@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30445",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30445/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30445/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30445/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30445",
+  "id": 1538011725,
+  "node_id": "I_kwDOCFbutM5brDJN",
+  "number": 30445,
+  "title": "quarkus-test-security-jwt: injecting org.eclipse.microprofile.jwt.JsonWebToken injects a NullJsonWebToken instance",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-01-18T13:32:36Z",
+  "updated_at": "2023-01-23T17:39:57Z",
+  "closed_at": "2023-01-20T15:39:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen using the `quarkus-test-security-jwt` extension, like this:\r\n\r\n```\r\n@Test\r\n@TestSecurity(user = \"testUser\", roles = {\"active_user\"})\r\n@JwtSecurity(\r\n\tclaims = {\r\n\t\t@Claim(key = \"language\", value = \"pt\"),\r\n\t\t@Claim(key = \"country\", value = \"PT\"),\r\n\t\t@Claim(key = \"exp\", value = \"9999999999\"),\r\n\t\t@Claim(key = \"iat\", value = \"0\"),\r\n\t\t@Claim(key = \"azp\", value = \"test\"),\r\n\t\t@Claim(key = \"sub\", value = \"testUser\"),\r\n\t}\r\n)\r\nvoid activateCampaign_ValidPayload() {\r\n    //....\r\n}\r\n```\r\n\r\nIf I have some class that wants to read data from the JWT:\r\n\r\n```\r\n@RequestScoped\r\npublic class AuthenticationIdentity {\r\n\r\n\tprivate static final Logger log = LoggerFactory.getLogger(AuthenticationIdentity.class);\r\n\tprivate final JsonWebToken jwt;\r\n\r\n\tAuthenticationIdentity() {\r\n\t\tthis.jwt = null;\r\n\t}\r\n\r\n\t@Inject\r\n\tpublic AuthenticationIdentity(JsonWebToken jwt) {\r\n\t\tif (!jwt.containsClaim(\"language\") || !jwt.containsClaim(\"country\") ||\r\n\t\t\t!jwt.containsClaim(\"sub\")) {\r\n\t\t\tUnauthorizedException exception = new UnauthorizedException();\r\n\t\t\tlog.warn(\"JsonWebToken not valid\");\r\n\t\t\tthrow exception;\r\n\t\t}\r\n\t\tthis.jwt = jwt;\r\n\t}\r\n}\r\n```\r\n\r\nThe test jwt is not what is injected here, I actually get a `NullJsonWebToken` instance.\r\nIn order to actually get the test jwt here, I had to instead receive a `CurrentIdentityAssociation` and from that, fetch the jwt:\r\n\r\n```\r\n@RequestScoped\r\npublic class AuthenticationIdentity {\r\n\r\n\tprivate static final Logger log = LoggerFactory.getLogger(AuthenticationIdentity.class);\r\n\tprivate final JsonWebToken jwt;\r\n\r\n\tAuthenticationIdentity() {\r\n\t\tthis.jwt = null;\r\n\t}\r\n\r\n\t@Inject\r\n\tpublic AuthenticationIdentity(CurrentIdentityAssociation identityAssociation) {\r\n\t\tfinal Principal principal = identityAssociation.getIdentity().getPrincipal();\r\n\r\n\t\tif (principal instanceof JsonWebToken jwt) {\r\n\t\t\tif (!jwt.containsClaim(\"language\") || !jwt.containsClaim(\"country\") ||\r\n\t\t\t\t!jwt.containsClaim(\"sub\")) {\r\n\t\t\t\tUnauthorizedException exception = new UnauthorizedException();\r\n\t\t\t\tlog.warn(\"JsonWebToken not valid\");\r\n\t\t\t\tthrow exception;\r\n\t\t\t}\r\n\t\t\tthis.jwt = jwt;\r\n\t\t} else {\r\n\t\t\tthrow new UnauthorizedException(\"No JWT token found\");\r\n\t\t}\r\n\t}\r\n}\r\n```\r\n\r\nNot sure if this is intended, or a bug. I'd say it's a bug as the test jwt should be injected here and not a `NullJsonWebToken`.\n\n### Expected behavior\n\nClasses that inject `JsonWebToken` should receive the test token when `quarkus-test-security-jwt` is in use.\n\n### Actual behavior\n\nClasses that inject `JsonWebToken` a `NullJsonWebToken` instance, when `quarkus-test-security-jwt` is in use. \n\n### How to Reproduce?\n\nCreate a test that uses `quarkus-test-security-jwt`, like so: \r\n\r\n```\r\nclass TestJwtSecurity {\r\n    @Test\r\n\t@TestSecurity(user = \"testUser\", roles = {\"active_user\"})\r\n\t@JwtSecurity(\r\n\t\tclaims = {\r\n\t\t\t@Claim(key = \"language\", value = \"pt\"),\r\n\t\t\t@Claim(key = \"country\", value = \"PT\"),\r\n\t\t\t@Claim(key = \"exp\", value = \"9999999999\"),\r\n\t\t\t@Claim(key = \"iat\", value = \"0\"),\r\n\t\t\t@Claim(key = \"azp\", value = \"test\"),\r\n\t\t\t@Claim(key = \"sub\", value = \"testUser\"),\r\n\t\t\t@Claim(key = \"realm_access\", value = \"{\\\"roles\\\":[\\\"active_user\\\"]}\")\r\n\t\t}\r\n\t)\r\n\tvoid activateCampaign_ValidPayload() {\r\n\t\r\n\t}\r\n}\r\n```\r\n\r\nCreate a class that injects `JsonWebToken` and performs some validations: \r\n\r\n```\r\n@RequestScoped\r\npublic class AuthenticationIdentity {\r\n\r\n\tprivate static final Logger log = LoggerFactory.getLogger(AuthenticationIdentity.class);\r\n\tprivate final JsonWebToken jwt;\r\n\r\n\tAuthenticationIdentity() {\r\n\t\tthis.jwt = null;\r\n\t}\r\n\r\n\t@Inject\r\n\tpublic AuthenticationIdentity(CurrentIdentityAssociation identityAssociation) {\r\n\t\tfinal Principal principal = identityAssociation.getIdentity().getPrincipal();\r\n\r\n\t\tif (principal instanceof JsonWebToken jwt) {\r\n\t\t\tif (!jwt.containsClaim(\"language\") || !jwt.containsClaim(\"country\") ||\r\n\t\t\t\t!jwt.containsClaim(\"sub\")) {\r\n\t\t\t\tUnauthorizedException exception = new UnauthorizedException();\r\n\t\t\t\tlog.warn(\"JsonWebToken not valid\");\r\n\t\t\t\tthrow exception;\r\n\t\t\t}\r\n\t\t\tthis.jwt = jwt;\r\n\t\t} else {\r\n\t\t\tthrow new UnauthorizedException(\"No JWT token found\");\r\n\t\t}\r\n\t}\r\n}\r\n```\r\n\r\nRun the test. It will fail since it will inject a `NullJsonWebToken`, instead of the test token with the custom claims.\n\n### Output of `uname -a` or `ver`\n\nLinux PM-DFrickert 6.1.6-1-MANJARO #1 SMP PREEMPT_DYNAMIC Sun Jan 15 02:14:14 UTC 2023 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18 OpenJDK Runtime Environment (build 17.0.5+1) OpenJDK 64-Bit Server VM (build 17.0.5+1, mixed mode)\n\n### GraalVM version (if different from Java)\n\nN/A\n\n### Quarkus version or git rev\n\n2.15.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63) Maven home: /opt/maven Java version: 17.0.5, vendor: N/A, runtime: /usr/lib/jvm/java-17-openjdk Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"6.1.6-1-manjaro\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30445/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30445/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

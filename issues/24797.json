@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24797",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24797/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24797/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24797/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24797",
+  "id": 1194639049,
+  "node_id": "I_kwDOCFbutM5HNL7J",
+  "number": 24797,
+  "title": "Enable contextPath support for SR OpenAPI Swagger UI",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1688349292,
+      "node_id": "MDU6TGFiZWwxNjg4MzQ5Mjky",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/swagger-ui",
+      "name": "area/swagger-ui",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-04-06T13:43:13Z",
+  "updated_at": "2022-11-09T16:15:01Z",
+  "closed_at": "2022-06-28T23:47:16Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nUse case\r\n\r\n- in production environment our app is served directly under root \"/\" path\r\n- in staging environment our app is served behing a nginx proxy_pass using a contextpath of \"/example\" : nginx below\r\n```\r\n\tlocation /example {\r\n\r\n\t\tproxy_pass http://localhost:8080/;\r\n\t\tproxy_redirect     off;\r\n\t\tproxy_set_header   Host $host;\r\n\r\n\t}\r\n```\r\n\r\n- its swagger UI openapi defaults to http://localhost/example/q/swagger-ui/\r\n- unfortunately the \"Explore\" form input does not honor the contextPath, see screenshot https://imgur.com/a/L5xMF7h\r\n- you can explore by manually entering to the input field \"/example/q/openapi\"\r\n- however the openAPI paths do not honor the contextPath either, but as suggested by @phillip-kruger in https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/relaxing.20build.20time.20property.20quarkus.2Ehttp.2Eroot-path.20.3F/near/277277998  using a https://download.eclipse.org/microprofile/microprofile-open-api-1.0/apidocs/org/eclipse/microprofile/openapi/OASFilter.html can fix and rewrite them, as in the pseudocode below\r\n- still, this OASFilter does not completely solve the bug since the form input of the screenshot remains ko, see screenshot\r\n\r\n```\r\nclass OpenApiFilter : OASFilter {\r\n\r\n    override fun filterOpenAPI(openAPI: OpenAPI?) {\r\nval contextPath = \"/example\"\r\n            LOG.info(\"\"\"!!!!! REWRITING OpenAPI paths using contextPath $contextPath for profile $profile !!!!!\"\"\")\r\n            val rewrittenPaths = PathsImpl()\r\n            val paths = openAPI!!.paths\r\n            val keys = paths.pathItems.keys\r\n            keys.forEach{ k ->\r\n                rewrittenPaths.addPathItem(\"\"\"$contextPath$k\"\"\", paths.pathItems.get(k))\r\n            }\r\n            openAPI.paths(rewrittenPaths)\r\n        \r\n        super.filterOpenAPI(openAPI)\r\n    }\r\n}\r\n```\r\n\r\n\n\n### Expected behavior\n\nPerhaps https://github.com/quarkusio/quarkus/blob/main/extensions/swagger-ui/deployment/src/main/java/io/quarkus/swaggerui/deployment/SwaggerUiProcessor.java could register a runtime processor to rewrite the contextPath at runtime - and not at build time since the path may not be known until runtime, given an nginx or apache may exist\n\n### Actual behavior\n\nThe openAPI endpoints are not accessible using \"try it out\" nor \"explore\" Swagger UI buttons or http calls unless you rewrite them\n\n### How to Reproduce?\n\n1. set up an nginx proxy \r\n```\r\n\tlocation /example {\r\n\r\n\t\tproxy_pass http://localhost:8080/;\r\n\t\tproxy_redirect     off;\r\n\t\tproxy_set_header   Host $host;\r\n\r\n\t}\r\n```\r\n2. hit http://localhost/q/swagger-ui/index.html. \r\n3. the API paths will not work\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\njdk11\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.5\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24797/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24797/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

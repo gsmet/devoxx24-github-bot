@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22945",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22945/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22945/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22945/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22945",
+  "id": 1106067990,
+  "node_id": "I_kwDOCFbutM5B7UIW",
+  "number": 22945,
+  "title": "Kotlin reactive messaging ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-01-17T16:41:34Z",
+  "updated_at": "2022-02-07T08:38:06Z",
+  "closed_at": "2022-02-07T08:38:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen I write the following code with the `quarkus-smallrye-reactive-messaging-rabbitmq` : \r\n```\r\n    @Incoming(\"interface-exc\")\r\n    @Outgoing(\"outgoind\")\r\n    suspend fun handleActualMsg(msg: Message<JsonObject>): Message<JsonObject>? {\r\n        val converted = msg.payload.mapTo()\r\n        val queueName = determineQueueName(converted)\r\n        val outgoing = copyHeaders(metadata, queueName)\r\n        return Message.of(\r\n            msg.payload, Metadata.of(outgoing)\r\n        )\r\n    }\r\n```\r\nI get the following exception:\r\n```\r\n2022-01-17 17:32:01,447 ERROR [io.sma.rea.mes.provider] (pool-1-thread-1) SRMSG00201: Error caught while processing a message: java.lang.IllegalStateException: No Vertx context found\r\n\tat io.quarkus.smallrye.reactivemessaging.runtime.kotlin.AbstractSubscribingCoroutineInvoker.invoke(AbstractSubscribingCoroutineInvoker.kt:16)\r\n\tat io.quarkus.smallrye.reactivemessaging.runtime.kotlin.AbstractSubscribingCoroutineInvoker.invoke(AbstractSubscribingCoroutineInvoker.kt:11)\r\n\tat io.smallrye.reactive.messaging.providers.AbstractMediator.invoke(AbstractMediator.java:91)\r\n\tat io.smallrye.reactive.messaging.providers.SubscriberMediator.lambda$processMethodReturningACompletionStage$18(SubscriberMediator.java:218)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage.subscribe(UniCreateFromCompletionStage.java:24)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemOrFailureFlatMap.subscribe(UniOnItemOrFailureFlatMap.java:27)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.converters.uni.UniToMultiPublisher$UniToMultiSubscription.request(UniToMultiPublisher.java:63)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapInner.onSubscribe(MultiFlatMapOp.java:591)\r\n\tat io.smallrye.mutiny.converters.uni.UniToMultiPublisher.subscribe(UniToMultiPublisher.java:24)\r\n\tat io.smallrye.mutiny.groups.MultiCreate$1.subscribe(MultiCreate.java:161)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapMainSubscriber.onItem(MultiFlatMapOp.java:191)\r\n\tat io.smallrye.mutiny.operators.multi.MultiMapOp$MapProcessor.onItem(MultiMapOp.java:50)\r\n\tat io.smallrye.mutiny.subscription.MultiSubscriber.onNext(MultiSubscriber.java:61)\r\n\tat io.smallrye.mutiny.subscription.SafeSubscriber.onNext(SafeSubscriber.java:98)\r\n\tat io.smallrye.mutiny.helpers.HalfSerializer.onNext(HalfSerializer.java:31)\r\n\tat io.smallrye.mutiny.helpers.StrictMultiSubscriber.onItem(StrictMultiSubscriber.java:83)\r\n\tat io.smallrye.mutiny.subscription.MultiSubscriber.onNext(MultiSubscriber.java:61)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapMainSubscriber.tryEmit(MultiFlatMapOp.java:228)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapInner.onItem(MultiFlatMapOp.java:597)\r\n\tat io.smallrye.mutiny.subscription.MultiSubscriber.onNext(MultiSubscriber.java:61)\r\n\tat io.smallrye.mutiny.converters.uni.UniToMultiPublisher$UniToMultiSubscription.onItem(UniToMultiPublisher.java:82)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:60)\r\n\tat io.smallrye.mutiny.operators.uni.builders.DefaultUniEmitter.complete(DefaultUniEmitter.java:36)\r\n\tat io.smallrye.mutiny.groups.UniOnNull.lambda$failWith$1(UniOnNull.java:46)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualBiConsumer.accept(SlowContextualBiConsumer.java:21)\r\n\r\n```\r\n\r\n### Expected behavior\r\n\r\nThe handler should process the message in seperate coroutine!\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nCreate an applicaiton with kotlin+reactive-messaging-rabbit mq\r\n(version 2.6.2)\r\n\r\n1. define input and output\r\n2. annotate a method with  `@Incoming` and `@Outgoing`\r\ntest the app with an embedded rabbit \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 11.0.2 2019-01-15\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\naccording to https://github.com/quarkusio/quarkus/issues/21423 it is supposed to be fixed I can't confirm and reproduce this!",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22945/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22945/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

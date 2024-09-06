@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38704",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38704/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38704/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38704/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38704",
+  "id": 2126891779,
+  "node_id": "I_kwDOCFbutM5-xcsD",
+  "number": 38704,
+  "title": "anonymous `SecurityIdentity` is not available inside background vertx worker, says \"RequestScoped context was not active\"",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2024-02-09T10:50:59Z",
+  "updated_at": "2024-02-12T11:08:20Z",
+  "closed_at": "2024-02-12T11:08:20Z",
+  "active_lock_reason": null,
+  "body": "Starting with Quarkus 3.7.2, trying to use an injected `SecurityIdentity` inside a vertx worker fails sometimes. This used to work in 3.7.1. My test setup is as follows:\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class TestSchedule {\r\n    @Inject SecurityIdentity securityIdentity;\r\n    @Inject Vertx vertx;\r\n\r\n    @Scheduled(every= \"1s\")\r\n    void testSchedule() {\r\n        vertx.executeBlocking(() -> {\r\n            Thread.sleep(100); // make sure this gets executed after the schedule method has ended\r\n            try {\r\n                System.out.println(\"is user anonymous? \" + securityIdentity.isAnonymous());\r\n            } catch (Exception ex) {\r\n                ex.printStackTrace();\r\n            }\r\n            return null;\r\n        });\r\n    }\r\n}\r\n```\r\n\r\nWith **Quarkus 3.7.1** and below, this successfully prints `is user anonymous? true`\r\n\r\nWith **Quarkus 3.7.2** (latest as of writing), this produces an exception:\r\n```\r\njakarta.enterprise.context.ContextNotActiveException: RequestScoped context was not active when trying to obtain a bean instance for a client proxy of CLASS bean [class=io.quarkus.security.runtime.SecurityIdentityProxy, id=U3fuB4yO9MSr82V2xU36xFn98dk]\r\n\t- you can activate the request context for a specific method using the @ActivateRequestContext interceptor binding\r\n\tat io.quarkus.arc.impl.ClientProxies.notActive(ClientProxies.java:70)\r\n\tat io.quarkus.arc.impl.ClientProxies.getSingleContextDelegate(ClientProxies.java:30)\r\n\tat io.quarkus.security.runtime.SecurityIdentityProxy_ClientProxy.arc$delegate(Unknown Source)\r\n\tat io.quarkus.security.runtime.SecurityIdentityProxy_ClientProxy.isAnonymous(Unknown Source)\r\n\tat org.acme.TestSchedule.lambda$testSchedule$0(TestSchedule.java:19)\r\n\tat io.vertx.core.impl.ContextImpl.lambda$executeBlocking$0(ContextImpl.java:177)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:276)\r\n\tat io.vertx.core.impl.ContextImpl.lambda$internalExecuteBlocking$2(ContextImpl.java:209)\r\n\tat io.vertx.core.impl.TaskQueue.run(TaskQueue.java:76)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n```\r\n\r\nThis either appears to be a regression, or it should have never been possible to successfully use an injected `SecurityIdentity` this way in the first place. I'm not sure which one it is.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38704/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38704/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

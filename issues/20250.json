@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20250",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20250/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20250/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20250/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20250",
+  "id": 999759611,
+  "node_id": "I_kwDOCFbutM47lx77",
+  "number": 20250,
+  "title": "Hibernate extension logs warning \"Unable to find a build time generated proxy for entity com.blazebit.[...].ValuesEntity\"",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-09-17T22:20:01Z",
+  "updated_at": "2021-10-13T13:51:56Z",
+  "closed_at": "2021-10-13T13:51:48Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen starting my Quarkus app (or running tests) that is using Blaze Persistence, I see:\r\n```\r\nWARN  [io.qua.hib.orm.run.pro.ProxyDefinitions] (main) Unable to find a build time generated proxy for entity com.blazebit.persistence.impl.function.entity.ValuesEntity\r\n```\r\n\r\n### Expected behavior\r\n\r\nNo warning\r\n\r\n### Actual behavior\r\n\r\nWarning is logged\r\n\r\n### How to Reproduce?\r\n\r\n1. clone https://github.com/famod/quarkus-quickstarts\r\n2. switch to branch `20250-blaze-warning`\r\n3. mvn verify -f hibernate-orm-quickstart\r\n4. after the testcontainers output you should see somethign like:\r\n    ```\r\n    INFO  [io.qua.dev.pos.dep.PostgresqlDevServicesProcessor] (build-12) Dev Services for PostgreSQL started.\r\n    WARN  [io.qua.hib.orm.run.pro.ProxyDefinitions] (main) Unable to find a build time generated proxy for entity com.blazebit.persistence.impl.function.entity.ValuesEntity\r\n    ```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux *** 5.10.16.3-microsoft-standard-WSL2 #1 SMP Fri Apr 2 22:23:49 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK 64-Bit Server VM Temurin-11.0.12+7 (build 11.0.12+7, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.1\r\n\r\n### Additional information\r\n\r\nhttps://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/Blaze.20Persistence.20warning\r\n\r\nIn that coversation, @beikov mentioned that no proxy is required for this class and the factory seems to be created eagerly:\r\nTrace from a `QuarkusTest`:\r\n```\r\n        at io.quarkus.hibernate.orm.runtime.proxies.ProxyDefinitions.generateProxyClass(ProxyDefinitions.java:142)\r\n        at io.quarkus.hibernate.orm.runtime.proxies.ProxyDefinitions.createFromMetadata(ProxyDefinitions.java:63)\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootMetadataBuilder.build(FastBootMetadataBuilder.java:374)\r\n        at io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.createMetadata(PersistenceUnitsHolder.java:101)\r\n        at io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.constructMetadataAdvance(PersistenceUnitsHolder.java:73)\r\n        at io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.initializeJpa(PersistenceUnitsHolder.java:40)\r\n        at io.quarkus.hibernate.orm.runtime.HibernateOrmRecorder$1.created(HibernateOrmRecorder.java:68)\r\n        at io.quarkus.arc.runtime.ArcRecorder.initBeanContainer(ArcRecorder.java:70)\r\n        at io.quarkus.deployment.steps.ArcProcessor$generateResources-1025303321.deploy_0(ArcProcessor$generateResources-1025303321.zig:139)\r\n        at io.quarkus.deployment.steps.ArcProcessor$generateResources-1025303321.deploy(ArcProcessor$generateResources-1025303321.zig:40)\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(ApplicationImpl.zig:292)\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Class.java:398)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl.run(StartupActionImpl.java:199)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.doJavaStart(QuarkusTestExtension.java:241)\r\n        [...]\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20250/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20250/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29612",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29612/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29612/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29612/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29612",
+  "id": 1471349085,
+  "node_id": "I_kwDOCFbutM5XswFd",
+  "number": 29612,
+  "title": "event.request().absoluteURI() returns an HTTP URL for a HTTPS request in Dev UI",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-12-01T13:47:05Z",
+  "updated_at": "2022-12-05T18:00:24Z",
+  "closed_at": "2022-12-05T18:00:24Z",
+  "active_lock_reason": null,
+  "body": "I don't know if it's a problem specific to Dev UI or not but it was reproduced in the Dev UI using:\r\n\r\nhttps://github.com/rsvoboda/code-with-quarkus/ at commit e8e79723136a9062e013a4c3d705e3c12cd301d2\r\n\r\nReproducing the issue is easy:\r\n- Start with mvn quarkus:dev\r\n- Go to https://localhost:8443/dev/ui (and discard the warning about the certificate)\r\n- Go to the config editor\r\n- Change a value of the top property (a datasource one) and validate the change\r\n- You won't get any success message and if you open the network console, you will see that the POST actually tried to redirect to a HTTP URL (see `Location` header of the `303` response), which leads to a CORS error (it's easier to see that in the Firefox dev console, I had trouble having the information with a Chromium-based browser)\r\n\r\nThe problem is that we end up with `event.request().absoluteURI()` returning an HTTP URL here: https://github.com/quarkusio/quarkus/blob/2.14/extensions/vertx-http/dev-console-runtime-spi/src/main/java/io/quarkus/devconsole/runtime/spi/DevConsolePostHandler.java#L78 so Quarkus tries to redirect to an HTTP URL and it's intercepted by the CORS checks.\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29612/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29612/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

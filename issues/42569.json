@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42569",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42569/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42569/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42569/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42569",
+  "id": 2467616549,
+  "node_id": "I_kwDOCFbutM6TFNcl",
+  "number": 42569,
+  "title": "when/if onTextMessage throws exception connection is \"quietly\" closed without explanation",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2748318141,
+      "node_id": "MDU6TGFiZWwyNzQ4MzE4MTQx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/websockets",
+      "name": "area/websockets",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2024-08-15T08:11:36Z",
+  "updated_at": "2024-08-26T15:35:31Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\ni had some code like this:\r\n\r\n```\r\n @OnTextMessage\r\n        Uni<Map<String, Object>> onMessage(JsonNode msg, WebSocketClientConnection connection) {\r\n            boolean succes = msg.get(\"success\").asBoolean();\r\n\r\n            logger.info(\"onTextMessage: \" + msg + \" succes: \" + succes);\r\n\r\n            if (!succes) {\r\n                logger.error(\"Error from Home Assistant: \" + msg.get(\"message\").asText());\r\n                return null;\r\n            }\r\n...\r\n```\r\n\r\nwhich i looked at for a long time to grok why I couldn't figure out why the output was just empty.\r\n\r\nI enabled traffic logging and I got:\r\n\r\n```\r\n2024-08-15 10:06:03,400 DEBUG [io.qua.web.nex.traffic] (vert.x-eventloop-thread-0) [client] connection opened: /api/websocket, Connection[clientId=io.quarkiverse.homeassistant.runtime.HomeAssistantWS$ClientEndpoint, id=7c72217f-0b13-440f-9f7e-5e392a5cf14f], Handshake headers[]\r\n\r\n2024-08-15 10:06:03,400 DEBUG [io.qua.web.nex.traffic] (vert.x-eventloop-thread-0) [client] received text message, Connection[clientId=io.quarkiverse.homeassistant.runtime.HomeAssistantWS$ClientEndpoint, id=7c72217f-0b13-440f-9f7e-5e392a5cf14f], Payload: \r\n{\"type\":\"auth_required\",\"ha_version\":\"2023.3.1\"}\r\n2024-08-15 10:06:03,401 INFO  [io.quarkus] (Quarkus Main Thread) web 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.12.2) started in 0.313s. Listening on: http://localhost:8080\r\n2024-08-15 10:06:03,401 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2024-08-15 10:06:03,401 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, homeassistant, jfr, opentelemetry, qute, qute-web, rest, rest-client, rest-client-jackson, rest-qute, smallrye-context-propagation, vertx, websockets-next]\r\n2024-08-15 10:06:03,401 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (Aesh InputStream Reader) Live reload total time: 0.342s \r\n2024-08-15 10:06:03,403 DEBUG [io.qua.web.nex.traffic] (vert.x-eventloop-thread-0) [client] connection closed, Connection[clientId=io.quarkiverse.homeassistant.runtime.HomeAssistantWS$ClientEndpoint, id=7c72217f-0b13-440f-9f7e-5e392a5cf14f]\r\n```\r\n\r\nwondering why client connection was closed I enabled full quarkus.debug logging and in between everyting was this debug log:\r\n\r\n```\r\n2024-08-15 10:09:13,360 DEBUG [io.qua.web.nex.run.Endpoints] (vert.x-eventloop-thread-4) Connection closed due to unhandled failure java.lang.NullPointerException: Cannot invoke \"com.fasterxml.jackson.databind.JsonNode.asBoolean()\" because the return value of \"com.fasterxml.jackson.databind.JsonNode.get(String)\" is null: WebSocket client connection [id=58fc1f2a-3e0e-4d83-abd0-8da44413ab4a, clientId=io.quarkiverse.homeassistant.runtime.HomeAssistantWS$ClientEndpoint]\r\n```\r\n\r\nso error was because I accidentally threw an exception by accident.\n\n### Expected behavior\n\n1) error printed about exception happening when calling onMessage - why should that be hidden?\r\n\r\n2) have client traffic logging include cause/reason on errors\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42569/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42569/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

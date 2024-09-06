@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34776",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34776/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34776/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34776/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34776",
+  "id": 1806391752,
+  "node_id": "I_kwDOCFbutM5rq1nI",
+  "number": 34776,
+  "title": "Quarkus cache : same package name in different modules causes error when compile java9 module",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-07-16T01:26:58Z",
+  "updated_at": "2023-07-20T15:59:42Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi,\r\n\r\ntry to add cache with CacheResult and a service using CacheManager on project with module-info.java\r\nCacheResult from : quarkus-cache-3.2.0.Final.jar\r\nCacheMananger from : quarkus-cache-runtime-spi-3.2.0.Final.jar\r\n\r\nin module-info need :\r\n  - quarkus.cache;\r\n  - quarkus.cache.runtime.spi;\r\n\r\n`\r\nimport io.quarkus.cache.CacheManager;\r\nimport jakarta.inject.Singleton;\r\nimport lombok.RequiredArgsConstructor;\r\n\r\n@Singleton\r\n@RequiredArgsConstructor\r\npublic class CacheClearer {\r\n\r\n  private final CacheManager cacheManager;\r\n\r\n  public void clearAllCaches() {\r\n    for (String cacheName : cacheManager.getCacheNames()) {\r\n      cacheManager.getCache(cacheName).ifPresent(cache -> cache.invalidateAll().await().indefinitely());\r\n    }\r\n  }\r\n}\r\n`\r\n\r\n`  \r\nimport fr.gnss.constellation.ouranos.librairy.almanach.EphemerideType;\r\nimport fr.gnss.constellation.ouranos.librairy.almanach.OrbitType;\r\nimport fr.gnss.constellation.ouranos.librairy.almanach.sp3.Sp3FileName;\r\nimport fr.gnss.constellation.ouranos.librairy.almanach.sp3.TimeCoordinateSatellitePosition;\r\nimport fr.gnss.constellation.ouranos.librairy.coordinate.CartesianCoordinate3D;\r\nimport fr.gnss.constellation.ouranos.sp3.Sp3FileNameUtils;\r\nimport fr.gnss.constellation.ouranos.sp3.service.ISp3Service;\r\nimport io.quarkus.cache.CacheKey;\r\nimport io.quarkus.cache.CacheResult;\r\nimport java.time.LocalDateTime;\r\nimport java.util.List;\r\n\r\npublic abstract class AbstractOrbitDataService implements IOrbitDataService {\r\n\r\n  // -------------------- Services --------------------\r\n\r\n  protected final ISp3Service sp3Service;\r\n\r\n  // ------------------------ Constructeur(s) ------------------------\r\n\r\n  public AbstractOrbitDataService(ISp3Service sp3Service) {\r\n    this.sp3Service = sp3Service;\r\n  }\r\n\r\n  // -------------------- Methodes de l'interface --------------------\r\n\r\n  @Override\r\n  @CacheResult(cacheName = \"cartesian-position\")\r\n  public List<TimeCoordinateSatellitePosition<CartesianCoordinate3D>> getCartesianPositionsForPeriod(\r\n      @CacheKey LocalDateTime start, @CacheKey LocalDateTime end, @CacheKey EphemerideType ephemerideType, @CacheKey OrbitType orbitType) {\r\n\r\n    List<Sp3FileName> allSp3FileNameBetweenStartEnd = Sp3FileNameUtils.getAllSp3FileNameBetween2Date(ephemerideType, start, end, orbitType);\r\n\r\n    sp3Service.downloadsAndStoresIfNotExist(allSp3FileNameBetweenStartEnd);\r\n\r\n    return doProcessing(start, end, allSp3FileNameBetweenStartEnd);\r\n  }\r\n\r\n  protected abstract List<TimeCoordinateSatellitePosition<CartesianCoordinate3D>> doProcessing(\r\n      LocalDateTime start, LocalDateTime end, List<Sp3FileName> allSp3FileNameBetweenStartEnd);\r\n}\r\n`\n\n### Expected behavior\n\nNo compilation error\n\n### Actual behavior\n\n[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project ouranos-rest-api: Compilation failure: Compilation failure:\r\n[ERROR] module ouranos.domain reads package io.quarkus.cache from both quarkus.cache.runtime.spi and quarkus.cache\r\n[ERROR] module ouranos.core reads package io.quarkus.cache from both quarkus.cache.runtime.spi and quarkus.cache\r\n[ERROR] /**/gnss.constellation/ouranos-core/src/main/java/module-info.java:[1,1] module ouranos.core reads package io.quarkus.cache from both quarkus.cache and quarkus.cache.runtime.spi\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nWindows 11 Professionnel 22H2\n\n### Output of `java -version`\n\nopenjdk version \"20.0.1\" 2023-04-18 OpenJDK Runtime Environment Temurin-20.0.1+9 (build 20.0.1+9) OpenJDK 64-Bit Server VM Temurin-20.0.1+9 (build 20.0.1+9, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.6.3 (cecedd343002696d0abb50b32b541b8a6ba2883f) Maven home: E:\\ApplicationPortable\\maven\\bin\\.. Java version: 20.0.1, vendor: Eclipse Adoptium, runtime: C:\\Program Files\\Eclipse Adoptium\\jdk-20.0.1.9-hotspot Default locale: fr_FR, platform encoding: UTF-8 OS name: \"windows 11\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34776/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34776/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

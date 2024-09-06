@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34518",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34518/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34518/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34518/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34518",
+  "id": 1787793792,
+  "node_id": "I_kwDOCFbutM5qj5GA",
+  "number": 34518,
+  "title": "quarkus-smallrye-openapi extension oauth2-implicit flow missing authorization header",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-07-04T12:00:35Z",
+  "updated_at": "2023-07-05T17:37:50Z",
+  "closed_at": "2023-07-05T17:37:50Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nthe extension quarkus-smallrye-openapi is used.\r\nin swagger-ui i want to authorize a user via keycloak (oauth2-implicit) flow. After authorization, the \"Authorization\" header with Bearer token should be set when an endpoint is \"try out\". I would like to do the configuration via the application.properties.\r\n\r\n_quarkus.smallrye-openapi.security-scheme=oauth2-implicit\r\nquarkus.smallrye-openapi.security-scheme-name=Keycloak\r\nquarkus.smallrye-openapi.oauth2-implicit-authorization-url=\r\nquarkus.smallrye-openapi.oauth2-implicit-refresh-url=_\r\n\r\n\r\nif the whole thing is configured via the annotations, it works. However, not via the application.properties.\r\n![Pasted Graphic 1](https://github.com/quarkusio/quarkus/assets/57587083/dc427b5f-3aad-4e48-b8f9-0c03c9e5aa83)\r\n![Pasted Graphic 2](https://github.com/quarkusio/quarkus/assets/57587083/b75723ab-d51a-4a6d-83b6-822fa9d25b48)\r\n\n\n### Expected behavior\n\nwhen setting configuration in application.properties\r\n\r\nquarkus.smallrye-openapi.security-scheme=oauth2-implicit\r\nquarkus.smallrye-openapi.security-scheme-name=Keycloak\r\nquarkus.smallrye-openapi.oauth2-implicit-authorization-url=http://localhost:8083/realms/local_realm/protocol/openid-connect/auth\r\nquarkus.smallrye-openapi.oauth2-implicit-refresh-url=http://localhost:8083/realms/local_realm/protocol/openid-connect/token\r\n\r\nthen after authorization in swagger-ui via keycloak, Bearer token should be added to Request Header.\r\n![Pasted Graphic 2](https://github.com/quarkusio/quarkus/assets/57587083/64fee94c-e8a9-460f-b764-20d1af5adc77)\r\n\r\n****\n\n### Actual behavior\n\nwhen setting configuration in application.properties \r\n\r\nquarkus.smallrye-openapi.security-scheme=oauth2-implicit\r\nquarkus.smallrye-openapi.security-scheme-name=Keycloak\r\nquarkus.smallrye-openapi.oauth2-implicit-authorization-url=http://localhost:8083/realms/local_realm/protocol/openid-connect/auth\r\nquarkus.smallrye-openapi.oauth2-implicit-refresh-url=http://localhost:8083/realms/local_realm/protocol/openid-connect/token\r\n\r\nthen after authorization in swagger-ui via keycloak NO Bearer token is added to Request Header.\r\n![Pasted Graphic](https://github.com/quarkusio/quarkus/assets/57587083/1ad4d24b-501d-42fd-8e2d-aa88c64eab0d)\r\n\n\n### How to Reproduce?\n\n1. Setup a keycloak with some realm and client (set Valid redirect URIs to swagger-ui)\r\n2. add a new user\r\n\r\n3. generate quarkus service with quarkus-smallrye-openapi extension\r\n4. configure oauth2-implicit flow via application.properties\r\nquarkus.smallrye-openapi.security-scheme=oauth2-implicit\r\nquarkus.smallrye-openapi.security-scheme-name=Keycloak\r\nquarkus.smallrye-openapi.oauth2-implicit-authorization-url=\r\nquarkus.smallrye-openapi.oauth2-implicit-refresh-url=\r\n\r\n5. implement some endpoint to call via swagger-ui\r\n6. run quarkus service in dev mode\r\n7. open swagger-ui and authorize via keycloak\r\n![image](https://github.com/quarkusio/quarkus/assets/57587083/24feb16e-141c-4ae4-9123-4075974b8e0e)\r\n\r\n8. try out implemented endpoint and see curl Log (should not have an \"Authorization\" Header)\n\n### Output of `uname -a` or `ver`\n\nDarwin Kernel Version 22.4.0\n\n### Output of `java -version`\n\n17.0.3\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.7.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34518/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34518/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

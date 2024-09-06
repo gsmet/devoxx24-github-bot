@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40719",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40719/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40719/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40719/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40719",
+  "id": 2304805495,
+  "node_id": "I_kwDOCFbutM6JYIp3",
+  "number": 40719,
+  "title": "quarkus-hibernate-orm - lazy loading of parameterized attributes from MappedSuperclass with getter does not work.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-05-19T22:19:21Z",
+  "updated_at": "2024-05-22T10:22:28Z",
+  "closed_at": "2024-05-22T10:15:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nReproducer: https://github.com/mapuci/hibernate-parameterized-mappedsuperclass\r\n* contains issue reproducer with `quarkus`\r\n* contains working example with same entities in `wildfly`\r\n\r\nI believe reading the simple reproducer code offers the best explanation.\r\n* See https://github.com/mapuci/hibernate-parameterized-mappedsuperclass/blob/main/quarkus3-hibernate-parameterized-mappedsuperclass/src/main/java/si/mapuci/ReproducerEndpoint.java method `thisWillFail`\r\n* See classes \r\n  * https://github.com/mapuci/hibernate-parameterized-mappedsuperclass/blob/main/quarkus3-hibernate-parameterized-mappedsuperclass/src/main/java/si/mapuci/entity/AbsOne.java\r\n  *  https://github.com/mapuci/hibernate-parameterized-mappedsuperclass/blob/main/quarkus3-hibernate-parameterized-mappedsuperclass/src/main/java/si/mapuci/entity/One.java\r\n* Notice that `hibernate_interceptor` does not get invoked when calling getter of `parameterized entity field, inside abstract MappedSuperClass `\r\n\r\nIf you have read the code and README, stop reading.\r\n\r\nWe have entity and its abstract parameterized MappedSuperclass:\r\n```java\r\n@MappedSuperclass\r\npublic abstract class AbsOne<TWO extends AbsTwo<?, ?>> {\r\n    @Id\r\n    @GeneratedValue\r\n    private Long id;\r\n\r\n    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)\r\n    @JoinColumn(name = \"two_id\")\r\n    private TWO two;\r\n//... getters, setters... are ommited\r\n}\r\n\r\n@Entity\r\npublic class One extends AbsOne<Two> {\r\n    private String oneConcreteProp;\r\n//... getters, setters... are ommited\r\n}    \r\n\r\n//and some more, for the context\r\n@MappedSuperclass\r\npublic abstract class AbsTwo<ONE extends AbsOne<?>, THREE extends AbsThree<?, ?>> {\r\n    @Id\r\n    @GeneratedValue\r\n    private Long id;\r\n\r\n    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)\r\n    @JoinColumn(name = \"three_id\")\r\n    private THREE three;\r\n//... getters, setters... are ommited\r\n}\r\n\r\n@Entity\r\npublic class Two extends AbsTwo<One, Three> {\r\n    private String twoConcreteProp;\r\n//... getters, setters... are ommited\r\n}    \r\n```\r\n\r\nAfter these entities are enhanced by bytebuddy/hibernate, invoking getters for parameterized field (e.g. `one.getTwo()`) do not invoke  `$$_hibernate_getInterceptor()`, so the relation is not lazily fetched.\r\nWorks as expected in latest wildfly.\r\n\r\n\r\n### Expected behavior\r\n\r\nHibernate interceptor is invoked, triggering lazy load.\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nclone https://github.com/mapuci/hibernate-parameterized-mappedsuperclass\r\nhere you will find quarkus reproducer AND wildfly project, with same entities working normally.\r\nWith some of my additional insights in readme. :)\r\n\r\nTo reproduce, change directory to `quarkus3-hibernate-parameterized-mappedsuperclass` and run `./mvnw test`. \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Matejs-MacBook-Pro-2.local 23.4.0 Darwin Kernel Version 23.4.0: Fri Mar 15 00:10:42 PDT 2024; root:xnu-10063.101.17~1/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\n17 (tried with 21 also)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.10.1 (I also tried 2.0.3.Final, 3.2.0.Final, 3.8.0)\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40719/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40719/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

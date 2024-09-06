@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42442",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42442/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42442/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42442/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42442",
+  "id": 2457406591,
+  "node_id": "I_kwDOCFbutM6SeQx_",
+  "number": 42442,
+  "title": "Recursive mapping issue with JSON-B (despite custom serializers)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-08-09T08:32:48Z",
+  "updated_at": "2024-08-09T11:43:52Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nClass structures that contain a recursive reference can't be mapped to JSON, even though when one defines custom JSON-B serializers or type adapters. This doesn't really make sense, since serializing (back) references to, for example, scalar values stops the recursion.\n\n### Expected behavior\n\nMake it possible to serialize recursive references when custom serializers / type adapters are present. \n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nReproducer here: https://github.com/sdaschner/quarkus-playground/releases/tag/jsonb-recursive-mapping\r\n\r\n```\r\nmvn quarkus:dev\r\ncurl localhost:8080/json-test\r\n```\r\n\r\n(or run `JsonIT` in the project)\r\n\r\nThis will cause Quarkus to throw an exception like:\r\n\r\n```\r\nCaused by: jakarta.json.bind.JsonbException: Unable to serialize property 'schedule' from com.sebastian_daschner.coffee.JsonTestResource.Item\r\n\tat org.eclipse.yasson.internal.serializer.ObjectSerializer.lambda$serialize$0(ObjectSerializer.java:43)\r\n[...]\r\n\tat org.eclipse.yasson.internal.serializer.ObjectSerializer.lambda$serialize$0(ObjectSerializer.java:41)\r\n\t... 25 more\r\nCaused by: jakarta.json.bind.JsonbException: Recursive reference has been found in class class com.sebastian_daschner.coffee.JsonTestResource$Schedule.\r\n\tat org.eclipse.yasson.internal.serializer.RecursionChecker.serialize(RecursionChecker.java:36)\r\n[...]\r\n```\r\n\r\nAs you can see in the code (`Schedule` -> `Item`), the back reference `Item#schedule` is annotated with `@JsonbTypeSerializer(ScheduleNameSerializer.class)`. Only if *also* the reference `Schedule#item` is annotated with a similar serializer, it works. Adding `@JsonbTransient` on the back reference also works.\r\n\r\nHowever, the following output would be expected from that test:\r\n\r\n```json\r\n{\r\n  \"item\": {\r\n    \"name\": \"Item\",\r\n    \"schedule\": \"Name\"\r\n  },\r\n  \"name\": \"Name\"\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n3.13.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42442/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42442/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

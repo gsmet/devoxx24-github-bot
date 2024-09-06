@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40559",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40559/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40559/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40559/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40559",
+  "id": 2289922254,
+  "node_id": "I_kwDOCFbutM6IfXDO",
+  "number": 40559,
+  "title": "Quarkus Ignores CurrentThreadContext on Blocking Methods Using SmallRye Reactive Messaging",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-05-10T15:12:35Z",
+  "updated_at": "2024-06-11T00:46:11Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIn an application that uses SmallRye Reactive Messaging, a channel consuming method may affect the contexts propagated to it using the `@CurrentThreadContext` annotation. However, when the channel consuming method is also annotated with `@Blocking`, the configuration in the `@CurrentThreadContext` annotation seems to be ignored.\r\n\r\n```java\r\n@Path(\"/hello\")\r\nclass GreetingResource {\r\n\r\n  @Channel(\"greeting\")\r\n  Emitter<String> emitter;\r\n\r\n  @POST\r\n  @Consumes(MediaType.TEXT_PLAIN)\r\n  public void hello(String body) {\r\n    emitter.send(body);\r\n  }\r\n}\r\n\r\nclass GreetingProcessor {\r\n\r\n  @Inject RequestContextController controller;\r\n  @Inject Logger logger;\r\n\r\n  @Blocking // CDI context is not cleared for blocking methods, removing this annotation avoids the IllegalStateException\r\n  @CurrentThreadContext(cleared = ThreadContext.CDI)\r\n  @Incoming(\"greeting\")\r\n  void process(String name) {\r\n    if (!controller.activate()) {\r\n      throw new IllegalStateException(\"Request context is already active\");\r\n    }\r\n```\n\n### Expected behavior\n\nThe current context in the channel consuming method should be affected by the `@CurrentThreadContext` annotation.\n\n### Actual behavior\n\nThe context is propagated to the channel consuming method as if the `@CurrentThreadContext` annotation were not present.\n\n### How to Reproduce?\n\nSmall example application attached.\r\n\r\n1. Run the test and note that SmallRye Reactive Messaging logs that the `process` method throws the `IllegalStateException` that indicates the request context is active.\r\n2. Remove the `@Blocking` annotations from the `process` method.\r\n3. Re-run the test and note that no `IllegalStateException` is logged, because the CDI context has been cleared, so the `RequestContextController` reference in `process` may create a new request scope.\r\n\r\n[quarkus-emitter-new-request-context.zip](https://github.com/quarkusio/quarkus/files/15276572/quarkus-emitter-new-request-context.zip)\r\n\n\n### Output of `uname -a` or `ver`\n\nDarwin pixee-mbp-gilday.localdomain 23.4.0 Darwin Kernel Version 23.4.0: Fri Mar 15 00:10:42 PDT 2024; root:xnu-10063.101.17~1/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"21.0.1\" 2023-10-17 LTS OpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12-LTS) OpenJDK 64-Bit Server VM Temurin-21.0.1+12 (build 21.0.1+12-LTS, mixed mode)\n\n### Quarkus version or git rev\n\n3.10.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /Users/jgilday/.m2/wrapper/dists/apache-maven-3.9.6-bin/3311e1d4/apache-maven-3.9.6 Java version: 21.0.1, vendor: Eclipse Adoptium, runtime: /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home Default locale: en_US, platform encoding: UTF-8 OS name: \"mac os x\", version: \"14.4.1\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40559/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40559/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

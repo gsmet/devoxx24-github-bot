@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33049",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33049/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33049/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33049/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33049",
+  "id": 1692304574,
+  "node_id": "I_kwDOCFbutM5k3oS-",
+  "number": 33049,
+  "title": "Quarkus Native on GraalVM issue with ElasticSearch Java Client jakarta.json.JsonException: Provider org.eclipse.parsson.JsonProviderImpl not found",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2222769329,
+      "node_id": "MDU6TGFiZWwyMjIyNzY5MzI5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/elasticsearch",
+      "name": "area/elasticsearch",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2023-05-02T12:08:24Z",
+  "updated_at": "2023-05-02T21:00:39Z",
+  "closed_at": "2023-05-02T13:19:08Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm using Quarkus 2.16.6.Final with ElasticSearch 8.7. I've written a small piece of code to use ES's update_by_query feature:\r\n\r\n```\r\ntry (Reader query = new StringReader(/*my json query String*/)) {\r\n  var request = UpdateByQueryRequest.of(fn -> fn.index(index).withJson(query));\r\n\r\n  return client.updateByQuery(request);\r\n} catch (IOException e) {\r\n  throw new RuntimeException(e);\r\n}\r\n```\r\n\r\nAnd this is my ES client initialization code:\r\n```\r\n\r\nvar credsProv = new BasicCredentialsProvider();\r\n\r\ncredsProv.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));\r\n\r\nvar restClient = RestClient.builder(HttpHost.create(host)).setHttpClientConfigCallback(\r\n    hc -> hc.disableAuthCaching().setDefaultCredentialsProvider(credsProv)).build();\r\n\r\nvar transport = new RestClientTransport(restClient, new JacksonJsonpMapper());\r\n\r\nvar client = new ElasticsearchAsyncClient(transport);\r\n```\r\n\r\nThis actually works fine in normal jvm mode. However whenever I'm trying to run this is Quarkus Native(GraalVM) mode I'm getting this error:\r\n\r\n```\r\nCaused by: jakarta.json.JsonException: Provider org.eclipse.parsson.JsonProviderImpl not found\r\n   at jakarta.json.spi.JsonProvider.newInstance(JsonProvider.java:160)\r\n   at jakarta.json.spi.JsonProvider.provider(JsonProvider.java:144)\r\n   at co.elastic.clients.json.JsonpUtils.findProvider(JsonpUtils.java:65)\r\n... 54 more\r\nCaused by: java.lang.ClassNotFoundException: org.eclipse.parsson.JsonProviderImpl\r\n    at java.base@17.0.7/java.lang.Class.forName(DynamicHub.java:1132)\r\n    at java.base@17.0.7/java.lang.Class.forName(DynamicHub.java:1105)\r\n    at jakarta.json.spi.JsonProvider.newInstance(JsonProvider.java:157)\r\n```\r\n\r\nAs per the [documentation](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/installation.html), I've added required dependency in the Maven pom.\r\n\r\n```\r\n    <dependency>\r\n        <groupId>co.elastic.clients</groupId>\r\n        <artifactId>elasticsearch-java</artifactId>\r\n        <version>8.7.0</version>\r\n        <exclusions>\r\n            <exclusion>\r\n                <groupId>commons-logging</groupId>\r\n                <artifactId>commons-logging</artifactId>\r\n            </exclusion>\r\n            <exclusion>\r\n                <groupId>jakarta.json</groupId>\r\n                <artifactId>jakarta.json-api</artifactId>\r\n            </exclusion>\r\n            <exclusion>\r\n                <groupId>org.eclipse.parsson</groupId>\r\n                <artifactId>parsson</artifactId>\r\n            </exclusion>\r\n        </exclusions>\r\n    </dependency>\r\n    <dependency>\r\n        <groupId>jakarta.json</groupId>\r\n        <artifactId>jakarta.json-api</artifactId>\r\n        <version>2.1.1</version>\r\n        <scope>compile</scope>\r\n    </dependency>\r\n    <dependency>\r\n        <groupId>org.eclipse.parsson</groupId>\r\n        <artifactId>parsson</artifactId>\r\n        <version>1.1.1</version>\r\n        <scope>compile</scope>\r\n    </dependency>\r\n```\r\n\r\nBut that didn't solve this issue and wondering how come the same thing works on normal JVM but not in native mode in GraalVM\n\n### Expected behavior\n\nIn Quarkus native mode the ElasticSearch java client should work just like JVM mode\n\n### Actual behavior\n\nGetting below exception:\r\n```\r\n2023-05-02 08:14:52,422 ERROR [com.mab.cha.con.exc.ServerExceptionHandler] (vert.x-eventloop-thread-3) Unhandled error: jakarta.json.JsonException: Unable to get a JsonProvider. Check your classpath or thread context classloader.\r\n\tat co.elastic.clients.json.JsonpUtils.findProvider(JsonpUtils.java:85)\r\n\tat co.elastic.clients.json.JsonpUtils.provider(JsonpUtils.java:55)\r\n\tat co.elastic.clients.json.SimpleJsonpMapper.jsonProvider(SimpleJsonpMapper.java:93)\r\n\tat co.elastic.clients.json.WithJson.withJson(WithJson.java:57)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat io.smallrye.faulttolerance.FaultToleranceInterceptor.lambda$syncFlow$3(FaultToleranceInterceptor.java:257)\r\n\tat io.smallrye.faulttolerance.core.InvocationContext.call(InvocationContext.java:20)\r\n\tat io.smallrye.faulttolerance.core.Invocation.apply(Invocation.java:29)\r\n\tat io.smallrye.faulttolerance.core.retry.Retry.doApply(Retry.java:88)\r\n\tat io.smallrye.faulttolerance.core.retry.Retry.apply(Retry.java:42)\r\n\tat io.smallrye.faulttolerance.FaultToleranceInterceptor.syncFlow(FaultToleranceInterceptor.java:259)\r\n\tat io.smallrye.faulttolerance.FaultToleranceInterceptor.intercept(FaultToleranceInterceptor.java:186)\r\n\tat io.smallrye.faulttolerance.FaultToleranceInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:33)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat io.quarkus.hibernate.validator.runtime.interceptor.AbstractMethodValidationInterceptor.validateMethodInvocation(AbstractMethodValidationInterceptor.java:71)\r\n\tat io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveEndPointValidationInterceptor.validateMethodInvocation(ResteasyReactiveEndPointValidationInterceptor.java:21)\r\n\tat io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveEndPointValidationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:33)\r\n\tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:114)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxResteasyReactiveRequestContext$1$1.handle(VertxResteasyReactiveRequestContext.java:78)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxResteasyReactiveRequestContext$1$1.handle(VertxResteasyReactiveRequestContext.java:75)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:566)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base@17.0.7/java.lang.Thread.run(Thread.java:833)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.thread.PlatformThreads.threadStartRoutine(PlatformThreads.java:775)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.posix.thread.PosixPlatformThreads.pthreadStartRoutine(PosixPlatformThreads.java:203)\r\nCaused by: jakarta.json.JsonException: Provider org.eclipse.parsson.JsonProviderImpl not found\r\n\tat jakarta.json.spi.JsonProvider.newInstance(JsonProvider.java:160)\r\n\tat jakarta.json.spi.JsonProvider.provider(JsonProvider.java:144)\r\n\tat co.elastic.clients.json.JsonpUtils.findProvider(JsonpUtils.java:65)\r\n\t... 54 more\r\nCaused by: java.lang.ClassNotFoundException: org.eclipse.parsson.JsonProviderImpl\r\n\tat java.base@17.0.7/java.lang.Class.forName(DynamicHub.java:1132)\r\n\tat java.base@17.0.7/java.lang.Class.forName(DynamicHub.java:1105)\r\n\tat jakarta.json.spi.JsonProvider.newInstance(JsonProvider.java:157)\r\n\t... 56 more\r\n\r\n```\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nquay.io/quarkus/ubi-quarkus-mandrel-builder-image:22.3-java17\n\n### Output of `java -version`\n\nopenjdk 17.0.6 2023-01-17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.6.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33049/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33049/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

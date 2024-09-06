@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40113",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40113/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40113/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40113/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40113",
+  "id": 2247513235,
+  "node_id": "I_kwDOCFbutM6F9lST",
+  "number": 40113,
+  "title": "MongoReplicaSetTestResource fails to shutdown on Windows",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-04-17T06:46:32Z",
+  "updated_at": "2024-04-17T06:46:37Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm using `MongoReplicaSetTestResource`. When executing a build in Windows, it hangs while shutting down Quarkus after the tests and after a while i can see a stacktrace exactly like the one pasted here: https://github.com/flapdoodle-oss/de.flapdoodle.embed.mongo/issues/373\r\n\r\nI think this happens, because Flapdoodle constantly writes errors to the error-stream while shutdown is in progress. It then tries to close the error-stream, which not works because there are still messages to write.\r\n\r\nThe problem does not occour in our CI-pipeline, which is not Linux-based. When executing tests in Intellij, the shutdown takes very long, but in most of the cases, it works after a while.\r\n\r\nI managed to develop a workaround by creating an additional test-resource which first re-configures the replica set and drops all connections to the second node:\r\n\r\n```\r\npublic class MongoDBShutdownWorkaroundResource implements QuarkusTestResourceLifecycleManager {\r\n\r\n    private static final String ADMIN_DB = \"admin\";\r\n\r\n    private Integer port;\r\n    private String replicaSet;\r\n\r\n    @Override\r\n    public void init(Map<String, String> initArgs) {\r\n        port = MongoTestResource.port(initArgs);\r\n        replicaSet = MongoReplicaSetTestResource.setReplicaSet(initArgs);\r\n    }\r\n\r\n    @Override\r\n    public Map<String, String> start() {\r\n        return null;\r\n    }\r\n\r\n    @Override\r\n    public void stop() {\r\n        try (MongoClient client = MongoClients.create(\"mongodb://localhost:\" + port)) {\r\n            Document replicaSetSetting = buildShutdownReplicaSetConfig();\r\n            client.getDatabase(ADMIN_DB).runCommand(\r\n                    new Document(\"replSetReconfig\", replicaSetSetting)\r\n                            .append(\"force\", true));\r\n\r\n            client.getDatabase(ADMIN_DB).runCommand(\r\n                    new Document(\"dropConnections\", \"1\")\r\n                            .append(\"hostAndPort\", List.of(\"localhost:\" + (port + 1))));\r\n        } catch (Exception e) {\r\n            throw new RuntimeException(e);\r\n        }\r\n    }\r\n\r\n    private Document buildShutdownReplicaSetConfig() {\r\n        Document rsConfig = new Document();\r\n        rsConfig.append(\"_id\", replicaSet);\r\n        List<Document> members = new ArrayList<>();\r\n        members.add(new Document().append(\"_id\", 0).append(\"host\", \"localhost:\" + port));\r\n        rsConfig.append(\"members\", members);\r\n        rsConfig.append(\"version\", 99);\r\n        return rsConfig;\r\n    }\r\n}\r\n```\r\n\r\nAlthough this works, there is still a 15 seconds quiesce-period when shutting down. I think this is also unnecessary, but I was not able to find an option in Flapdoodle to modify this shutdown timeout. I tried to fix it by `client.getDatabase(\"admin\").runCommand(new Document(\"setParameter\", \"1\").append(\"shutdownTimeoutMillisForSignaledShutdown\", 0));` which unfortunately didn't fix it.\n\n### Expected behavior\n\nQuarkus should be able to shutdown a MongoDB-replica-set even on Windows. This should happen as fast as possible to not slow down test-execution.\n\n### Actual behavior\n\nMongoDB-replica-set is not shut down at all under Windows.\n\n### How to Reproduce?\n\nI'm not sure if this happens on every Windows-env. I'm just having a project with\r\n\r\n```\r\n@QuarkusTestResource(value = MongoReplicaSetTestResource.class, initArgs = {\r\n        @ResourceArg(name = MongoTestResource.VERSION, value = \"V7_0\"),\r\n        @ResourceArg(name = MongoTestResource.PORT, value = \"27099\")\r\n})\r\n```\r\n\r\nand then executing `mvn clean install` in the console.\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [Version 10.0.19045.4291]\n\n### Output of `java -version`\n\nJava version: 17.0.10, vendor: Amazon.com Inc\n\n### Quarkus version or git rev\n\n3.9.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40113/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40113/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

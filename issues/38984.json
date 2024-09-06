@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38984",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38984/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38984/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38984/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38984",
+  "id": 2150963006,
+  "node_id": "I_kwDOCFbutM6ANRc-",
+  "number": 38984,
+  "title": "Use Arc AnnotationStore to build Hibernate ORM metadata",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 25,
+  "created_at": "2024-02-23T12:12:25Z",
+  "updated_at": "2024-08-14T15:10:39Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nArc allows to modify/add/remove annotations at build time on a bean, with the contract that the (CDI) container will use these transformed annotations (stored in `io.quarkus.arc.processor.AnnotationStore`) to setup its metadata.\r\n\r\nThis could be a powerful tool to customize also Hibernate ORM metadata: by adding annotations to entity classes in a BuildStep, one could f.i. automate definition of converters and types that are parameterized based on class metadata, or automate definition of filters.\r\n\r\nTo give a small example: I was looking for a way to define automatic conversion of `Duration` attributes, where I want to control the unit of duration stored in the database. With Hibernate `UserType` I can register a `DurationType` that will correctly convert `Duration` attributes without need for an annotation, but it does not allow me to parameterize that type except adding the unit as a parameter to the `@Type` annotation:\r\n```\r\n   @Type(value=DurationType.class,parameters={@Parameter(name=\"unit\",value=\"SECONDS\")})\r\n   private Duration duration;\r\n```\r\nHaving the option to modify annotations during build, I could do the following:\r\n```\r\n   @TemporalUnit(SECONDS)\r\n   private Duration duration;\r\n```\r\nwhere the `@TemporalUnit` annotation (mine) is optional, and if present could be processed during buildTime to add the proper `@Type` annotation with corresponding parameters.\r\n\r\nAnd another example: I am among the ones that cannot live with the new `@SoftDelete` implementation of Hibernate, since we need to be able to see deleted many-to-one related entities. So I have to fallback on a solution that combines `@SQLDelete` with `@FilterDef` and `@Filter` annotations. A nice solution could be to process the existing `@SoftDelete` annotation and reconvert it into the set of fore-mentioned annotations during buildTime, before Hibernate has started recollecting its metadata.\r\n\r\nSo my question is: would it be possible that the Quarkus hibernate-orm extension uses the Arc `AnnotationStore` to get the decorations from the entity classes ?\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38984/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38984/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

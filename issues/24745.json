@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24745",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24745/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24745/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24745/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24745",
+  "id": 1192134834,
+  "node_id": "I_kwDOCFbutM5HDoiy",
+  "number": 24745,
+  "title": "Multiple `@LookupIfProperty` and a single `@DefaultBean` not able to resolve the bean",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2022-04-04T18:07:19Z",
+  "updated_at": "2022-04-05T10:48:50Z",
+  "closed_at": "2022-04-05T08:21:30Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a simple configuration like this:\r\n\r\n```\r\npublic class CassandraTokenConfiguration {\r\n\r\n    @Produces\r\n    @ApplicationScoped\r\n    @LookupIfProperty(\r\n            name = \"stargate.token-resolver.type\",\r\n            stringValue = \"header\"\r\n    )\r\n    CassandraTokenResolver headerTokenResolver(StargateConfig stargateConfig) {\r\n        String headerName = stargateConfig.tokenResolver().header().headerName();\r\n        return new HeaderTokenResolver(headerName);\r\n    }\r\n\r\n    @Produces\r\n    @ApplicationScoped\r\n    @LookupIfProperty(\r\n            name = \"stargate.token-resolver.type\",\r\n            stringValue = \"principal\"\r\n    )\r\n    CassandraTokenResolver principalTokenResolver() {\r\n        return new PrincipalTokenResolver();\r\n    }\r\n\r\n    @Produces\r\n    @ApplicationScoped\r\n    @DefaultBean\r\n    CassandraTokenResolver noopCassandraTokenResolver() {\r\n        return (context, securityContext) -> Optional.empty();\r\n    }\r\n\r\n}\r\n```\r\n\r\nHowever, there is no way to inject the correct bean based on the above.\r\n\r\nUsing the `@Inject CassandraTokenResolver resolver;` fails with exception like:\r\n\r\n```\r\nFailed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: javax.enterprise.inject.spi.DeploymentException: javax.enterprise.inject.AmbiguousResolutionException: Ambiguous dependencies for type io.stargate.sgv2.docsapi.api.common.auth.CassandraTokenResolver and qualifiers [@Default]\r\n\t- java member: io.stargate.sgv2.docsapi.api.common.StargateRequestInfo().tokenResolver\r\n\t- declared on CLASS bean [types=[java.lang.Object, io.stargate.sgv2.docsapi.api.common.StargateRequestInfo], qualifiers=[@Default, @Any], target=io.stargate.sgv2.docsapi.api.common.StargateRequestInfo]\r\n\t- available beans:\r\n\t\t- PRODUCER METHOD bean [types=[io.stargate.sgv2.docsapi.api.common.auth.CassandraTokenResolver, java.lang.Object], qualifiers=[@Default, @Any], target=io.stargate.sgv2.docsapi.api.common.auth.CassandraTokenResolver headerTokenResolver(io.stargate.sgv2.docsapi.config.StargateConfig stargateConfig), declaringBean=io.stargate.sgv2.docsapi.api.common.auth.configuration.CassandraTokenConfiguration]\r\n\t\t- PRODUCER METHOD bean [types=[io.stargate.sgv2.docsapi.api.common.auth.CassandraTokenResolver, java.lang.Object], qualifiers=[@Default, @Any], target=io.stargate.sgv2.docsapi.api.common.auth.CassandraTokenResolver noopCassandraTokenResolver(), declaringBean=io.stargate.sgv2.docsapi.api.common.auth.configuration.CassandraTokenConfiguration]\r\n\t\t- PRODUCER METHOD bean [types=[io.stargate.sgv2.docsapi.api.common.auth.CassandraTokenResolver, java.lang.Object], qualifiers=[@Default, @Any], target=io.stargate.sgv2.docsapi.api.common.auth.CassandraTokenResolver principalTokenResolver(), declaringBean=io.stargate.sgv2.docsapi.api.common.auth.configuration.CassandraTokenConfiguration]\r\n```\r\n\r\nUsing the `@Inject Instance<CassandraTokenResolver> resolver;` does work, but completely ignores the default bean if the given property does not match any of the specified values and ends up in the exception when calling `resolver.get()`:\r\n\r\n```\r\njavax.enterprise.inject.UnsatisfiedResolutionException: No bean found for required type [interface io.stargate.sgv2.docsapi.api.common.auth.CassandraTokenResolver] and qualifiers [[@javax.enterprise.inject.Any()]]\r\n\tat io.quarkus.arc.impl.InstanceImpl.bean(InstanceImpl.java:188)\r\n\tat io.quarkus.arc.impl.InstanceImpl.getInternal(InstanceImpl.java:209)\r\n\tat io.quarkus.arc.impl.InstanceImpl.get(InstanceImpl.java:95)\r\n\r\n``` \r\n\r\nThis is a pretty standard CDI functionality, so I guess this has to be some kind of a bug.\n\n### Expected behavior\n\nI expect that at least one, if not both of the above given injection examples do work.\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux ise-Precision-5550 5.13.0-37-generic #42~20.04.1-Ubuntu SMP Tue Mar 15 15:44:28 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.2\" 2022-01-18 OpenJDK Runtime Environment (build 17.0.2+8-Ubuntu-120.04) OpenJDK 64-Bit Server VM (build 17.0.2+8-Ubuntu-120.04, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.5\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven home: /home/ise/.m2/wrapper/dists/apache-maven-3.8.4-bin/52ccbt68d252mdldqsfsn03jlf/apache-maven-3.8.4 Java version: 17.0.2, vendor: Private Build, runtime: /usr/lib/jvm/java-17-openjdk-amd64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.13.0-37-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24745/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24745/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

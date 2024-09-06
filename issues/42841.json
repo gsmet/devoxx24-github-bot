@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42841",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42841/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42841/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42841/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42841",
+  "id": 2492506153,
+  "node_id": "I_kwDOCFbutM6UkKAp",
+  "number": 42841,
+  "title": "Azure OpenAI Assistant API Mutlipart Upload Problem because Rest Client adds Content Type by default",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-08-28T16:10:00Z",
+  "updated_at": "2024-09-02T12:43:52Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nI'm currently trying to use OpenAI's assistant API and I want to upload a file to use it with the assistant. It seems this API is quite picky how it wants to be called.\r\n\r\nIn particular, the file upload is a multipart/form-data call. It wants the file as one part and an additional `purpose` part with the value `assistants`. However, if the purpose part has a `Content-Type` set in any way, the request fails with a Bad Request with the message that the purpose would be invalid. I was able to verfiy this by using a proxy and manually editing failed api calls (which had a Content Type by removing the Content Type).\r\n\r\nSo far, I was able to make it work with CURL, as CURL does not add a Content-Type for the purpose part by default. However, IntelliJ's Http Client and the Quarkus Rest Client add a `Content-Type: text/plain` by default. To be clear, this is correct according to the standard and I totally see the API at fault...\r\n\r\nHowever, as I need to make it work somehow: Do you have any suggestions how I can make it so that the Quarkus Rest Client does not add `Content-Type: text/plain` to the part `purpose`?\r\n\r\nI tried using the `ClientMultipartForm` object, but there, the attribute function does not allow me to specify the Content Type and even if I could, it seems it is already set to null internally and then added in a later step.\r\n\r\nIt seems the `Content-Type` is always added here https://github.com/quarkusio/quarkus/blob/main/independent-projects/resteasy-reactive/client/runtime/src/main/java/org/jboss/resteasy/reactive/client/impl/multipart/PausableHttpPostRequestEncoder.java#L593\r\n\r\nIt seems it is always added because the charset is always not null. This is caused by https://github.com/quarkusio/quarkus/blob/main/independent-projects/resteasy-reactive/client/runtime/src/main/java/org/jboss/resteasy/reactive/client/impl/multipart/QuarkusMultipartFormUpload.java#L55. There, the charset is always set to UTF-8 by default if no other one is set.\r\n\r\nDo you think it would be possible to make the default behavior of adding the Content-Type optional/configurable via a config property? Or maybe, this should not be done by default at all? According to the RFC, it is the same to not send the Content-Type and if you set it to text/plain. But I understand that this would probably be a breaking change for some equally picky/non-conform APIs... \r\n\r\nI'm open for any suggestions. Thanks!\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42841/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42841/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

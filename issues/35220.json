@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35220",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35220/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35220/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35220/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35220",
+  "id": 1837689749,
+  "node_id": "I_kwDOCFbutM5tiOuV",
+  "number": 35220,
+  "title": "No MessageBodyWriter  for io.smallrye.mutiny.groups.MultiCreate$2",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-08-05T10:34:04Z",
+  "updated_at": "2023-08-30T05:14:01Z",
+  "closed_at": "2023-08-30T05:14:01Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nI tried to bridge message received in JMS to SSE endpoint using `MultiEmitterProcessor`.\r\n\r\nThe example project: https://github.com/hantsy/quarkus-sandbox/tree/master/jms\r\n\r\n```java\r\n    MultiEmitterProcessor<Message> emitterProcessor = MultiEmitterProcessor.create();\r\n\r\n\r\n    @Scheduled(delay = 500L, delayUnit = TimeUnit.MILLISECONDS, every = \"1s\")\r\n    void receive() {\r\n        var consumer = jmsContext.createConsumer(helloQueue);\r\n        consumer.setMessageListener(\r\n                msg -> {\r\n                    try {\r\n                        var received = jsonb.fromJson(msg.getBody(String.class), Message.class);\r\n                        LOGGER.log(Level.INFO, \"consuming message: {0}\", received);\r\n                        emitterProcessor.emit(received);\r\n                    } catch (JMSException e) {\r\n                        throw new RuntimeException(e);\r\n                    }\r\n                }\r\n        );\r\n    }\r\n```\r\n\r\nAnd the sse endpoint is like this.\r\n\r\n```java\r\n@GET\r\n@Produces(MediaType.SERVER_SENT_EVENTS)\r\n@SseElementType(MediaType.APPLICATION_JSON)\r\npublic Multi<Message> stream() {\r\n    return handler.emitterProcessor.toMulti();\r\n}\r\n```\r\n\r\nAnd I got the following exception in the testing codes.\r\n\r\n```bash\r\nat java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)\r\n\tat com.example.MessageResourceTest.testSendAndReceiveMessages(MessageResourceTest.java:79)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:578)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.runExtensionMethod(QuarkusTestExtension.java:1015)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.interceptTestMethod(QuarkusTestExtension.java:829)\r\n\tat org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)\r\n\tat org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)\r\n\tat org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)\r\n\tat org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)\r\n\tat org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)\r\n\tat org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)\r\n\tat org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)\r\n\tat org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)\r\n\tat org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)\r\n\tat org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)\r\n\tat org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)\r\n\tat org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)\r\n\tat org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)\r\n\tat org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)\r\n\tat org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:217)\r\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n\tat org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)\r\n\tat org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)\r\n\tat org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151)\r\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)\r\n\tat org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)\r\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tat org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)\r\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)\r\n\tat org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)\r\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tat org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)\r\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)\r\n\tat org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)\r\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)\r\n\tat org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)\r\n\tat org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)\r\n\tat org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)\r\n\tat org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:147)\r\n\tat org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:127)\r\n\tat org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:90)\r\n\tat org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:55)\r\n\tat org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:102)\r\n\tat org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:54)\r\n\tat org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)\r\n\tat org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:86)\r\n\tat org.junit.platform.launcher.core.DefaultLauncherSession$DelegatingLauncher.execute(DefaultLauncherSession.java:86)\r\n\tat org.junit.platform.launcher.core.SessionPerRequestLauncher.execute(SessionPerRequestLauncher.java:53)\r\n\tat com.intellij.junit5.JUnit5IdeaTestRunner.startRunnerWithArgs(JUnit5IdeaTestRunner.java:57)\r\n\tat com.intellij.rt.junit.IdeaTestRunner$Repeater$1.execute(IdeaTestRunner.java:38)\r\n\tat com.intellij.rt.execution.junit.TestsRepeater.repeat(TestsRepeater.java:11)\r\n\tat com.intellij.rt.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:35)\r\n\tat com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:232)\r\n\tat com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:55)\r\n\tSuppressed: org.jboss.resteasy.core.NoMessageBodyWriterFoundFailure: Could not find MessageBodyWriter for response object of type: io.smallrye.mutiny.groups.MultiCreate$2 of media type: text/event-stream;charset=UTF-8\r\n\t\tat org.jboss.resteasy.core.ServerResponseWriter.lambda$writeNomapResponse$3(ServerResponseWriter.java:131)\r\n\t\tat org.jboss.resteasy.core.interception.jaxrs.ContainerResponseContextImpl.filter(ContainerResponseContextImpl.java:365)\r\n\t\tat org.jboss.resteasy.core.ServerResponseWriter.executeFilters(ServerResponseWriter.java:243)\r\n\t\tat org.jboss.resteasy.core.ServerResponseWriter.writeNomapResponse(ServerResponseWriter.java:100)\r\n\t\tat org.jboss.resteasy.core.ServerResponseWriter.writeNomapResponse(ServerResponseWriter.java:73)\r\n\t\tat org.jboss.resteasy.core.SynchronousDispatcher.writeResponse(SynchronousDispatcher.java:518)\r\n\t\tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:458)\r\n\t\tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:240)\r\n\t\tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:154)\r\n\t\tat org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n\t\tat org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:157)\r\n\t\tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:229)\r\n\t\tat io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:82)\r\n\t\tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:147)\r\n\t\tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:93)\r\n\t\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\n\t\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\t\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\t\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\t\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\t\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\t\tat java.base/java.lang.Thread.run(Thread.java:1623)\r\n\tSuppressed: jakarta.ws.rs.InternalServerErrorException: HTTP 500 Internal Server Error\r\n\t\tat org.jboss.resteasy.client.jaxrs.internal.ClientInvocation.handleErrorStatus(ClientInvocation.java:250)\r\n\t\tat org.jboss.resteasy.plugins.providers.sse.client.SseEventSourceImpl$EventHandler.run(SseEventSourceImpl.java:307)\r\n\t\tat org.jboss.resteasy.plugins.providers.sse.client.SseEventSourceScheduler$1.run(SseEventSourceScheduler.java:80)\r\n\t\tat org.jboss.resteasy.concurrent.ContextualExecutors.lambda$runnable$2(ContextualExecutors.java:312)\r\n\t\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:577)\r\n\t\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)\r\n\t\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)\r\n\t\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n\t\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n\t\tat java.base/java.lang.Thread.run(Thread.java:1623)\r\n```\r\n\r\n### Implementation ideas\r\n\r\nIn Spring/Reactor, it is easy to use a `Sinks` to emit events in reactive stream and export as a connectable `Flux` as SSE endpoint. \r\n\r\nI am not sure how to process this in Smallrye Mutiny.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35220/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35220/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

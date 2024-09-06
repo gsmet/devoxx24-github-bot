@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36227",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36227/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36227/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36227/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36227",
+  "id": 1920809062,
+  "node_id": "I_kwDOCFbutM5yfThm",
+  "number": 36227,
+  "title": "Accept-Language header not parsed correctly for language subtags, variants, extension and private subtags",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-10-01T14:55:09Z",
+  "updated_at": "2023-10-06T15:59:17Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using an Accept-Language header for HTTP requests that contains more than simple language or language-country forms, the parsed `Locale` does not correctly reflect the given language tag as defined in https://www.rfc-editor.org/rfc/rfc9110#section-12.5.4.\r\n\r\nOther examples of complex tags can be found in https://www.w3.org/International/articles/language-tags/.\r\n\r\n### Expected behavior\r\n\r\nLanguage tags are parsed into a Locale that correctly reflects the given data;  examples (not sure if `zh-yue` being turned into `yue` or `ar-afb` being turned into `afb` are correct, but that's what `java.util.Locale` turns it into):\r\n\r\n```\r\nAccept-Language: en\r\n         Parsed: en\r\n\r\nAccept-Language: ast\r\n         Parsed: ast\r\n\r\nAccept-Language: zh-yue\r\n         Parsed: yue\r\n\r\nAccept-Language: ar-afb\r\n         Parsed: afb\r\n\r\nAccept-Language: zh-Hans\r\n         Parsed: zh-Hans\r\n\r\nAccept-Language: az-Latn\r\n         Parsed: az-Latn\r\n\r\nAccept-Language: en-GB\r\n         Parsed: en-GB\r\n\r\nAccept-Language: es-005\r\n         Parsed: es-005\r\n\r\nAccept-Language: zh-Hant-HK\r\n         Parsed: zh-Hant-HK\r\n\r\nAccept-Language: sl-nedis\r\n         Parsed: sl-nedis\r\n\r\nAccept-Language: sl-IT-nedis\r\n         Parsed: sl-IT-nedis\r\n\r\nAccept-Language: de-CH-1901\r\n         Parsed: de-CH-1901\r\n\r\nAccept-Language: de-DE-u-co-phonebk\r\n         Parsed: de-DE-u-co-phonebk\r\n\r\nAccept-Language: en-US-x-twain\r\n         Parsed: en-US-x-twain\r\n```\r\n\r\n### Actual behavior\r\n\r\nSimpler language tags are parsed correctly, but some of the more complex ones are not:\r\n\r\n```\r\nAccept-Language: en\r\n         Parsed: en\r\n\r\nAccept-Language: ast\r\n         Parsed: ast\r\n\r\nAccept-Language: zh-yue\r\n         Parsed: zh\r\n\r\nAccept-Language: ar-afb\r\n         Parsed: ar\r\n\r\nAccept-Language: zh-Hans\r\n         Parsed: zh\r\n\r\nAccept-Language: az-Latn\r\n         Parsed: az\r\n\r\nAccept-Language: en-GB\r\n         Parsed: en-GB\r\n\r\nAccept-Language: es-005\r\n         Parsed: es-005\r\n\r\nAccept-Language: zh-Hant-HK\r\n         Parsed: zh-x-lvariant-HK\r\n\r\nAccept-Language: sl-nedis\r\n         Parsed: sl\r\n\r\nAccept-Language: sl-IT-nedis\r\n         Parsed: sl-IT-nedis\r\n\r\nAccept-Language: de-CH-1901\r\n         Parsed: de-CH-1901\r\n\r\nAccept-Language: de-DE-u-co-phonebk\r\n         Parsed: de-DE-x-lvariant-u\r\n\r\nAccept-Language: en-US-x-twain\r\n         Parsed: en-US-x-lvariant-x\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n[i18n-with-quarkus-reactive.zip](https://github.com/quarkusio/quarkus/files/12777404/i18n-with-quarkus-reactive.zip)\r\n\r\n1. run the application with `./mvnw clean compile quarkus:dev`\r\n2. either use the included `tests.sh` script to run some `curl` commands, or craft your own with an `Accept-Language` header for the URL `http://localhost:8080/hello`\r\n3. note the response to see if the parsed Locale produces the same language tag as the given header\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux laverne 6.2.0-33-generic #33~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Sep  7 10:33:52 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.8.1\" 2023-08-24\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.4.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3 (21122926829f1ead511c958d89bd2f672198ae9f)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36227/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36227/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

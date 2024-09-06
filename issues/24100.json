@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24100",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24100/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24100/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24100/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24100",
+  "id": 1159529525,
+  "node_id": "I_kwDOCFbutM5FHQQ1",
+  "number": 24100,
+  "title": "NullPointerException in io.quarkus.jackson.runtime.ObjectMapperProducer_ProducerMethod_objectMapper",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-03-04T11:12:12Z",
+  "updated_at": "2022-03-23T05:57:03Z",
+  "closed_at": "2022-03-23T05:57:03Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe have a function to transform a string to JsonNode, which is done using the default object mapper, without any customization. \r\n\r\nHere is what the class signature looks like\r\n\r\n```\r\n@ApplicationScoped\r\nclass LegacyValueBackfiller(private val objectMapper: ObjectMapper) {}\r\n```\r\n\r\nHowever, **sometimes** it throws an NPE, and here are the frames\r\n\r\n```\r\nexception: {\r\n    refId:         1,\r\n    exceptionType: 'java.lang.NullPointerException',\r\n    message:       null,\r\n    frames: [\r\n      {\r\n        class:  'io.quarkus.jackson.runtime.ObjectMapperProducer_ProducerMethod_objectMapper_7d4fe425e6f58abcbdd78addaab8a43fdb7ab3ae_Bean',\r\n        method: 'get',\r\n      },\r\n      {\r\n        class:  'io.quarkus.jackson.runtime.ObjectMapperProducer_ProducerMethod_objectMapper_7d4fe425e6f58abcbdd78addaab8a43fdb7ab3ae_Bean',\r\n        method: 'get',\r\n      },\r\n      {\r\n        class:  '{MY_PATH}.LegacyValueBackfiller_Bean',\r\n        method: 'create',\r\n      },\r\n      {\r\n        class:  '{MY_PATH}.LegacyValueBackfiller_Bean',\r\n        method: 'create',\r\n      },\r\n      {\r\n        class:  'io.quarkus.arc.impl.AbstractSharedContext',\r\n        method: 'createInstanceHandle',\r\n        line:   101,\r\n      },\r\n      {\r\n        class:  'io.quarkus.arc.impl.AbstractSharedContext$1',\r\n        method: 'get',\r\n        line:   29,\r\n      },\r\n      {\r\n        class:  'io.quarkus.arc.impl.AbstractSharedContext$1',\r\n        method: 'get',\r\n        line:   26,\r\n      },\r\n      {\r\n        class:  'io.quarkus.arc.impl.LazyValue',\r\n        method: 'get',\r\n        line:   26,\r\n      },\r\n      {\r\n        class:  'io.quarkus.arc.impl.ComputingCache',\r\n        method: 'computeIfAbsent',\r\n        line:   69,\r\n      },\r\n      {\r\n        class:  'io.quarkus.arc.impl.AbstractSharedContext',\r\n        method: 'get',\r\n        line:   26,\r\n      },\r\n      {\r\n        class:  'io.quarkus.arc.impl.ClientProxies',\r\n        method: 'getApplicationScopedDelegate',\r\n        line:   18,\r\n      },\r\n      {\r\n        class:  '{MY_PATH}.LegacyValueBackfiller_ClientProxy',\r\n        method: 'arc$delegate',\r\n      },\r\n     {\r\n        class:  '{MY_PATH}.LegacyValueBackfiller_ClientProxy',\r\n        method: '{MY_FUNCTION}',\r\n      },\r\n      ...\r\n```\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\nSometimes a null pointer exception is thrown, which does not occur at the start of the application, etc ...\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux {MY_POD} 5.4.0-1063-aws #66-Ubuntu SMP Wed Jan 12 17:49:45 UTC 2022 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.14.1\" 2022-02-08 OpenJDK Runtime Environment 18.9 (build 11.0.14.1+1) OpenJDK 64-Bit Server VM 18.9 (build 11.0.14.1+1, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.2\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24100/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24100/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

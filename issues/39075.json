@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39075",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39075/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39075/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39075/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39075",
+  "id": 2160730887,
+  "node_id": "I_kwDOCFbutM6AyiMH",
+  "number": 39075,
+  "title": "Jacoco doesn't count coverage for @QuarkusTest tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-02-29T08:50:37Z",
+  "updated_at": "2024-02-29T12:40:43Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi,\r\nI have a gradle quarkus project which consists of 2 modules: api and utils.\r\napi module contains test classes for both utils and api modules (some of them are marked as @QuarkusTest).\r\napi's build gradle is configured according to https://quarkus.io/guides/tests-with-coverage#quarkus-jacoco-jacoco-config_quarkus-jacoco-includes:\r\n1) it has gthe following plugins:\r\nplugins {\r\n    id 'java'\r\n    id 'io.quarkus'\r\n    id 'jacoco'\r\n    id 'org.kordamp.gradle.jandex'  version '1.1.0'\r\n}\r\n2) it has dependency \r\ntestImplementation(\"io.quarkus:quarkus-jacoco\")\r\n3) for non QuarkusTests it has:\r\ntest {\r\n    environment(\"DOCKER_HOST\", System.getenv(\"TEST_DOCKER_URL\"))\r\n    systemProperty \"java.util.logging.manager\", \"org.jboss.logmanager.LogManager\"\r\n    systemProperty(\"quarkus.test.profile\", \"test-${buildDatabaseKind}\")\r\n    finalizedBy jacocoTestReport\r\n    jacoco {\r\n        excludeClassLoaders = [\"*QuarkusClassLoader\"]\r\n        destinationFile = layout.buildDirectory.file(\"jacoco-quarkus.exec\").get().asFile\r\n    }\r\n    jacocoTestReport.enabled = false\r\n}\r\n\r\nThere are 3 test classes: \r\n- GreetingResourceTest (@QuarkusTest)\r\n- CommonTest (regular unit test) for the api module\r\n- UtilsTest (regular unit test) for the utils module\r\n\r\nProject structure looks like:\r\n![image](https://github.com/quarkusio/quarkus/assets/83769220/b2424be1-9dca-4af9-a3cd-9210c2de0f56)\r\n\r\nAnd jacoco report doesn't take into account test classes marked as @QuarkusTest:\r\n![image](https://github.com/quarkusio/quarkus/assets/83769220/9a11a95c-b20c-428b-8a4d-4c62c1057962)\r\n\r\nIf I change CommonTest class and add @QuarkusTest annotation (despite it is actually not a Quarkus test), then report looks like:\r\n![image](https://github.com/quarkusio/quarkus/assets/83769220/f0bdb46d-35e8-4ac1-983b-f294b9d77a0c)\r\n\r\nAnd everything works fine if I don't have submodules in my project.\n\n### Expected behavior\n\nJacoco should take into account QuarkusTest classes\n\n### Actual behavior\n\nJacoco doesn't take into account QuarkusTest classes\n\n### How to Reproduce?\n\nCreate project like in the description and run 'gradle clean build'\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39075/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39075/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32462",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32462/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32462/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32462/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32462",
+  "id": 1657055988,
+  "node_id": "I_kwDOCFbutM5ixKr0",
+  "number": 32462,
+  "title": "MQTT connector duplicates messages when multiple connectors have matchig topics",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-04-06T09:45:17Z",
+  "updated_at": "2023-05-29T17:21:14Z",
+  "closed_at": "2023-05-29T17:21:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a service where I connect to an MQTT broker with multiple connectors, each having a different topic pattern. These topic patterns overlapp but are different. If the MQTT broker receives a message on a topic that matches with multiple of the connectors, each of those connectors receives every message as often as connectors matched. \r\n\r\nE.g. I have the following config in the `application.properties` (reproducer code below)\r\n\r\n```\r\n# Consumer1\r\nmp.messaging.incoming.consumer1.connector=smallrye-mqtt\r\nmp.messaging.incoming.consumer1.host=public.mqtthq.com\r\nmp.messaging.incoming.consumer1.port=1883\r\nmp.messaging.incoming.consumer1.topic=arconsis/#\r\n\r\n# Consumer2\r\nmp.messaging.incoming.consumer2.connector=smallrye-mqtt\r\nmp.messaging.incoming.consumer2.host=public.mqtthq.com\r\nmp.messaging.incoming.consumer2.port=1883\r\nmp.messaging.incoming.consumer2.topic=arconsis/test/#\r\n\r\n# Consumer3\r\nmp.messaging.incoming.consumer3.connector=smallrye-mqtt\r\nmp.messaging.incoming.consumer3.host=public.mqtthq.com\r\nmp.messaging.incoming.consumer3.port=1883\r\nmp.messaging.incoming.consumer3.topic=arconsis/test/quarkus\r\n```\r\n\r\nSo there are 3 connectors. The first has the most generic topic, the last one has the most specific one. If we send a message to the most specific topic, **each** of these connectors receives the message 3 times. If you add more connectors with a matching pattern, each connector will receive the message even more often. \n\n### Expected behavior\n\nEvery connector should receive the message only once. \n\n### Actual behavior\n\nEvery connector receives the message multiple times. \n\n### How to Reproduce?\n\nReproducer: \r\n[2023-04-06-mqtt-multi-subscriptions.zip](https://github.com/quarkusio/quarkus/files/11168751/2023-04-06-mqtt-multi-subscriptions.zip)\r\n\r\n1. Download and unzip the reproducer\r\n2. start the application with `./gradlew quarkusDev`\r\n3. Go to the configured broker https://mqtthq.com/client  or configure your own broker\r\n4. Send any message to the topic `arconsis/test/quarkus`\r\n5. Observe that the only receiver for `consumer1` receives the message 3 times. \r\n6. If you send a message to `arconsis/test`, the message will be received only 2 times. \n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nJDK17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\nAt least since 2.14.1 up to 2.16.6\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32462/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32462/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

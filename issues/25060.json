@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25060",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25060/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25060/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25060/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25060",
+  "id": 1210629903,
+  "node_id": "I_kwDOCFbutM5IKL8P",
+  "number": 25060,
+  "title": "Fail to inject multiple bean with Kotlin and 2.8.1.Final ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-04-21T07:44:28Z",
+  "updated_at": "2022-04-21T08:59:43Z",
+  "closed_at": "2022-04-21T08:57:32Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIn Quarkus 2.7.5.Final is success, but 2.8.1.Final is failed.\r\n\r\n```kotlin\r\n    interface ColorService {\r\n        val color: String\r\n    }\r\n\r\n    @Singleton\r\n    @Named(\"red\")\r\n    class RedColorService: ColorService {\r\n        override val color: String = \"red\"\r\n    }\r\n\r\n    @Singleton\r\n    @Named(\"blue\")\r\n    class BlueColorService: ColorService {\r\n        override val color: String = \"blue\"\r\n    }\r\n\r\n    /**\r\n     * [ColorService]의 모든 Service 를 inject 받는다\r\n     *\r\n     * 참고: [Injecting Multiple Bean Instances Intuituvely](https://quarkus.io/guides/cdi-reference#injecting-multiple-bean-instances-intuitively)\r\n     *\r\n     * FIXME: Quarkus 2.7.5에서는 동작하는데, Quarkus 2.8.1 에서 동작하지 않는다\r\n     */\r\n    @Inject\r\n    @All\r\n    internal lateinit var colorServices: List<CDITest.ColorService>\r\n``` \n\n### Expected behavior\n\n`colorServices` is injected\n\n### Actual behavior\n\nError raise like this\r\n\r\n```\r\nCaused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: javax.enterprise.inject.spi.DefinitionException: Wildcard is not a legal type argument for org.acme.cdi.CDITest#colorServices\r\n\tat io.quarkus.arc.deployment.ArcProcessor.registerSyntheticObservers(ArcProcessor.java:446)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:925)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:277)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\n\tat io.quarkus.builder.Execution.run(Execution.java:116)\r\n\tat io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:79)\r\n\tat io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:157)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:328)\r\n\t... 62 more\r\nCaused by: javax.enterprise.inject.spi.DefinitionException: Wildcard is not a legal type argument for org.acme.cdi.CDITest#colorServices\r\n\tat io.quarkus.arc.deployment.ArcProcessor.registerSyntheticObservers(ArcProcessor.java:446)\r\n\tat java.base@11.0.14/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base@11.0.14/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n\tat java.base@11.0.14/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base@11.0.14/java.lang.reflect.Method.invoke(Method.java:566)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:925)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:277)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat java.base@11.0.14/java.lang.Thread.run(Thread.java:829)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk 11.0.14\n\n### GraalVM version (if different from Java)\n\nGrallVM CE 22.0.0.2\n\n### Quarkus version or git rev\n\n2.8.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle 7.4.2\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25060/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25060/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34106",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34106/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34106/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34106/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34106",
+  "id": 1761187941,
+  "node_id": "I_kwDOCFbutM5o-Zhl",
+  "number": 34106,
+  "title": "Difficult to use transactions with blocking code and reactive SQL drivers",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2955124662,
+      "node_id": "MDU6TGFiZWwyOTU1MTI0NjYy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-sql-clients",
+      "name": "area/reactive-sql-clients",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-06-16T19:17:23Z",
+  "updated_at": "2024-08-21T14:13:16Z",
+  "closed_at": "2024-08-21T13:17:12Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nWe are using the reactive drivers but in a blocking fashion, ie `pgPool.query(\"SELECT * FROM mytable\").executeAndAwait()`. IIUC, this should be very performant when using virtual threads (since only the JDBC/non-reactive drivers pin the carrier thread).\r\n\r\nWith non-reactive drivers, you can easily add a JTA annotation and begin/end a transaction in a call stack safely. With reactive drivers, it appears there are at least two common transaction options (below), but neither supports using blocking code within the transaction. Can this be improved, or perhaps am I missing some other easy alternative?\r\n\r\n### 1) PgPool#withTransaction\r\n(https://quarkus.io/guides/reactive-sql-clients#transactions)\r\n\r\nThe main problem here is that:\r\na) you have to pass the allocated SqlConnection throughout the entire stack\r\nb) the passed-in function has to return a Uni (or future) and cannot block\r\n\r\nvertx-sql-client has recently added ability to specify TransactionPropagation.CONTEXT to this method, which will store/lookup a SqlConnection in the Vertx context. This somewhat improves a), although it is difficult (or at least non-obvious) to test code that uses this in quarkus unit tests (complains with `java.lang.NullPointerException: Cannot invoke \"io.vertx.core.impl.ContextInternal.getLocal(Object)\" because \"context\" is null`). Regardless, even if that is resolved, b) is still an issue.\r\n\r\n### 2) @Transactional on Uni-returning methods\r\n(https://quarkus.io/guides/transaction#reactive-extensions)\r\n(https://quarkus.io/guides/context-propagation#usage-example-with-mutiny)\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34106/reactions",
+    "total_count": 3,
+    "+1": 3,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34106/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

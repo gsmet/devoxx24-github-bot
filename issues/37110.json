@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37110",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37110/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37110/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37110/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37110",
+  "id": 1995020415,
+  "node_id": "I_kwDOCFbutM526Zh_",
+  "number": 37110,
+  "title": "Messaging Emitter can't handle Objects",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-11-15T15:36:40Z",
+  "updated_at": "2023-11-15T19:59:55Z",
+  "closed_at": "2023-11-15T19:26:22Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI've found that the emitter used for sending messages can't handle sending objects, even though the API appears to accept them.\r\n\r\nI'll note I am using Jackson, as per the guide: https://quarkus.io/guides/amqp\r\n\r\n### Expected behavior\r\n\r\n```\r\n    @Channel(\"calculator-results\")\r\n    Emitter<CalculationResult> quoteRequestEmitter;\r\n\r\n    public void sendResult(CalculationResult result){\r\n        this.quoteRequestEmitter.send(Message.of(result));\r\n    }\r\n```\r\nShould be acceptable\r\n\r\n### Actual behavior\r\n\r\nGet the following error:\r\n\r\n```\r\n2023-11-15 10:26:42,184 ERROR [io.sma.rea.mes.provider] (vert.x-eventloop-thread-0) SRMSG00201: Error caught while processing a message in method org.acme.interfaces.message.CalculatorMessenger#process: java.lang.ClassCastException: class io.vertx.core.json.JsonObject cannot be cast to class com.fasterxml.jackson.databind.JsonNode (io.vertx.core.json.JsonObject and com.fasterxml.jackson.databind.JsonNode are in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @27ae2fd0)\r\n\tat org.acme.interfaces.message.CalculatorMessenger_SmallRyeMessagingInvoker_process_23024026a695027853c3a36f832876685db6fcae.invoke(Unknown Source)\r\n\tat io.smallrye.reactive.messaging.providers.AbstractMediator.lambda$invokeBlocking$10(AbstractMediator.java:171)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromDeferredSupplier.subscribe(UniCreateFromDeferredSupplier.java:25)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromDeferredSupplier.subscribe(UniCreateFromDeferredSupplier.java:36)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.withSubscriber(UniSubscribe.java:51)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:110)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:88)\r\n\tat io.vertx.mutiny.core.Context$1.handle(Context.java:172)\r\n\tat io.vertx.mutiny.core.Context$1.handle(Context.java:170)\r\n\tat io.vertx.core.impl.ContextBase.lambda$executeBlocking$1(ContextBase.java:180)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:277)\r\n\tat io.vertx.core.impl.ContextBase.lambda$internalExecuteBlocking$2(ContextBase.java:199)\r\n\tat io.vertx.core.impl.TaskQueue.run(TaskQueue.java:76)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: https://github.com/GregJohnStewart/calc-quarkus \r\n\r\nhttps://github.com/GregJohnStewart/calc-quarkus/blob/main/src/main/java/org/acme/interfaces/message/CalculatorMessenger.java#L27\r\n\r\nRun in dev mode, hit the `/calculate/5/ADD/5` endpoint, optionally from Swagger in dev ui\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37110/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37110/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

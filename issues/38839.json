@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38839",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38839/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38839/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38839/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38839",
+  "id": 2140854059,
+  "node_id": "I_kwDOCFbutM5_mtcr",
+  "number": 38839,
+  "title": "Make CheckedTemplate support exceptions",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1714005220,
+      "node_id": "MDU6TGFiZWwxNzE0MDA1MjIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/qute",
+      "name": "area/qute",
+      "color": "0366d6",
+      "default": false,
+      "description": "The template engine"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2024-02-18T09:03:47Z",
+  "updated_at": "2024-02-21T14:29:36Z",
+  "closed_at": "2024-02-21T04:52:44Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nWhen i return `TemplateInstance` in my Renarde application it means that any exception that i catch in a try catch block is not rollbacked.\r\n\r\nIn the following example the transaction is not rollbacked. \r\n\r\n```java\r\n@CheckedTemplate\r\npublic class AdminTemplate {\r\n    public static native TemplateInstance auth(Exception e);\r\n    public static native TemplateInstance auth();\r\n}\r\n```\r\n\r\n```java\r\n@Path(\"login\")\r\npublic TemplateInstance loginPage(User user)\r\n        try {\r\n            authService.register(user);\r\n        } catch (Exception e) {\r\n            // transaction is not rollbacked\r\n            return AdminTemplate.auth(e);\r\n        }\r\n        return AdminTemplate.auth();\r\n}\r\n```\r\n\r\nIn order to fix this issue we could change the `AdminTemplate` to support \"exceptions\". One way could be to add a new return type `ExceptionTemplateInstance`. Another way could be to have a special name `auth$Exception()` (or something like that), or a method with throws `authException() throws WebApplicationException` or add a new `@Rollback` annotation to the method. In all cases instead of just rendering the template, it would throw WebApplicationException and as it's content it would be the rendered template. \r\n\r\n```java\r\n@CheckedTemplate\r\npublic class AdminTemplate {\r\n    public static native TemplateInstance auth(Exception e);\r\n    public static native TemplateInstance auth();\r\n    public static native TemplateInstance authException(Exception e) throws WebApplicationException;\r\n    public static native TemplateInstance auth$Exception(Exception e);\r\n    public static native ExceptionTemplateInstance exceptionAuth(Exception e);\r\n    `@Rollback` `@Location(\"auth\")`\r\n    public static native TemplateInstance authError(Exception e);\r\n}\r\n```\r\n\r\n```java\r\n@Path(\"login\")\r\npublic ExceptionTemplateInstance loginPage(User user)\r\n        try {\r\n            authService.register(user);\r\n        } catch (Exception e) {\r\n            // transaction is rollbacked\r\n            return AdminTemplate.auth$Exception(e); // or return AdminTemplate.exceptionAuth(e); // or return AdminTemplate.authException(e); // or return AdminTemplate.authError(e);\r\n        }\r\n       return AdminTemplate.auth();\r\n}\r\n```\r\n\r\nThis is more or less my brainstorming ideas, what do you think?\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38839/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38839/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31985",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31985/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31985/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31985/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31985",
+  "id": 1632607163,
+  "node_id": "I_kwDOCFbutM5hT5u7",
+  "number": 31985,
+  "title": "Quarkus 2.16.4 MongoDB blocking limitation",
+  "labels": [
+    {
+      "id": 1274891213,
+      "node_id": "MDU6TGFiZWwxMjc0ODkxMjEz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/new-feature",
+      "name": "kind/new-feature",
+      "color": "c5def5",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-03-20T17:59:32Z",
+  "updated_at": "2023-05-08T14:53:00Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi,\r\n\r\nI am needing to create a Quarkus application that uses the MongoDB Panache module.\r\n\r\nThe issue is that our MongoDB & Collections already exist and can't be changed. Several of our collections have both an _id & an id field and this is apparently not allowed/supported with the current Quarkus MongoDB Panache implementation.\r\n\r\nOur collections are like this:\r\n\r\n```java\r\npublic class MyMongoEntity extends PanacheMongoEntityBase {\r\n\r\n@BsonId\r\npublic ObjectId _id;\r\n\r\nprivate String id;\r\n\r\npublic String getId() {\r\nreturn id;\r\n}\r\n\r\npublic void setId(String id) {\r\n[this.id](http://this.id/) = id;\r\n}\r\n...\r\n}\r\n```\r\n\r\nWhich generates errors like this:\r\n```posh\r\norg.bson.codecs.configuration.CodecConfigurationException: An exception occurred when decoding using the AutomaticPojoCodec.\r\nDecoding into a 'MyMongoEntity' failed with the following exception:\r\n\r\nFailed to decode 'MyMongoEntity'. Decoding 'id' errored with: readString can only be called when CurrentBSONType is STRING, not when CurrentBSONType is OBJECT_ID.\r\n```\r\n\r\nI believe the problem is in this Quarkus jar: io.quarkus:quarkus-mongodb-client:2.16.4.Final\r\n\r\nSpecifically in the `MongoClients#configureCodecRegistry` method it has this bit of code:\r\n\r\n```java\r\nPojoCodecProvider.Builder pojoCodecProviderBuilder = PojoCodecProvider.builder()\r\n.automatic(true)\r\n.conventions(Conventions.DEFAULT_CONVENTIONS);\r\n```\r\n\r\nThe problem is the fixed Conventions.DEFAULT_CONVENTIONS used. This is defined as:\r\n\r\npublic static final List<Convention> DEFAULT_CONVENTIONS =\r\nunmodifiableList(asList(CLASS_AND_PROPERTY_CONVENTION, ANNOTATION_CONVENTION, OBJECT_ID_GENERATORS));\r\n\r\nThis code treats the id field as the BsonId and it ignores the _id field.\r\n\r\nThe CLASS_AND_PROPERTY_CONVENTION is the problem we don't want that for our use case. I believe that if I could configure this as asList(ANNOTATION_CONVENTION, OBJECT_ID_GENERATORS) it would work for our MongoDb use case.\r\n\r\nCould this be made configurable? I can't find any workarounds for this issue so it's blocking us from using Quarkus MongoDb with Panache.\r\n\r\nI think the only solution is to expose the MongoDb PojoCodecProvider's Conventions via Quarkus config options. MongoDB provides these Convention options:\r\n\r\nCLASS_AND_PROPERTY_CONVENTION\r\nANNOTATION_CONVENTION\r\nSET_PRIVATE_FIELDS_CONVENTION\r\nUSE_GETTERS_FOR_SETTERS\r\nOBJECT_ID_GENERATORS\r\nNO_CONVENTIONS\r\n\r\nAll of these need to be configurable in Quarkus per MongoDb client else one is blocked if the defaults don't work.\r\n\r\nDiscussed here: https://groups.google.com/g/quarkus-dev/c/-nY60Dq7p6A\r\n\r\n### Expected behavior\r\n\r\nQuarkus MongoDB with Panache can both read and write Pojos that have both an _id & id field.  In all cases _id is the BsonId/ObjectId and id is a String.  They have completely separate values. \r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 11.0.11 2021-04-20 OpenJDK Runtime Environment AdoptOpenJDK-11.0.11+9 (build 11.0.11+9) OpenJDK 64-Bit Server VM AdoptOpenJDK-11.0.11+9 (build 11.0.11+9, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.0 (9b58d2bad23a66be161c4664ef21ce219c2c8584) Maven home: C:\\Programs\\apache-maven-3.9.0 Java version: 11.0.11, vendor: AdoptOpenJDK, runtime: C:\\Programs\\Java\\jdk-11.0.11.9-hotspot Default locale: en_US, platform encoding: Cp1252 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31985/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31985/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

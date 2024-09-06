@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24899",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24899/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24899/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24899/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24899",
+  "id": 1202271855,
+  "node_id": "I_kwDOCFbutM5HqTZv",
+  "number": 24899,
+  "title": "Smallrye Reactive Messaging causes java.lang.NullPointerException: Subscription not set!",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-04-12T19:01:39Z",
+  "updated_at": "2022-05-01T15:22:12Z",
+  "closed_at": "2022-05-01T15:21:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm trying to convert an InputStream to a ReactiveStream and broadcast it using Smallrye Reactive Messaging\r\n\r\n\r\n```\r\n    @Broadcast\r\n    @Outgoing(\"my-channel\")\r\n    public PublisherBuilder<String> source() {\r\n        return ReactiveStreams.fromPublisher((Publisher<String>) s -> {\r\n         .\r\n         .\r\n         .\r\n            String line;\r\n            while ((line = reader.readLine()) != null) {\r\n                        s.onNext(line);\r\n              }\r\n       };\r\n```\r\n\r\n\r\nAnd my receiver looks like this\r\n\r\n\r\n```\r\n    @Incoming(\"my-channel\")\r\n    public void onMessage(String s) {\r\n        log.info(s);\r\n    }\r\n```\r\n\r\n\r\nBut I'm getting this exception\r\n\r\n\r\n```\r\n2022-04-12 20:50:02,654 ERROR [io.sma.rea.mes.provider] (Quarkus Main Thread) SRMSG00201: Error caught while processing a message: java.lang.NullPointerException: Subscription not set!\r\n\tat io.smallrye.mutiny.subscription.SafeSubscriber.manageViolationProtocol(SafeSubscriber.java:180)\r\n\tat io.smallrye.mutiny.subscription.SafeSubscriber.onNextNoSubscription(SafeSubscriber.java:117)\r\n\tat io.smallrye.mutiny.subscription.SafeSubscriber.onNext(SafeSubscriber.java:88)\r\n\tat com.myapp.test.MySource.lambda$source$0(MySource.java:53)\r\n\tat io.smallrye.mutiny.groups.MultiCreate$2.subscribe(MultiCreate.java:192)\r\n\tat io.smallrye.mutiny.operators.AbstractMulti.subscribe(AbstractMulti.java:25)\r\n\tat io.smallrye.mutiny.groups.MultiSubscribe.withSubscriber(MultiSubscribe.java:72)\r\n\tat io.smallrye.mutiny.operators.multi.MultiMapOp.subscribe(MultiMapOp.java:24)\r\n\tat io.smallrye.mutiny.groups.MultiSubscribe.withSubscriber(MultiSubscribe.java:72)\r\n\tat io.smallrye.mutiny.operators.multi.MultiMapOp.subscribe(MultiMapOp.java:24)\r\n\tat io.smallrye.mutiny.operators.AbstractMulti.subscribe(AbstractMulti.java:39)\r\n\tat io.smallrye.mutiny.groups.MultiCreate$2.subscribe(MultiCreate.java:192)\r\n\tat io.smallrye.mutiny.operators.AbstractMulti.subscribe(AbstractMulti.java:25)\r\n\tat io.smallrye.mutiny.groups.MultiSubscribe.withSubscriber(MultiSubscribe.java:72)\r\n\tat io.smallrye.reactive.messaging.providers.locals.ContextDecorator$ContextMulti.subscribe(ContextDecorator.java:36)\r\n\tat io.smallrye.mutiny.operators.AbstractMulti.subscribe(AbstractMulti.java:39)\r\n\tat io.smallrye.mutiny.operators.multi.multicast.MultiPublishOp.connect(MultiPublishOp.java:105)\r\n\tat io.smallrye.mutiny.operators.multi.multicast.MultiConnectAfter.subscribe(MultiConnectAfter.java:35)\r\n\tat io.smallrye.mutiny.operators.AbstractMulti.subscribe(AbstractMulti.java:39)\r\n\tat io.smallrye.mutiny.groups.MultiCreate$2.subscribe(MultiCreate.java:192)\r\n\tat io.smallrye.mutiny.operators.AbstractMulti.subscribe(AbstractMulti.java:25)\r\n\tat io.smallrye.mutiny.groups.MultiSubscribe.withSubscriber(MultiSubscribe.java:72)\r\n\tat io.smallrye.mutiny.operators.multi.MultiMapOp.subscribe(MultiMapOp.java:24)\r\n\tat io.smallrye.mutiny.operators.AbstractMulti.subscribe(AbstractMulti.java:39)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp.subscribe(MultiFlatMapOp.java:56)\r\n\tat io.smallrye.mutiny.groups.MultiSubscribe.withSubscriber(MultiSubscribe.java:72)\r\n\tat io.smallrye.mutiny.operators.multi.MultiOnFailureInvoke.subscribe(MultiOnFailureInvoke.java:30)\r\n\tat io.smallrye.mutiny.operators.AbstractMulti.subscribe(AbstractMulti.java:39)\r\n\tat io.smallrye.reactive.messaging.providers.SubscriberMediator.run(SubscriberMediator.java:145)\r\n\tat io.smallrye.reactive.messaging.providers.wiring.Wiring$SubscriberMediatorComponent.materialize(Wiring.java:599)\r\n\tat io.smallrye.reactive.messaging.providers.wiring.Graph.lambda$materialize$10(Graph.java:100)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tat io.smallrye.reactive.messaging.providers.wiring.Graph.materialize(Graph.java:99)\r\n\tat io.smallrye.reactive.messaging.providers.extension.MediatorManager.start(MediatorManager.java:205)\r\n\tat io.smallrye.reactive.messaging.providers.extension.MediatorManager_Subclass.start$$superforward1(Unknown Source)\r\n\tat io.smallrye.reactive.messaging.providers.extension.MediatorManager_Subclass$$function$$14.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat io.smallrye.reactive.messaging.providers.extension.MediatorManager_Subclass.start(Unknown Source)\r\n\tat io.smallrye.reactive.messaging.providers.extension.MediatorManager_ClientProxy.start(Unknown Source)\r\n\tat io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingLifecycle.onApplicationStart(SmallRyeReactiveMessagingLifecycle.java:41)\r\n\tat io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingLifecycle_Subclass.onApplicationStart$$superforward1(Unknown Source)\r\n\tat io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingLifecycle_Subclass$$function$$1.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingLifecycle_Subclass.onApplicationStart(Unknown Source)\r\n\tat io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingLifecycle_Observer_onApplicationStart_7f54e4b27c1b49e5e062caa58f1e82797fa01393.notify(Unknown Source)\r\n\tat io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:322)\r\n\tat io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:304)\r\n\tat io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:73)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:128)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:97)\r\n\tat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy(Unknown Source)\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:103)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:103)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n```\r\n\r\nHowever, the example from here using PublisherBuilder works flawlessly:\r\n\r\nhttps://smallrye.io/smallrye-reactive-messaging/smallrye-reactive-messaging/3.1/getting-started.html\r\n\r\n\r\nWhy do I running into this issue?\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.8.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24899/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24899/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

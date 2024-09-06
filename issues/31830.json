@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31830",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31830/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31830/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31830/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31830",
+  "id": 1623060543,
+  "node_id": "I_kwDOCFbutM5gvfA_",
+  "number": 31830,
+  "title": "Qute: support named parameters",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1714005220,
+      "node_id": "MDU6TGFiZWwxNzE0MDA1MjIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/qute",
+      "name": "area/qute",
+      "color": "0366d6",
+      "default": false,
+      "description": "The template engine"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-03-14T09:22:08Z",
+  "updated_at": "2023-03-14T09:22:12Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nI'd like to be able to pass parameters by name on function calls.\r\n\r\nThis may not be very useful for Java methods, who don't support optional parameters, but for \"virtual\" functions, it can be very useful.\r\n\r\nFor example, the `uri:Class.method()` functions in Renarde, for obtaining a URI from a method name, would benefit greatly from named parameters. Consider the following JAX-RS method:\r\n\r\n```java\r\nstatic class Container {\r\n @RestForm\r\n String userName;\r\n @RestHeader\r\n String authorization;\r\n}\r\n\r\n@Path(\"/something/{id}\")\r\n@POST\r\npublic void endpoint(@RestPath String id, @RestForm String name, @BeanParam Container otherParams){}\r\n```\r\n\r\nThe \"Java-like\" syntax for invoking that method would be: `{uri:Class.endpoint(id, null, null)`, given that form parameters and headers don't participate in URI, so we could even shorten it to `{uri:Class.endpoint(id)}` but that forces us to declare all parameters that participate in URI to the start of the method signature.\r\n\r\nNow consider this declaration form:\r\n\r\n```java\r\nstatic class Container {\r\n @RestForm\r\n String userName;\r\n @RestHeader\r\n String authorization;\r\n @RestQuery\r\n boolean nice;\r\n}\r\n\r\n@Path(\"/something/{id}\")\r\n@POST\r\npublic void endpoint(@RestPath String id, @RestForm String name, @BeanParam Container otherParams){}\r\n```\r\n\r\nWith an optional query param in the container. One way of passing it could be:\r\n\r\n```\r\n{#let container=new Container(null, null, true)}\r\n {uri:Class.endpoint(id, null, container)}\r\n{/let}\r\n```\r\n\r\n(forgetting a minute we can't call `new` in Qute). But this is not nice. We could also come back to the idea of moving every parameter that participates in URI up and call `{uri:Class.endpoint(id, true)}` but this not very obvious.\r\n\r\nPerhaps the most intuitive way to solve this would be to support named parameters:\r\n\r\n```\r\n{uri:Class.endpoint(id: id, nice: true)}\r\n// or\r\n{uri:Class.endpoint(id=id, nice=true)}\r\n```\r\n\r\n\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31830/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31830/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

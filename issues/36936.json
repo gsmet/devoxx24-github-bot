@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36936",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36936/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36936/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36936/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36936",
+  "id": 1982520770,
+  "node_id": "I_kwDOCFbutM52Kt3C",
+  "number": 36936,
+  "title": "quarkus.http.cors.methods should only be applicable for cross-origin requests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-11-08T01:01:46Z",
+  "updated_at": "2023-11-10T10:13:36Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe've just upgraded from Quarkus 2.16.6.Final to Quarkus 3.5.0.\r\n\r\nWe've had CORS enabled for some origins that needed access to a subset of the API.\r\n\r\n```\r\nquarkus.http.cors=true\r\nquarkus.http.cors.origins = http://www.blah.com\r\nquarkus.http.cors.methods = GET,PUT,POST\r\n```\r\n\r\nSince those origins did not need to call any DELETE endpoints, I omitted DELETE from `quarkus.http.cors.methods`. We don't rely on it for security, but it seemed like a good practice. After upgrading, DELETE requests for same-origin requests are failing with 403 CORS Rejected.\r\n\r\nI'm not a CORS expert, but it seems `quarkus.http.cors.methods` should only be applicable for cross-origin requests and not same-origin requests, almost by definition. In `CORSFilter.java`, the method `isSameOrigin` returns true, but instead of exiting the filter early since it's not a cross-origin request, CORSFilter continues to treat it as a cross-origin request and eventually reaches the check for `isMethodAllowed` which fails since DELETE is not in [GET,PUT,POST].\n\n### Expected behavior\n\nThe configured `quarkus.http.cors.methods` should **not** be checked for same-origin requests.\r\n\r\nOr perhaps even more general, CORSFilter.java should call isSameOrigin() and if true, should terminate early.**\r\n\r\nCurrent Code:\r\n```\r\nif (origin == null) {\r\n   event.next();\r\n} else {\r\n  // treat as cross-origin\r\n} \r\n```\r\n\r\nPerhaps should be changed to:\r\n```\r\nif (origin == null || isSameOrigin(request, origin)) {\r\n   event.next();\r\n} else {\r\n  // treat as cross-origin\r\n} \r\n```\n\n### Actual behavior\n\nThe configured `quarkus.http.cors.methods` is checked even for same-origin requests.\n\n### How to Reproduce?\n\n1. Create getting started app:\r\n\r\n```\r\nquarkus create && cd code-with-quarkus\r\n```\r\n\r\n2. Add CORS config to application.properties\r\n```\r\nquarkus.http.cors=true\r\nquarkus.http.cors.origins = http://www.blah.com\r\nquarkus.http.cors.methods = GET,PUT,POST\r\n```\r\n\r\n3. Add delete endpoint to GreetingResource:\r\n\r\n```\r\n@Path(\"/delete\")\r\n@DELETE\r\n@Produces(MediaType.TEXT_PLAIN)\r\npublic String delete() {\r\n  return \"DELETED!!!\";\r\n}\r\n```\r\n\r\n4. Start quarkus and Call endpoint from Postman or other tool ensuring Origin header is manually set.\r\nDELETE http://localhost:8080/hello/delete\r\n\r\nwith `Origin` header set to `http://localhost:8080`\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36936/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36936/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

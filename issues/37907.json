@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37907",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37907/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37907/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37907/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37907",
+  "id": 2053871530,
+  "node_id": "I_kwDOCFbutM56a5eq",
+  "number": 37907,
+  "title": "Pause/Resume Http Requests: can we improve it?",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-12-22T12:43:02Z",
+  "updated_at": "2024-03-05T06:49:48Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nhttps://github.com/quarkusio/quarkus/pull/4382/ has introduced, for correctness, to always pause before installing the http handler, but it frequently popup in few public benchmarks (which still doesn't mean it to be relevant in real world!),\r\nsee `io/vertx/core/http/impl/Http1xServerRequest.pause` (in violet)\r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/13125299/2d2cb067-cc61-465b-bac5-9809a1c9b30d)\r\n\r\nwhich, despite represent just ~3% of the overall cpu usage is ~17.5% of the overall http request decoding (which is not negligible) - including both the mentioned above commit ie at https://github.com/quarkusio/quarkus/blob/6f8706c2e7e1656bbe9806f322395a26c82dcc39/extensions/vertx-http/runtime/src/main/java/io/quarkus/vertx/http/runtime/VertxHttpRecorder.java#L126-L131 and the additional `pause` happening at https://github.com/quarkusio/quarkus/blob/87632d2decc41bd885159a6c87074fdc46392414/independent-projects/resteasy-reactive/server/vertx/src/main/java/org/jboss/resteasy/reactive/server/vertx/VertxResteasyReactiveRequestContext.java#L83\r\n\r\nIn term of cpu usage they both have some relevant impact, and both contains no more biased locking `synchronized` ops, but it really looks weird they cost that much, unless there's something more going on.\r\n\r\nI would like to investigate if there are known conditions where we can avoid them\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37907/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37907/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

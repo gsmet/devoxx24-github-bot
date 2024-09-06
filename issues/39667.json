@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39667",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39667/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39667/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39667/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39667",
+  "id": 2205454085,
+  "node_id": "I_kwDOCFbutM6DdI8F",
+  "number": 39667,
+  "title": "JWT+REST Client+OT: SecurityIdentityProxy exception popping up",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-03-25T10:50:42Z",
+  "updated_at": "2024-05-27T07:29:18Z",
+  "closed_at": "2024-05-27T07:29:18Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen I migrated a small test app from Jaeger to OpenTelemetry, a new exception has started to pop up in the log.\r\nNote that this is a tiny test app, mushing together client and server, initiating a REST Client call from within an already ongoing request. Perhaps that could be a part of the issue. I am fine refactoring the app, but it's not obvious to me if this is indeed an expected behavior. Despite \"Security\" keyword in the exception, I do not thing there is any immediate security implication at hand.\n\n### Expected behavior\n\nThere is no error in the log.\n\n### Actual behavior\n\n```\r\nERROR [org.jbo.thr.errors] (executor-thread-1) Thread Thread[#36,executor-thread-1,5,main] threw an uncaught exception: jakarta.enterprise.context.ContextNotActiveException: RequestScoped context was not active when trying to obtain a bean instance for a client proxy of CLASS bean [class=io.quarkus.security.runtime.SecurityIdentityProxy, id=U3fuB4yO9MSr82V2xU36xFn98dk]\r\n    - you can activate the request context for a specific method using the @ActivateRequestContext interceptor binding\r\n    at io.quarkus.arc.impl.ClientProxies.notActive(ClientProxies.java:70)\r\n    at io.quarkus.arc.impl.ClientProxies.getSingleContextDelegate(ClientProxies.java:30)\r\n    at io.quarkus.security.runtime.SecurityIdentityProxy_ClientProxy.arc$delegate(Unknown Source)\r\n    at io.quarkus.security.runtime.SecurityIdentityProxy_ClientProxy.isAnonymous(Unknown Source)\r\n    at io.quarkus.opentelemetry.runtime.exporter.otlp.EndUserSpanProcessor.lambda$onStart$0(EndUserSpanProcessor.java:31)\r\n    at io.smallrye.context.impl.wrappers.SlowContextualRunnable.run(SlowContextualRunnable.java:19)\r\n    at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:587)\r\n    at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n    at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n    at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n    at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n    at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n    at java.base/java.lang.Thread.run(Thread.java:1583)\r\n```\n\n### How to Reproduce?\n\n```\r\n$ git clone https://github.com/Karm/dev-null\r\n$ cd dev-null/reproducer87326/\r\n$ mvn clean package\r\n$ java -jar target/quarkus-app/quarkus-run.jar \r\n```\r\n\r\nThen in a separate terminal, trivial, one client connection at a time:\r\n\r\n```\r\n$ while [ 1 ];do curl http://0.0.0.0:8080/secured/test;done \r\n```\r\n\r\nYou can run the OT collector too, but it doesn't seem to be necessary to see the issue:\r\n\r\n```\r\n$ docker run -p 127.0.0.1:4317:4317   -p 127.0.0.1:55679:55679 otel/opentelemetry-collector:0.96.0 \r\n```\r\n\r\nThe correct expected result of the call is:\r\n\r\n```\r\nClaim value within JWT of 'custom-value' : PROTECTED: My value\r\n```\r\n\r\nNote that the call works fine, it's the exception in the log that is...unexpected.\r\n\r\n\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux amd64, 5.14.0-425.el9.x86_64\n\n### Output of `java -version`\n\n21.0.1\n\n### Quarkus version or git rev\n\n3.8.0, 3.8.3, 3.9.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /home/karm/Tools/apache-maven-3.9.6 Java version: 21.0.1-beta, vendor: Eclipse Adoptium, runtime: /var/X/JDKs/jdk-21.0.1+12 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.14.0-425.el9.x86_64\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39667/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39667/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29670",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29670/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29670/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29670/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29670",
+  "id": 1475464909,
+  "node_id": "I_kwDOCFbutM5X8c7N",
+  "number": 29670,
+  "title": "native build failure: classes specified in --initialize-at-run-time still say that they are requested to be initialized at run time",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-12-05T02:36:12Z",
+  "updated_at": "2023-08-30T07:16:52Z",
+  "closed_at": "2022-12-05T07:52:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi - I'm new to Quarkus and trying to build a native image using \"mvn package -Pnative\". I received the error \"Error: Classes that should be initialized at run time got initialized during image building:\" so in the pom.xml I added an additional build arg --initialize-at-run-time with a \\\\, separated list for these classes. When I run the mvn command again, all of these classes still say that they need to be initialized at run time. \n\n### Expected behavior\n\nWhen a class if added to --initialize-at-run-time, it should not give me the error that the same class needs to be initialized at run time when running the mvn command.\n\n### Actual behavior\n\nThe initialize at run time error should be resolved after adding the additional build arg --initialize-at-run-time with the specified classes, and then the native build should succeed. \r\n\r\n- I entered into the Intellij terminal : \"mvn package -Pnative\"\r\n- After finishing tests, there is the following INFO line :\r\n\r\n`[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] /Library/Java/JavaVirtualMachines/graalvm-ce-java11-22.3.0/Contents/Home/bin/native-image -J-Dsun.nio.ch.maxUpdateArraySize=100 -J-Djava.util.logging.manager=org.jboss.logmanager.LogManager -J-Dlogging.initial-configurator.min-level=500 -J-Dio.netty.leakDetection.level=DISABLED -J-Dio.netty.allocator.maxOrder=3 -J-Dvertx.logger-delegate-factory-class-name=io.quarkus.vertx.core.runtime.VertxLogDelegateFactory -J-Dvertx.disableDnsResolver=true -J-Duser.language=en -J-Duser.country=US -J-Dfile.encoding=UTF-8 --features=io.quarkus.runner.Feature,io.quarkus.runtime.graal.ResourcesFeature,io.quarkus.runtime.graal.DisableLoggingFeature -J--add-exports=java.security.jgss/sun.security.krb5=ALL-UNNAMED -J--add-opens=java.base/java.text=ALL-UNNAMED -J--add-opens=java.base/java.io=ALL-UNNAMED -J--add-opens=java.base/java.lang.invoke=ALL-UNNAMED -J--add-opens=java.base/java.util=ALL-UNNAMED -H:+CollectImageBuildStatistics -H:ImageBuildStatisticsFile=[PROJECT-NAME]-1.0.0-SNAPSHOT-runner-timing-stats.json -H:BuildOutputJSONFile=[PROJECT-NAME]-1.0.0-SNAPSHOT-runner-build-output-stats.json --initialize-at-run-time=io.netty.buffer.UnpooledDirectByteBuf,io.netty.handler.ssl.ReferenceCountedOpenSslContext,io.netty.buffer.UnpooledHeapByteBuf,io.netty.buffer.ByteBufUtil,io.netty.buffer.AbstractReferenceCountedByteBuf,io.netty.channel.kqueue.KQueue,io.netty.buffer.UnpooledByteBufAllocator\\$InstrumentedUnpooledUnsafeDirectByteBuf,io.netty.handler.ssl.OpenSslContext,io.netty.util.concurrent.ScheduledFutureTask,io.netty.buffer.AbstractPooledDerivedByteBuf,io.netty.buffer.PooledByteBufAllocator,io.netty.handler.ssl.ReferenceCountedOpenSslClientContext,io.netty.buffer.UnpooledUnsafeDirectByteBuf,io.netty.channel.DefaultFileRegion,io.netty.handler.ssl.OpenSslClientContext,io.netty.util.concurrent.GlobalEventExecutor,io.netty.channel.epoll.Epoll,io.netty.util.AbstractReferenceCounted,io.netty.buffer.ByteBufAllocator,io.netty.buffer.PooledSlicedByteBuf,io.netty.buffer.PooledByteBuf,io.netty.buffer.PooledUnsafeDirectByteBuf -H:InitialCollectionPolicy=com.oracle.svm.core.genscavenge.CollectionPolicy\\$BySpaceAndTime -H:+AllowFoldMethods -J-Djava.awt.headless=true --no-fallback --link-at-build-time -H:+ReportExceptionStackTraces -H:-AddAllCharsets --enable-url-protocols=http,https -H:-UseServiceLoaderFeature -H:+StackTrace -J--add-exports=org.graalvm.sdk/org.graalvm.nativeimage.impl=ALL-UNNAMED -J--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk=ALL-UNNAMED [PROJECT-NAME]-1.0.0-SNAPSHOT-runner -jar [PROJECT-NAME]-1.0.0-SNAPSHOT-runner.jar` \r\n\r\n- it runs through 1/7 initializing and 2/7 performing analysis until hitting errors like: \r\n`Error: Classes that should be initialized at run time got initialized during image building:\r\nio.netty.buffer.AbstractReferenceCountedByteBuf the class was requested to be initialized at run time ....... in 'file:///path/to/project/target/[PROJECT-NAME]-1.0.0-SNAPSHOT-native-image-source-jar/lib/io.netty.netty-buffer-4.1.79.Final.jar'` \r\n\r\n- the end of the errors has the following line that contains all of the same classes that I had specified:\r\n`To see how the classes got initialized, use --trace-class-initialization=io.netty.channel.kqueue.KQueue,io.netty.handler.ssl.OpenSslContext,io.netty.buffer.PooledUnsafeDirectByteBuf,io.netty.buffer.UnpooledHeapByteBuf,io.netty.channel.DefaultFileRegion,io.netty.buffer.PooledSlicedByteBuf,io.netty.buffer.PooledByteBuf,io.netty.handler.ssl.ReferenceCountedOpenSslClientContext,io.netty.util.AbstractReferenceCounted,io.netty.handler.ssl.OpenSslClientContext,io.netty.buffer.AbstractPooledDerivedByteBuf,io.netty.buffer.UnpooledByteBufAllocator$InstrumentedUnpooledUnsafeDirectByteBuf,io.netty.buffer.ByteBufUtil,io.netty.channel.epoll.Epoll,io.netty.util.concurrent.GlobalEventExecutor,io.netty.buffer.UnpooledUnsafeDirectByteBuf,io.netty.buffer.UnpooledDirectByteBuf,io.netty.buffer.AbstractReferenceCountedByteBuf,io.netty.handler.ssl.ReferenceCountedOpenSslContext,io.netty.buffer.PooledByteBufAllocator,io.netty.buffer.ByteBufAllocator,io.netty.util.concurrent.ScheduledFutureTask\r\n`\r\n\r\n- the different causes after adding trace-class-initialization to the pom were:\r\n- `com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdLoopNativeDetector`\r\n- `reactor.netty.http.client.HttpClientSecure`\r\n- `com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdServiceEndpoint$RntbdEndpointMonitoringProvider`\r\n- `reactor.netty.resources.DefaultLoopNativeDetector` \r\n- `io.netty.handler.ssl.OpenSsl`\r\n- I also tried adding these to the --initialize-at-run-time but that did not resolve it\r\n\r\n- the message after build failure:\r\n`[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:2.13.1.Final:build on project: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors`\n\n### How to Reproduce?\n\nI'm unable to provide the project as it contains sensitive and internal info but I added the following to the native profile in my pom.xml to try and resolve the error:\r\n`<quarkus.native.additional-build-args>--initialize-at-run-time=io.netty.buffer.UnpooledDirectByteBuf\\,io.netty.handler.ssl.ReferenceCountedOpenSslContext\\,io.netty.buffer.UnpooledHeapByteBuf\\,io.netty.buffer.ByteBufUtil\\,io.netty.buffer.AbstractReferenceCountedByteBuf\\,io.netty.channel.kqueue.KQueue\\,io.netty.buffer.UnpooledByteBufAllocator$InstrumentedUnpooledUnsafeDirectByteBuf\\,io.netty.handler.ssl.OpenSslContext\\,io.netty.util.concurrent.ScheduledFutureTask\\,io.netty.buffer.AbstractPooledDerivedByteBuf\\,io.netty.buffer.PooledByteBufAllocator\\,io.netty.handler.ssl.ReferenceCountedOpenSslClientContext\\,io.netty.buffer.UnpooledUnsafeDirectByteBuf\\,io.netty.channel.DefaultFileRegion\\,io.netty.handler.ssl.OpenSslClientContext\\,io.netty.util.concurrent.GlobalEventExecutor\\,io.netty.channel.epoll.Epoll\\,io.netty.util.AbstractReferenceCounted\\,io.netty.buffer.ByteBufAllocator\\,io.netty.buffer.PooledSlicedByteBuf\\,io.netty.buffer.PooledByteBuf\\,io.netty.buffer.PooledUnsafeDirectByteBuf</quarkus.native.additional-build-args>`\n\n### Output of `uname -a` or `ver`\n\nOS name: \"mac os x\", version: \"12.6\", arch: \"aarch64\", family: \"Mac\". I am running MacOS Monterey.\n\n### Output of `java -version`\n\nopenjdk version \"11.0.17\" 2022-10-18 OpenJDK Runtime Environment GraalVM CE 22.3.0 (build 11.0.17+8-jvmci-22.3-b08) OpenJDK 64-Bit Server VM GraalVM CE 22.3.0 (build 11.0.17+8-jvmci-22.3-b08, mixed mode) || echo $JAVA_HOME returns \"/Library/Java/JavaVirtualMachines/graalvm-ce-java11-22.3.0/Contents/Home\"\n\n### GraalVM version (if different from Java)\n\ngraalvm-ce-java11-22.3.0/\n\n### Quarkus version or git rev\n\nin the pom, the platform version is 2.13.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven 3.8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29670/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29670/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

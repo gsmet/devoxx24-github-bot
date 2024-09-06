@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38583",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38583/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38583/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38583/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38583",
+  "id": 2118799305,
+  "node_id": "I_kwDOCFbutM5-Sk_J",
+  "number": 38583,
+  "title": "Avro files in separate module causes SerializationException during tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-02-05T15:13:29Z",
+  "updated_at": "2024-03-13T07:07:40Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have encountered following issue while using Quarkus with smallrye-reactive-messaging-kafka and confluent kafka-avro-serializer during tests:\r\n\r\nI have an Avro file which among others includes a timestamp field:\r\n```json\r\n {\r\n   \"name\": \"release\",\r\n   \"type\": [\r\n     \"null\",\r\n     {\r\n       \"type\": \"long\",\r\n       \"avro.java.long\": \"long\",\r\n       \"logicalType\": \"timestamp-millis\"\r\n     }\r\n   ],\r\n   \"default\": null\r\n }\r\n```\r\n\r\nIssue no 1:\r\nlets say we have very simple app which writes something in the topic and reads from the topic in Avro format. Producer and consumer classes are in the CORE module. \r\n**case a)** If AVSC files are in the CORE module everything works fine.\r\n**case b)** If AVSC files are in separate module, in multimodule project, and this module is referenced in CORE pom.xml - project compiles and builds correctly, generated POJOs from Avro are accessible - but when running tests _SerializationException_ occurs caused by _AvroRuntimeException_: with msg: \"Unknown datum type java.time.Instant\".\r\n\r\nI did some investigation and debugging and what I was able to discover is that problem seems to occurring in class `GenericData` from _org.apache.avro.generic_ package. Initially, all Conversion instances are registered in `conversionsByClass` hashmap. And later, during serializing they are retrieved from that map in method `resolveUnion()`. However, when Avro is in separate module `conversionsByClass` map is empty, despite that it was populated initially by all required conversions. Because of this, conversion for timestamp cannot be retrieved what eventually leads to SerializationException.\r\n\r\nIn general, it looks like the generate POJOs from Avsc MUST be in the Target folder in the same module which uses that generated classes, otherwise unexpected behaviour occurs as described.\r\n\r\nIssue no 2:\r\nIf we take reproducer from a case a), and change  generic type in the List from Object to Movies (Movies is POJO generated from Avsc file) I get following exception:\r\n```text\r\n2024-02-05 15:46:51,405 ERROR [io.sma.rea.mes.provider] (vert.x-eventloop-thread-0) SRMSG00200: The method \r\norg.acme.kafka.MovieConsumer#messageConsumer has thrown an exception: java.lang.ClassCastException: class \r\norg.apache.avro.generic.GenericData$Record cannot be cast to class org.acme.kafka.quarkus.Movie \r\n(org.apache.avro.generic.GenericData$Record is in unnamed module of loader \r\nio.quarkus.bootstrap.classloading.QuarkusClassLoader @5be49b60; org.acme.kafka.quarkus.Movie is in unnamed module of \r\nloader io.quarkus.bootstrap.classloading.QuarkusClassLoader @1460c81d)\r\n```\r\nThis issue seems to be independent from multimodule projects.\r\n\r\n\r\n### Expected behavior\r\n\r\nIt is expected that service should work with generated classes from avsc files if they are in the same module or referenced from another.\r\n\r\n### Actual behavior\r\n\r\nIssue 1:\r\nWhen Avsc file is in another module, SerializationException is thrown during tests.\r\n\r\nIssue 2:\r\nEven if Avsc file is in the same module, ClassCastException occures when attempt to use Movie type as a type for a List<>.\r\n\r\n### How to Reproduce?\r\n\r\nI have provided 2 simplified reproducers, based on quarkus.io examples:\r\n\r\nTo reproduce issue 1:\r\n1. Project with Avro in separate module, causing Serialization Exception:\r\nhttps://github.com/pjazdzyk/avro-in-separate-module\r\n\r\n2. The same project, but with Avro in CORE module, which works fine:\r\nhttps://github.com/pjazdzyk/avro-in-core-module\r\n\r\nTo reproduce issue no 2:\r\nUse second repository with Avro in CORE, go to the `MovieConsumer.java` and in line 19, change generic type from Object to Movie, to reproduce `ClassCastException`.\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows 11 Pro 10.0.22631 22631       64-bit\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.9\" 2023-10-17 LTS OpenJDK Runtime Environment \r\nZulu17.46+19-CA (build 17.0.9+8-LTS)\r\nOpenJDK 64-Bit Server VM Zulu17.46+19-CA (build 17.0.9+8-LTS, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.6.9\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nJava version: 17.0.9, vendor: Azul Systems, Inc., runtime: C:\\0_Programming\\zulu17.46.19-ca-jdk17.0.9-win_x64 Default locale: en_GB, platform encoding: Cp1250 OS name: \"windows 11\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\nWe are struggling with this issue for some time, another example from the past:\r\nTwo months ago we tried to do this on Quarkus 2.x.x and KafkaStreams based service and also it failed with error:\r\n```text\r\nWARN: SRMSG18228: A failure has been reported for Kafka topics '[some.topic.name]'\r\njava.lang.ClassCastException: class com.our.domain.kafka.avro.schema.v1.OurObjectKey cannot be cast to class org.apache.avro.specific.SpecificRecord (com.our.domain.anything.kafka.avro.schema.v1.OurObjectKey is in unnamed module of loader 'app'; org.apache.avro.specific.SpecificRecord is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @3dbbed3e) \r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38583/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38583/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29428",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29428/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29428/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29428/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29428",
+  "id": 1460779169,
+  "node_id": "I_kwDOCFbutM5XEbih",
+  "number": 29428,
+  "title": "Quarkus otel reporting to Jaeger but not propagating http headers ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102616,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyNjE2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jaeger",
+      "name": "area/jaeger",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-11-23T01:08:37Z",
+  "updated_at": "2023-07-04T09:10:30Z",
+  "closed_at": "2023-07-04T09:10:30Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am using the follow libraries and extensions to enable otel.\r\n\r\n```gradle\r\n    implementation(\"io.quarkus:quarkus-opentelemetry\")\r\n    implementation(\"io.quarkus:quarkus-smallrye-context-propagation\")\r\n    implementation(\"io.opentelemetry:opentelemetry-extension-trace-propagators\")\r\n```\r\n\r\nI've managed to get all span (event the one using resteasy client) working using jaeger collector as follow:\r\n\r\n```json\r\n\r\n{\r\n   \"data\":[\r\n      {\r\n         \"traceID\":\"c23f7601d96fa18dc17d90b5aba7e7dc\",\r\n         \"spans\":[\r\n            {\r\n               \"traceID\":\"c23f7601d96fa18dc17d90b5aba7e7dc\",\r\n               \"spanID\":\"798b7abc8065a863\",\r\n               \"operationName\":\"HTTP PUT\",\r\n               \"references\":[\r\n                  {\r\n                     \"refType\":\"CHILD_OF\",\r\n                     \"traceID\":\"c23f7601d96fa18dc17d90b5aba7e7dc\",\r\n                     \"spanID\":\"c2a37158569d380a\"\r\n                  }\r\n               ],\r\n               \"startTime\":1669164756740106,\r\n               \"duration\":109141,\r\n               \"tags\":[\r\n                  {\r\n                     \"key\":\"otel.library.name\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"io.quarkus.opentelemetry\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.method\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"PUT\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.url\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"http://localhost:8089/admin/realms/master/users/94ff0c44-006b-4aed-96f0-1858759167a4/execute-actions-email\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.user_agent\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"Resteasy Reactive Client\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.status_code\",\r\n                     \"type\":\"int64\",\r\n                     \"value\":204\r\n                  },\r\n                  {\r\n                     \"key\":\"span.kind\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"client\"\r\n                  },\r\n                  {\r\n                     \"key\":\"internal.span.format\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"proto\"\r\n                  }\r\n               ],\r\n               \"logs\":[\r\n                  \r\n               ],\r\n               \"processID\":\"p1\",\r\n               \"warnings\":null\r\n            },\r\n            {\r\n               \"traceID\":\"c23f7601d96fa18dc17d90b5aba7e7dc\",\r\n               \"spanID\":\"c2a37158569d380a\",\r\n               \"operationName\":\"/users\",\r\n               \"references\":[\r\n                  \r\n               ],\r\n               \"startTime\":1669164756572370,\r\n               \"duration\":278745,\r\n               \"tags\":[\r\n                  {\r\n                     \"key\":\"otel.library.name\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"io.quarkus.opentelemetry\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.method\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"POST\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.request_content_length\",\r\n                     \"type\":\"int64\",\r\n                     \"value\":35\r\n                  },\r\n                  {\r\n                     \"key\":\"http.client_ip\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"127.0.0.1\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.scheme\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"http\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.host\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"localhost:8080\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.target\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"/users/\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.response_content_length\",\r\n                     \"type\":\"int64\",\r\n                     \"value\":59\r\n                  },\r\n                  {\r\n                     \"key\":\"http.route\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"/users\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.user_agent\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"PostmanRuntime/7.29.2\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.flavor\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"1.1\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.status_code\",\r\n                     \"type\":\"int64\",\r\n                     \"value\":200\r\n                  },\r\n                  {\r\n                     \"key\":\"span.kind\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"server\"\r\n                  },\r\n                  {\r\n                     \"key\":\"internal.span.format\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"proto\"\r\n                  }\r\n               ],\r\n               \"logs\":[\r\n                  \r\n               ],\r\n               \"processID\":\"p1\",\r\n               \"warnings\":null\r\n            },\r\n            {\r\n               \"traceID\":\"c23f7601d96fa18dc17d90b5aba7e7dc\",\r\n               \"spanID\":\"0ad1c426aac2b570\",\r\n               \"operationName\":\"HTTP GET\",\r\n               \"references\":[\r\n                  {\r\n                     \"refType\":\"CHILD_OF\",\r\n                     \"traceID\":\"c23f7601d96fa18dc17d90b5aba7e7dc\",\r\n                     \"spanID\":\"c2a37158569d380a\"\r\n                  }\r\n               ],\r\n               \"startTime\":1669164756601532,\r\n               \"duration\":135268,\r\n               \"tags\":[\r\n                  {\r\n                     \"key\":\"otel.library.name\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"io.quarkus.opentelemetry\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.method\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"GET\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.url\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"http://localhost:8089/admin/realms/master/users?username=email%40exam1ple.com\\u0026exact=true\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.response_content_length\",\r\n                     \"type\":\"int64\",\r\n                     \"value\":359\r\n                  },\r\n                  {\r\n                     \"key\":\"http.user_agent\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"Resteasy Reactive Client\"\r\n                  },\r\n                  {\r\n                     \"key\":\"http.status_code\",\r\n                     \"type\":\"int64\",\r\n                     \"value\":200\r\n                  },\r\n                  {\r\n                     \"key\":\"span.kind\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"client\"\r\n                  },\r\n                  {\r\n                     \"key\":\"internal.span.format\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"proto\"\r\n                  }\r\n               ],\r\n               \"logs\":[\r\n                  \r\n               ],\r\n               \"processID\":\"p1\",\r\n               \"warnings\":null\r\n            }\r\n         ],\r\n         \"processes\":{\r\n            \"p1\":{\r\n               \"serviceName\":\"tenant-provider\",\r\n               \"tags\":[\r\n                  {\r\n                     \"key\":\"service.version\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"unspecified\"\r\n                  },\r\n                  {\r\n                     \"key\":\"telemetry.sdk.language\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"java\"\r\n                  },\r\n                  {\r\n                     \"key\":\"telemetry.sdk.name\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"opentelemetry\"\r\n                  },\r\n                  {\r\n                     \"key\":\"telemetry.sdk.version\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"1.18.0\"\r\n                  },\r\n                  {\r\n                     \"key\":\"webengine.name\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"Quarkus\"\r\n                  },\r\n                  {\r\n                     \"key\":\"webengine.version\",\r\n                     \"type\":\"string\",\r\n                     \"value\":\"2.14.1.Final\"\r\n                  }\r\n               ]\r\n            }\r\n         },\r\n         \"warnings\":null\r\n      }\r\n   ],\r\n   \"total\":0,\r\n   \"limit\":0,\r\n   \"offset\":0,\r\n   \"errors\":null\r\n}\r\n```\r\n\r\nHowever I expected those span to be propagated in the response headers as I've configure:\r\n\r\n`quarkus.opentelemetry.propagators=tracecontext,baggage`\r\n\r\n\r\n \r\n\r\n### Expected behavior\r\n\r\nThe trace should be sent propagated using in the response headers.\r\n\r\n### Actual behavior\r\n\r\nThe response header does not contain any span header.\r\n\r\n### How to Reproduce?\r\n\r\n1. Create a project and added the following dependencies \r\n```gradle\r\n    implementation(\"io.quarkus:quarkus-opentelemetry\")\r\n    implementation(\"io.quarkus:quarkus-smallrye-context-propagation\")\r\n    implementation(\"io.opentelemetry:opentelemetry-extension-trace-propagators\")\r\n```\r\n2. Create a docker compose for jaeger:\r\n```yaml\r\nversion: '3.5'\r\n\r\nservices:\r\n  jaeger:\r\n    image: jaegertracing/all-in-one:latest\r\n    environment:\r\n      COLLECTOR_OTLP_ENABLED: true\r\n    ports:\r\n      - \"16686:16686\"\r\n      - \"14268:14268\"\r\n      - \"14250:14250\"\r\n      - \"4317:4317\"\r\n\r\n```\r\n\r\n3. Added the follow config:\r\n```properties\r\nquarkus.opentelemetry.tracer.exporter.otlp.endpoint=http://localhost:4317\r\nquarkus.opentelemetry.enabled=true\r\nquarkus.opentelemetry.propagators=tracecontext,baggage\r\n\r\n```\r\n\r\n4. Create a Dummy Endpoint and call it\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin MacBook-Pro-de-Guilherme.local 22.1.0 Darwin Kernel Version 22.1.0: Sun Oct  9 20:15:09 PDT 2022; root:xnu-8792.41.9~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.5\" 2022-10-18 LTS OpenJDK Runtime Environment GraalVM 22.3.0 (build 17.0.5+8-LTS) OpenJDK 64-Bit Server VM GraalVM 22.3.0 (build 17.0.5+8-LTS, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.2\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29428/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29428/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

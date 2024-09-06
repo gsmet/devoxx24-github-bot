@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33636",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33636/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33636/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33636/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33636",
+  "id": 1727676629,
+  "node_id": "I_kwDOCFbutM5m-kDV",
+  "number": 33636,
+  "title": "UnresolvedElementException: Discovered unresolved method during parsing when adding legacy rest client binding",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-05-26T13:54:00Z",
+  "updated_at": "2024-01-10T20:12:23Z",
+  "closed_at": "2023-05-30T13:50:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAfter adding a new rest client binding into an `@ApplicationScoped` service that already had 2 other such bindings, now the native compilation fails with \r\n\r\n```posh\r\nCaused by: org.graalvm.compiler.java.BytecodeParser$BytecodeParserError: com.oracle.graal.pointsto.constraints.UnresolvedElementException: Discovered unresolved method during parsing: com.redacted.redacted.bond.service.svc.service.base.BondValuationRequestProviderImpl.<init>(com.redacted.redacted.bond.service.svc.service.rules.RulesLoaderService, com.redacted.redacted.bond.service.svc.client.tradeLoader.TradeLoaderResource). This error is reported at image build time because class co com.redacted.redacted.bond.service.svc.service.base.BondValuationRequestProviderImpl_Bean is registered for linking at image build time by command line\r\n```\r\n\r\nI tried multiple solutions like encapsulating the rest client in a resource, changing the scopes, injecting it in different manners, etc.\r\n\r\nI presume this Bean class is like a proxy generated for DI at compile time.\r\nThe application runs normally on non native, AND was building natively without issues before adding this new service.\r\n\r\nThe service definition is quite simple:\r\n\r\n```java\r\n@RegisterRestClient\r\n@Path(\"/\")\r\npublic interface TradeLoaderClientService {\r\n    @GET\r\n    @Path(\"trade\")\r\n    @Produces(\"application/json\")\r\n    @Retry(delay = 5000, retryOn = {Exception.class, RuntimeException.class})\r\n    TradeDO trade(@QueryParam String clientName,@QueryParam String tradeId);\r\n}\r\n```\r\n\r\nThis is injected into\r\n```java\r\n@Path(\"/\")\r\n@Dependent\r\npublic class TradeLoaderResource {\r\n\r\n    @Inject\r\n    @RestClient\r\n    TradeLoaderClientService tradeLoaderClientService;\r\n\r\n\r\n    @GET\r\n    @Path(\"trade\")\r\n    @Produces(\"application/json\")\r\n    @Retry(delay = 5000, retryOn = {Exception.class, RuntimeException.class})\r\n    public TradeDO trade(@QueryParam String clientName, @QueryParam String tradeId) {\r\n        return tradeLoaderClientService.trade(clientName, tradeId);\r\n    }\r\n}\r\n```\r\n\r\nThen directly injected in the above service with constructor injection\r\n\r\n```java\r\n    RulesLoaderService rulesLoaderService;\r\n\r\n    TradeLoaderResource tradeLoaderResource;\r\n\r\n    public BondValuationRequestProviderImpl(RulesLoaderService rulesLoaderService,TradeLoaderResource tradeLoaderResource) {\r\n        this.rulesLoaderService = rulesLoaderService;\r\n        this.tradeLoaderResource = tradeLoaderResource;\r\n    }\r\n\r\n```\r\n\r\n### Expected behavior\r\n\r\nThe application should compile natively.\r\n\r\n### Actual behavior\r\n\r\nThe compile fails.\r\n\r\n### How to Reproduce?\r\n\r\ncould try to build a test project but this is a complex project otherwise\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\ndocker linux machine on aws\r\n\r\n### Output of `java -version`\r\n\r\n11.0.18+10-jvmci-22.3-b13 openjdk\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nGraalVM 22.3.1 Java 11 CE\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.4.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.6.2 \r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33636/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33636/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

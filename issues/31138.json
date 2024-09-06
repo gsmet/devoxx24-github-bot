@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31138",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31138/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31138/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31138/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31138",
+  "id": 1583544965,
+  "node_id": "I_kwDOCFbutM5eYvqF",
+  "number": 31138,
+  "title": "Google Cloud Tasks integration",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2243658033,
+      "node_id": "MDU6TGFiZWwyMjQzNjU4MDMz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/google-cloud-functions",
+      "name": "area/google-cloud-functions",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-02-14T06:00:14Z",
+  "updated_at": "2023-02-20T01:18:34Z",
+  "closed_at": "2023-02-20T01:18:34Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm trying to create a quarkus app that creates tasks in Google Cloud Tasks. I'm using the [Google Cloud Java Client Library](https://cloud.google.com/java/docs/reference/google-cloud-tasks/latest/overview). I'm unable to build my app after integrating the sdk. \r\n\r\nThis is my quarkus app code :\r\n```\r\npackage org.acme;\r\n\r\nimport javax.inject.Inject;\r\nimport javax.ws.rs.GET;\r\nimport javax.ws.rs.Path;\r\n\r\nimport com.google.cloud.tasks.v2.*;\r\nimport com.google.protobuf.ByteString;\r\n\r\n@Path(\"/create-task\")\r\npublic class GreetingResource {\r\n\r\n    @Inject\r\n    CloudTasksClient cloudTasksClient;\r\n\r\n    @GET\r\n    public String createTask() throws Exception {\r\n        QueueName queueName = QueueName.of(\"project-id\", \"location-id\", \"queue-id\");\r\n        Task task = Task.newBuilder()\r\n                .setHttpRequest(\r\n                        HttpRequest.newBuilder()\r\n                                .setUrl(\"https://task-handler-service.com/handle-task\")\r\n                                .setHttpMethod(HttpMethod.POST)\r\n                                .setBody(ByteString.copyFromUtf8(\"{\\\"message\\\":\\\"test task\\\",\\\"reschedule\\\":true}\"))\r\n                                .build())\r\n                .build();\r\n        cloudTasksClient.createTask(queueName, task);\r\n        return \"Task created!\";\r\n    }\r\n}\r\n``` \r\n\r\nI'm getting the following error when building the app : \r\n```\r\n[INFO] --- quarkus-maven-plugin:2.16.2.Final:build (default) @ task-producer ---\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  5.665 s\r\n[INFO] Finished at: 2023-02-14T11:26:59+05:30\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:2.16.2.Final:build (default) on project task-producer: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR]         [error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: javax.enterprise.inject.spi.DeploymentException: javax.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type com.google.cloud.tasks.v2.CloudTasksClient and qualifiers [@Default]\r\n[ERROR]         - java member: org.acme.GreetingResource#cloudTasksClient\r\n[ERROR]         - declared on CLASS bean [types=[org.acme.GreetingResource, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.GreetingResource]\r\n[ERROR]         at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1223)\r\n[ERROR]         at io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:288)\r\n[ERROR]         at io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:148)\r\n[ERROR]         at io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:526)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n[ERROR]         at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n[ERROR]         at java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n[ERROR]         at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n[ERROR]         at io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n[ERROR]         at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n[ERROR]         at java.base/java.lang.Thread.run(Thread.java:829)\r\n[ERROR]         at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n[ERROR] Caused by: javax.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type com.google.cloud.tasks.v2.CloudTasksClient and qualifiers [@Default]\r\n[ERROR]         - java member: org.acme.GreetingResource#cloudTasksClient\r\n[ERROR]         - declared on CLASS bean [types=[org.acme.GreetingResource, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.GreetingResource]\r\n[ERROR]         at io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:440)\r\n[ERROR]         at io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:539)\r\n[ERROR]         at io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:276)\r\n[ERROR]         ... 13 more\r\n[ERROR] -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR] \r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kamaldeeps-MacBook-Pro.local 21.4.0 Darwin Kernel Version 21.4.0: Fri Mar 18 00:45:05 PDT 2022; root:xnu-8020.101.4~15/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment Homebrew (build 11.0.12+0) OpenJDK 64-Bit Server VM Homebrew (build 11.0.12+0, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63) Maven home: /Users/kamaldeepjayaprakash/.m2/wrapper/dists/apache-maven-3.8.6-bin/67568434/apache-maven-3.8.6 Java version: 11.0.12, vendor: Homebrew, runtime: /usr/local/Cellar/openjdk@11/11.0.12/libexec/openjdk.jdk/Contents/Home Default locale: en_IN, platform encoding: US-ASCII OS name: \"mac os x\", version: \"12.3.1\", arch: \"x86_64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31138/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31138/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

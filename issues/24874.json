@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24874",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24874/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24874/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24874/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24874",
+  "id": 1200042857,
+  "node_id": "I_kwDOCFbutM5HhzNp",
+  "number": 24874,
+  "title": "Kotlin BsonProperty Panache mapping",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-04-11T14:16:36Z",
+  "updated_at": "2022-10-26T16:24:03Z",
+  "closed_at": "2022-10-26T16:23:06Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using kotlin panache library `@BsonProperty` is not working as expected.\r\nI have a complex object with nested fields and only fields that is named fully the same as in DB mapped properly.\r\n```kotlin\r\n@MongoEntity(collection = INTEGRATION_COLLECTION)\r\ndata class App(\r\n    @BsonId\r\n    var id: IntegrationKey,\r\n    var appData: Integration\r\n) : ReactivePanacheMongoEntityBase()\r\n\r\n@MongoEntity\r\ndata class Integration(\r\n    var id: String? = null,\r\n    @BsonProperty(\"authed_at\")\r\n    var authedAt: Long? = null,\r\n    var stats: Stats? = null,\r\n    @BsonProperty(\"lang_stats\")\r\n    var langStats: Map<String, Int>? = null,\r\n    var plan: Plan? = null,\r\n    @BsonProperty(\"is_pro\")\r\n    var isPro: Boolean? = null,\r\n    var token: String? = null\r\n)\r\n\r\n@MongoEntity\r\ndata class Stats(\r\n    var detect: Long? = null,\r\n    @BsonProperty(\"chars_in\")\r\n    var charsIn: Long? = null,\r\n    @BsonProperty(\"chars_out\")\r\n    var charsOut: Long? = null\r\n)\r\n\r\n@MongoEntity\r\ndata class Plan(\r\n    var id: String = \"\",\r\n    var period: Period = Period()\r\n)\r\n\r\n@MongoEntity\r\ndata class Period(\r\n    var start: Long = 0,\r\n    var end: Long = 0\r\n)\r\n```\r\n\r\njson inserted to MongoDb (5.0.6)\r\nFor access `ReactivePanacheMongoRepositoryBase` is used\r\n```json\r\n{\r\n    \"_id\" : {\r\n        \"appType\" : \"support\",\r\n        \"appId\" : \"123\"\r\n    },\r\n    \"appData\" : {\r\n        \"name\" : \"John\",\r\n        \"email\" : \"test@example.com\",\r\n        \"authed_at\" : 1649341731,\r\n        \"last_active_at\" : 1649341731,\r\n        \"token\" : \"***\",\r\n        \"stats\" : {\r\n            \"detect\" : 0,\r\n            \"chars_in\" : 0,\r\n            \"chars_out\" : 0\r\n        },\r\n        \"langs_stats\" : {\r\n            \"en\" : 1,\r\n            \"de\" : 2\r\n        },\r\n        \"is_pro\": true,\r\n        \"plan\" : {\r\n            \"id\" : \"123\",\r\n            \"period\" : {\r\n                \"start\" : 1649341731,\r\n                \"end\" : 1654041599\r\n            }\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nFields like `appData`, `stats` and `token` are mapped properly, but all fields with `@BsonProperty` are not working. \r\nI have discovered that I can overcome this using  `@field:BsonProperty`, but it is still not working for several fields, for example `isPro` field.\r\nIf data classes are changed for classes and fields are moved to body annotations start working, despite of `isPro` field.\r\nIf I use `@set:BsonProperty + @get:BsonProperty`  on `isPro` it works.\r\nAll fields named  `id` are mapped only with  `@field:BsonProperty`.\r\n\r\n### Expected behavior\r\n\r\nAll fields are mapped properly based on field name or `@BsonProperty ` value\r\n\r\n### Actual behavior\r\n\r\nSome fields are missing\r\n\r\n### How to Reproduce?\r\n\r\ngradle \r\n```\r\nplugins {\r\n\r\n    kotlin(\"jvm\") version \"1.6.20\"\r\n    kotlin(\"plugin.allopen\") version \"1.6.20\"\r\n    kotlin(\"plugin.noarg\") version \"1.6.20\"\r\n    id(\"io.quarkus\")\r\n}\r\n\r\ndependencies {\r\n    implementation(enforcedPlatform(\"$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion\"))\r\n    implementation(\"io.quarkus:quarkus-resteasy-reactive\")\r\n    implementation(\"io.quarkus:quarkus-resteasy-reactive-jackson\")\r\n    implementation(\"io.quarkus:quarkus-rest-client-reactive-jackson\")\r\n    implementation(\"io.quarkus:quarkus-micrometer-registry-prometheus\")\r\n    implementation(\"io.quarkus:quarkus-kotlin\")\r\n    implementation(\"io.quarkus:quarkus-smallrye-health\")\r\n    implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")\r\n    implementation(\"io.quarkus:quarkus-arc\")\r\n    implementation(\"io.quarkus:quarkus-smallrye-openapi\")\r\n    implementation(\"io.quarkus:quarkus-config-yaml\")\r\n    implementation(\"io.quarkus:quarkus-mongodb-panache-kotlin\")\r\n    implementation(\"io.smallrye.reactive:mutiny-kotlin:$mutinyKotlinVersion\")\r\n    implementation(\"com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion\")\r\n}\r\n\r\nnoArg {\r\n    annotation(\"io.quarkus.mongodb.panache.common.MongoEntity\")\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.18363.2037]\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.13\" 2021-10-19\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nOpenJDK Runtime Environment GraalVM CE 21.3.0 (build 11.0.13+7-jvmci-21.3-b05)\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.5.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.1\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24874/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24874/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33908",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33908/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33908/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33908/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33908",
+  "id": 1747804636,
+  "node_id": "I_kwDOCFbutM5oLWHc",
+  "number": 33908,
+  "title": "Enhance and fix @Startup annotation to make it simpler to listen to startup events",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-06-08T12:32:52Z",
+  "updated_at": "2023-06-15T13:50:21Z",
+  "closed_at": "2023-06-15T13:50:21Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nI was annoyed to keep writing `@Observes StartupEvent evt` methods, and was going to ask to add a `@Startup` annotation I can put on my startup method, only to be surprised it exists!\r\n\r\nBut when I tried it, I got an NPE:\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class StartupJob {\r\n    @Startup\r\n    public void start()  {\r\n    }\r\n}\r\n```\r\n\r\n```\r\n2023-06-08 14:25:07,445 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (Aesh InputStream Reader) Failed to start quarkus: io.quarkus.dev.appstate.ApplicationStartException: java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.dev.appstate.ApplicationStateNotification.waitForApplicationStart(ApplicationStateNotification.java:58)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl.runMainClass(StartupActionImpl.java:123)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.restartApp(IsolatedDevModeMain.java:222)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.restartCallback(IsolatedDevModeMain.java:203)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:541)\r\n\tat io.quarkus.deployment.console.ConsoleStateManager.forceRestart(ConsoleStateManager.java:141)\r\n\tat io.quarkus.deployment.console.ConsoleStateManager.lambda$installBuiltins$0(ConsoleStateManager.java:98)\r\n\tat io.quarkus.deployment.console.ConsoleStateManager$1.accept(ConsoleStateManager.java:73)\r\n\tat io.quarkus.deployment.console.ConsoleStateManager$1.accept(ConsoleStateManager.java:46)\r\n\tat io.quarkus.deployment.console.AeshConsole.lambda$setup$1(AeshConsole.java:275)\r\n\tat org.aesh.terminal.EventDecoder.accept(EventDecoder.java:118)\r\n\tat org.aesh.terminal.EventDecoder.accept(EventDecoder.java:31)\r\n\tat org.aesh.terminal.io.Decoder.write(Decoder.java:133)\r\n\tat org.aesh.readline.tty.terminal.TerminalConnection.openBlocking(TerminalConnection.java:216)\r\n\tat org.aesh.readline.tty.terminal.TerminalConnection.openBlocking(TerminalConnection.java:203)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:104)\r\n\t... 1 more\r\nCaused by: java.lang.NullPointerException\r\n\tat java.base/java.util.Objects.requireNonNull(Objects.java:208)\r\n\tat io.quarkus.arc.impl.ArcContainerImpl.instance(ArcContainerImpl.java:294)\r\n\tat util.StartupJob_Observer_Synthetic_eb3e38591e0df9bc32072fd7c88688131df7a86f.notify(Unknown Source)\r\n\tat io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:346)\r\n\tat io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:328)\r\n\tat io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:82)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:155)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:106)\r\n\tat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy(Unknown Source)\r\n\t... 13 more\r\n```\r\n\r\nAlso, I tried it without the `@ApplicationScoped` and it silently did not call my method. Could we do like we do in RESTEasy Reactive and auto-add the `@ApplicationScoped` annotation to the bean we generate for the method? Or, whatever, but just Make It Work™ ;)\r\n\r\nWould you be open to supporting optional parameters like we do for RESTEasy Reactive filter methods, or build steps, so for example if I want to know what the `LaunchMode` is, I can write it like this?\r\n\r\n```java\r\npublic class StartupJob {\r\n    @Startup\r\n    public void start(LaunchMode mode)  {\r\n    }\r\n}\r\n```\r\n\r\nI think that could be super neat.\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33908/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33908/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

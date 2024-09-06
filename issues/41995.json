@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41995",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41995/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41995/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41995/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41995",
+  "id": 2418468507,
+  "node_id": "I_kwDOCFbutM6QJuab",
+  "number": 41995,
+  "title": "Enable `--exact-reachability-metadata` with Mandrel >= 23.1 (GraalVM for JDK 21)",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-07-19T09:31:17Z",
+  "updated_at": "2024-07-22T12:28:30Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\n#### Background\r\n\r\nStarting with Mandrel 23.0 (GraalVM for JDK 17) an option `-H:+ThrowMissingRegistrationErrors` was introduced to throw an exception\r\n\r\n> when it is impossible to tell whether a reflective query should fail because the queried element has not been registered at build-time, or because it doesn't exist.\r\n\r\nSee https://github.com/oracle/graal/pull/6139\r\n\r\nStarting with Mandrel 23.1 (GraalVM for JDK 21) the option was extended to also cover other elements, e.g., classes, resources, etc.\r\n\r\nSee https://github.com/oracle/graal/blob/release/graal-vm/23.1/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/doc-files/MissingRegistrationHelp.txt and https://github.com/oracle/graal/pull/6448\r\n\r\nStarting with Mandrel 24.1 (GraalVM for JDK 23) the option **will be available as a public flag (meaning it's no longer experimental) with the intention to ultimately become the default**.\r\n\r\nSee https://github.com/oracle/graal/blob/release/graal-vm/24.1/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/doc-files/ExactReachabilityMetadataHelp.txt, https://github.com/oracle/graal/issues/5173#issuecomment-1752811101 and https://github.com/oracle/graal/pull/9036\r\n\r\n#### Pros\r\n\r\nEnabling the flag by default seems like a good idea since it will notify the users about elements that the code tries to access reflectively but have not been registered, which right now is leading in unexpected behavior without the users even knowing in some cases (for an example see https://github.com/quarkusio/quarkus/issues/37626).\r\n\r\n#### Cons/Difficulties\r\n\r\nThe so far identified cons and difficulties of having this option enabled by default are:\r\n\r\n1. The exception is only thrown at runtime, so one needs to run the native executable to see if it will throw the exception. This requires several run-fix-build-run cycles which is tedious... The process can be sped up by using the native-image-agent to generate the reachability-metadata configuration, but it still depends highly on how good coverage the run will have.\r\n2. Some libraries \"blindly\" try to access resources, e.g. SmallRye tries to find various configuration files in a few places leading to an exception being thrown even if in Quarkus we know we don't need these resources. Registering the said resources resolves the issue, but comes with the drawback that if any of these resources happens to be found at build-time it will actually end up in the native-executable and get loaded at run-time, which right now is not and the effects of it are unknown (see https://github.com/quarkusio/quarkus/issues/41994)\r\n3. We need to make sure that registering things to avoid the exception doesn't change the intended behavior. E.g. if we don't want a configuration to be accessed at run-time we need to somehow make sure it's also not present at build-time so that it doesn't end up getting embedded in the native executable.\r\n\r\n### Implementation ideas\r\n\r\nWIP PR https://github.com/quarkusio/quarkus/pull/36378",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41995/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41995/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

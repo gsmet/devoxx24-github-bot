@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25536",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25536/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25536/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25536/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25536",
+  "id": 1234023762,
+  "node_id": "I_kwDOCFbutM5JjbVS",
+  "number": 25536,
+  "title": "Websocket @ServerEndpoint - have a way to retrieve http headers",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1696394231,
+      "node_id": "MDU6TGFiZWwxNjk2Mzk0MjMx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/undertow-websockets",
+      "name": "area/undertow-websockets",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2748318141,
+      "node_id": "MDU6TGFiZWwyNzQ4MzE4MTQx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/websockets",
+      "name": "area/websockets",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-05-12T13:53:30Z",
+  "updated_at": "2024-05-13T09:23:25Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nI have the simple need to access the http headers, so I can retrieve user-agent, ip, etc... of the incoming request.\r\nThese properties are inside **HandshakeRequest** object, which I have no access to inside my @**ServerEndpoint** class.\r\n\r\nOne of the options mentioned in Java docs is to configure a custom **Configurator** and grab the headers inside this method:\r\n**public void modifyHandshake(ServerEndpointConfig conf, HandshakeRequest req,  HandshakeResponse resp) {**\r\n\r\nAnd after the header values are grabbed to put them inside the ServerEndpointConfig user properties object which the @**ServerEndpoint** class can inject inside the @**OnOpen** method.\r\n\r\n**@OnOpen\r\npublic void onOpen(Session session, EndpointConfig config) {**\r\n\r\nBUT there is a huge **blocker** here -> the ServerEndpointConfig is a **singleton** and all requests are sharing this object. That means the same underlying map is used and it will break under concurrency, also it is a HashMap not a ConcurrencyHashMap.\r\n\r\nThis is a very well known inconsistency issue in the Java Websockets Implementations in servers. Here is some information:\r\n\r\nhttps://stackoverflow.com/questions/17936440/accessing-httpsession-from-httpservletrequest-in-a-web-socket-serverendpoint\r\nhttps://stackoverflow.com/questions/28939581/access-useragent-in-websocket-session\r\n\r\nSo I am completely stuck here with the simple task of having access to the http headers in my WebSocket class.\r\n\r\nWhat do you suggest? I see 2 options:\r\n1. Provide a way to inject HandshakeRequest inside the @OnOpen method\r\n2. Make ServerEndpointConfig not to be a singleton and be per request and to use ConcurrentHashMap. Then the getUserProperties() could be used in the custom configurator.\r\n\r\nTo be honest I prefer option 1.\r\n\r\nThank you in advance!\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25536/reactions",
+    "total_count": 14,
+    "+1": 14,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25536/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

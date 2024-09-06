@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41156",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41156/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41156/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41156/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41156",
+  "id": 2348448437,
+  "node_id": "I_kwDOCFbutM6L-nq1",
+  "number": 41156,
+  "title": "Memory leak on TestContainers IT tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2024-06-12T10:49:15Z",
+  "updated_at": "2024-06-25T12:04:58Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen trying to run 10 IT tests with TestContainers in this PR: https://github.com/quarkusio/quarkus/pull/39032 \r\nThe CI build fails with an OOM exception on all JDKs. Example: https://github.com/quarkusio/quarkus/actions/runs/9283986768/job/25545787368#step:16:4086\r\n\r\n```bash\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  06:03 min\r\n[INFO] Finished at: 2024-05-29T10:10:21Z\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] 327 goals, 235 executed, 92 from cache, saving at least 3m 27s\r\nError:  Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project quarkus-opentelemetry-deployment: \r\nError:  \r\nError:  Please refer to /home/runner/work/quarkus/quarkus/extensions/opentelemetry/deployment/target/surefire-reports for the individual test results.\r\nError:  Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.\r\nError: [ERROR] There was an error in the forked process\r\nError:  Java heap space\r\nError:  java.lang.OutOfMemoryError: Java heap space\r\nError:  \tat jdk.zipfs/jdk.nio.zipfs.ZipFileSystem.initCEN(ZipFileSystem.java:1552)\r\nError:  \tat jdk.zipfs/jdk.nio.zipfs.ZipFileSystem.<init>(ZipFileSystem.java:179)\r\nError:  \tat jdk.zipfs/jdk.nio.zipfs.ZipFileSystemProvider.getZipFileSystem(ZipFileSystemProvider.java:125)\r\nError:  \tat jdk.zipfs/jdk.nio.zipfs.ZipFileSystemProvider.newFileSystem(ZipFileSystemProvider.java:120)\r\nError:  \tat io.quarkus.fs.util.ZipUtils.newFileSystem(ZipUtils.java:228)\r\nError:  \tat io.quarkus.fs.util.ZipUtils.newFileSystem(ZipUtils.java:210)\r\nError:  \tat io.quarkus.paths.ArchivePathTree.openFs(ArchivePathTree.java:179)\r\nError:  \tat io.quarkus.paths.ArchivePathTree.apply(ArchivePathTree.java:117)\r\nError:  \tat io.quarkus.paths.PathTreeWithManifest.apply(PathTreeWithManifest.java:74)\r\nError:  \tat io.quarkus.bootstrap.resolver.maven.ApplicationDependencyTreeResolver.getExtensionInfoOrNull(ApplicationDependencyTreeResolver.java:566)\r\nError:  \tat io.quarkus.bootstrap.resolver.maven.ApplicationDependencyTreeResolver.getExtensionDependencyOrNull(ApplicationDependencyTreeResolver.java:489)\r\nError:  \tat io.quarkus.bootstrap.resolver.maven.ApplicationDependencyTreeResolver.visitRuntimeDependency(ApplicationDependencyTreeResolver.java:426)\r\nError:  \tat io.quarkus.bootstrap.resolver.maven.ApplicationDependencyTreeResolver.visitRuntimeDependencies(ApplicationDependencyTreeResolver.java:404)\r\nError:  \tat io.quarkus.bootstrap.resolver.maven.ApplicationDependencyTreeResolver.visitRuntimeDependency(ApplicationDependencyTreeResolver.java:469)\r\nError:  \tat io.quarkus.bootstrap.resolver.maven.ApplicationDependencyTreeResolver.visitRuntimeDependencies(ApplicationDependencyTreeResolver.java:404)\r\nError:  \tat io.quarkus.bootstrap.resolver.maven.ApplicationDependencyTreeResolver.visitRuntimeDependency(ApplicationDependencyTreeResolver.java:469)\r\nError:  \tat io.quarkus.bootstrap.resolver.maven.ApplicationDependencyTreeResolver.visitRuntimeDependencies(ApplicationDependencyTreeResolver.java:404)\r\nError:  \tat io.quarkus.bootstrap.resolver.maven.ApplicationDependencyTreeResolver.resolve(ApplicationDependencyTreeResolver.java:172)\r\nError:  \tat io.quarkus.bootstrap.resolver.BootstrapAppModelResolver.buildAppModel(BootstrapAppModelResolver.java:382)\r\nError:  \tat io.quarkus.bootstrap.resolver.BootstrapAppModelResolver.doResolveModel(BootstrapAppModelResolver.java:319)\r\nError:  \tat io.quarkus.bootstrap.resolver.BootstrapAppModelResolver.resolveManagedModel(BootstrapAppModelResolver.java:200)\r\nError:  \tat io.quarkus.bootstrap.BootstrapAppModelFactory.resolveAppModel(BootstrapAppModelFactory.java:294)\r\nError:  \tat io.quarkus.bootstrap.app.QuarkusBootstrap.bootstrap(QuarkusBootstrap.java:133)\r\nError:  \tat io.quarkus.test.QuarkusUnitTest.beforeAll(QuarkusUnitTest.java:651)\r\nError:  \tat org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeBeforeAllCallbacks$12(ClassBasedTestDescriptor.java:396)\r\nError:  \tat org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor$$Lambda$449/0x00007f367813c4d0.execute(Unknown Source)\r\nError:  \tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\nError:  \tat org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeBeforeAllCallbacks(ClassBasedTestDescriptor.java:396)\r\nError:  \tat org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:212)\r\nError:  \tat org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:85)\r\nError:  \tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:148)\r\nError:  \tat org.junit.platform.engine.support.hierarchical.NodeTestTask$$Lambda$367/0x00007f3678118dc0.execute(Unknown Source)\r\nError:  \r\nError:  org.apache.maven.surefire.booter.SurefireBooterForkException: There was an error in the forked process\r\n```\r\n\r\nLocal execution reveals a memory leak:\r\n\r\n<img width=\"1728\" alt=\"Screenshot 2024-06-12 at 11 13 20\" src=\"https://github.com/quarkusio/quarkus/assets/2318030/6f5aeb30-75e2-4130-b381-391d8c81e1f2\">\r\n\r\nInitial analysis pointed to the new feature being added, however that was just a tipping point. The bulk of memory being used is related with the `QuarkusTestExtension` class or with TestContainers.\r\n\r\n<img width=\"1682\" alt=\"Screenshot 2024-06-12 at 11 11 19\" src=\"https://github.com/quarkusio/quarkus/assets/2318030/5bf4a8e1-a90b-47f3-8ca1-3c9f84c2ff44\">\r\n\r\nWhen running all the tests the containers are not immediately shut down. They linger in the system until the last test is finished, according to my view of Podman desktop.\r\n\r\nI profiled the test execution and I'm attacking the JFR stream file here:\r\n\r\n[GrpcNoTLSNoCompressionTest_and_9_more_2024_06_12_102823.jfr.zip](https://github.com/user-attachments/files/15803326/GrpcNoTLSNoCompressionTest_and_9_more_2024_06_12_102823.jfr.zip)\r\n\r\nFurther analyses reveals this on `QuarkusTestExtension`:\r\n\r\n<img width=\"966\" alt=\"Screenshot 2024-06-12 at 11 19 29\" src=\"https://github.com/quarkusio/quarkus/assets/2318030/52ed6821-aea8-4e54-8fbe-ae509452e252\">\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nNo out of memory when running mutiple IT tests with  TestContainers\r\n\r\n### Actual behavior\r\n\r\nCI will fail with out of memory\r\n\r\n### How to Reproduce?\r\n\r\n1. Run all these tests on Intellij Idea in profiler mode: https://github.com/quarkusio/quarkus/blob/fb79c7c22ee746c904a95199390e295865024f73/integration-tests/opentelemetry-vertx-exporter/src/test/java/io/quarkus/it/opentelemetry/vertx/exporter\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin xxxxxxxxxxx 22.6.0 Darwin Kernel Version 22.6.0: Mon Apr 22 20:49:37 PDT 2024; root:xnu-8796.141.3.705.2~1/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.2\" 2024-01-16 LTS OpenJDK Runtime Environment Temurin-21.0.2+13 (build 21.0.2+13-LTS) OpenJDK 64-Bit Server VM Temurin-21.0.2+13 (build 21.0.2+13-LTS, mixed mode)\r\n\r\n### Quarkus version or git rev\r\n\r\ngit version 2.38.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /Users/xxxxxxx/.sdkman/candidates/maven/current Java version: 21.0.2, vendor: Eclipse Adoptium, runtime: /Users/xxxxxxx/.sdkman/candidates/java/21.0.2-tem Default locale: en_PT, platform encoding: UTF-8 OS name: \"mac os x\", version: \"13.6.7\", arch: \"aarch64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\nRunning Podman Desktop Version 1.10.3 (1.10.3)\r\n\r\nSee companion discussion on Zulip: https://quarkusio.zulipchat.com/#narrow/stream/187038-dev/topic/TestContainer.20IT.20tests.20out.20of.20memory\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41156/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41156/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

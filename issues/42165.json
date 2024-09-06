@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42165",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42165/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42165/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42165/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42165",
+  "id": 2432451345,
+  "node_id": "I_kwDOCFbutM6Q_EMR",
+  "number": 42165,
+  "title": "unable to load resource bundle from dependent jar",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-07-26T15:14:30Z",
+  "updated_at": "2024-07-29T06:52:15Z",
+  "closed_at": "2024-07-29T06:51:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nan application has some bundles, and a dependency on an external jar that has additional different bundles, plus some logic to retrieve the values from the bundles.\r\nwhen running `mvn quarkus:test`, the bundles that are in the app can't be found, if loaded from the code located in the external jar.\r\nbut they are found if the logic is in the app itself.\r\n\r\n### Expected behavior\r\n\r\nthe bundles in the app should be found, whether or not they are loaded from the app or external jar code.\r\n\r\n### Actual behavior\r\n\r\nthe bundles that are in the app can't be found, if loaded from the code located in the external jar.\r\nbut they are found if the logic is in the app itself.\r\n\r\n### How to Reproduce?\r\n\r\n#### external module \r\n\r\ncreate an external module `foo`, with this class:\r\n```\r\npublic class ResourceBundleProvider {\r\n\r\n    public String getValue(String basename, String key) {\r\n        return ResourceBundle.getBundle(basename).getString(key);\r\n    }\r\n}\r\n```\r\n\r\nand create in this module a resource bundle `ValidationMessages_BAR.properties` with:\r\n```\r\nBAR=this is bar\r\n```\r\n\r\n#### application\r\n\r\ncreate an application with the following resource bundle `ValidationMessages_FOO.properties`:\r\n```\r\nFOO=this is foo\r\n```\r\n\r\nadd the following endpoint:\r\n```\r\npackage org.acme;\r\n\r\nimport com.foo.ResourceBundleProvider;\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\nimport jakarta.ws.rs.Produces;\r\nimport jakarta.ws.rs.core.MediaType;\r\nimport org.slf4j.Logger;\r\nimport org.slf4j.LoggerFactory;\r\n\r\nimport java.util.ResourceBundle;\r\n\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n    private static final Logger log = LoggerFactory.getLogger(GreetingResource.class);\r\n\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello() {\r\n        return \"Hello from Quarkus REST\";\r\n    }\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    @Path(\"/bundle1\")\r\n    public String bundle1() {\r\n        return ResourceBundle.getBundle(\"ValidationMessages_FOO\").getString(\"FOO\");\r\n    }\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    @Path(\"/bundle2\")\r\n    public String bundle2() {\r\n        return new ResourceBundleProvider().getValue(\"ValidationMessages_FOO\", \"FOO\");\r\n    }\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    @Path(\"/bundle3\")\r\n    public String bundle3() {\r\n        return new ResourceBundleProvider().getValue(\"ValidationMessages_BAR\", \"BAR\");\r\n    }\r\n}\r\n\r\n```\r\n\r\nand the following test:\r\n```\r\npackage org.acme;\r\n\r\nimport io.quarkus.test.junit.QuarkusTest;\r\nimport org.junit.jupiter.api.Test;\r\n\r\nimport static io.restassured.RestAssured.given;\r\nimport static org.hamcrest.CoreMatchers.is;\r\n\r\n@QuarkusTest\r\nclass GreetingResourceTest {\r\n    @Test\r\n    void testHelloEndpoint() {\r\n        given()\r\n          .when().get(\"/hello\")\r\n          .then()\r\n             .statusCode(200)\r\n             .body(is(\"Hello from Quarkus REST\"));\r\n    }\r\n\r\n    @Test\r\n    void testHelloBundle1() {\r\n        given()\r\n                .when().get(\"/hello/bundle1\")\r\n                .then()\r\n                .statusCode(200);\r\n    }\r\n\r\n    @Test\r\n    void testHelloBundle2() {\r\n        given()\r\n                .when().get(\"/hello/bundle2\")\r\n                .then()\r\n                .statusCode(200);\r\n    }\r\n\r\n    @Test\r\n    void testHelloBundle3() {\r\n        given()\r\n                .when().get(\"/hello/bundle3\")\r\n                .then()\r\n                .statusCode(200);\r\n    }\r\n}\r\n```\r\n\r\nand add pom dependency:\r\n```\r\n        <dependency>\r\n            <groupId>...</groupId>\r\n            <artifactId>foo</artifactId>\r\n            <version>...</version>\r\n        </dependency>\r\n```\r\n\r\n#### run\r\n\r\n1. execute `mvn clean package` => all tests are green\r\n2. execute `mvn quarkus:test` => `GreetingResourceTest#testHelloBundle2() 1 expectation failed.`\r\n3. execute `mvn quarkus:dev` and `curl localhost:18080/hello/bundle1 2 or 3` => 1 and 3 are success, 2 is failed\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42165/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42165/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

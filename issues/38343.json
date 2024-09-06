@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38343",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38343/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38343/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38343/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38343",
+  "id": 2095695469,
+  "node_id": "I_kwDOCFbutM586cZt",
+  "number": 38343,
+  "title": "quarkus-amazon-lambda-http extension can fail to identify content-type value and thus fails to adjust isBase64Encoded in the final response",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-01-23T09:58:06Z",
+  "updated_at": "2024-01-26T13:39:46Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen io.quarkus.amazon.lambda.http.LambdaHttpHandler maps the response from the application to an APIGatewayV2HTTPResponse object, it first collects headers from HttpResponse into a HashMap. which is set on the APIGatewayV2HTTPResponse#setHeaders earlier. (from line 100 to 131) \r\n\r\nHowever while populating the body and isBase64Encoded fields according to the content-type header,  the content-type header value is queried from the previously populated hash map  with \"Content-Type\" key. (at line 153).  As you know HTTP headers are case insensitive according to IETF RFC 7230. This query can fail to get the correct value if the header is \"content-type\", which it is in my case. And also it appears to be set as \"content-type\" when quarkus serves static html content under the resources/META-INF/resources, or perhaps res.headers().names() always returns headers in lowercase I am not sure.\r\n\r\nThis leads to having null as content-type and thus setting body as string and isBase64Encoded as false.\r\n\r\n\n\n### Expected behavior\n\nContent-Type should be identified correctly regardless of its capitalization\n\n### Actual behavior\n\nReturned response can only be base64 encoded if the content-type header is set exactly as \"Content-Type\" bot not if it is set as \"content-type\"\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nOpenJDK 64-Bit Server VM GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.6.6\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38343/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38343/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

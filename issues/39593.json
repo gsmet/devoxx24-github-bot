@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39593",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39593/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39593/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39593/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39593",
+  "id": 2197847553,
+  "node_id": "I_kwDOCFbutM6DAH4B",
+  "number": 39593,
+  "title": "Connecting to a Redis cluster returning only port numbers for nodes results in an error",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-03-20T15:33:22Z",
+  "updated_at": "2024-07-25T14:33:12Z",
+  "closed_at": "2024-07-25T14:33:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nUsing Quarkus 3.7.4 and the Redis extension, a connection to a Redis cluster (in cluster mode), results in an error when trying to parse one of the node addresses.\r\n\r\nUpon connection to some endpoint, the cluster returns \":6379\" for a node address (without IP / hostname), which allowed per Redis (cluster) specification.\r\nVert.x Redis client should use the original connection's host / IP in this case, but instead it fails trying to parse an address like `redis://:6379`.\r\n\r\nSee e.g. https://redis.io/docs/reference/cluster-spec/ for MOVED (a different use case than the first connection, but describes the generally expected behavior):\r\n```quote\r\nThe client needs to reissue the query to the specified node's endpoint address and port. The endpoint can be either an IP address, a hostname, or it can be empty (e.g. -MOVED 3999 :6380). An empty endpoint indicates that the server node has an unknown endpoint, and the client should send the next request to the same endpoint as the current request but with the provided port.\r\n```\r\n\r\nIt fails on this line: `this.redisURI = new RedisURI(connectionString);`\r\n\r\nFull stack trace:\r\n```\r\n<init>:138, RedisConnectionManager$RedisConnectionProvider (io.vertx.redis.client.impl)\r\n<init>:424, RedisConnectionManager$RedisEndpoint (io.vertx.redis.client.impl)\r\nconnectionEndpointProvider:73, RedisConnectionManager (io.vertx.redis.client.impl)\r\nlambda$getConnection$6:394, RedisConnectionManager (io.vertx.redis.client.impl)\r\ncreate:-1, RedisConnectionManager$$Lambda$3450/0x00000117be19e410 (io.vertx.redis.client.impl)\r\nlambda$getConnection$1:50, ConnectionManager (io.vertx.core.net.impl.pool)\r\napply:-1, ConnectionManager$$Lambda$3452/0x00000117be19e860 (io.vertx.core.net.impl.pool)\r\ncomputeIfAbsent:1708, ConcurrentHashMap (java.util.concurrent)\r\ngetConnection:50, ConnectionManager (io.vertx.core.net.impl.pool)\r\ngetConnection:40, ConnectionManager (io.vertx.core.net.impl.pool)\r\ngetConnection:394, RedisConnectionManager (io.vertx.redis.client.impl)\r\nconnect:170, RedisClusterClient (io.vertx.redis.client.impl)\r\nlambda$connect$11:150, RedisClusterClient (io.vertx.redis.client.impl)\r\nhandle:-1, RedisClusterClient$$Lambda$3467/0x00000117be1b0cc8 (io.vertx.redis.client.impl)\r\nonSuccess:91, FutureImpl$1 (io.vertx.core.impl.future)\r\nonSuccess:297, FutureImpl$ListenerArray (io.vertx.core.impl.future)\r\nemitSuccess:66, FutureBase (io.vertx.core.impl.future)\r\ntryComplete:246, FutureImpl (io.vertx.core.impl.future)\r\nonSuccess:49, PromiseImpl (io.vertx.core.impl.future)\r\nhandle:41, PromiseImpl (io.vertx.core.impl.future)\r\nhandle:23, PromiseImpl (io.vertx.core.impl.future)\r\nlambda$null$16:259, RedisClusterClient (io.vertx.redis.client.impl)\r\nhandle:-1, RedisClusterClient$$Lambda$3494/0x00000117be1ccfc0 (io.vertx.redis.client.impl)\r\nlambda$getSlots$18:283, RedisClusterClient (io.vertx.redis.client.impl)\r\nhandle:-1, RedisClusterClient$$Lambda$3495/0x00000117be1cd1e8 (io.vertx.redis.client.impl)\r\nonSuccess:176, FutureImpl$4 (io.vertx.core.impl.future)\r\nemitSuccess:66, FutureBase (io.vertx.core.impl.future)\r\ntryComplete:246, FutureImpl (io.vertx.core.impl.future)\r\nonSuccess:63, Transformation$1 (io.vertx.core.impl.future)\r\nemitSuccess:66, FutureBase (io.vertx.core.impl.future)\r\naddListener:231, FutureImpl (io.vertx.core.impl.future)\r\nonSuccess:44, Transformation (io.vertx.core.impl.future)\r\nemitSuccess:66, FutureBase (io.vertx.core.impl.future)\r\ntryComplete:246, FutureImpl (io.vertx.core.impl.future)\r\nhandle:418, RedisStandaloneConnection (io.vertx.redis.client.impl)\r\nhandleResponse:296, RESPParser (io.vertx.redis.client.impl)\r\nhandleMulti:262, RESPParser (io.vertx.redis.client.impl)\r\nhandle:102, RESPParser (io.vertx.redis.client.impl)\r\nhandle:24, RESPParser (io.vertx.redis.client.impl)\r\nlambda$new$1:101, NetSocketImpl (io.vertx.core.net.impl)\r\nhandle:-1, NetSocketImpl$$Lambda$3481/0x00000117be1ba7d0 (io.vertx.core.net.impl)\r\nhandleEvent:255, InboundBuffer (io.vertx.core.streams.impl)\r\nwrite:134, InboundBuffer (io.vertx.core.streams.impl)\r\nhandle:402, NetSocketImpl$DataMessageHandler (io.vertx.core.net.impl)\r\nemit:335, ContextImpl (io.vertx.core.impl)\r\nemit:328, ContextImpl (io.vertx.core.impl)\r\nhandleMessage:378, NetSocketImpl (io.vertx.core.net.impl)\r\nread:159, ConnectionBase (io.vertx.core.net.impl)\r\nchannelRead:153, VertxHandler (io.vertx.core.net.impl)\r\ninvokeChannelRead:442, AbstractChannelHandlerContext (io.netty.channel)\r\ninvokeChannelRead:420, AbstractChannelHandlerContext (io.netty.channel)\r\nfireChannelRead:412, AbstractChannelHandlerContext (io.netty.channel)\r\nchannelRead:1410, DefaultChannelPipeline$HeadContext (io.netty.channel)\r\ninvokeChannelRead:440, AbstractChannelHandlerContext (io.netty.channel)\r\ninvokeChannelRead:420, AbstractChannelHandlerContext (io.netty.channel)\r\nfireChannelRead:919, DefaultChannelPipeline (io.netty.channel)\r\nread:166, AbstractNioByteChannel$NioByteUnsafe (io.netty.channel.nio)\r\nprocessSelectedKey:788, NioEventLoop (io.netty.channel.nio)\r\nprocessSelectedKeysOptimized:724, NioEventLoop (io.netty.channel.nio)\r\nprocessSelectedKeys:650, NioEventLoop (io.netty.channel.nio)\r\nrun:562, NioEventLoop (io.netty.channel.nio)\r\nrun:997, SingleThreadEventExecutor$4 (io.netty.util.concurrent)\r\nrun:74, ThreadExecutorMap$2 (io.netty.util.internal)\r\nrun:30, FastThreadLocalRunnable (io.netty.util.concurrent)\r\nrun:833, Thread (java.lang)\r\n```\n\n### Expected behavior\n\nThe client can work with node address being only a port number (completing it using the original connection's host / IP address).\n\n### Actual behavior\n\nThe connection fails because of Redis URI parsing errror.\n\n### How to Reproduce?\n\nDeploy a Redis with `cluster-preferred-endpoint-type unknown-endpoint` or probably even `bind 0.0.0.0`.\r\nThe `redis-cli cluster nodes` should return a node without an IP address / hostname:\r\n```\r\n9ed8f1e3223045eb166c536af2f56fd02db79b31 :6379@16379 myself,master - 0 0 1 connected 0-16383\r\n```\r\n\r\nConnect to the cluster from Quarkus:\r\n```yaml\r\n  redis:\r\n    hosts: 'redis://redis-cluster.redis.svc.cluster.local:6379'\r\n    client-type: cluster\r\n    replicas: share\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### Quarkus version or git rev\n\n3.7.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.9.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39593/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39593/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

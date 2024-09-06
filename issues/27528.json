@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27528",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27528/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27528/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27528/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27528",
+  "id": 1352071850,
+  "node_id": "I_kwDOCFbutM5Qlvqq",
+  "number": 27528,
+  "title": "OpenTelemetry's traceId and spanId not logged after RestClient call",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-08-26T10:24:25Z",
+  "updated_at": "2022-08-26T14:50:04Z",
+  "closed_at": "2022-08-26T14:49:20Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nOpenTelemetry's traceId and spanId not logged has been fixed recently #26562\r\n\r\nHowever, there is a remaing issue when handling the result of a reactive rest client call\r\n\r\n### Resource\r\n```\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n   private static final Logger LOG = Logger.getLogger(GreetingResource.class);\r\n   @Inject\r\n   GreetingService service;\r\n\r\n   @RestClient\r\n   GreetingClient greetingClient;\r\n\r\n   @SneakyThrows\r\n   @GET\r\n   @WithSpan\r\n   @Produces(MediaType.TEXT_PLAIN)\r\n   public CompletableFuture<String> hello() {\r\n      LOG.info(\"generate uuid\");\r\n      String uuid = UUID.randomUUID().toString();\r\n      LOG.info(\"loop \" + uuid);\r\n      return greetingClient.greeting(\"RESTEasy_Reactive_\" + uuid)\r\n            .thenApply(msg -> {\r\n               LOG.info(\"back \"+ msg);\r\n               return msg;\r\n            })\r\n            .toCompletableFuture();\r\n   }\r\n\r\n   @GET\r\n   @WithSpan\r\n   @Produces(MediaType.TEXT_PLAIN)\r\n   @Path(\"/greeting/{name}\")\r\n   public String greeting(String name) {\r\n      String res = service.greeting(name);\r\n      LOG.info(res);\r\n      return res;\r\n   }\r\n}\r\n```\r\n\r\n### Client\r\n```\r\n@Path(\"/hello\")\r\n@RegisterRestClient(configKey=\"greeting-api\")\r\npublic interface GreetingClient {\r\n   @GET\r\n   @Path(\"/greeting/{name}\")\r\n   CompletionStage<String> greeting(@PathParam(\"name\") String name);\r\n}\r\n```\r\n\r\n\n\n### Expected behavior\n\nAll traces related to one transaction should be logged under same id\n\n### Actual behavior\n\n```\r\n10:51:38 INFO  traceId=acf609ed27927c523adeef15e38c68d8, parentId=9a30b66aed506cc5, spanId=b861b34e21bc9556, sampled=true [co.nx.nx.ba.GreetingResource] (executor-thread-0) generate uuid\r\n10:51:38 INFO  traceId=acf609ed27927c523adeef15e38c68d8, parentId=9a30b66aed506cc5, spanId=b861b34e21bc9556, sampled=true [co.nx.nx.ba.GreetingResource] (executor-thread-0) loop 40a7b65c-e5f2-4973-8acd-bf81bea9b72d\r\n10:51:38 INFO  traceId=acf609ed27927c523adeef15e38c68d8, parentId=07b041e5a1404cde, spanId=8b77eafbcd574064, sampled=true [co.nx.nx.ba.GreetingResource] (executor-thread-0) hello RESTEasy_Reactive_40a7b65c-e5f2-4973-8acd-bf81bea9b72d\r\n10:51:38 INFO  traceId=, parentId=, spanId=, sampled= [co.nx.nx.ba.GreetingResource] (vert.x-eventloop-thread-1) back hello RESTEasy_Reactive_40a7b65c-e5f2-4973-8acd-bf81bea9b72d\r\n```\r\n\r\nLast line (logged inside `thenApply`) has no traceId\n\n### How to Reproduce?\n\nPerform `GET http://localhost:8080/hello`\n\n### Output of `uname -a` or `ver`\n\nLinux dev-ptf 5.15.0-46-generic #49-Ubuntu SMP Thu Aug 4 18:03:25 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment GraalVM CE 22.1.0 (build 11.0.15+10-jvmci-22.1-b06)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\nio.quarkus.platform.quarkus-bom.2.12.0.CR1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27528/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27528/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

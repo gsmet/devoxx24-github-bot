@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40938",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40938/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40938/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40938/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40938",
+  "id": 2330608056,
+  "node_id": "I_kwDOCFbutM6K6kG4",
+  "number": 40938,
+  "title": "Netty:LogCleanupFilterBuildItem does not remove a message",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 6795585542,
+      "node_id": "LA_kwDOCFbutM8AAAABlQxoBg",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/netty",
+      "name": "area/netty",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-06-03T09:14:06Z",
+  "updated_at": "2024-06-03T10:31:37Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI keep encountering:\r\n\r\n```\r\nBuild resources:\r\n - 12.09GB of memory (75.6% of 16.00GB system memory, determined at start)\r\n - 10 thread(s) (100.0% of 10 available processor(s), determined at start)\r\n01:09:13,109 INFO  [org.jbo.res.res.i18n] RESTEASY002225: Deploying jakarta.ws.rs.core.Application: class com.example.quarkus.QuarkusRestApplication\r\n01:09:26,536 WARN  [io.net.res.dns.DnsServerAddressStreamProviders] Can not find io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider in the classpath, fallback to system defaults. This may result in incorrect DNS resolutions on MacOS. Check whether you have a dependency on 'io.netty:netty-resolver-dns-native-macos'\r\n```\r\n\r\nSo it seems this doesn't work: [NettyProcessor.java#L302](https://github.com/quarkusio/quarkus/blob/3.8.4/extensions/netty/deployment/src/main/java/io/quarkus/netty/deployment/NettyProcessor.java#L302)\r\n\r\n```\r\n    /**\r\n     * On mac, if you do not have the `MacOSDnsServerAddressStreamProvider` class, Netty prints a warning saying it\r\n     * falls back to the default system DNS provider. This is not a problem and generates tons of questions.\r\n     *\r\n     * @return the log cleanup item removing the message\r\n     */\r\n    @BuildStep\r\n    LogCleanupFilterBuildItem cleanupMacDNSInLog() {\r\n        return new LogCleanupFilterBuildItem(DnsServerAddressStreamProviders.class.getName(), Level.WARN,\r\n                \"Can not find io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider in the classpath\");\r\n    }\r\n```\r\n\r\n\n\n### Expected behavior\n\nNo warning.\n\n### Actual behavior\n\nWarning in the build log.\n\n### How to Reproduce?\n\ne.g. build this project: https://github.com/Karm/mandrel-integration-tests/tree/master/apps/quarkus-full-microprofile\r\n(patch with [quarkus_3.8.x.patch](https://github.com/Karm/mandrel-integration-tests/blob/master/apps/quarkus-full-microprofile/quarkus_3.8.x.patch) first)\r\n\r\n```\r\nmvn package -Pnative -Dquarkus.version=3.8.4\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin mandrel-macos-aarch64-1.local 23.5.0 Darwin Kernel Version 23.5.0: Wed May  1 20:14:38 PDT 2024; root:xnu-10063.121.3~5/RELEASE_ARM64_T6020 arm64\n\n### Output of `java -version`\n\nopenjdk 21.0.3 2024-04-16 LTS\n\n### Quarkus version or git rev\n\n3.8.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.7 (8b094c9513efc1b9ce2d952b3b9c8eaedaf8cbf0) Maven home: /opt/apache-maven-3.9.7 Java version: 21.0.3, vendor: Eclipse Adoptium, runtime: /Users/tester/tmp/mandrel-23.1.3.1-Final/Contents/Home\n\n### Additional information\n\n % native-image --version\r\nnative-image 21.0.3 2024-04-16\r\nOpenJDK Runtime Environment Mandrel-23.1.3.2-dev49b42155870 (build 21.0.3+9-LTS)\r\nOpenJDK 64-Bit Server VM Mandrel-23.1.3.2-dev49b42155870 (build 21.0.3+9-LTS, mixed mode)\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40938/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40938/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41607",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41607/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41607/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41607/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41607",
+  "id": 2385994340,
+  "node_id": "I_kwDOCFbutM6ON2Jk",
+  "number": 41607,
+  "title": "Netty finalizers load classes from closed class loaders",
+  "labels": [
+    {
+      "id": 6795585542,
+      "node_id": "LA_kwDOCFbutM8AAAABlQxoBg",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/netty",
+      "name": "area/netty",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2024-07-02T11:21:48Z",
+  "updated_at": "2024-07-06T15:02:52Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "@franz1981 @cescoffier  I decided to create a specific issue for this one. I think it would have value for us to be able to fully control the Netty lifecycle instead of relying on finalizers.\r\nObviously, I have no idea how easy it would be.\r\n\r\nThis is the stacktrace we obtain:\r\n\r\n```\r\nClass loader QuarkusClassLoader:QuarkusUnitTest ClassLoader for NonAppEndpointsDisabledTest@75b45343 has been closed and may not be accessed anymore\r\njava.lang.Exception: Stack trace\r\n\tat java.base/java.lang.Thread.dumpStack(Thread.java:1389)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.ensureOpen(QuarkusClassLoader.java:730)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:509)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:504)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:556)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:504)\r\n\tat io.netty.util.internal.shaded.org.jctools.queues.ConcurrentCircularArrayQueue.isEmpty(ConcurrentCircularArrayQueue.java:71)\r\n\tat io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueue.isEmpty(MpscArrayQueue.java:207)\r\n\tat io.netty.buffer.PoolThreadCache.checkCacheMayLeak(PoolThreadCache.java:236)\r\n\tat io.netty.buffer.PoolThreadCache.free(PoolThreadCache.java:227)\r\n\tat io.netty.buffer.PoolThreadCache$FreeOnFinalize.finalize(PoolThreadCache.java:500)\r\n\tat java.base/java.lang.System$2.invokeFinalize(System.java:2297)\r\n\tat java.base/java.lang.ref.Finalizer.runFinalizer(Finalizer.java:88)\r\n\tat java.base/java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:173)\r\n```\r\n\r\nThis is logged when trying to load `IndexedQueueSizeUtil` to check if the queue is empty.\r\n\r\nWhile it might sound like something that is not that problematic because it works, we actually have a lot of problems coming from the fact that we don't enforce the closing of CLs. When a `QuarkusClassLoader` is closed, we shouldn't try to load anything from it anymore.\r\nThis is not exactly easy and this is just one of the occurrences but I thought it would be better isolated in a specific issue.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41607/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41607/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,101 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24067",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24067/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24067/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24067/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24067",
+  "id": 1157907788,
+  "node_id": "I_kwDOCFbutM5FBEVM",
+  "number": 24067,
+  "title": "use \"hibernate reactive with panache\" in kafkaConsumerRebalanceListener throw javax.enterprise.context.ContextNotActiveException",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2022-03-03T02:49:53Z",
+  "updated_at": "2022-05-01T15:13:29Z",
+  "closed_at": "2022-05-01T15:13:20Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMy kafka consume offset is stored in the database, every time to start, need in KafkaConsumerRebalanceListener query the database, and set up the consume offset, But each time performs a database query in KafkaConsumerRebalanceListener throw \"javax.enterprise.context.ContextNotActiveException\"\r\n\r\n```java\r\n@Slf4j\r\n@ApplicationScoped\r\n@Identifier(\"test-topic.rebalancer\")\r\npublic class KafkaRebalanceListener implements KafkaConsumerRebalanceListener {\r\n    private static final String CONSUME_GROUP = \"test-topic-consume-group\";\r\n    @ConfigProperty(name = \"device-status.init-rollback-seconds\", defaultValue = \"3600\")\r\n    Provider<Long> initRollbackSeconds;\r\n    @Inject\r\n    EventConsumeOffsetDao eventConsumeOffsetDao;\r\n\r\n    @Override\r\n    public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {\r\n        log.info(\"Partitions assigned: {}\", partitions);\r\n        List<Integer> partitionNum = new ArrayList<>();\r\n        for (TopicPartition partition : partitions) {\r\n            partitionNum.add(partition.partition());\r\n        }\r\n        eventConsumeOffsetDao.getOffset(CONSUME_GROUP, partitionNum).map(list -> {\r\n            Map<Integer, Long> offsets = new HashMap<>();\r\n            list.forEach(o -> offsets.put(o.getPartitionNum(), o.getOffset()));\r\n            return offsets;\r\n        }).invoke(map -> {\r\n            Map<TopicPartition, Long> requestOffset = new HashMap<>();\r\n            long now = System.currentTimeMillis();\r\n            long shouldStartAt = now - initRollbackSeconds.get() * 1000L;\r\n            for (TopicPartition partition : partitions) {\r\n                Long offset = map.get(partition.partition());\r\n                if(offset != null) {\r\n                    setOffset(consumer, partition, offset);\r\n                } else {\r\n                    requestOffset.put(partition, shouldStartAt);\r\n                }\r\n            }\r\n            Map<TopicPartition, OffsetAndTimestamp> offsets = consumer.offsetsForTimes(requestOffset);\r\n            for (Map.Entry<TopicPartition, OffsetAndTimestamp> position : offsets.entrySet()) {\r\n                long target = position.getValue() == null ? 0L : position.getValue().offset();\r\n                setOffset(consumer, position.getKey(), target);\r\n            }\r\n        }).await().indefinitely();\r\n    }\r\n\r\n    private void setOffset(Consumer<?, ?> consumer, TopicPartition partition, long offset) {\r\n        log.info(\"Seeking position {} for partition {}\", offset, partition);\r\n        consumer.seek(partition, offset);\r\n    }\r\n\r\n    @Override\r\n    public void onPartitionsRevoked(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {\r\n        log.info(\"Partitions revoked: {}\", partitions);\r\n        recyclePersistence(consumer, partitions);\r\n    }\r\n\r\n    @Override\r\n    public void onPartitionsLost(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {\r\n        log.info(\"Partitions lost: {}\", partitions);\r\n        recyclePersistence(consumer, partitions);\r\n    }\r\n\r\n    private void recyclePersistence(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {\r\n        // TODO\r\n    }\r\n\r\n}\r\n```\r\n\r\n```yml\r\nmp:\r\n  messaging:\r\n    incoming:\r\n      test-topic-in:\r\n        connector: smallrye-kafka\r\n        topic: test-topic\r\n        group:\r\n          id: test-topic-consume-group\r\n        key:\r\n          deserializer: io.vertx.kafka.client.serialization.JsonObjectDeserializer\r\n        value:\r\n          deserializer: xxxDeserializer\r\n        auto:\r\n          offset:\r\n            reset: latest\r\n        broadcast: false\r\n        partitions: 3\r\n        max.poll.records: 100\r\n        consumer-rebalance-listener:\r\n          name: test-topic.rebalancer\r\n```\r\n\r\n```log\r\n2022-03-03 09:45:58.243[ERROR]-[vert.x-eventloop-thread-6]-[i.q.m.r.MutinyInfrastructure(49)]: Mutiny had to drop the following exception: javax.enterprise.context.ContextNotActiveException\r\n\tat io.quarkus.arc.impl.ClientProxies.getDelegate(ClientProxies.java:46)\r\n\tat org.hibernate.reactive.mutiny.ReactiveSessionProducer_ProducerMethod_createMutinySession_1321d110ee9e92bda147899150401e0a136779c7_ClientProxy.arc$delegate(Unknown Source)\r\n\tat org.hibernate.reactive.mutiny.ReactiveSessionProducer_ProducerMethod_createMutinySession_1321d110ee9e92bda147899150401e0a136779c7_ClientProxy.createQuery(Unknown Source)\r\n\tat io.quarkus.hibernate.reactive.panache.common.runtime.CommonPanacheQueryImpl.createBaseQuery(CommonPanacheQueryImpl.java:316)\r\n\tat io.quarkus.hibernate.reactive.panache.common.runtime.CommonPanacheQueryImpl.createQuery(CommonPanacheQueryImpl.java:264)\r\n\tat io.quarkus.hibernate.reactive.panache.common.runtime.CommonPanacheQueryImpl.lambda$list$6(CommonPanacheQueryImpl.java:230)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.performInnerSubscription(UniOnItemTransformToUni.java:68)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:57)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onItem(UniOperatorProcessor.java:46)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromItemSupplier.subscribe(UniCreateFromItemSupplier.java:29)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniRunSubscribeOn.lambda$subscribe$0(UniRunSubscribeOn.java:27)\r\n\tat io.quarkus.hibernate.reactive.panache.common.runtime.AbstractJpaOperations.lambda$executeInVertxEventLoop$0(AbstractJpaOperations.java:43)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:38)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute$$$capture(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:834)\r\n```\n\n### Expected behavior\n\nQuery the Kafka consume offset stored in the database and set the initial consumption location\n\n### Actual behavior\n\nthrow javax.enterprise.context.ContextNotActiveException\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [Version 10.0.22000.168]\n\n### Output of `java -version`\n\njava version \"11.0.10\" 2021-01-19 \n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.6.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24067/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24067/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

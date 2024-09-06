@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37148",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37148/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37148/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37148/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37148",
+  "id": 1997098984,
+  "node_id": "I_kwDOCFbutM53CU_o",
+  "number": 37148,
+  "title": "JAX-RS subresource issue in Quarkus native build",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 21,
+  "created_at": "2023-11-16T15:15:36Z",
+  "updated_at": "2024-03-30T17:52:34Z",
+  "closed_at": "2024-03-29T14:50:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nGeneral architecture:\r\n\r\n```java\r\n@Path(\"foo\")\r\n@RequestScoped\r\npublic class FooResource {\r\n\r\n  @Path(\"{id}\")\r\n  public BarResource bar(@Context ResourceContext rc) {\r\n        return rc.initResource(CDI.current()\r\n                .select(BarResource.class)\r\n                .get());\r\n  }\r\n}\r\n```\r\n\r\n```java\r\n@Dependent\r\n@Unremovable\r\n@RegisterForReflection\r\npublic class BarResource {\r\n\r\n  @PathParam(\"id\")\r\n  String id;\r\n\r\n  // some CDI @Inject dependencies omitted\r\n\r\n  @GET\r\n  public boolean get(@QueryParam(\"bar\") Integer bar) {\r\n    return true;\r\n  }\r\n}\r\n```\r\n\r\nWhen executing an HTTP GET for /foo/some?bar=5, we get the following exception:\r\n\r\n```\r\nEncountered an issue: org.jboss.resteasy.spi.InternalServerErrorException: RESTEASY003815: Subresource for target class has no qualifying annotations.: ...BarResource.class...\r\n        at org.jboss.resteasy.core.ResourceLocatorInvoker.invokeOnTargetObject(ResourceLocatorInvoker.java:157)\r\n\tat org.jboss.resteasy.core.ResourceLocatorInvoker.invoke(ResourceLocatorInvoker.java:131)\r\n\tat org.jboss.resteasy.core.ResourceLocatorInvoker.invoke(ResourceLocatorInvoker.java:33)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:429)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:240)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:154)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:157)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:229)\r\n\tat io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:82)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:147)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:93)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:582)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base@21.0.1/java.lang.Thread.runWith(Thread.java:1596)\r\n\tat java.base@21.0.1/java.lang.Thread.run(Thread.java:1583)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.thread.PlatformThreads.threadStartRoutine(PlatformThreads.java:832)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.posix.thread.PosixPlatformThreads.pthreadStartRoutine(PosixPlatformThreads.java:211)\r\n```\r\n\r\n### Expected behavior\r\n\r\nNo exception, or detection of the issue at build time.\r\n\r\n### Actual behavior\r\n\r\nException when trying to call endpoint specified in subresource\r\n\r\n### How to Reproduce?\r\n\r\nSee [reproducer](https://github.com/DeMol-EE/quarkus-reproducer-37148)\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nruntime provided by quarkus-micro-image:2.0\r\n\r\n### Output of `java -version`\r\n\r\njdk 21 used in the mandrel build image\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\nbuilt with quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21, released with quay.io/quarkus/quarkus-micro-image:2.0\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn 3.9.5, via mvnw 3.2.0\r\n\r\n### Additional information\r\n\r\n* JAXRS extension: quarkus-resteasy-jackson\r\n* We added `@RegisterForReflection` after reading [this](https://stackoverflow.com/questions/57820428/jax-rs-subresource-issue-in-quarkus), but to no avail\r\n* Getting subresources and CDI to work never went smoothly, it took some trial-and-error but the shenanigans with `ResourceContext` work.\r\n* this is a minimal Quarkus app with strictly quarkus extensions as dependencies",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37148/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37148/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

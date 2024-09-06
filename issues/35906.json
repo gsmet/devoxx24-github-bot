@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35906",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35906/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35906/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35906/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35906",
+  "id": 1894066918,
+  "node_id": "I_kwDOCFbutM5w5Srm",
+  "number": 35906,
+  "title": "Native build fails with signed jars containing Quarkus resources to be augmented",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-09-13T08:59:02Z",
+  "updated_at": "2024-08-28T09:35:29Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "Building native applications which depend on signed jars that contain Quarkus resources for which bytecode is generated (e.g. JAX-RS resources) will fail. This is the case in [this discussion](https://github.com/quarkusio/quarkus/discussions/34909). The error looks like this:\r\n\r\n```\r\nCaused by: java.lang.SecurityException:\r\nclass \"com.ibm.bamoe.ilmt.quarkus.pamoe.PAMOESwidTagGen\"'s signer information\r\ndoes not match signer information of other classes in the same package\r\n```\r\n\r\nThe error is caused because `PAMOESwidTagGen` is a JAX-RS resource, located inside a signed jar. When Quarkus augments that, it generates a `PAMOESwidTagGen_Bean` class, which is stored inside non-signed `generated-bytecode.jar`. During native image process, the standard classloading encounters that both of this classes are in the same package `com.ibm.bamoe.ilmt.quarkus.pamoe`, but one is inside a signed jar and the other is an unsigned jar and hence it fails this integrity check.\r\n\r\nThe [standalone reproducer attached to this issue](https://github.com/quarkusio/quarkus/files/12595551/signed-jar-standalone-reproducer.tar.gz) demonstrates the issue native image encounters with just a java class that does the following:\r\n\r\n```\r\nclass reproducer {\r\n    public static void main(String[] args) throws ClassNotFoundException\r\n    {\r\n        System.out.println(Class.forName(\"org.acme.service.GreetingService_Bean\"));\r\n        System.out.println(Class.forName(\"org.acme.service.GreetingService\"));\r\n    }\r\n}\r\n```\r\n\r\nCompiling it and running it with the jars within the bundle reproduces it:\r\n\r\n```\r\n$ ❯ ./reproduce.sh\r\n+ javac reproducer.java\r\n+ java -cp .:io.quarkus.arc.arc-3.3.2.jar:jakarta.enterprise.jakarta.enterprise.cdi-api-4.0.1.jar:org.acme.service-1.0.0-SNAPSHOT.jar:generated-bytecode.jar reproducer\r\nclass org.acme.service.GreetingService_Bean\r\nException in thread \"main\" java.lang.SecurityException: class \"org.acme.service.GreetingService\"'s signer information does not match signer information of other classes in the same package\r\n\tat java.base/java.lang.ClassLoader.checkCerts(ClassLoader.java:1163)\r\n\tat java.base/java.lang.ClassLoader.preDefineClass(ClassLoader.java:907)\r\n\tat java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1015)\r\n\tat java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:150)\r\n\tat java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:862)\r\n\tat java.base/jdk.internal.loader.BuiltinClassLoader.findClassOnClassPathOrNull(BuiltinClassLoader.java:760)\r\n\tat java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:681)\r\n\tat java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:639)\r\n\tat java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)\r\n\tat java.base/java.lang.Class.forName0(Native Method)\r\n\tat java.base/java.lang.Class.forName(Class.java:375)\r\n\tat reproducer.main(reproducer.java:5)\r\n```\r\n\r\nThis issue does not happen in either test, dev, or production mode, because they run custom classloaders. The way the `java.security.CodeSource` is created means that any certiticates that a jar might contained [are ignored](https://github.com/quarkusio/quarkus/blob/3.3.2/independent-projects/bootstrap/runner/src/main/java/io/quarkus/bootstrap/runner/JarResource.java#L67):\r\n\r\n```java\r\n        this.protectionDomain = new ProtectionDomain(new CodeSource(url, (Certificate[]) null), null, runnerClassLoader, null);\r\n```\r\n\r\nThis is not a security problem because Quarkus does not support running with a `SecurityManager`.\r\n\r\nSo, the main issue here is really trying to figure out how to fix native builds in this scenario. There are 3 ways to do this:\r\n\r\n1. Generate bytecode in a different package. This wouldn't be the default configuration, but could be something the user decides to activate optionally. This would break package private and/or protected access though.\r\n2. Rebundle signed jars so that the jar that is passed onto the native-image process does not contain certificates. This requires exploration on how the `Certificate[]` that is passed onto `CodeSource` is extracted out of a jar, and use that information to decide how to reshape the signed jars.\r\n3. State that signed jars containing augmented Quarkus resources are not supported.\r\n\r\nIrrespective of the chose solution, the [Security Guide](https://quarkus.io/guides/security-overview) needs to be updated to make it clear that:\r\n\r\n1. Quarkus does not support running with a `SecurityManager`.\r\n2. Acknowledge that Quarkus uses a custom classloader in all test, dev and production modes, and this classloader ignores the certificates inside jar files.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35906/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35906/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

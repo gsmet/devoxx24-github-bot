@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35663",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35663/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35663/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35663/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35663",
+  "id": 1875774271,
+  "node_id": "I_kwDOCFbutM5vzgs_",
+  "number": 35663,
+  "title": "Hibernate reactive does not allow SSL connection within GRPC service with native compilation",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-08-31T15:32:57Z",
+  "updated_at": "2024-08-14T15:10:34Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAfter migrating our Quarkus 2 applications to Quarkus 3 we identified a regression. One of our GRPC service which create a request to our mariaDB is not working. When targeting this GRPC service, our database return ACCESS DENIED error.\r\n\r\nThis issue happens only when application is compiled in native mode and with SSL connection to DB (tested only with SSL-MODE required).\r\n\r\nWe reproduced it on Windows and Linux environment.\r\n\r\nMy local DB server is configured to accept only TLS connection and reproducer is configured to trust all certificates.\r\n\r\n\r\n### Expected behavior\r\n\r\nConnect to the database with SSL-MODE required\r\n\r\n### Actual behavior\r\n\r\nFailed to connect to the database with native compilation and SSL-MODE set to required.\r\n\r\n### How to Reproduce?\r\n\r\n**Steps to reproduce (due to company policy I cannot upload minimal reproducer):**\r\n\r\n1. Create Quarkus application which expose GRPC server (I used quarkus-grpc starter code)\r\n2. Include quarkus-reactive-mysql-client and quarkus-hibernate-reactive-panache dependencies\r\n3. Add any DB request in the GRPC service (I also had to create a dummy entity). See example below:\r\n4. Enable SSL connection in the datasource configuration\r\n5. Ensure MariaDB is configured to accept only SSL encrypted connection\r\n6. Compile in native mode\r\n7. Send request to GRPC service\r\n8. Access denied should be returned (doing the exact same process in JVM mode will succeed)\r\n\r\n**GRPC service source code example**\r\n```\r\n@Override\r\npublic Uni<org.acme.HelloReply> sayHello(org.acme.HelloRequest request) {\r\n    return Panache.withSession(() ->\r\n            Panache.getSession()\r\n                    .chain(session -> session.createQuery(\"select 1\")\r\n                            .getSingleResult()\r\n                            .map(o -> org.acme.HelloReply.newBuilder().setMessage(o.toString()).build()))\r\n                    .onItem().invoke(() -> LOGGER.info(\"Connection succeed\")))\r\n            .onFailure().recoverWithItem((Throwable throwable) -> {\r\n                LOGGER.error(\"Connection failed\", throwable);\r\n                return org.acme.HelloReply.newBuilder().setMessage(\"error\").build();\r\n            });\r\n}\r\n```\r\n\r\n**Datasource configuration example:**\r\nquarkus.datasource.db-kind=mariadb\r\nquarkus.datasource.username=username\r\nquarkus.datasource.password=password\r\nquarkus.datasource.reactive.url=mariadb://localhost/dbname\r\nquarkus.datasource.reactive.mysql.ssl-mode=required\r\nquarkus.datasource.reactive.trust-all=true\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"18.0.1.1\" 2022-04-22 OpenJDK Runtime Environment (build 18.0.1.1+2-6) OpenJDK 64-Bit Server VM (build 18.0.1.1+2-6, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nmandrel-java17-23.0.1.2-Final\r\n\r\n### Quarkus version or git rev\r\n\r\n3.3.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35663/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35663/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

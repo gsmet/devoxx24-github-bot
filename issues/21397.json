@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21397",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21397/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21397/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21397/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21397",
+  "id": 1051770675,
+  "node_id": "I_kwDOCFbutM4-sL8z",
+  "number": 21397,
+  "title": "Resteasy JavaTimeModule not working properly",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-11-12T09:43:00Z",
+  "updated_at": "2021-11-12T15:15:34Z",
+  "closed_at": "2021-11-12T13:26:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen adding e.g. java.time.OffsetDateTime as a @QueryParam to an endpoint, Quarkus fails to startup (RESTEASY003875), despite stating \"To improve user experience, Quarkus registers the three Jackson Java 8 modules so you don’t need to do it manually.\" in the [docs](https://quarkus.io/guides/rest-json).\r\n\r\nI created a [plain project for reproduction](https://github.com/mzellho/quarkus-java8time-issue) and added \r\n\r\n```\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-resteasy-jackson</artifactId>\r\n</dependency>\r\n\r\n\r\n```\r\n\r\nand edited the generated `hello` endoint to `public String hello(@QueryParam(\"date\") OffsetDateTime date)`\r\n\r\nIn my other project, I was able to verify that `JacksonProcessor` got invoked and raised no error when registering `MODULES_NAMES_TO_AUTO_REGISTER`.\r\n\r\nI also tried to implement a `ObjectMapperCustomizer` registering `JavaTimeModule` myself, but with no luck.\r\n\r\n\r\n### Expected behavior\r\n\r\nJavaTimeModule enables to use java.time.* in @QueryParam\r\n\r\n### Actual behavior\r\n\r\nWhen running `mvn quarkus:dev`, Quarkus fails to boot:\r\n\r\n```\r\n2021-11-12 10:31:47,215 ERROR [io.qua.run.boo.StartupActionImpl] (Quarkus Main Thread) Error running Quarkus: java.lang.reflect.InvocationTargetException\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:78)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:567)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:103)\r\n        at java.base/java.lang.Thread.run(Thread.java:831)\r\nCaused by: java.lang.ExceptionInInitializerError\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:78)\r\n        at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n        at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)\r\n        at java.base/java.lang.reflect.ReflectAccess.newInstance(ReflectAccess.java:128)\r\n        at java.base/jdk.internal.reflect.ReflectionFactory.newInstance(ReflectionFactory.java:350)\r\n        at java.base/java.lang.Class.newInstance(Class.java:642)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:66)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n        at io.quarkus.runner.GeneratedMain.main(GeneratedMain.zig:29)\r\n        ... 6 more\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(ApplicationImpl.zig:318)\r\n        ... 17 more\r\nCaused by: java.lang.RuntimeException: RESTEASY003875: Unable to find a constructor that takes a String param or a valueOf() or fromString() method for javax.ws.rs.QueryParam(\"date\") on public java.lang.String foo.bar.GreetingResource.hello(java.time.OffsetDateTime) for basetype: java.time.OffsetDateTime\r\n        at org.jboss.resteasy.core.StringParameterInjector.initialize(StringParameterInjector.java:458)\r\n        at org.jboss.resteasy.core.StringParameterInjector.<init>(StringParameterInjector.java:401)\r\n        at org.jboss.resteasy.core.QueryParamInjector.<init>(QueryParamInjector.java:31)\r\n        at org.jboss.resteasy.core.InjectorFactoryImpl.createParameterExtractor0(InjectorFactoryImpl.java:100)\r\n        at org.jboss.resteasy.core.InjectorFactoryImpl.lambda$createParameterExtractor$0(InjectorFactoryImpl.java:91)\r\n        at org.jboss.resteasy.core.InjectorFactoryImpl$OptionalInjections.lambda$wrap$8(InjectorFactoryImpl.java:309)\r\n        at java.base/java.util.Optional.orElseGet(Optional.java:364)\r\n        at org.jboss.resteasy.core.InjectorFactoryImpl$OptionalInjections.wrap(InjectorFactoryImpl.java:309)\r\n        at org.jboss.resteasy.core.InjectorFactoryImpl.createParameterExtractor(InjectorFactoryImpl.java:91)\r\n        at org.jboss.resteasy.core.MethodInjectorImpl.<init>(MethodInjectorImpl.java:45)\r\n        at org.jboss.resteasy.core.InjectorFactoryImpl.createMethodInjector(InjectorFactoryImpl.java:85)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.<init>(ResourceMethodInvoker.java:136)\r\n        at org.jboss.resteasy.core.ResourceMethodRegistry.processMethod(ResourceMethodRegistry.java:381)\r\n        at org.jboss.resteasy.core.ResourceMethodRegistry.register(ResourceMethodRegistry.java:308)\r\n        at org.jboss.resteasy.core.ResourceMethodRegistry.addResourceFactory(ResourceMethodRegistry.java:259)\r\n        at org.jboss.resteasy.core.ResourceMethodRegistry.addResourceFactory(ResourceMethodRegistry.java:227)\r\n        at org.jboss.resteasy.core.ResourceMethodRegistry.addResourceFactory(ResourceMethodRegistry.java:208)\r\n        at org.jboss.resteasy.core.ResourceMethodRegistry.addResourceFactory(ResourceMethodRegistry.java:192)\r\n        at org.jboss.resteasy.core.ResourceMethodRegistry.addResourceFactory(ResourceMethodRegistry.java:175)\r\n        at org.jboss.resteasy.core.ResourceMethodRegistry.addPerRequestResource(ResourceMethodRegistry.java:87)\r\n        at org.jboss.resteasy.core.ResteasyDeploymentImpl.registerResources(ResteasyDeploymentImpl.java:518)\r\n        at org.jboss.resteasy.core.ResteasyDeploymentImpl.registration(ResteasyDeploymentImpl.java:475)\r\n        at org.jboss.resteasy.core.ResteasyDeploymentImpl.startInternal(ResteasyDeploymentImpl.java:164)\r\n        at org.jboss.resteasy.core.ResteasyDeploymentImpl.start(ResteasyDeploymentImpl.java:121)\r\n        at io.quarkus.resteasy.runtime.standalone.ResteasyStandaloneRecorder.staticInit(ResteasyStandaloneRecorder.java:36)\r\n        at io.quarkus.deployment.steps.ResteasyStandaloneBuildStep$staticInit345281060.deploy_0(ResteasyStandaloneBuildStep$staticInit345281060.zig:884)\r\n        at io.quarkus.deployment.steps.ResteasyStandaloneBuildStep$staticInit345281060.deploy(ResteasyStandaloneBuildStep$staticInit345281060.zig:40)\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(ApplicationImpl.zig:287)\r\n        ... 17 more\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nClone the sample repo\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux DSAPA210210 5.4.72-microsoft-standard-WSL2 #1 SMP Wed Oct 28 23:40:43 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"16\" 2021-03-16 OpenJDK Runtime Environment AdoptOpenJDK (build 16+36) OpenJDK 64-Bit Server VM AdoptOpenJDK (build 16+36, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.4.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21397/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21397/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

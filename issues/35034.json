@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35034",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35034/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35034/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35034/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35034",
+  "id": 1822462724,
+  "node_id": "I_kwDOCFbutM5soJME",
+  "number": 35034,
+  "title": "OpenTelemetry Context is null in Rest Client filter (using Azure App Insights agent)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2023-07-26T13:48:21Z",
+  "updated_at": "2024-07-27T17:07:23Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe `OpenTelemetryClientFilter` is causing a `NullPointerException`. In particular, the `spanContext` as retrieved from the client request context is null: https://github.com/quarkusio/quarkus/blob/8f0e94e0238ba4ee75d2cbaada1c72be01edac43/extensions/opentelemetry/runtime/src/main/java/io/quarkus/opentelemetry/runtime/tracing/intrumentation/restclient/OpenTelemetryClientFilter.java#L121 \r\n\r\nThis issue seems only to occur when using the Microprofile Rest Client (resteasy classic) in order to invoke some other service. The server itself does not have this issue when it is called, nor do the autoinstrumented sdks that we use. \r\n\r\nI am using the Azure Application Insights Java Agent and the Quarkus OpenTelemetry extension. Project is written in Kotlin. I was using a customized propagator, but also with the default ones this error occurs. This issue started occurring after we upgraded from Quarkus 2.16 to 3.2. \r\n\r\nFull stack trace:\r\n```\r\njava.lang.NullPointerException: Cannot invoke \"io.opentelemetry.context.Context.get(io.opentelemetry.context.ContextKey)\" because \"context\" is null\r\n\tat io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResend.getAndIncrement(HttpClientResend.java:36)\r\n\tat io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor.onEnd(HttpClientAttributesExtractor.java:161)\r\n\tat io.opentelemetry.instrumentation.api.instrumenter.Instrumenter.doEnd(Instrumenter.java:224)\r\n\tat io.opentelemetry.instrumentation.api.instrumenter.Instrumenter.end(Instrumenter.java:144)\r\n\tat io.quarkus.opentelemetry.runtime.tracing.intrumentation.restclient.OpenTelemetryClientFilter.filter(OpenTelemetryClientFilter.java:123)\r\n\tat org.jboss.resteasy.client.jaxrs.internal.ClientInvocation.filterResponse(ClientInvocation.java:667)\r\n\tat org.jboss.resteasy.client.jaxrs.internal.ClientInvocation.invoke(ClientInvocation.java:428)\r\n\tat org.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.invokeSync(ClientInvoker.java:134)\r\n\tat org.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.invoke(ClientInvoker.java:103)\r\n\tat org.jboss.resteasy.client.jaxrs.internal.proxy.ClientProxy.invoke(ClientProxy.java:61)\r\n\tat jdk.proxy3/jdk.proxy3.$Proxy175.getCaptureResults(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat org.jboss.resteasy.microprofile.client.ProxyInvocationHandler.invoke(ProxyInvocationHandler.java:168)\r\n\tat jdk.proxy3/jdk.proxy3.$Proxy178.getCaptureResults(Unknown Source)\r\n\tat [... my application classes which invoke the rest client ...]\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:73)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext$NextAroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:97)\r\n\tat io.quarkus.hibernate.validator.runtime.interceptor.AbstractMethodValidationInterceptor.validateMethodInvocation(AbstractMethodValidationInterceptor.java:71)\r\n\tat io.quarkus.hibernate.validator.runtime.jaxrs.JaxrsEndPointValidationInterceptor.validateMethodInvocation(JaxrsEndPointValidationInterceptor.java:38)\r\n\tat io.quarkus.hibernate.validator.runtime.jaxrs.JaxrsEndPointValidationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:70)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext$NextAroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:97)\r\n\tat io.quarkus.resteasy.runtime.QuarkusRestPathTemplateInterceptor.restMethodInvoke(QuarkusRestPathTemplateInterceptor.java:39)\r\n\tat io.quarkus.resteasy.runtime.QuarkusRestPathTemplateInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:70)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:62)\r\n\tat io.quarkus.security.runtime.interceptor.SecurityHandler.handle(SecurityHandler.java:47)\r\n\tat io.quarkus.security.runtime.interceptor.RolesAllowedInterceptor.intercept(RolesAllowedInterceptor.java:29)\r\n\tat io.quarkus.security.runtime.interceptor.RolesAllowedInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n\tat [... my application classes ...]\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:154)\r\n\tat org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:118)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.internalInvokeOnTarget(ResourceMethodInvoker.java:560)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTargetAfterFilter(ResourceMethodInvoker.java:452)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.lambda$invokeOnTarget$2(ResourceMethodInvoker.java:413)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:415)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:378)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:356)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:70)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:429)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:240)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:154)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:157)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:229)\r\n\tat io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:82)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:147)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:93)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\n### Expected behavior\r\n\r\nRest client is instrumented and does not throw exceptions\r\n\r\n### Actual behavior\r\n\r\nNullPointerException is thrown\r\n\r\n### How to Reproduce?\r\n\r\nI haven't been able to reproduce this locally using the Azure app insights agent, there are some network/proxy settings that seem to prohibit me from getting it to work.\r\nUsing the jaeger-all-in-one docker container (as described in the documentation) locally did not give above error.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux <k8-deployment-name> 5.4.0-1111-azure #117~18.04.1-Ubuntu SMP Wed Jun 21 15:44:28 UTC 2023 x86_64 Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.8\" 2023-07-18 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nn/a\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35034/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35034/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

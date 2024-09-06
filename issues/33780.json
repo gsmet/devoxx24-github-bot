@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33780",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33780/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33780/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33780/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33780",
+  "id": 1736780017,
+  "node_id": "I_kwDOCFbutM5nhSjx",
+  "number": 33780,
+  "title": "Using a PropertyVisibilityStrategy when deserializing a json document containing a collection of enums fails since 3.0.0.Final",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-06-01T17:31:26Z",
+  "updated_at": "2023-06-12T11:17:11Z",
+  "closed_at": "2023-06-02T07:43:21Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen deserializing a json document that contains a collection of enums using io.quarkus:quarkus-jsonb, adding a PropertyVisibilityStrategy have the program fail with the following error:\r\n\r\njava.lang.reflect.InaccessibleObjectException: Unable to make field private final java.lang.String java.lang.Enum.name accessible: module java.base does not \"opens java.lang\" to unnamed module @cdf2379\r\n\r\nThis was working till version 3.0.0.CR2 and fails starting 3.0.0.Final\r\n\r\nAlso, maybe of interest: it doesn't fail when deserializing plain enums, only when deserializing a collection of enums.\r\n\n\n### Expected behavior\n\nIt shouldn't fail AFAIK.\n\n### Actual behavior\n\nIt fails\n\n### How to Reproduce?\n\n```java\r\nimport jakarta.inject.*;\r\nimport jakarta.json.bind.*;\r\nimport jakarta.json.bind.config.*;\r\n\r\nimport java.lang.reflect.*;\r\nimport java.time.*;\r\nimport java.util.*;\r\n\r\nimport org.jboss.logging.*;\r\n\r\nimport io.quarkus.runtime.*;\r\nimport io.quarkus.runtime.annotations.*;\r\n\r\n@QuarkusMain\r\npublic class TestJsonBug implements QuarkusApplication {\r\n\tpublic static record MyBean(String name, Month month, List<Month> listOfMonths) {\r\n\t}\r\n\r\n\t@Inject\r\n\tprivate Logger logger;\r\n\r\n\tpublic TestJsonBug() {\r\n\t\tsuper();\r\n\t}\r\n\r\n\tpublic int run(String... args) {\r\n\t\tvar text = \"\"\"\r\n\t\t\t\t{\r\n\t\t\t\t\t\"name\": \"John\",\r\n\t\t\t\t\t\"month\": \"JANUARY\",\r\n\t\t\t\t\t\"listOfMonths\": [ \"JANUARY\", \"FEBRUARY\" ]\r\n\t\t\t\t}\r\n\t\t\t\t\"\"\";\r\n\r\n\t\t// Works\r\n\t\tlogger.infof(\"Parsed: %s\", binding(null).fromJson(text, MyBean.class));\r\n\t\t// Fails\r\n\t\tlogger.infof(\"Parsed: %s\", binding(strategy()).fromJson(text, MyBean.class));\r\n\t\treturn 0;\r\n\t}\r\n\r\n\tprotected Jsonb binding(PropertyVisibilityStrategy strategy) {\r\n\t\treturn JsonbBuilder.newBuilder().withConfig(new JsonbConfig().withPropertyVisibilityStrategy(strategy)).build();\r\n\t}\r\n\r\n\tprotected PropertyVisibilityStrategy strategy() {\r\n\t\treturn new PropertyVisibilityStrategy() {\r\n\t\t\tpublic boolean isVisible(Field field) {\r\n\t\t\t\treturn true;\r\n\t\t\t}\r\n\r\n\t\t\tpublic boolean isVisible(Method meth) {\r\n\t\t\t\treturn false;\r\n\t\t\t}\r\n\t\t};\r\n\t}\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin potiron.local 21.6.0 Darwin Kernel Version 21.6.0: Mon Aug 22 20:19:52 PDT 2022; root:xnu-8020.140.49~2/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Temurin-17.0.4.1+1 (build 17.0.4.1+1)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.1.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.1.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33780/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33780/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

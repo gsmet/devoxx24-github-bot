@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33101",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33101/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33101/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33101/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33101",
+  "id": 1694107867,
+  "node_id": "I_kwDOCFbutM5k-gjb",
+  "number": 33101,
+  "title": "quarkus-logging-json quarkus.log.console.json.excluded-keys doesn't work",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283428650,
+      "node_id": "MDU6TGFiZWwxMjgzNDI4NjUw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/logging",
+      "name": "area/logging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-05-03T13:44:11Z",
+  "updated_at": "2024-08-24T12:42:57Z",
+  "closed_at": "2024-08-24T12:42:57Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm using `quarkus-logging-json`  to log the console logs in JSON format, it works fine I'm able to see the logs with the correct format, but I want to remove some extra fields. According to the documentation I should use `quarkus.log.console.json.excluded-keys` but the fields are not removed\r\n\r\n### Expected behavior\r\n\r\nthe fields should be removed\r\n\r\n### Actual behavior\r\n\r\nthe fields are not being removed\r\n\r\n### How to Reproduce?\r\n\r\nThis is my properties file:\r\n\r\n```\r\nquarkus.log.console.json=true\r\nquarkus.log.console.json.excluded-keys=[\"sequence\",\"threadName\",\"loggerClassName\",\"loggerName\", \"mdc\", \"ndc\", \"threadId\", \"processName\", \"processId\"]\r\nquarkus.log.console.json.additional-field.\"ti\".value=00000000-0000-0000-0000-000000000000\r\nquarkus.log.console.json.additional-field.\"sn\".value=${quarkus.application.name}\r\nquarkus.log.console.json.additional-field.\"e\".value=${ENVIRONMENT:unknown}\r\nquarkus.log.console.json.additional-field.\"lt\".value=SystemLog\r\n#Disable JSON logging for dev and test mode\r\n%dev.quarkus.log.console.json=false\r\n%test.quarkus.log.console.json=false\r\n```\r\n\r\nThis is my code\r\n\r\n```\r\n@Startup\r\n@ApplicationScoped\r\npublic class DsdConsumer implements Consumer<DangerousSlowdown> {\r\n\r\n    private static final Logger LOG = Logger.getLogger(DsdConsumer.class.getName());\r\n\r\n    @Inject AlertProducer alertProducer;\r\n    DsdToAlertTransformer dsdToAlertTransformer;\r\n\r\n    public DsdConsumer(final ReactiveRedisDataSource ds) {\r\n        ds.pubsub(DangerousSlowdown.class).subscribe(\"dsd-pubsub\", this).await().indefinitely();\r\n        this.dsdToAlertTransformer = new DsdToAlertTransformer();\r\n    }\r\n\r\n    @Override\r\n    public void accept(final DangerousSlowdown dangerousSlowdown) {\r\n        try {\r\n            Alert alert = dsdToAlertTransformer.transformToAlert(dangerousSlowdown);\r\n            alertProducer.publishAlert(alert);\r\n            LOG.info(\"DSD: \" + dangerousSlowdown);\r\n            LOG.info(\"Alert: \" + alert);\r\n        } catch (DecodeException decodeException) {\r\n            LOG.severe(\"Failed to deserialize incoming dsd\");\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nThe code is very simple, I'm just consuming messages from kafka and printing the object\r\n\r\nThis is the log message that I see\r\n\r\n```\r\n{\r\n   \"timestamp\":\"2023-05-03T14:38:45.176+01:00\",\r\n   \"sequence\":2415,\r\n   \"loggerClassName\":\"org.jboss.logging.Logger\",\r\n   \"loggerName\":\"io.quarkus.deployment.dev.IsolatedDevModeMain\",\r\n   \"level\":\"INFO\",\r\n   \"message\":\"Attempting to start live reload endpoint to recover from previous Quarkus startup failure\",\r\n   \"threadName\":\"main\",\r\n   \"threadId\":1,\r\n   \"mdc\":{\r\n      \r\n   },\r\n   \"ndc\":\"\",\r\n   \"hostName\":\"filipes-mbp.lan\",\r\n   \"processName\":\"alerts-dev.jar\",\r\n   \"processId\":43573,\r\n   \"e\":\"local\",\r\n   \"lt\":\"SystemLog\",\r\n   \"sn\":\"alerts\",\r\n   \"ti\":\"00000000-0000-0000-0000-000000000000\"\r\n}\r\n```\r\n\r\nThis is the log message that I want\r\n\r\n```\r\n{\r\n   \"timestamp\":\"2023-05-03T14:38:45.176+01:00\",\r\n   \"level\":\"INFO\",\r\n   \"message\":\"Attempting to start live reload endpoint to recover from previous Quarkus startup failure\",\r\n   \"hostName\":\"filipes-mbp.lan\",\r\n   \"e\":\"local\",\r\n   \"lt\":\"SystemLog\",\r\n   \"sn\":\"alerts\",\r\n   \"ti\":\"00000000-0000-0000-0000-000000000000\"\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"18.0.2\" 2022-07-19 OpenJDK Runtime Environment Corretto-18.0.2.9.1 (build 18.0.2+9-FR) OpenJDK 64-Bit Server VM Corretto-18.0.2.9.1 (build 18.0.2+9-FR, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.0.Alpha6\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n Gradle 7.5.1 \r\n\r\n### Additional information\r\n\r\nas you can see I'm adding extra fields to the log message, and they work fine, but for some reason removing fields doesn't work",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33101/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33101/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

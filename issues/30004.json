@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30004",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30004/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30004/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30004/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30004",
+  "id": 1506143172,
+  "node_id": "I_kwDOCFbutM5ZxevE",
+  "number": 30004,
+  "title": "hibernate-search-orm-elasticsearch fail in multi-module projects",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1664142960,
+      "node_id": "MDU6TGFiZWwxNjY0MTQyOTYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-search",
+      "name": "area/hibernate-search",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Search / Elasticsearch"
+    },
+    {
+      "id": 2222769329,
+      "node_id": "MDU6TGFiZWwyMjIyNzY5MzI5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/elasticsearch",
+      "name": "area/elasticsearch",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-12-21T11:19:19Z",
+  "updated_at": "2023-02-21T09:13:03Z",
+  "closed_at": "2023-02-21T08:36:11Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nTC:\r\n1. create multi module maven project.\r\n2. Put domain model to my-common with some item like\r\n```java\r\n@Entity\r\n@Indexed\r\npublic class MyClass extends PanacheEntityBase {\r\n    @Id\r\n    @SequenceGenerator(\r\n            name = \"my_sequence\",\r\n            sequenceName = \"my_id_seq\",\r\n            allocationSize = 1)\r\n    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = \"my_sequence\")\r\n    Long id;\r\n\r\n    @Column(nullable = false)\r\n    @FullTextField(analyzer = \"name\")\r\n    @KeywordField(name = \"name_sort\", sortable = Sortable.YES, normalizer = \"sort\")\r\n    String name;\r\n}\r\n```\r\nand add dependency to ```quarkus-hibernate-search-orm-elasticsearch```\r\n\r\n3. Create other module with main application and controller and include p.2 dependency to one\r\n4. In application properties define ```quarkus.hibernate-search-orm.elasticsearch.version=7``` \r\n\r\ntry to compile\r\n\r\n### Expected behavior\r\n\r\nER: project will compile and work fine\r\n\r\n### Actual behavior\r\n\r\nGet error:\r\n```\r\n[INFO] my-parent ......................................... SUCCESS [  0.094 s]\r\n[INFO] my-frontend ....................................... SUCCESS [01:02 min]\r\n[INFO] my-common ......................................... FAILURE [  8.647 s]  <-- @Entity hete\r\n[INFO] my-test ........................................... SKIPPED\r\n[INFO] my-backend ........................................ SKIPPED <-- application.properties here\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  01:13 min\r\n[INFO] Finished at: 2022-12-21T13:45:34+03:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:2.12.3.Final:build (default) on project my-common: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR]         [error]: Build step io.quarkus.hibernate.search.orm.elasticsearch.deployment.HibernateSearchElasticsearchProcessor#processPersistenceUnitBuildTimeConfig threw an exception: io.quarkus.runtime.configuration.ConfigurationException: The Elasticsearch version needs to be defined via properties: quarkus.hibernate-search-orm.elasticsearch.version.\r\n[ERROR]         at io.quarkus.hibernate.search.orm.elasticsearch.deployment.HibernateSearchElasticsearchProcessor.processPersistenceUnitBuildTimeConfig(HibernateSearchElasticsearchProcessor.java:280)\r\n[ERROR]         at io.quarkus.hibernate.search.orm.elasticsearch.deployment.HibernateSearchElasticsearchProcessor.processPersistenceUnitBuildTimeConfig(HibernateSearchElasticsearchProcessor.java:243)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n[ERROR]         at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n[ERROR]         at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n[ERROR]         at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n[ERROR]         at io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n[ERROR]         at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n[ERROR]         at java.base/java.lang.Thread.run(Thread.java:833)\r\n[ERROR]         at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n[ERROR] -> [Help 1]\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nRoot cause (after my quick search):\r\nHibernate search validate property at build time in the same module and fail - https://github.com/quarkusio/quarkus/blob/main/extensions/hibernate-search-orm-elasticsearch/deployment/src/main/java/io/quarkus/hibernate/search/orm/elasticsearch/deployment/HibernateSearchElasticsearchProcessor.java\r\n\r\nIn the reality config exist in the real application.\r\n\r\nBTW: maybe make sense to \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njdk 11 (graal)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.12.3.Final (but will be reproduced in any)\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nw/a at this moment:\r\nin my-common module remove:\r\n```\r\n<dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-hibernate-search-orm-elasticsearch</artifactId>\r\n</dependency>\r\n```\r\nand add ORM and annotations directly:\r\n```\r\n         <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-hibernate-orm</artifactId>\r\n        </dependency>\r\n <dependency>\r\n            <groupId>org.hibernate.search</groupId>\r\n            <artifactId>hibernate-search-mapper-orm</artifactId>\r\n            <exclusions>\r\n                <!-- We use Jakarta Persistence artifacts instead -->\r\n                <exclusion>\r\n                    <groupId>javax.persistence</groupId>\r\n                    <artifactId>javax.persistence-api</artifactId>\r\n                </exclusion>\r\n                <!--\r\n                The activation implementation is coming from the quarkus-hibernate-orm extension.\r\n                The implementation contains the API.\r\n                -->\r\n                <exclusion>\r\n                    <groupId>jakarta.activation</groupId>\r\n                    <artifactId>jakarta.activation-api</artifactId>\r\n                </exclusion>\r\n            </exclusions>\r\n        </dependency>\r\n```\r\n\r\ndependency to \r\n```\r\n<dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-hibernate-search-orm-elasticsearch</artifactId>\r\n</dependency>\r\n```\r\n\r\nwill be added only in module with controller.\r\n\r\n\r\n@yrodiere maybe make sense to separate it in quarkus level(like add quarkus-hibernate-search-orm-elasticsearch-spi) and update docs?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30004/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30004/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

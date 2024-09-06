@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41269",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41269/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41269/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41269/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41269",
+  "id": 2358493118,
+  "node_id": "I_kwDOCFbutM6Mk7--",
+  "number": 41269,
+  "title": "Test breaks when using a property in build > directory in pom.xml",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-06-17T23:36:28Z",
+  "updated_at": "2024-06-17T23:38:36Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIn pom.xml, when defining:\r\n\r\n```xml\r\n<properties>\r\n    <build.output>target</build.output>\r\n</properties>\r\n<build>\r\n    <directory>${build.output}</directory>\r\n</build>\r\n```\r\n\r\nThe test breaks: `./mvnw -V clean test`\r\n\r\nWith the exception:\r\n\r\n```\r\n[INFO] Running br.meudominio.meuprojeto.GreetingResourceTest\r\n[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.810 s <<< FAILURE! -- in br.meudominio.meuprojeto.GreetingResourceTest\r\n[ERROR] br.meudominio.meuprojeto.GreetingResourceTest.testHelloEndpoint -- Time elapsed: 0.009 s <<< ERROR!\r\njava.lang.RuntimeException: io.quarkus.bootstrap.BootstrapException: Failed to create the application model for br.meudominio.meuprojeto:my-api2::jar:1.0.0-SNAPSHOTnull\r\n        at io.quarkus.test.junit.QuarkusTestExtension.throwBootFailureException(QuarkusTestExtension.java:642)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.interceptTestClassConstructor(QuarkusTestExtension.java:726)\r\n        at java.base/java.util.Optional.orElseGet(Optional.java:364)\r\n        at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n        at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\nCaused by: io.quarkus.bootstrap.BootstrapException: Failed to create the application model for br.meudominio.meuprojeto:my-api2::jar:1.0.0-SNAPSHOTnull\r\n        at io.quarkus.bootstrap.BootstrapAppModelFactory.resolveAppModel(BootstrapAppModelFactory.java:308)\r\n        at io.quarkus.bootstrap.app.QuarkusBootstrap.bootstrap(QuarkusBootstrap.java:133)\r\n        at io.quarkus.test.junit.AbstractJvmQuarkusTestExtension.createAugmentor(AbstractJvmQuarkusTestExtension.java:190)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.doJavaStart(QuarkusTestExtension.java:218)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.ensureStarted(QuarkusTestExtension.java:609)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.beforeAll(QuarkusTestExtension.java:659)\r\n        ... 1 more\r\nCaused by: io.quarkus.bootstrap.resolver.maven.BootstrapMavenException: Failed to resolve artifact br.meudominio.meuprojeto:my-api2:jar:1.0.0-SNAPSHOT\r\n        at io.quarkus.bootstrap.resolver.BootstrapAppModelResolver.resolve(BootstrapAppModelResolver.java:581)\r\n        at io.quarkus.bootstrap.resolver.BootstrapAppModelResolver.resolve(BootstrapAppModelResolver.java:431)\r\n        at io.quarkus.bootstrap.resolver.BootstrapAppModelResolver.doResolveModel(BootstrapAppModelResolver.java:291)\r\n        at io.quarkus.bootstrap.resolver.BootstrapAppModelResolver.resolveManagedModel(BootstrapAppModelResolver.java:200)\r\n        at io.quarkus.bootstrap.BootstrapAppModelFactory.resolveAppModel(BootstrapAppModelFactory.java:294)\r\n        ... 6 more\r\nCaused by: org.eclipse.aether.resolution.ArtifactResolutionException: The following artifacts could not be resolved: br.meudominio.meuprojeto:my-api2:jar:1.0.0-SNAPSHOT (absent): Could not find artifact br.meudominio.meuprojeto:my-api2:jar:1.0.0-SNAPSHOT\r\n        at org.eclipse.aether.internal.impl.DefaultArtifactResolver.resolve(DefaultArtifactResolver.java:473)\r\n        at org.eclipse.aether.internal.impl.DefaultArtifactResolver.resolveArtifacts(DefaultArtifactResolver.java:261)\r\n        at org.eclipse.aether.internal.impl.DefaultArtifactResolver.resolveArtifact(DefaultArtifactResolver.java:243)\r\n        at org.eclipse.aether.internal.impl.DefaultRepositorySystem.resolveArtifact(DefaultRepositorySystem.java:278)\r\n        at io.quarkus.bootstrap.resolver.BootstrapAppModelResolver.resolve(BootstrapAppModelResolver.java:576)\r\n        ... 10 more\r\nCaused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find artifact br.meudominio.meuprojeto:my-api2:jar:1.0.0-SNAPSHOT\r\n        at org.eclipse.aether.internal.impl.DefaultArtifactResolver.resolve(DefaultArtifactResolver.java:464)\r\n        ... 14 more\r\n```\n\n### Expected behavior\n\nThe test should work.\n\n### Actual behavior\n\nThrows exception when running the test, as shown above.\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux fedora-desktop 6.0.18-200.fc36.x86_64 #1 SMP PREEMPT_DYNAMIC Sat Jan 7 17:08:48 UTC 2023 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17\" 2021-09-14 OpenJDK Runtime Environment (build 17+35-2724) OpenJDK 64-Bit Server VM (build 17+35-2724, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.11.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /home/mhagnumdw/.m2/wrapper/dists/apache-maven-3.9.6-bin/3311e1d4/apache-maven-3.9.6 Java version: 17, vendor: Oracle Corporation, runtime: /home/mhagnumdw/.asdf/installs/java/openjdk-17 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"6.0.18-200.fc36.x86_64\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\nIt works ok if you use a hardcoded value instead of a property in `<directory>`. If you use `target` or `target2` as the value (instead `${build.output}`), it will work.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41269/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41269/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

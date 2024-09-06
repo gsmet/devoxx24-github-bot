@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38303",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38303/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38303/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38303/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38303",
+  "id": 2090838441,
+  "node_id": "I_kwDOCFbutM58n6mp",
+  "number": 38303,
+  "title": "TestAuthController can only be used in tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-01-19T16:01:10Z",
+  "updated_at": "2024-01-19T20:26:21Z",
+  "closed_at": "2024-01-19T17:09:18Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen starting the application and making a simple Try out with swagger for any endpoint :\r\n\r\nI receive an error : \r\n\r\njava.lang.RuntimeException: TestAuthController can only be used in tests redirecting to the quarkus test security pkg\r\n\r\n    @PostConstruct\r\n    public void check() {\r\n        if (LaunchMode.current() != LaunchMode.TEST) {\r\n            throw new RuntimeException(\"TestAuthController can only be used in tests\");\r\n        }\r\n    }\r\n    \r\n    \r\n    I just want to be able to use my endpoints but this piece of code is blocking me.\r\n    \r\n    I checked on the web about and there is nothing at all.\r\n\r\n\r\nCan someone help please ?\r\n    \r\n    \r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### Quarkus version or git rev\n\n3.6.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\npom.xml : \r\n\r\n...\r\n\r\n    <!-- JWT   -->\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-jwt</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-jwt-build</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.eclipse.microprofile.jwt</groupId>\r\n      <artifactId>microprofile-jwt-auth-api</artifactId>\r\n    </dependency>\r\n\r\n    <!-- Quarkus reactive jackson   -->\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-resteasy-reactive-jackson</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-rest-client-reactive-jackson</artifactId>\r\n    </dependency>\r\n\r\n    <!-- TESTS   -->\r\n    <dependency>\r\n      <groupId>org.testcontainers</groupId>\r\n      <artifactId>junit-jupiter</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.testcontainers</groupId>\r\n      <artifactId>mongodb</artifactId>\r\n      <version>1.18.0</version>\r\n      <scope>test</scope>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.mockito</groupId>\r\n      <artifactId>mockito-junit-jupiter</artifactId>\r\n      <version>4.6.1</version>\r\n      <scope>test</scope>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-test-security</artifactId>\r\n    </dependency>\r\n...\r\n\r\nMethod inside the controller : \r\n\r\n    @Authenticated\r\n    @Override\r\n    public Uni<Response> sendWelcomeEmail(String email, String username, String language) {\r\n        try{\r\n            return Uni.createFrom().completionStage(emailingService.sendWelcomeEmail(email, username,language)).onItem().transform(v -> Response.noContent().build());\r\n        }catch (Exception e){\r\n            return Uni.createFrom().item(ControllerExceptionHandler.toHttpResponse(e));\r\n        }\r\n    }\r\n    \r\n Endpoint test working: \r\n \r\n     @TestSecurity(authorizationEnabled = false)\r\n    @Test\r\n    void testSendWelcomeEmailSuccess() {\r\n        Mockito.reset(emailingService);\r\n\r\n        Mockito.when(emailingService.sendWelcomeEmail(Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(CompletableFuture.completedFuture(null));\r\n\r\n        QuarkusMock.installMockForType(emailingService, EmailingService.class);\r\n\r\n        given()\r\n                .queryParam(\"email\", \"florian.gustin.barriera@gmail.com\")\r\n                .queryParam(\"username\", \"florian\")\r\n                .queryParam(\"language\", \"fr\")\r\n                .when()\r\n                .post(\"http://localhost:10021/api/v1/emailing/welcome\")\r\n                .then()\r\n                .statusCode(204);\r\n    }",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38303/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38303/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

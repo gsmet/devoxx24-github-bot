@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39254",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39254/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39254/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39254/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39254",
+  "id": 2173688504,
+  "node_id": "I_kwDOCFbutM6Bj9q4",
+  "number": 39254,
+  "title": "HttpClient Closed Prematurely Before @Shutdown Processing",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-03-07T11:53:22Z",
+  "updated_at": "2024-05-17T11:57:10Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI am using rest-client-reactive and resteasy-reactive. During shutdown, I attempt an HTTP request by annotating a method with @Shutdown. This method calls the API client and waits for its completion.\n\n### Expected behavior\n\nThe HTTP request succeeds, and the application subsequently shuts down.\n\n### Actual behavior\n\nThe HTTP client is prematurely closed and unable to process the request. A log message 'Running a shutdown task failed [Error Occurred After Shutdown]' is printed with the following stack trace:\r\n```\r\njava.lang.IllegalStateException: Client is closed\r\nat io.vertx.core.http.impl.HttpClientImpl.checkClosed(HttpClientImpl.java:405)\r\nat io.vertx.core.http.impl.HttpClientImpl.doRequest(HttpClientImpl.java:281)\r\nat io.vertx.core.http.impl.HttpClientImpl.request(HttpClientImpl.java:184)\r\nat org.jboss.resteasy.reactive.client.handlers.ClientSendRequestHandler$5.lambda$apply$0(ClientSendRequestHandler.java:434)\r\nat io.smallrye.context.impl.wrappers.SlowContextualConsumer.accept(SlowContextualConsumer.java:21)\r\nat org.jboss.resteasy.reactive.client.AsyncResultUni.subscribe(AsyncResultUni.java:31)\r\nat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\nat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.performInnerSubscription(UniOnItemTransformToUni.java:81)\r\nat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:57)\r\nat io.smallrye.mutiny.operators.uni.UniOnItemConsume$UniOnItemComsumeProcessor.onItem(UniOnItemConsume.java:43)\r\nat io.smallrye.mutiny.operators.uni.UniOnItemTransform$UniOnItemTransformProcessor.onItem(UniOnItemTransform.java:43)\r\nat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription.forward(UniCreateFromKnownItem.java:38)\r\nat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem.subscribe(UniCreateFromKnownItem.java:23)\r\nat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\nat io.smallrye.mutiny.operators.uni.UniOnItemTransform.subscribe(UniOnItemTransform.java:22)\r\nat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\nat io.smallrye.mutiny.operators.uni.UniOnItemConsume.subscribe(UniOnItemConsume.java:30)\r\nat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\nat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni.subscribe(UniOnItemTransformToUni.java:25)\r\nat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\nat io.smallrye.mutiny.groups.UniSubscribe.withSubscriber(UniSubscribe.java:51)\r\nat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:110)\r\nat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:88)\r\nat org.jboss.resteasy.reactive.client.handlers.ClientSendRequestHandler.handle(ClientSendRequestHandler.java:94)\r\nat org.jboss.resteasy.reactive.client.handlers.ClientSendRequestHandler.handle(ClientSendRequestHandler.java:66)\r\nat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.invokeHandler(AbstractResteasyReactiveContext.java:231)\r\nat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\nat io.smallrye.context.impl.wrappers.SlowContextualRunnable.run(SlowContextualRunnable.java:19)\r\nat org.jboss.resteasy.reactive.client.handlers.ClientSwitchToRequestContextRestHandler$1$1.handle(ClientSwitchToRequestContextRestHandler.java:38)\r\nat org.jboss.resteasy.reactive.client.handlers.ClientSwitchToRequestContextRestHandler$1$1.handle(ClientSwitchToRequestContextRestHandler.java:35)\r\nat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:276)\r\nat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:258)\r\nat io.vertx.core.impl.ContextInternal.lambda$runOnContext$0(ContextInternal.java:56)\r\nat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)\r\nat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)\r\nat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\nat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\nat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\nat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\nat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\nat java.base/java.lang.Thread.run(Thread.java:840)\r\n```\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux xxx-xxx-xxx5.14.0-284.50.1.el9_2.x86_64 #1 SMP PREEMPT_DYNAMIC Thu Jan 18 12:28:24 EST 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.9\" 2023-10-17\n\n### Quarkus version or git rev\n\n3.8.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.5 (Red Hat 3.8.5-4)\n\n### Additional information\n\nI couldn't reproduce the issue locally, only with the deployed application on OpenShift. The error occurs only when a REST interface provided by the application has been called previously. If a freshly started pod is terminated, sending requests is successful.\r\nThrough remote debugging, I observed that in case of an error, the HTTP client is closed by executing the `closeTask` of \r\n`VertxHttpRecorder` before the `ShutdownEvent` is fired by the `ArcRecorder`.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39254/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39254/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

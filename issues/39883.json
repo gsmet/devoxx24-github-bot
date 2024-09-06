@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39883",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39883/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39883/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39883/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39883",
+  "id": 2225525408,
+  "node_id": "I_kwDOCFbutM6EptKg",
+  "number": 39883,
+  "title": "camel-quarkus-spring-redis doesn't autowire RedisTemplate so it cannot be used for e.g. RedisIdempotentRepository",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1552233747,
+      "node_id": "MDU6TGFiZWwxNTUyMjMzNzQ3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/spring",
+      "name": "area/spring",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues relating to the Spring integration"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-04-04T13:28:39Z",
+  "updated_at": "2024-04-04T13:46:19Z",
+  "closed_at": "2024-04-04T13:46:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe extension _camel-quarkus-spring-redis_ doesn't seem to autowire _RedisTemplate_ which is needed for _RedisIdempotentRepository_.\r\n\r\nI've got this dependency:\r\n```\r\n<dependency>\r\n    <groupId>org.apache.camel.quarkus</groupId>\r\n    <artifactId>camel-quarkus-spring-redis</artifactId>\r\n</dependency>\r\n```\r\n\r\nAnd in my code I have something like this:\r\n```\r\n@ApplicationScoped\r\npublic class CommonRoutes extends RouteBuilder {\r\n\r\n    public static final int SUCCESS = 100;\r\n    public static final int ERROR = 200;\r\n    public static final int EXHAUSTED = 300;\r\n\r\n    @ConfigProperty(name = \"url\")\r\n    private String url;\r\n    @ConfigProperty(name = \"max.retry.count\")\r\n    private String maxRetryCnt;\r\n    @ConfigProperty(name = \"ordning\")\r\n    private String ordning;\r\n\r\n    @Inject\r\n    private CamelContext context;\r\n    @Inject\r\n    private RedisTemplate redisTemplate;\r\n\r\n    @Override\r\n    public void configure() throws Exception {\r\n\r\n        // Redis idempotent repository\r\n        RedisIdempotentRepository redisIdempotentRepository = new RedisIdempotentRepository(redisTemplate, \"NGDP.KvitteringOpsamler\");\r\n        context.getRegistry().bind(\"redisIdempotentRepo\", redisIdempotentRepository);\r\n...\r\n```\r\n\r\nBut when I run my code I get these exceptions:\r\n```\r\njava.lang.RuntimeException: \r\njava.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 4 deployment problems: \r\n[1] Unsatisfied dependency for type org.springframework.data.redis.core.RedisTemplate and qualifiers [@Default]\r\n\t- injection target: dk.atp.integration.dp.kvitteringopsamler.FileRouter#redisTemplate\r\n\t- declared on CLASS bean [types=[org.apache.camel.builder.BuilderSupport, org.apache.camel.Ordered, org.apache.camel.CamelContextAware, org.apache.camel.spi.ResourceAware, org.apache.camel.spi.HasCamelContext, dk.atp.integration.dp.kvitteringopsamler.FileRouter, org.apache.camel.RoutesBuilder, java.lang.Object, org.apache.camel.builder.ModelRoutesBuilder, org.apache.camel.builder.RouteBuilder], qualifiers=[@Default, @Any], target=dk.atp.integration.dp.kvitteringopsamler.FileRouter]\r\n[2] Unsatisfied dependency for type org.springframework.data.redis.core.RedisTemplate and qualifiers [@Default]\r\n\t- injection target: dk.atp.integration.dp.kvitteringopsamler.MailRouter#redisTemplate\r\n\t- declared on CLASS bean [types=[org.apache.camel.builder.BuilderSupport, org.apache.camel.Ordered, org.apache.camel.CamelContextAware, org.apache.camel.spi.ResourceAware, dk.atp.integration.dp.kvitteringopsamler.MailRouter, org.apache.camel.spi.HasCamelContext, org.apache.camel.RoutesBuilder, java.lang.Object, org.apache.camel.builder.ModelRoutesBuilder, org.apache.camel.builder.RouteBuilder], qualifiers=[@Default, @Any], target=dk.atp.integration.dp.kvitteringopsamler.MailRouter]\r\n[3] Unsatisfied dependency for type org.springframework.data.redis.core.RedisTemplate and qualifiers [@Default]\r\n\t- injection target: dk.atp.integration.dp.kvitteringopsamler.CommonRoutes#redisTemplate\r\n\t- declared on CLASS bean [types=[org.apache.camel.builder.BuilderSupport, org.apache.camel.Ordered, org.apache.camel.CamelContextAware, org.apache.camel.spi.ResourceAware, org.apache.camel.spi.HasCamelContext, org.apache.camel.RoutesBuilder, java.lang.Object, dk.atp.integration.dp.kvitteringopsamler.CommonRoutes, org.apache.camel.builder.ModelRoutesBuilder, org.apache.camel.builder.RouteBuilder], qualifiers=[@Default, @Any], target=dk.atp.integration.dp.kvitteringopsamler.CommonRoutes]\r\n[4] Unsatisfied dependency for type org.springframework.data.redis.core.RedisTemplate and qualifiers [@Default]\r\n\t- injection target: dk.atp.integration.dp.kvitteringopsamler.DatabaseRouter#redisTemplate\r\n\t- declared on CLASS bean [types=[org.apache.camel.builder.BuilderSupport, org.apache.camel.Ordered, org.apache.camel.CamelContextAware, dk.atp.integration.dp.kvitteringopsamler.DatabaseRouter, org.apache.camel.spi.ResourceAware, org.apache.camel.spi.HasCamelContext, org.apache.camel.RoutesBuilder, java.lang.Object, org.apache.camel.builder.ModelRoutesBuilder, org.apache.camel.builder.RouteBuilder], qualifiers=[@Default, @Any], target=dk.atp.integration.dp.kvitteringopsamler.DatabaseRouter]\r\n\tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1516)\r\n\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:320)\r\n\tat io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:160)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:488)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:483)\r\n\tSuppressed: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type org.springframework.data.redis.core.RedisTemplate and qualifiers [@Default]\r\n\t- injection target: dk.atp.integration.dp.kvitteringopsamler.FileRouter#redisTemplate\r\n\t- declared on CLASS bean [types=[org.apache.camel.builder.BuilderSupport, org.apache.camel.Ordered, org.apache.camel.CamelContextAware, org.apache.camel.spi.ResourceAware, org.apache.camel.spi.HasCamelContext, dk.atp.integration.dp.kvitteringopsamler.FileRouter, org.apache.camel.RoutesBuilder, java.lang.Object, org.apache.camel.builder.ModelRoutesBuilder, org.apache.camel.builder.RouteBuilder], qualifiers=[@Default, @Any], target=dk.atp.integration.dp.kvitteringopsamler.FileRouter]\r\n\t\tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:519)\r\n\t\tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:638)\r\n\t\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:308)\r\n\t\t... 14 more\r\n\tSuppressed: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type org.springframework.data.redis.core.RedisTemplate and qualifiers [@Default]\r\n\t- injection target: dk.atp.integration.dp.kvitteringopsamler.MailRouter#redisTemplate\r\n\t- declared on CLASS bean [types=[org.apache.camel.builder.BuilderSupport, org.apache.camel.Ordered, org.apache.camel.CamelContextAware, org.apache.camel.spi.ResourceAware, dk.atp.integration.dp.kvitteringopsamler.MailRouter, org.apache.camel.spi.HasCamelContext, org.apache.camel.RoutesBuilder, java.lang.Object, org.apache.camel.builder.ModelRoutesBuilder, org.apache.camel.builder.RouteBuilder], qualifiers=[@Default, @Any], target=dk.atp.integration.dp.kvitteringopsamler.MailRouter]\r\n\t\tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:519)\r\n\t\tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:638)\r\n\t\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:308)\r\n\t\t... 14 more\r\n\tSuppressed: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type org.springframework.data.redis.core.RedisTemplate and qualifiers [@Default]\r\n\t- injection target: dk.atp.integration.dp.kvitteringopsamler.CommonRoutes#redisTemplate\r\n\t- declared on CLASS bean [types=[org.apache.camel.builder.BuilderSupport, org.apache.camel.Ordered, org.apache.camel.CamelContextAware, org.apache.camel.spi.ResourceAware, org.apache.camel.spi.HasCamelContext, org.apache.camel.RoutesBuilder, java.lang.Object, dk.atp.integration.dp.kvitteringopsamler.CommonRoutes, org.apache.camel.builder.ModelRoutesBuilder, org.apache.camel.builder.RouteBuilder], qualifiers=[@Default, @Any], target=dk.atp.integration.dp.kvitteringopsamler.CommonRoutes]\r\n\t\tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:519)\r\n\t\tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:638)\r\n\t\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:308)\r\n\t\t... 14 more\r\n\tSuppressed: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type org.springframework.data.redis.core.RedisTemplate and qualifiers [@Default]\r\n\t- injection target: dk.atp.integration.dp.kvitteringopsamler.DatabaseRouter#redisTemplate\r\n\t- declared on CLASS bean [types=[org.apache.camel.builder.BuilderSupport, org.apache.camel.Ordered, org.apache.camel.CamelContextAware, dk.atp.integration.dp.kvitteringopsamler.DatabaseRouter, org.apache.camel.spi.ResourceAware, org.apache.camel.spi.HasCamelContext, org.apache.camel.RoutesBuilder, java.lang.Object, org.apache.camel.builder.ModelRoutesBuilder, org.apache.camel.builder.RouteBuilder], qualifiers=[@Default, @Any], target=dk.atp.integration.dp.kvitteringopsamler.DatabaseRouter]\r\n\t\tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:519)\r\n\t\tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:638)\r\n\t\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:308)\r\n\t\t... 14 more\r\n```\n\n### Expected behavior\n\nI expect the RedisTemplate to be autowired so the code works.\n\n### Actual behavior\n\nIt's not being autowired and throws the exceptions as described above.\n\n### How to Reproduce?\n\nMake any simple application with a camel route and inject the RedisTemplate.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18\n\n### Quarkus version or git rev\n\n3.9.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.5\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39883/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39883/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

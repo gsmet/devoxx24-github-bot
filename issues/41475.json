@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41475",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41475/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41475/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41475/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41475",
+  "id": 2375576841,
+  "node_id": "I_kwDOCFbutM6NmG0J",
+  "number": 41475,
+  "title": "quarkus-container-image-docker 3.8.5 doesnt see docker allias",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2024-06-26T14:51:22Z",
+  "updated_at": "2024-06-27T07:24:33Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen building docker image of quarkus project with maven command quarkus-container-image-docker fails due to missing docker command although docker is available from command line\r\n\r\nmaven command is executed in windows, docker is installed in wsl2 and docker command is available via allias\r\ndocker=wsl.exe docker\r\n\r\ndocker --version\r\n`Docker version 25.0.3, build 4debf41`\r\n\r\nFor some reason docker command is not available for jre via alias. Command fails in class io.quarkus.deployment.util.ContainerRuntimeUtil:222 getVersionOutputFor when it tries to execute docker --version\r\nwith error\r\njava.io.IOException: Cannot run program \"podman\": CreateProcess error=2, The system cannot find the file specified\r\n\r\nExecuting quarkus integration tests with mockserver works without problem although docker is requered there as well.\r\n\r\n### Expected behavior\r\n\r\nDocker image is built successfully\r\n\r\n### Actual behavior\r\n\r\n```\r\n[INFO] Found Docker environment with Environment variables, system properties and defaults. Resolved dockerHost=tcp://172.30.100.49:2375\r\n[INFO] Docker host IP address is 172.30.100.49\r\n[INFO] Connected to docker:\r\n  Server Version: 25.0.3\r\n  API Version: 1.44\r\n  Operating System: Ubuntu 20.04.6 LTS\r\n  Total Memory: 15998 MB\r\n[INFO] Image pull policy will be performed by: DefaultPullPolicy()\r\n[INFO] Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')\r\n[INFO] Checking the system...\r\n[INFO] ?? Docker server version should be at least 1.6.0\r\n[INFO] [io.quarkus.container.image.docker.deployment.DockerProcessor] Starting (local) container image build for jar using docker.\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  01:20 min\r\n[INFO] Finished at: 2024-06-26T16:29:30+02:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal io.quarkus:quarkus-maven-plugin:3.8.5:build (default) on project myproject: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR]         [error]: Build step io.quarkus.container.image.docker.deployment.DockerProcessor#dockerBuildFromJar threw an exception: java.lang.IllegalStateException: No container runtime was found. Make sure you have either Docker or Podman installed in your environment.\r\n[ERROR]         at io.quarkus.deployment.util.ContainerRuntimeUtil.detectContainerRuntime(ContainerRuntimeUtil.java:58)\r\n[ERROR]         at io.quarkus.container.image.docker.deployment.DockerProcessor.createContainerImage(DockerProcessor.java:193)\r\n[ERROR]         at io.quarkus.container.image.docker.deployment.DockerProcessor.dockerBuildFromJar(DockerProcessor.java:103)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n[ERROR]         at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n[ERROR]         at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n[ERROR]         at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n[ERROR]         at io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n[ERROR]         at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n[ERROR]         at java.base/java.lang.Thread.run(Thread.java:833)\r\n[ERROR]         at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n[ERROR] -> [Help 1]\r\n[ERROR]\r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR]\r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nrun mvn clean install on quarkus project with extension quarkus-container-image-docker and having docker **only** in wsl linked to windows via DOCKER_HOST env variable\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava version \"17.0.8\" 2023-07-18 LTS Java(TM) SE Runtime Environment (build 17.0.8+9-LTS-211) Java HotSpot(TM) 64-Bit Server VM (build 17.0.8+9-LTS-211, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.8.5\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.1 \r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41475/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41475/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

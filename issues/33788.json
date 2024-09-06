@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33788",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33788/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33788/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33788/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33788",
+  "id": 1737629135,
+  "node_id": "I_kwDOCFbutM5nkh3P",
+  "number": 33788,
+  "title": "How to use hibernate with thread? Exception in thread \"ForkJoinPool-2-worker-1\" jakarta.enterprise.inject.CreationException: java.lang.ClassNotFoundException: io.quarkus.hibernate.orm.runtime.TransactionSessions",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2023-06-02T07:39:09Z",
+  "updated_at": "2023-06-02T10:24:45Z",
+  "closed_at": "2023-06-02T08:20:16Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nExecutorConfigurer.java\r\n```java\r\npublic class ExecutorConfigurer {\r\n  @Produces\r\n  public ForkJoinPool forkJoinPool() {\r\n    return new ForkJoinPool(\r\n        Math.max(Runtime.getRuntime().availableProcessors() - 4, 4),\r\n        ForkJoinPool.defaultForkJoinWorkerThreadFactory,\r\n        null,\r\n        true);\r\n  }\r\n}\r\n```\r\n\r\nUserDao.java\r\n```java\r\n@Singleton\r\npublic class UserDao implements PanacheRepositoryBase<User, Long> {\r\n\r\n  @Transactional\r\n  public void save(User entities) {\r\n    persist(entities);\r\n  }\r\n}\r\n```\r\n\r\nUserResource.java\r\n```java\r\n@Path(\"/user\")\r\npublic class UserResource {\r\n  @Inject ForkJoinPool forkJoinPool;\r\n  @Inject UserDao userDao;\r\n\r\n  @GET\r\n  @Path(\"save1\")\r\n  @Produces(MediaType.TEXT_PLAIN)\r\n  public String save1() {\r\n    forkJoinPool.execute(() -> userDao.save(User.builder().nickName(\"bob\").build()));\r\n    return \"save1 end\";\r\n  }\r\n}\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\ninsert success\r\n\r\n### Actual behavior\r\n\r\nthrow exception\r\n```\r\nException in thread \"ForkJoinPool-2-worker-1\" jakarta.enterprise.inject.CreationException: java.lang.ClassNotFoundException: io.quarkus.hibernate.orm.runtime.TransactionSessions\r\n\tat org.hibernate.Session_3a974b6a18ac399f675913d732c105426414d370_Synthetic_Bean.create(Unknown Source)\r\n\tat org.hibernate.Session_3a974b6a18ac399f675913d732c105426414d370_Synthetic_Bean.create(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:113)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:37)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:34)\r\n\tat io.quarkus.arc.impl.LazyValue.get(LazyValue.java:26)\r\n\tat io.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:69)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:34)\r\n\tat io.quarkus.arc.impl.ClientProxies.getApplicationScopedDelegate(ClientProxies.java:21)\r\n\tat org.hibernate.Session_3a974b6a18ac399f675913d732c105426414d370_Synthetic_ClientProxy.arc$delegate(Unknown Source)\r\n\tat org.hibernate.Session_3a974b6a18ac399f675913d732c105426414d370_Synthetic_ClientProxy.contains(Unknown Source)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.AbstractJpaOperations.persist(AbstractJpaOperations.java:100)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.AbstractJpaOperations.persist(AbstractJpaOperations.java:96)\r\n\tat io.quarkus.hibernate.orm.panache.PanacheRepositoryBase.persist(PanacheRepositoryBase.java:54)\r\n\tat com.example.dao.UserDao.save(UserDao.java:13)\r\n\tat com.example.dao.UserDao_Subclass.save$$superforward(Unknown Source)\r\n\tat com.example.dao.UserDao_Subclass$$function$$2.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:77)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:66)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.invokeInOurTx(TransactionalInterceptorBase.java:136)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.invokeInOurTx(TransactionalInterceptorBase.java:107)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired.doIntercept(TransactionalInterceptorRequired.java:38)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.intercept(TransactionalInterceptorBase.java:61)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired.intercept(TransactionalInterceptorRequired.java:32)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:34)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n\tat com.example.dao.UserDao_Subclass.save(Unknown Source)\r\n\tat com.example.resource.UserResource.lambda$save1$0(UserResource.java:24)\r\n\tat java.base/java.util.concurrent.ForkJoinTask$RunnableExecuteAction.exec(ForkJoinTask.java:1395)\r\n\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\r\n\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)\r\n\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)\r\n\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)\r\n\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)\r\nCaused by: java.lang.ClassNotFoundException: io.quarkus.hibernate.orm.runtime.TransactionSessions\r\n\tat java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)\r\n\tat java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n\tat java.base/java.lang.Class.forName0(Native Method)\r\n\tat java.base/java.lang.Class.forName(Class.java:467)\r\n\tat org.hibernate.Session_3a974b6a18ac399f675913d732c105426414d370_Synthetic_Bean.doCreate(Unknown Source)\r\n\t... 36 more\r\n\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nhttps://github.com/seepine/quarkus-thread-hibernate-demo\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n8.1.1\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33788/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33788/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

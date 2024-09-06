@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41429",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41429/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41429/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41429/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41429",
+  "id": 2372768983,
+  "node_id": "I_kwDOCFbutM6NbZTX",
+  "number": 41429,
+  "title": "[hibernate-search] Support injecting runtime properties in custom `IndexLayoutStrategy` implementation",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1664142960,
+      "node_id": "MDU6TGFiZWwxNjY0MTQyOTYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-search",
+      "name": "area/hibernate-search",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Search / Elasticsearch"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-06-25T13:55:26Z",
+  "updated_at": "2024-07-16T14:19:49Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nFollowing https://github.com/quarkusio/quarkus/issues/41384, I try to implement a custom `IndexLayoutStrategy` to prefix the index name with a config property defined in `application.properties`.\r\n\r\n```java\r\n@SearchExtension\r\npublic class PrefixIndexLayoutStrategy implements IndexLayoutStrategy {\r\n\r\n    @ConfigProperty(name = \"index-prefix\")\r\n    String prefix;\r\n\r\n    @Override\r\n    public String createInitialElasticsearchIndexName(String hibernateSearchIndexName) {\r\n        return prefix + hibernateSearchIndexName + \"-000001\";\r\n    }\r\n    [...]\r\n```\r\n\r\nwhen I run my application (`prod` profile in k8s), I get\r\n\r\n```text\r\nA runtime config property value differs from the value that was injected during the static intialization phase:\r\n- the runtime value of 'index-prefix' is [dev-] but the value [null] was injected into myapp.PrefixIndexLayoutStrategy()\r\n\r\nIf that's intentional then annotate the injected field/parameter with @io.quarkus.runtime.annotations.StaticInitSafe to eliminate the false positive.\r\n```\r\n\r\nQuoting @yrodiere from https://github.com/quarkusio/quarkus/issues/41384#issuecomment-2188252197:\r\n\r\n> I believe the index layout strategy is used by Hibernate Search at static init, so you can't use runtime properties in there. \r\n> I'd suggest opening a feature request to make the index layout strategy a runtime component (which makes sense)\r\n> FWIW it'll probably require changes to Hibernate Search itself, since it currently creates index names very (too?) early, \r\n> for no good reason that I can see (the names aren't used until runtime): \r\n> https://github.com/hibernate/hibernate-search/blob/0b9e3f0d87250daa800f10223bcc81cdb0da773a/backend/elasticsearch/src/main/java/org/hibernate/search/backend/elasticsearch/impl/ElasticsearchBackendImpl.java#L206\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41429/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41429/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

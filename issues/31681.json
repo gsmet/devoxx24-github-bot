@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31681",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31681/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31681/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31681/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31681",
+  "id": 1615072080,
+  "node_id": "I_kwDOCFbutM5gRAtQ",
+  "number": 31681,
+  "title": "@CacheResult on Uni is delayed until Uni is resolved, this allows several concurrent Uni to be active and overwrite cache",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2023-03-08T10:56:05Z",
+  "updated_at": "2023-03-10T06:51:35Z",
+  "closed_at": "2023-03-10T06:29:34Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWith normal calls that are cached using @CacheResult concurrent calls all get the value returned by the first call.\r\nThis means that if a slow backend service is called additional calls will still get the first value returned.\r\nReactive calls do the opposite, since the cache value is not set until the Uni is resolved, additional reactive calls may start and will then overwrite the cache value of the preceeding calls.\r\nThe effect is that after a bunch of concurrent reactive calls have been run, the cache value is that of the last call - and all calls will\r\nwait for the slow backend service.\n\n### Expected behavior\n\nI was expecting the @CacheResult and Uni memoize() to behave similar to blocking calls, so that the first call would set the cache and the value then used by the other reactive calls waiting for resolution.\r\nThe waiting time for 4 concurrent calls should be ended when the first call resolved.\n\n### Actual behavior\n\nThe cache value is that of the last call - and all calls will wait for the slow backend service. The waiting time for each call is the full time of the backend call.\n\n### How to Reproduce?\n\nTwo projects, one to simulate the slow backend, providing a 10 second delay before result is returned, the other to test blocking cached calls, reactive cached calls that show the above behaviour and also a fixed version that might be useful for a fix.\r\n\r\nThe slow backend service (runs on localhost:8090)\r\nhttps://github.com/flygarej/quarkus-cache-slowservice\r\n\r\nThe test bench (runs on localhost:8080):\r\nhttps://github.com/flygarej/quarkus-cache-test-clientside\r\n\r\nStart both projects in separate terminals, then add two or more terminals to test concurrency:\r\n\r\nTo test normal cache behaviour for blocking calls, in each window run:\r\ncurl http://localhost/test/gettokenb\r\nwithin the 10 second window the slow backend provides. All calls will return when the first one get a result.\r\nSubsequent calls get the cached value until a test/invalidateb is done\r\n\r\nTo test normal cache behaviour for reactive calls, in each window run:\r\ncurl http://localhost/test/gettokennaive\r\nwithin the 10 second window the slow backend provides. Each call will wait for 10 seconds. The cache\r\nwill be set to the value of the last call. \r\nSubsequent calls will get the cached value until a test/invalidatenaive is done. \r\nIf cache is invalidated while waiting for resolution, the resolved value is not cached.\r\n\r\nTo test the wanted reactive behaviour (modulo me being a reactive noob) in each window run:\r\ncurl http://localhost/test/gettoken\r\nwithin the 10 second window the slow backend provides. The behaviour is the same as for blocking calls.\r\nA call to test/invalidate invalidates cache unless a call is pending resolution, if so the pending call will be cached.\r\n\r\n\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux deadpool 5.19.0-35-generic #36~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Feb 17 15:17:25 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"19.0.2\" 2023-01-17\r\nOpenJDK Runtime Environment Zulu19.32+13-CA (build 19.0.2+7)\r\nOpenJDK 64-Bit Server VM Zulu19.32+13-CA (build 19.0.2+7, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\nMaven home: /home/flax/.m2/wrapper/dists/apache-maven-3.8.6-bin/67568434/apache-maven-3.8.6\r\nJava version: 17.0.6, vendor: Azul Systems, Inc., runtime: /usr/lib/jvm/zulu17-ca-amd64\r\nDefault locale: sv_SE, platform encoding: UTF-8\r\nOS name: \"linux\", version: \"5.19.0-35-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31681/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31681/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

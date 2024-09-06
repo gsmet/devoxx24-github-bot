@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36266",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36266/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36266/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36266/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36266",
+  "id": 1924134161,
+  "node_id": "I_kwDOCFbutM5yr_UR",
+  "number": 36266,
+  "title": "Should a dynamodb table be created automatically in dev mode?",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-10-03T13:16:45Z",
+  "updated_at": "2023-10-03T13:37:25Z",
+  "closed_at": "2023-10-03T13:37:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI've created a lambda that connects to dynamodb to store state from a rest endpoint.\r\n\r\nUsing this in quarkus dev mode requires I add code that creates the table before I can test locally or the application fails because the table does not exist. The dynamodb is provided via localstack as provisioned by the amazon-dynamodb-enhanced extension starting when quarkus starts so I'm unable to provision the table externally to the program.\r\n\r\nI've been using the following code to ensure the table is created\r\n\r\n` @Inject\r\n    TimeRecordService(DynamoDbEnhancedClient dynamoEnhancedClient) {\r\n        timeRecordTable = dynamoEnhancedClient.table(getTableName(),\r\n                TableSchema.fromClass(TimeRecord.class));\r\n        timeRecordTable.createTable();\r\n    }`\r\n\r\nHowever, when deployed to AWS the table will be there (at least after the first run).\r\n\r\nI can remove this logic and add specific code just to create the table in dev with something like the below maybe?\r\n\r\n`  @ApplicationScoped\r\n   @Profile(\"dev\")\r\n   public class DynamoDbTableCreator {\r\n   \r\n       @Inject\r\n       DyanmoDbClient client;\r\n   \r\n       void onStart(@Observes StartupEvent ev) {\r\n           // Create table logic here\r\n       }\r\n   }\r\n`\r\n\r\nWhat's the recommended way to achieve this? How does/should table provisioning work when running against a database in dev mode?\r\n\r\n\r\n\r\n\r\n\r\n\r\n\n\n### Expected behavior\n\nGiven that quarkus dev is starting the database, I'd assume there would be a mechanism to initialize it/create the table required as part of that start-up process.\n\n### Actual behavior\n\nTables aren't created. Any interaction with the database fails unless code is added to explicitly create the table.\n\n### How to Reproduce?\n\n- Create a basic quarkus app that uses the amazon-dynamodb-enhanced extension.\r\n- Have the app query a table\r\n- Start the app.\r\n- A LocalStack version of the AWS dynamodb will spin up\r\n- Perform any operation against the app that queries the table\r\n- app fails as the table does not exist.\r\n\n\n### Output of `uname -a` or `ver`\n\nDarwin Stevens-MacBook-Pro.local 22.6.0 Darwin Kernel Version 22.6.0: Wed Jul  5 22:22:05 PDT 2023; root:xnu-8796.141.3~6/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.6\" 2023-01-17 LTS OpenJDK Runtime Environment Zulu17.40+19-CA (build 17.0.6+10-LTS) OpenJDK 64-Bit Server VM Zulu17.40+19-CA (build 17.0.6+10-LTS, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\nN/A\n\n### Quarkus version or git rev\n\n3.4.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.4 (dfbb324ad4a7c8fb0bf182e6d91b0ae20e3d2dd9) Maven home: /opt/homebrew/Cellar/maven/3.9.4/libexec Java version: 17.0.6, vendor: Azul Systems, Inc., runtime: /Users/eework/.sdkman/candidates/java/17.0.6-zulu/zulu-17.jdk/Contents/Home Default locale: en_ZA, platform encoding: UTF-8 OS name: \"mac os x\", version: \"13.5.2\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36266/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36266/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

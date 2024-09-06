@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28035",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28035/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28035/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28035/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28035",
+  "id": 1376831756,
+  "node_id": "I_kwDOCFbutM5SEMkM",
+  "number": 28035,
+  "title": "Hibernate ORM and Spring Data tests failing with out-by-one error when run on Mac in North American timezone",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 1552233747,
+      "node_id": "MDU6TGFiZWwxNTUyMjMzNzQ3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/spring",
+      "name": "area/spring",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues relating to the Spring integration"
+    },
+    {
+      "id": 4147701997,
+      "node_id": "LA_kwDOCFbutM73OOjt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/m1",
+      "name": "env/m1",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Apple M1 machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2022-09-17T17:39:49Z",
+  "updated_at": "2024-08-14T15:11:01Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI can’t decide if this is a test issue, or an implementation issue, but I’m raising a defect to track the investigation (and track the disabling of the tests on Mac CIs in https://github.com/quarkusio/quarkus/pull/27156, which we will want to reverse once this is sorted out). \r\n\r\nA number of tests which check author.dob are failing with an out-by-one error, on our Mac GitHub runner. I assume the issue is a timezone one, since taking five hours off a date (as in UTC-5) can have the effect of going back a day. I have confirmed that I can reproduce on my Mac if I set the timezone to Chicago. \r\n\r\n``` io.quarkus.it.hibernate.orm.rest.data.panache.HibernateOrmRestDataPanacheTest.shouldGetBookHal  Time elapsed: 0.033 s  <<< FAILURE!\r\n2022-09-17T06:31:57.7517920Z java.lang.AssertionError: \r\n2022-09-17T06:31:57.7518080Z 1 expectation failed.\r\n2022-09-17T06:31:57.7527070Z JSON path author.dob doesn't match.\r\n2022-09-17T06:31:57.7527270Z Expected: is \"1821-11-11\"\r\n2022-09-17T06:31:57.7527420Z   Actual: 1821-11-10 ```\r\n```\r\n\r\n  I can’t explain why this only affects the Mac runner, and not the other US-hosted runners. (I’ve checked, and the timestamps in the log are the same as the ubuntu runners which pass fine.) \r\n  \r\n  These are the affected tests:\r\n\r\n\r\n📦 integration-tests/hibernate-orm-rest-data-panache\r\n✖ io.quarkus.it.hibernate.orm.rest.data.panache.HibernateOrmRestDataPanacheTest.shouldGetAuthor line 51 - \r\n✖ io.quarkus.it.hibernate.orm.rest.data.panache.HibernateOrmRestDataPanacheTest.shouldGetBookHal line 82 - \r\n✖ io.quarkus.it.hibernate.orm.rest.data.panache.HibernateOrmRestDataPanacheTest.shouldGetBook line 70 - \r\n✖ io.quarkus.it.hibernate.orm.rest.data.panache.HibernateOrmRestDataPanacheTest.shouldListAuthors line 97 - \r\n✖ io.quarkus.it.hibernate.orm.rest.data.panache.HibernateOrmRestDataPanacheTest.shouldListBooksHal line 134 - \r\n✖ io.quarkus.it.hibernate.orm.rest.data.panache.HibernateOrmRestDataPanacheTest.shouldListBooks line 109 - \r\n\r\n📦 integration-tests/jackson\r\n✖ io.quarkus.it.jackson.DateDeserializerPojoResourceTest.testSqlDate line 41 - \r\n\r\n📦 integration-tests/spring-data-rest\r\n✖ io.quarkus.it.spring.data.rest.SpringDataRestTest.shouldGetAuthor line 43 - \r\n✖ io.quarkus.it.spring.data.rest.SpringDataRestTest.shouldGetBookHal line 67 - \r\n✖ io.quarkus.it.spring.data.rest.SpringDataRestTest.shouldGetBook line 55 - \r\n✖ io.quarkus.it.spring.data.rest.SpringDataRestTest.shouldListAuthors line 82 -\r\n✖ io.quarkus.it.spring.data.rest.SpringDataRestTest.shouldListBooksHal line 106 - \r\n✖ io.quarkus.it.spring.data.rest.SpringDataRestTest.shouldListBooks line 94 - \r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nTo reproduce, I think you will need a Mac? But probably not specifically an M1?\r\n\r\nChange the timezone to something West of Greenwich, like a North American or Brazilian time (hi, @gastaldi  :) ). \r\n\r\nThen \r\n\r\n```mvn verify -f integration-tests/hibernate-orm-rest-data-panache```\r\n\r\nwill fail. \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n```Darwin hcummins-mac 21.6.0 Darwin Kernel Version 21.6.0: Wed Aug 10 14:28:23 PDT 2022; root:xnu-8020.141.5~2/RELEASE_ARM64_T6000 arm64```\r\n\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28035/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28035/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "reopened"
+}

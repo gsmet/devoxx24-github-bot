@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26584",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26584/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26584/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26584/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26584",
+  "id": 1295901350,
+  "node_id": "I_kwDOCFbutM5NPeKm",
+  "number": 26584,
+  "title": "Generic runtime exception mapper used for `javax.ws.rs.WebApplicationException`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2022-07-06T14:10:15Z",
+  "updated_at": "2022-07-14T10:10:09Z",
+  "closed_at": "2022-07-14T09:26:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen using the `quarkus-resteasy-reactive` and adding the generic exception mapper with the default priority `Priorities.USER`, then the `org.jboss.resteasy.reactive.server.core.RuntimeExceptionMapper` that should handle \"infrastructure\" exceptions like `javax.ws.rs.WebApplicationException` is not actually doing it.\r\n\r\nWe have seen this for the `javax.ws.rs.NotAllowedException: HTTP 405 Method Not Allowed`. Once raised, it will still reach the generic exception mapper that we defined.\r\n\r\nSeems that the issue can be the following. Although the `RuntimeExceptionMapper#mapException` is intercepting the `WebApplicationException`, it's not returning the response it creates as entity is `null`:\r\n\r\n```\r\n        if (isWebApplicationException) {\r\n            response = ((WebApplicationException) throwable).getResponse();\r\n        }\r\n        if (response != null && response.hasEntity()) {\r\n            context.setResult(response);\r\n            return;\r\n        }\r\n```\r\n\r\nWould this be expected behavior?\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nAdd the following exception mapper and make HTTP call that should return `405`.\r\n\r\n```\r\n  @ServerExceptionMapper\r\n  public RestResponse<ApiError> runtimeException(RuntimeException exception) {\r\n    return ResponseBuilder.create(Response.Status.INTERNAL_SERVER_ERROR).build();\r\n  }\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.10.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven home: /home/ise/.m2/wrapper/dists/apache-maven-3.8.4-bin/52ccbt68d252mdldqsfsn03jlf/apache-maven-3.8.4 Java version: 17.0.3, vendor: Private Build, runtime: /usr/lib/jvm/java-17-openjdk-amd64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.13.0-52-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\nWorkaround currently would be to manually check in the user-defined exception mapper and exception is `javax.ws.rs.WebApplicationException` and return response that it contains. Or add an explicit `javax.ws.rs.WebApplicationException` mapper.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26584/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26584/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

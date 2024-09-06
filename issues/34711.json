@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34711",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34711/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34711/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34711/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34711",
+  "id": 1801624856,
+  "node_id": "I_kwDOCFbutM5rYp0Y",
+  "number": 34711,
+  "title": "Interception and mutating transactions doesn't work in Quarkus 3",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 2955124662,
+      "node_id": "MDU6TGFiZWwyOTU1MTI0NjYy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-sql-clients",
+      "name": "area/reactive-sql-clients",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-07-12T19:29:03Z",
+  "updated_at": "2023-08-21T09:43:24Z",
+  "closed_at": "2023-08-21T09:43:23Z",
+  "active_lock_reason": null,
+  "body": "I have a problem with adding SQL command execution interceptor for adding custom SQL command on every method with my annotation. It was worked in Quarkus 2.\r\n\r\nWhat am I doing and why do I need it?\r\nI use multiregional AWS Aurora DB with one master instance in USW2 region and slave instance in EUC1 according to https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-write-forwarding.html\r\nSlave instances (as I have in EUC1) region prohibited to perform write sql commands. But if will be performed the following command before SQL commands then transaction will be forwarded automatically to master region (USW2, which is able to perform write commands):\r\n\r\n```\r\nSET aurora_replica_read_consistency = 'EVENTUAL'\r\n```\r\n\r\nIf I do it in console manually - all works.\r\n\r\nIf I do it via quarkus via following interceptor, it doesn't work:\r\n\r\n```\r\npackage com.test.someapi.interceptors;\r\n\r\nimport com.test.someapi.annotations.ReactiveAuroraWriteForwarding;\r\nimport io.smallrye.mutiny.Uni;\r\nimport io.smallrye.mutiny.unchecked.Unchecked;\r\nimport jakarta.annotation.Priority;\r\nimport jakarta.inject.Inject;\r\nimport jakarta.interceptor.AroundInvoke;\r\nimport jakarta.interceptor.Interceptor;\r\nimport jakarta.interceptor.InvocationContext;\r\n\r\n@Priority(100)\r\n@ReactiveAuroraWriteForwarding\r\n@Interceptor\r\npublic class AuroraWriteForwardingInterceptor {\r\n\r\n    private static final String SET_AURORA_READ_CONSISTENCY_TEMPLATE = \"SET aurora_replica_read_consistency = '%s'\";\r\n\r\n    @Inject\r\n    io.vertx.mutiny.mysqlclient.MySQLPool client;\r\n\r\n    @AroundInvoke\r\n    Object writeForwardingInvocation(InvocationContext ic)throws Exception {\r\n        Class<?> returnType = ic.getMethod().getReturnType();\r\n\r\n        if(returnType == Uni.class){\r\n            ReactiveAuroraWriteForwarding annotation = ic.getMethod().getAnnotation(ReactiveAuroraWriteForwarding.class);\r\n            String setAuroraReadConsistencyQuery = String.format(SET_AURORA_READ_CONSISTENCY_TEMPLATE, annotation.auroraReplicaReadConsistency());\r\n            return client.withTransaction(conn ->\r\n                            conn.query(setAuroraReadConsistencyQuery).execute()\r\n                    .onFailure().recoverWithNull()\r\n                    .onItem().transformToUni(Unchecked.function(item -> {\r\n                        try {\r\n                            return (Uni<?>) ic.proceed();\r\n                        } catch (Exception ex) {\r\n                            throw new RuntimeException(ex);\r\n                        }\r\n            })));\r\n        }\r\n        return ic.proceed();\r\n    }\r\n\r\n}\r\n```\r\n\r\nInterceptor above works via annotation @ReactiveAuroraWriteForwarding. Interface which was created.\r\n```\r\n@Inherited\r\n@InterceptorBinding\r\n@Retention(RUNTIME)\r\n@Target({METHOD, TYPE})\r\npublic @interface ReactiveAuroraWriteForwarding {\r\n    @Nonbinding AuroraReplicaReadConsistency auroraReplicaReadConsistency() default SESSION;\r\n}\r\n```\r\n\r\nSo if I add annotation @ReactiveAuroraWriteForwarding to any method which doing persisting in DB in Quarkus 2, then it was worked. But in Quarkus 3 it doesn't work - I even don't see in logs that \r\n```\r\nSET aurora_replica_read_consistency = 'EVENTUAL' \r\n```\r\nwas executed.\r\n\r\nMaybe smth was changed in Quarkus 3 and there is another way to add custom command like 'SET aurora_replica_read_consistency = 'EVENTUAL' ' before commands for data persistance?\r\n\r\n### Expected behavior\r\n\r\nI see in logs:\r\n```\r\nHibernate: \r\n     SET aurora_replica_read_consistency = 'EVENTUAL' \r\n```\r\nThen sql commands for data persistance.\r\n\r\n### Actual behavior\r\n\r\nI see in logs only sql commands for data persistance.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin MYPCNAME 21.4.0 Darwin Kernel Version 21.4.0: Mon Feb 21 20:35:58 PST 2022; root:xnu-8020.101.4~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\n17.0.4+8-jvmci-22.2-b06\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.4.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 \r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34711/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34711/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

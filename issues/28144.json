@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28144",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28144/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28144/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28144/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28144",
+  "id": 1382021724,
+  "node_id": "I_kwDOCFbutM5SX_pc",
+  "number": 28144,
+  "title": "Narayana JTA - Enabling Recovery service by default",
+  "labels": [
+    {
+      "id": 1633508165,
+      "node_id": "MDU6TGFiZWwxNjMzNTA4MTY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/narayana",
+      "name": "area/narayana",
+      "color": "0366d6",
+      "default": false,
+      "description": "Transactions / Narayana"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-09-22T08:11:39Z",
+  "updated_at": "2023-01-20T03:28:54Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "During the 2.13 development cycle, there was an attempt to enable the Narayana JTA recovery service by default. Not having it enabled was apparently an oversight and is considered a bug by the Narayana team.\r\n\r\nIn the end, we disabled it by default in 2.13 because we didn't have time to properly sort things out.\r\n\r\nEnabling the recovery service by default comes with a few questions/problems:\r\n\r\n- Are we clear that the recovery service is required for a consistent behavior even when XA is not used? Could we have a description of a problem that could happen without XA and that the recovery service is supposed to fix?\r\n- Enabling the recovery service requires the `ObjectStore` directory to be created. At the moment, if we do so, an `ObjectStore` directory is created at the current path. Meaning if you run tests creating an `ObjectStore` you end up with an `ObjectStore` directory created at the root of your project (i.e. in the case of Maven, outside of `target` and thus ready to get committed to your Git repository). Creating this directory in a temp directory doesn't seem like a good idea (at least from what I understood of the purpose of this service) but we need to solve the directory location for all cases:\r\n  - tests (both Maven and Gradle, they have different output directories)\r\n  - execution\r\n  - execution inside containers - we need to make sure this works with the permissions defined in our Dockerfiles.\r\nNote that it's not so simple as we definitely don't want the location to be defined at build time.\r\n- Are we sure enabling this service doesn't cause any performance regressions? If so, are they acceptable or not?\r\n\r\n/cc @zhfeng @mmusgrov @Sanne @yrodiere ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28144/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28144/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

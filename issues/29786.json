@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29786",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29786/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29786/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29786/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29786",
+  "id": 1489930870,
+  "node_id": "I_kwDOCFbutM5Yzop2",
+  "number": 29786,
+  "title": "quarkus-keycloak-admin-client-reactive throwing BlockingNotAllowedException from ServerRequestFilter",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-12-11T12:36:44Z",
+  "updated_at": "2022-12-13T12:20:27Z",
+  "closed_at": "2022-12-12T07:35:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm using Quarkus with `quarkus-resteasy-reactive` and the `quarkus-keycloak-admin-client-reactive` extensions. I'm building a `ServerRequestFilter` that queries Keycloak for a user attribute, but even though I'm using the reactive client, I'm getting `BlockingNotAllowedException` when calling its methods.\r\n\r\nThe filter is this:\r\n\r\n```java\r\npublic class Filters {\r\n    @Inject\r\n    Keycloak keycloak;\r\n\r\n    @ServerRequestFilter\r\n    public Uni<Response> filter(ContainerRequestContext requestContext) {\r\n        return Uni.createFrom().item(() ->\r\n                keycloak.realm(\"my-realm\")\r\n                        .users()\r\n                        .search(\"user-that-i-get-from-context\")\r\n                        .stream()\r\n                        .findFirst()\r\n                        .orElseThrow()\r\n                        .firstAttribute(\"the-attribute\")).map(attr -> {\r\n            if (attr.equals(\"some-value\")){\r\n                return null;\r\n            }\r\n            return Response.status(403).build();\r\n        });\r\n    }\r\n}\r\n```\r\n\r\nIn the example here I wrapped the call to Keycloak inside a `Uni` for the sake of simplicity in reporting the bug because in actuality what I want to have is a query to the DB first and then I'll call Keycloak, so the filter really must return a `Uni`.\r\n\r\nI am able to use the Keycloak client directly in my endpoints, this only happens when using it in a `ServerRequestFilter`.\r\n\r\nI've tried adding `.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())` to the above `Uni`, as well as wrapping it in `vertx.executeBlocking()` with no success, I still get the exception.\r\n\r\nThis also only seems to happen on endpoints that return a `Uni`. On endpoints that simply return a `Response` or another type, the exception does not occur\r\n\r\n### Expected behavior\r\n\r\nSince I'm using the keycloak reactive client, there should be no blocking and therefore there should be no `BlockingNotAllowedException` anywhere its methods are called\r\n\r\n### Actual behavior\r\n\r\nI get a `BlockingNotAllowedException` when calling methods of the Keycloak reactive client in a `ServerRequestFilter`\r\n\r\n### How to Reproduce?\r\n\r\nYou can use this project to reproduce: https://github.com/TiagoGrosso/keycloak-quarkus-reactive-bug\r\n\r\nSimply send a request to GET http://localhost:8080/hello\r\n\r\nIf you switch out the return of the endpoint in `GreetingResource` to `String` the bug stops happening.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nUbuntu 5.15.0-56-generic #62~20.04.1-Ubuntu SMP Tue Nov 22 21:24:20 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.2 2022-01-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\r\n\r\n### Additional information\r\n\r\nFull stacktrace:\r\n\r\n```java\r\nERROR [org.jbo.res.rea.com.cor.AbstractResteasyReactiveContext] (vert.x-eventloop-thread-0) Request failed: org.jboss.resteasy.reactive.common.core.BlockingNotAllowedException\r\n\tat org.jboss.resteasy.reactive.client.impl.InvocationBuilderImpl.unwrap(InvocationBuilderImpl.java:210)\r\n\tat org.jboss.resteasy.reactive.client.impl.InvocationBuilderImpl.method(InvocationBuilderImpl.java:329)\r\n\tat org.keycloak.admin.client.resource.UsersResourcecec060e01a4e8719a5229b25492913298e3846fc54.search(Unknown Source)\r\n\tat com.tiagop.filters.Filters.lambda$filter$0(Filters.java:20)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromItemSupplier.subscribe(UniCreateFromItemSupplier.java:28)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransform.subscribe(UniOnItemTransform.java:22)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.withSubscriber(UniSubscribe.java:52)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:112)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:89)\r\n\tat org.jboss.resteasy.reactive.server.filters.FilterUtil.handleUniResponse(FilterUtil.java:74)\r\n\tat com.tiagop.filters.Filters$GeneratedServerRequestFilter$filter.filter(Unknown Source)\r\n\tat org.jboss.resteasy.reactive.server.spi.ResteasyReactiveContainerRequestFilter.filter(ResteasyReactiveContainerRequestFilter.java:11)\r\n\tat org.jboss.resteasy.reactive.server.handlers.ResourceRequestFilterHandler.handle(ResourceRequestFilterHandler.java:48)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:104)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:48)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:23)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:10)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:173)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:140)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:84)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:71)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:136)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:140)\r\n\tat io.vertx.ext.web.handler.impl.StaticHandlerImpl.lambda$sendStatic$1(StaticHandlerImpl.java:290)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29786/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29786/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

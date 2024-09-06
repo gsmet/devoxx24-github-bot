@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20593",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20593/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20593/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20593/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20593",
+  "id": 1020250503,
+  "node_id": "I_kwDOCFbutM48z8mH",
+  "number": 20593,
+  "title": "Is the build action of Gradle `QuarkusBuild` running asynchronously?",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-10-07T16:41:48Z",
+  "updated_at": "2021-10-08T07:06:28Z",
+  "closed_at": "2021-10-08T07:06:28Z",
+  "active_lock_reason": null,
+  "body": "I'm having a strange error in a Gradle build that produces a Quarkus uber-jar. What I want to do in this build is to package the uber-jar created by the `quarkusBuild` task in a TAR file *after* it has been created. For this I have created a Gradle Tar task as follows:\r\n\r\n```\r\ntasks.register('buildTar', Tar)\r\n{\r\n   // ...\r\n\r\n   mustRunAfter quarkusBuild\r\n\r\n   into('foo')\r\n   {\r\n      from quarkusBuild.runnerJar\r\n   }\r\n\r\n   // ...\r\n}\r\n```\r\n\r\nThe problem is that the uber-jar in the TAR is corrupt, and only this file (meaning that everything else in the TAR is consistent). When unpacking the uber-jar from the Tar and comparing it with the uber-jar file that is written to the `build` folder, the one in the TAR is larger (they have different sizes). Trying to run the unpacked uber-jar with `java -jar myUber.jar` results equally in errors saying it is not a valid JAR file.\r\n\r\nI was studying the code of the class `QuarkusBuild` a little. Could it be that [lines 118 to 138](https://github.com/quarkusio/quarkus/blob/8f312f55cefe11de7c189144bc54f2fc5090403b/devtools/gradle/gradle-application-plugin/src/main/java/io/quarkus/gradle/tasks/QuarkusBuild.java#L118) spawn a thread that executes asynchronously to the calling thread? If this is indeed the case, my explanation would be that at the time the `buildTar` tasks starts reading the uber-jar, it is not yet completely written. This would be a bad design flaw. Without further synchronization means it would be impossible to reliably post-process the output of `quarkusBuild` by subsequent tasks in a Gradle build. Or am I missing something else?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20593/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20593/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

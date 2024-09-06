@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40363",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40363/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40363/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40363/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40363",
+  "id": 2270963175,
+  "node_id": "I_kwDOCFbutM6HXCXn",
+  "number": 40363,
+  "title": "Transaction is not closed at the end of the request after calling the begin() method in @GraphqlAPI",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-04-30T09:23:48Z",
+  "updated_at": "2024-04-30T11:23:25Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nTransaction is not closed at the end of the request after calling the begin() method in @GraphqlAPI\r\n\r\nI've written two simple classes (I plan to use GraphqlApiDomainTransactionalState in @Interceptor, but for simplicity I wrote this example)\r\n\r\n```kotlin\r\n@RequestScoped\r\nclass GraphqlApiDomainTransactionalState {\r\n  private var started = false\r\n\r\n  fun startIfNeed() {\r\n    println(started)\r\n\r\n    if (started) {\r\n      return\r\n    }\r\n\r\n    QuarkusTransaction.begin(\r\n      QuarkusTransaction.beginOptions().commitOnRequestScopeEnd()\r\n    )\r\n\r\n    started = true\r\n  }\r\n}\r\n\r\n@GraphQLApi\r\nclass TestGraphqlEndpoint {\r\n  @Inject\r\n  lateinit var state: GraphqlApiDomainTransactionalState\r\n\r\n  @Query(\"objects\")\r\n  fun tests(): List<Test> {\r\n    state.startIfNeed()\r\n\r\n    return listOf(Test(\"asd\"))\r\n  }\r\n}\r\n```\r\n\r\nAfter that execute graphql query, it completes successfully. At the end of the logs I see the following\r\n\r\n```\r\n2024-04-30 19:18:40,024 FINE  [io.sma.con.jta.con.pro.JtaContextProvider] (vert.x-worker-thread-1) Suspending transaction TransactionImple < ac, BasicAction: 0:ffff0a140312:c968:6630b76f:0 status: ActionStatus.RUNNING >\r\n2024-04-30 19:18:40,038 FINE  [io.sma.con.jta.con.pro.JtaContextProvider] (vert.x-worker-thread-1) Resuming transaction TransactionImple < ac, BasicAction: 0:ffff0a140312:c968:6630b76f:0 status: ActionStatus.RUNNING >\r\n```\r\n\r\nIf I execute the request again, the following exception is thrown\r\n\r\n```\r\n2024-04-30 19:20:03,485 DEBUG [not.gra.exe.ExecutionStrategy] (vert.x-worker-thread-1) '19770343191', field '/objects' fetch threw exception: io.quarkus.narayana.jta.QuarkusTransactionException: Transaction already active\r\n\tat io.quarkus.narayana.jta.RequestScopedTransaction.begin(RequestScopedTransaction.java:57)\r\n\tat io.quarkus.narayana.jta.RequestScopedTransaction_ClientProxy.begin(Unknown Source)\r\n\tat io.quarkus.narayana.jta.QuarkusTransactionImpl.begin(QuarkusTransactionImpl.java:223)\r\n\tat io.quarkus.narayana.jta.QuarkusTransaction.begin(QuarkusTransaction.java:53)\r\n\tat ru.foura.erpii.graphql.endpoints.GraphqlApiDomainTransactionalState.startIfNeed(DepartmentGraphqlEndpoint.kt:48)\r\n\tat ru.foura.erpii.graphql.endpoints.GraphqlApiDomainTransactionalState_ClientProxy.startIfNeed(Unknown Source)\r\n\tat ru.foura.erpii.graphql.endpoints.TestGraphqlEndpoint.tests(DepartmentGraphqlEndpoint.kt:63)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.smallrye.graphql.execution.datafetcher.helper.ReflectionInvoker.invoke(ReflectionInvoker.java:97)\r\n\tat io.smallrye.graphql.execution.datafetcher.DefaultDataFetcher.invokeAndTransform(DefaultDataFetcher.java:33)\r\n\tat io.quarkus.smallrye.graphql.runtime.spi.datafetcher.QuarkusDefaultDataFetcher.invokeAndTransform(QuarkusDefaultDataFetcher.java:45)\r\n\tat io.smallrye.graphql.execution.datafetcher.AbstractDataFetcher.get(AbstractDataFetcher.java:70)\r\n\tat graphql.execution.ExecutionStrategy.invokeDataFetcher(ExecutionStrategy.java:311)\r\n\tat graphql.execution.ExecutionStrategy.fetchField(ExecutionStrategy.java:287)\r\n\tat graphql.execution.ExecutionStrategy.resolveFieldWithInfo(ExecutionStrategy.java:213)\r\n\tat graphql.execution.AsyncExecutionStrategy.execute(AsyncExecutionStrategy.java:55)\r\n\tat graphql.execution.Execution.executeOperation(Execution.java:161)\r\n\tat graphql.execution.Execution.execute(Execution.java:103)\r\n\tat graphql.GraphQL.execute(GraphQL.java:568)\r\n\tat graphql.GraphQL.lambda$parseValidateAndExecute$13(GraphQL.java:487)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniComposeStage(CompletableFuture.java:1187)\r\n\tat java.base/java.util.concurrent.CompletableFuture.thenCompose(CompletableFuture.java:2341)\r\n\tat graphql.GraphQL.parseValidateAndExecute(GraphQL.java:482)\r\n\tat graphql.GraphQL.lambda$executeAsync$9(GraphQL.java:440)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniComposeStage(CompletableFuture.java:1187)\r\n\tat java.base/java.util.concurrent.CompletableFuture.thenCompose(CompletableFuture.java:2341)\r\n\tat graphql.GraphQL.executeAsync(GraphQL.java:428)\r\n\tat io.smallrye.graphql.execution.ExecutionService.lambda$writeAsync$0(ExecutionService.java:235)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage.subscribe(UniCreateFromCompletionStage.java:24)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.withSubscriber(UniSubscribe.java:51)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:110)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:88)\r\n\tat io.smallrye.graphql.execution.ExecutionService.writeAsync(ExecutionService.java:237)\r\n\tat io.smallrye.graphql.execution.ExecutionService.execute(ExecutionService.java:196)\r\n\tat io.smallrye.graphql.execution.ExecutionService.executeAsync(ExecutionService.java:131)\r\n\tat io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLExecutionHandler.doRequest(SmallRyeGraphQLExecutionHandler.java:366)\r\n\tat io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLExecutionHandler.handlePost(SmallRyeGraphQLExecutionHandler.java:124)\r\n\tat io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLExecutionHandler.doHandle(SmallRyeGraphQLExecutionHandler.java:85)\r\n\tat io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLAbstractHandler.handleWithIdentity(SmallRyeGraphQLAbstractHandler.java:95)\r\n\tat io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLAbstractHandler.handle(SmallRyeGraphQLAbstractHandler.java:76)\r\n\tat io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLAbstractHandler.handle(SmallRyeGraphQLAbstractHandler.java:30)\r\n```\r\n\r\nAfter debugging, I noticed that the `RequestScopedTransaction` class tries to complete the transaction but fails the check in the\r\n\r\n```kotlin\r\n@PreDestroy\r\n    void destroy() {\r\n        try {\r\n            if (transactionManager.getTransaction() == createdTransaction) { // (!!!!!!) doesn't pass inspection here. fields of transactionManager object is empty for some reason\r\n                if (autoCommit) {\r\n                    QuarkusTransaction.commit();\r\n                } else {\r\n                    log.warn(\"Rolling back transaction that was not committed or explicitly rolled back.\");\r\n                    try {\r\n                        userTransaction.rollback();\r\n                    } catch (SystemException e) {\r\n                        throw new QuarkusTransactionException(e);\r\n                    }\r\n                }\r\n            }\r\n        } catch (SystemException e) {\r\n            log.warn(\"Failed to destroy request scoped transaction\", e);\r\n        }\r\n    }\r\n```\r\n\r\nAnd of course, if I call the QuarkusTransaction.commit() method manually after QuarkusTransaction.begin(), everything works as intended\r\n\r\n### Expected behavior\r\n\r\nAfter calling the method\r\n\r\nQuarkusTransaction.begin(\r\n   QuarkusTransaction.beginOptions().commitOnRequestScopeEnd()\r\n)\r\n\r\nThe transaction should complete at the end of the request\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nUnder Describe the bug\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.22631.3527]\r\n\r\n### Output of `java -version`\r\n\r\nJava(TM) SE Runtime Environment Oracle GraalVM 21.0.2+13.1 (build 21.0.2+13-LTS-jvmci-23.1-b30)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.9.5\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.6\r\n\r\n### Additional information\r\n\r\n------------------------------------------------------------\r\nGradle 8.6\r\n------------------------------------------------------------\r\n\r\nBuild time:   2024-02-02 16:47:16 UTC\r\nRevision:     d55c486870a0dc6f6278f53d21381396d0741c6e\r\n\r\nKotlin:       1.9.20\r\nGroovy:       3.0.17\r\nAnt:          Apache Ant(TM) version 1.10.13 compiled on January 4 2023\r\nJVM:          21.0.2 (Oracle Corporation 21.0.2+13-LTS-jvmci-23.1-b30)\r\nOS:           Windows 11 10.0 amd64",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40363/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40363/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

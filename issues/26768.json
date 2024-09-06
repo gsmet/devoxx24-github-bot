@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26768",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26768/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26768/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26768/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26768",
+  "id": 1307095387,
+  "node_id": "I_kwDOCFbutM5N6LFb",
+  "number": 26768,
+  "title": "Allow running `@QuarkusMainIntegrationTest` on non short-lived apps",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-07-17T13:18:07Z",
+  "updated_at": "2023-04-18T06:53:45Z",
+  "closed_at": "2023-04-18T06:53:45Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nHey,\r\n\r\nMy colleagues and I working on a Quarkus application that basically runs a server that reads data from a Unix domain socket over UDP and performs some BL on top of the messages it receives.\r\n\r\nTo run the socket server we're providing a custom main method with `@QuarkusMain` - \r\n```kotlin\r\n// SocketServerMain.kt\r\n@QuarkusMain\r\nobject SocketServerMain {\r\n    @JvmStatic\r\n    fun main(args: Array<String>) {\r\n        Quarkus.run(SocketServer::class.java, *args)\r\n    }\r\n}\r\n```\r\n\r\n```kotlin\r\n// SocketServer.kt\r\nclass SocketServer() : QuarkusApplication {\r\n    override fun run(vararg args: String?): Int {\r\n        start()\r\n\r\n        return 0\r\n    }\r\n\r\n    private fun start() {\r\n        // Socket server main loop\r\n    }\r\n}\r\n```\r\n\r\nWhile running and testing the application manually, we had no issues and everything worked just fine.\r\n\r\nWe did bump into an issue when trying to write integration tests for the server - it seemed as though the server never really started running when we used `@QuarkusMainIntegrationTest`.\r\nAfter some digging we've found out that `@QuarkusMainIntegrationTest` is meant for working short lived applications (i.e command line apps) and waits for the process completion before actually invoking the test suite.\r\n\r\nWe would like to have an option to run integration tests on a custom `main` application without blocking the tests until the application's exit code is returned - similarly to how it's done with HTTP servers for example.\r\n\r\n### Implementation ideas\r\n\r\nTo overcome our issue with running the ITs - we've created a custom `SocketServerMainIntegrationTestExtension` for junit, which we hacked to work with some package private functions from [IntegrationTestUtil](https://github.com/quarkusio/quarkus/blob/main/test-framework/junit5/src/main/java/io/quarkus/test/junit/IntegrationTestUtil.java).\r\nThe main difference from the `QuarkusMainIntegrationTestExtension` is that it calls `IntegrationTestUtil.startLauncher` to run the application rather than [`launcher.runToCompletion`](https://github.com/quarkusio/quarkus/blob/main/test-framework/junit5/src/main/java/io/quarkus/test/junit/QuarkusMainIntegrationTestExtension.java#L158).\r\n\r\nI'm not sure that this is the optimal way to go, and perhaps our solution won't cover all integration tests use cases, but for our rather small app, it actually did the trick.\r\nOne limitation we did notice is that the log level of the running application must not be `ERROR`/`WARN` - otherwise it seems as though Quarkus does not detect any activity from the application under test and assumes it does not behave as expected 🤔 \r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26768/reactions",
+    "total_count": 2,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26768/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

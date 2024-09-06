@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31963",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31963/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31963/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31963/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31963",
+  "id": 1630967951,
+  "node_id": "I_kwDOCFbutM5hNpiP",
+  "number": 31963,
+  "title": "Upgrading to 21.0.1 from 20.0.5 - Error: Caused by: java.security.cert.CertificateException: Certificates do not conform to algorithm constraints",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-03-19T14:35:48Z",
+  "updated_at": "2023-06-07T16:43:17Z",
+  "closed_at": "2023-06-07T16:43:17Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI upgraded my image yesterday from 20.0.5 to 21.0.1 and got the following error\r\n\r\n```log\r\nat java.base/sun.security.ssl.SSLSocketImpl.readHandshakeRecord(SSLSocketImpl.java:1425)\r\n\tat java.base/sun.security.ssl.SSLSocketImpl.startHandshake(SSLSocketImpl.java:455)\r\n\tat java.base/sun.security.ssl.SSLSocketImpl.startHandshake(SSLSocketImpl.java:426)\r\n\tat org.postgresql.ssl.MakeSSL.convert(MakeSSL.java:41)\r\n\t... 20 more\r\nCaused by: java.security.cert.CertificateException: Certificates do not conform to algorithm constraints\r\n\tat java.base/sun.security.ssl.AbstractTrustManagerWrapper.checkAlgorithmConstraints(SSLContextImpl.java:1573)\r\n\tat java.base/sun.security.ssl.AbstractTrustManagerWrapper.checkAdditionalTrust(SSLContextImpl.java:1498)\r\n\tat java.base/sun.security.ssl.AbstractTrustManagerWrapper.checkServerTrusted(SSLContextImpl.java:1442)\r\n\tat java.base/sun.security.ssl.CertificateMessage$T13CertificateConsumer.checkServerCerts(CertificateMessage.java:1341)\r\n\t... 32 more\r\nCaused by: java.security.cert.CertPathValidatorException: Algorithm constraints check failed on signature algorithm: SHA1withRSA\r\n\tat java.base/sun.security.provider.certpath.AlgorithmChecker.check(AlgorithmChecker.java:237)\r\n\tat java.base/sun.security.ssl.AbstractTrustManagerWrapper.checkAlgorithmConstraints(SSLContextImpl.java:1569)\r\n\t... 35 more\r\n\r\n```\r\n\r\nI am building an optimized image from Keycloak (passing in 21.0.1) into this file\r\n\r\n```dockerfile\r\n# Documentation:\r\n#  https://www.keycloak.org/server/containers\r\nARG KEYCLOAK_VERSION\r\n\r\nFROM quay.io/keycloak/keycloak:$KEYCLOAK_VERSION as builder\r\n\r\n# Configure postgres database vendor\r\nENV KC_DB=postgres\r\n\r\nENV KC_FEATURES=\"token-exchange,scripts,preview\"\r\n\r\nWORKDIR /opt/keycloak\r\n\r\nRUN /opt/keycloak/bin/kc.sh build --cache=ispn --cache-stack=kubernetes --health-enabled=true --metrics-enabled=true\r\n\r\nFROM quay.io/keycloak/keycloak:$KEYCLOAK_VERSION\r\nCOPY --from=builder /opt/keycloak/ /opt/keycloak/\r\n\r\nENTRYPOINT [\"/opt/keycloak/bin/kc.sh\"]\r\n```\r\n\r\nMy Let's Encrypt certificate is coming from the standard jetstack/cert-manager with the standard configuration, if I need to go more into that I can.\r\n\r\nWhen I inspect the certificate in OpenSSL\r\n\r\n```bash\r\n> $ openssl x509 -in tls.crt -text -noout\r\n\r\nCertificate:\r\n    Data:\r\n        Version: 3 (0x2)\r\n        Serial Number:\r\n            03:22:3a:9b:28:db:2d:c4:cb:cc:ab:c4:99:ec:a7:c2:a4:fe\r\n    Signature Algorithm: sha256WithRSAEncryption\r\n        Issuer: C=US, O=Let's Encrypt, CN=R3\r\n        Validity\r\n            Not Before: Mar 15 01:10:26 2023 GMT\r\n            Not After : Jun 13 01:10:25 2023 GMT\r\n        Subject: CN=<custom cn here>\r\n        Subject Public Key Info:\r\n            Public Key Algorithm: rsaEncryption\r\n                RSA Public-Key: (2048 bit)\r\n                Modulus:\r\n                    00:a5:b7:db:98:f1:17:9c:69:c7:3a:ba:12:2e:a6:\r\n                    a2:d7:c5:cf:d5:8a:0b:81:9b:c1:f1:d2:26:87:48:\r\n                    b8:45:b2:81:73:ec:b4:62:64:bf:f0:5a:54:f2:8e:\r\n                    17:5a:33:b3:b8:43:3b:b2:7a:56:25:e0:f8:89:a6:\r\n                    a5:62:bb:53:29:7c:5e:62:5c:aa:29:56:a8:bb:ae:\r\n                    02:85:38:d7:8a:33:c7:12:29:b5:f3:f0:94:89:5d:\r\n                    ee:e4:cb:fd:cb:ac:cc:5c:1d:27:fa:bb:33:0d:d3:\r\n                    51:bc:41:59:b4:04:90:27:11:9c:a9:0f:fa:71:8a:\r\n                    30:80:5b:c3:48:ef:99:b6:c2:ae:9c:97:c0:22:e9:\r\n                    86:4a:a6:82:4e:01:a9:df:37:e3:0a:cf:a6:27:33:\r\n                    f9:1d:7a:9d:44:76:45:0f:f6:e8:6b:24:93:39:48:\r\n                    95:fa:f4:8a:19:df:0a:3e:5c:21:f7:f6:32:c2:53:\r\n                    f4:20:89:e4:db:84:69:f6:99:7d:38:3f:18:4d:6e:\r\n                    2d:a5:07:3e:af:4b:86:5b:3c:ef:64:4e:d7:be:68:\r\n                    24:fe:2d:9d:27:18:90:25:43:ee:de:24:f2:4d:6d:\r\n                    6d:a9:3b:cd:ea:e2:7c:14:eb:9b:7e:8a:e9:15:cf:\r\n                    16:bd:8d:8a:68:ae:78:65:97:cd:f7:1e:c1:77:1e:\r\n                    87:7f\r\n                Exponent: 65537 (0x10001)\r\n        X509v3 extensions:\r\n            X509v3 Key Usage: critical\r\n                Digital Signature, Key Encipherment\r\n            X509v3 Extended Key Usage:\r\n                TLS Web Server Authentication, TLS Web Client Authentication\r\n            X509v3 Basic Constraints: critical\r\n                CA:FALSE\r\n            X509v3 Subject Key Identifier:\r\n                39:61:C7:39:29:D0:C8:5C:2B:04:93:A1:6B:A3:EB:3B:C5:3A:5E:65\r\n            X509v3 Authority Key Identifier:\r\n                keyid:14:2E:B3:17:B7:58:56:CB:AE:50:09:40:E6:1F:AF:9D:8B:14:C2:C6\r\n\r\n            Authority Information Access:\r\n                OCSP - URI:http://r3.o.lencr.org\r\n                CA Issuers - URI:http://r3.i.lencr.org/\r\n\r\n            X509v3 Subject Alternative Name:\r\n                DNS:<alt cn here>\r\n            X509v3 Certificate Policies:\r\n                Policy: 2.23.140.1.2.1\r\n                Policy: 1.3.6.1.4.1.44947.1.1.1\r\n                  CPS: http://cps.letsencrypt.org\r\n\r\n            1.3.6.1.4.1.11129.2.4.2:\r\n....M;..H`.x...v45\\P.r.....!.....;.c+...........%.o..t....i...w.z2.T..-. .8.R....p2..M;.+.:W.R.R......q%.....H0F.!....FOg.....@G......W@J.).....EV..!..\\...elh;0.<T..|...,2@4e..~]MB..\r\n    Signature Algorithm: sha256WithRSAEncryption\r\n         8d:a5:04:65:83:4b:45:e2:f9:33:41:16:1d:f8:20:0c:13:b2:\r\n         a7:c1:59:5f:61:c2:49:66:29:65:2b:20:53:9d:3c:f9:ce:00:\r\n         f5:44:85:30:91:68:60:04:4e:de:16:91:db:98:20:6f:00:89:\r\n         e7:a7:1b:bb:2a:31:c9:f3:29:9c:80:f2:d5:96:0d:f6:96:6d:\r\n         61:c1:f6:eb:80:8a:9f:ec:dd:15:b2:62:34:41:40:36:b5:f6:\r\n         93:5d:d4:96:af:aa:af:7b:64:f0:d8:cb:f1:b4:fc:74:8f:32:\r\n         d9:e1:55:ac:bd:87:53:b1:f2:e0:84:30:89:bf:c3:bb:26:4b:\r\n         43:9b:26:6a:00:d0:69:d6:30:fe:6d:be:fe:d0:f3:39:a6:52:\r\n         4c:dc:fd:81:1e:ec:54:d9:27:9c:3c:88:67:1c:11:9c:2c:fa:\r\n         19:33:21:5f:44:6e:6d:c9:91:4f:80:dc:72:07:ce:3c:f3:d5:\r\n         9b:bf:0d:89:81:f2:8b:02:32:85:91:d7:1b:a0:87:37:ba:5e:\r\n         76:bb:f2:48:ad:93:85:3b:88:04:1e:ea:c3:d9:56:34:73:b3:\r\n         c0:6d:d3:f1:f5:8f:47:91:70:05:da:52:da:af:8f:a1:67:e3:\r\n         69:27:4e:7c:77:fe:8e:86:7c:b4:46:92:ed:a7:57:de:67:c7:\r\n         7d:40:44:db\r\n```\r\n\r\n### Expected behavior\r\n\r\nKeycloak should be deployed successfully with no errors on 21.0.1\r\n\r\n### Actual behavior\r\n\r\nError above when starting the new container\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31963/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31963/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

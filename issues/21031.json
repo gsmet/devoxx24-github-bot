@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21031",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21031/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21031/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21031/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21031",
+  "id": 1037158301,
+  "node_id": "I_kwDOCFbutM490ced",
+  "number": 21031,
+  "title": "ClassCastException at running JUnit-Test with Annocation @QuarkusTest",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2021-10-27T09:01:02Z",
+  "updated_at": "2022-01-06T17:00:56Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a junit parameterized test (written in Kotlin) that is annotated as a @QuarkusTest. My IDE can compile my test, but at the runtime i get a ClassCastException:\r\n\r\n`java.lang.ClassCastException: class io.restassured.internal.ValidatableResponseImpl cannot be cast to class io.restassured.response.ValidatableResponse (io.restassured.internal.ValidatableResponseImpl is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @74960bfa; io.restassured.response.ValidatableResponse is in unnamed module of loader 'app')`\r\n\r\nMy Test Class:\r\n\r\n```\r\n@QuarkusTest\r\n@QuarkusTestResource(TestResource::class)\r\nclass ResourcesTest {\r\n\r\n    @ParameterizedTest(name = \"{0}\")\r\n    @MethodSource(\"validData\")\r\n    fun `should succeed when input valid`(requestBody: String, responseBodyValidator: (resp: ValidatableResponse) -> Unit) {\r\n        val assertThat = given()\r\n            .config(\r\n                RestAssured.config()\r\n                    .encoderConfig(encoderConfig().encodeContentTypeAs(\"application/graphql\", ContentType.TEXT))\r\n            )\r\n            .body(requestBody)\r\n            .headers(mapOf(HttpHeader.USERNAME to \"foobar\", HttpHeader.TENANT_ID to \"1\"))\r\n            .contentType(\"application/graphql\")\r\n            .post(\"/graphql\")\r\n            .then()\r\n            .assertThat()\r\n        assertThat\r\n            .contentType(ContentType.JSON)\r\n            .statusCode(200)\r\n        responseBodyValidator.invoke(assertThat)\r\n    }\r\n\r\n    companion object {\r\n        @JvmStatic\r\n        fun validData(): List<Arguments> {\r\n            val parameters = ArrayList<Arguments>()\r\n            parameters.add(\r\n                Arguments.of(\r\n                    VALID_INSERT_HUMAN_REQUEST,\r\n                    fun(resp: ValidatableResponse): Unit { resp.body(\"data.insertHumanResource.firstName\", Matchers.`is`(FIRST_NAME)) })\r\n            )\r\n            return parameters\r\n        }\r\n    }\r\n}\r\n```\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"11.0.10\" 2021-01-19 OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.10+9) OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.10+9, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.2.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\napache maven 3.8.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21031/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21031/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

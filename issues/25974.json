@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25974",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25974/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25974/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25974/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25974",
+  "id": 1261667353,
+  "node_id": "I_kwDOCFbutM5LM4QZ",
+  "number": 25974,
+  "title": "Opentelemetry new trace getting generated during remote call using quarkus rest client",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2022-06-06T10:39:21Z",
+  "updated_at": "2023-10-01T23:27:58Z",
+  "closed_at": "2022-06-20T18:40:14Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n\r\n\r\n\r\n### Scenario\r\n\r\nI have a scenario where I need a trace to propagate across 3 different quarkus services : - \r\n\r\n- service 1 is a rest - service which exposes an HTTP GET end point and takes \"name\" pathParam and dumps the pathParam to an outgoing channel which is linked to a kafka topic\r\ngithub:- https://github.com/avenuebankau/rest-service/blob/master/src/main/java/org/acme/GreetingResource.java\r\n\r\n\r\n- service 2 is a smallrye kafka consumer which consumes payload from the kafka topic mentioned in the previous step and sends that same payload to another rest api using quarkus RestClient\r\ngithub:- https://github.com/avenuebankau/kafka-consumer-rest/blob/master/src/main/java/org/acme/MyReactiveMessagingApplication.java \r\n\r\n- service 3 is another rest api which is called from the service 2 kafka consumer. It takes pathParam \"name\" and returns a response to the kafka consumer (service 2)\r\ngithub:- https://github.com/avenuebankau/rest-service-2/blob/master/src/main/java/org/acme/GreetingResource.java\r\n\r\nAll the 3 projects have the following respective opentelemetry dependencies : - \r\n`\r\n<!-- open telemetry dependencies-->\r\n    <dependency>\r\n      <groupId>io.quarkiverse.loggingjson</groupId>\r\n      <artifactId>quarkus-logging-json</artifactId>\r\n      <version>${quarkiverse.loggingjson.version}</version>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-opentelemetry-exporter-otlp</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.opentelemetry</groupId>\r\n      <artifactId>opentelemetry-extension-trace-propagators</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.opentelemetry.instrumentation</groupId>\r\n      <artifactId>opentelemetry-kafka-clients-common</artifactId>\r\n      <version>${kafka.client.opentelemetry.version}</version>\r\n      <scope>runtime</scope>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>au.com.avenuebank</groupId>\r\n      <artifactId>opentelemetry-dd-logger-extension</artifactId>\r\n      <version>${avenue.opentelemetry.version}</version>\r\n    </dependency>\r\n`\r\n\r\n### Issue:- \r\nSame traceid is propagated from service 1 to service 2 , however when the restClient in service2 calls rest api of service3 , I see a new traceid being set in http outgoing headers. \r\n\r\nThe traceid started in service 1 is  **c65c440ef08b2033440f2bc6c808b90c** and we can see that it was propagated to service 2  as well in the kafka message header.  Kafka consumer adds a new span under the same traceid **79c6e55fa61daab5b402d2dde8d9ef5f** as can be seen from the logs of service 2. \r\n\r\n#### service1 logs : -\r\n{\"timestamp\":\"2022-06-06T19:18:49.834+10:00\",\"sequence\":2270,\"loggerClassName\":\"org.jboss.logging.Logger\",\"loggerName\":\"org.acme.GreetingResource\",\"level\":\"INFO\",\"message\":\"name: kunal\",\"threadName\":\"executor-thread-0\",\"threadId\":115,\"mdc\":{\"transactionId\":\"5f832cd8ac57cecd\",\"traceId\":\"c65c440ef08b2033440f2bc6c808b90c\",\"dd.traceId\":\"4904186651989293324\"},\"hostName\":\"c02gk1kymd6m\",\"processName\":\"rest-service-dev.jar\",\"processId\":8880}\r\n{\"timestamp\":\"2022-06-06T19:18:49.843+10:00\",\"sequence\":2271,\"loggerClassName\":\"org.jboss.logging.Logger\",\"loggerName\":\"org.acme.GreetingResource\",\"level\":\"INFO\",\"message\":\"messageSent: org.eclipse.microprofile.reactive.messaging.Message$8@2a5dfa1a\",\"threadName\":\"executor-thread-0\",\"threadId\":115,\"mdc\":{\"transactionId\":\"5f832cd8ac57cecd\",\"traceId\":\"**c65c440ef08b2033440f2bc6c808b90c**\",\"dd.traceId\":\"**4904186651989293324**\"},\"hostName\":\"c02gk1kymd6m\",\"processName\":\"rest-service-dev.jar\",\"processId\":8880}\r\n\r\n#### service 2 logs : - \r\n{\"timestamp\":\"2022-06-06T19:18:52.586+10:00\",\"sequence\":3037,\"loggerClassName\":\"org.apache.commons.logging.impl.JBossLog\",\"loggerName\":\"org.apache.http.wire\",\"level\":\"DEBUG\",\"message\":\"http-outgoing-15 >> \\\"Accept: text/plain[\\\\r][\\\\n]\\\"\",\"threadName\":\"vert.x-eventloop-thread-18\",\"threadId\":596,\"mdc\":{\"transactionId\":\"da9fd1ef7025eb15\",\"traceId\":\"c65c440ef08b2033440f2bc6c808b90c\",\"dd.traceId\":\"4904186651989293324\"},\"hostName\":\"c02gk1kymd6m\",\"processName\":\"kafka-consumer-rest-dev.jar\",\"processId\":9576}\r\n{\"timestamp\":\"2022-06-06T19:18:52.587+10:00\",\"sequence\":3038,\"loggerClassName\":\"org.apache.commons.logging.impl.JBossLog\",\"loggerName\":\"org.apache.http.wire\",\"level\":\"DEBUG\",\"message\":\"http-outgoing-15 >> \\\"kunal: 8fed6d2ad3e2d99e35086a7cfe38c5c2[\\\\r][\\\\n]\\\"\",\"threadName\":\"vert.x-eventloop-thread-18\",\"threadId\":596,\"mdc\":{\"transactionId\":\"da9fd1ef7025eb15\",\"traceId\":\"c65c440ef08b2033440f2bc6c808b90c\",\"dd.traceId\":\"4904186651989293324\"},\"hostName\":\"c02gk1kymd6m\",\"processName\":\"kafka-consumer-rest-dev.jar\",\"processId\":9576}\r\n{\"timestamp\":\"2022-06-06T19:18:52.587+10:00\",\"sequence\":3039,\"loggerClassName\":\"org.apache.commons.logging.impl.JBossLog\",\"loggerName\":\"org.apache.http.wire\",\"level\":\"DEBUG\",\"message\":\"http-outgoing-15 >> \\\"sumbly: ffa25f0d6e9437b2[\\\\r][\\\\n]\\\"\",\"threadName\":\"vert.x-eventloop-thread-18\",\"threadId\":596,\"mdc\":{\"transactionId\":\"da9fd1ef7025eb15\",\"traceId\":\"c65c440ef08b2033440f2bc6c808b90c\",\"dd.traceId\":\"4904186651989293324\"},\"hostName\":\"c02gk1kymd6m\",\"processName\":\"kafka-consumer-rest-dev.jar\",\"processId\":9576}\r\n**{\"timestamp\":\"2022-06-06T19:18:52.588+10:00\",\"sequence\":3040,\"loggerClassName\":\"org.apache.commons.logging.impl.JBossLog\",\"loggerName\":\"org.apache.http.wire\",\"level\":\"DEBUG\",\"message\":\"http-outgoing-15 >> \\\"traceparent: 00-79c6e55fa61daab5b402d2dde8d9ef5f-b9319414ca11355d-01[\\\\r][\\\\n]\\\"\",\"threadName\":\"vert.x-eventloop-thread-18\",\"threadId\":596,\"mdc\":{\"transactionId\":\"da9fd1ef7025eb15\",\"traceId\":\"c65c440ef08b2033440f2bc6c808b90c\",\"dd.traceId\":\"4904186651989293324\"},\"hostName\":\"c02gk1kymd6m\",\"processName\":\"kafka-consumer-rest-dev.jar\",\"processId\":9576}**\r\n{\"timestamp\":\"2022-06-06T19:18:52.588+10:00\",\"sequence\":3041,\"loggerClassName\":\"org.apache.commons.logging.impl.JBossLog\",\"loggerName\":\"org.apache.http.wire\",\"level\":\"DEBUG\",\"message\":\"http-outgoing-15 >> \\\"Host: localhost:8887[\\\\r][\\\\n]\\\"\",\"threadName\":\"vert.x-eventloop-thread-18\",\"threadId\":596,\"mdc\":{\"transactionId\":\"da9fd1ef7025eb15\",\"traceId\":\"**c65c440ef08b2033440f2bc6c808b90c**\",\"dd.traceId\":\"4904186651989293324\"},\"hostName\":\"c02gk1kymd6m\",\"processName\":\"kafka-consumer-rest-dev.jar\",\"processId\":9576}\r\n\r\n\r\nI am not sure if this is a bug or am I missing something here? Any pointers would be really appreciated. \r\n\r\nThanks,\r\nKunal\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nSame traceid that was started in service 1 should be propagated to service 3 when service 2 calls service 3 using rest client. \r\n\r\n### Actual behavior\r\n\r\nwhen service 2 (kafka consumer) makes a rest call to service 3, a new traceparentid is set as http outgoing header which means service 3 starts its own trace and the original trace is lost. \r\n\r\n### How to Reproduce?\r\n\r\nI have given the github links for all the three services , after git checkout , please run mvn quarkus:dev to start each service and use the following GET url to start the trace \r\n\r\n`http://localhost:8080/rest/hello/kunal`\r\n\r\nThis will send the `kunal` in the message payload to kafka topic (`words-out`) which will be picked up by service 2 and again sent as a param to service 3 via rest client.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 11.0.12 2021-07-20 OpenJDK Runtime Environment Homebrew (build 11.0.12+0) OpenJDK 64-Bit Server VM Homebrew (build 11.0.12+0, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.9.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn 3.8.3\r\n\r\n### Additional information\r\nNeed to run the data dog agent \r\n`\r\ndocker run -d --name dd-agent \\\r\n        --network kafka-docker_default \\\r\n        --rm \\\r\n        -v /var/run/docker.sock:/var/run/docker.sock:ro \\\r\n        -v /proc/:/host/proc/:ro \\\r\n        -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro \\\r\n        -p 8126:8126/tcp \\\r\n        -p 8125:8125/udp \\\r\n        -p 4318:4318/tcp \\\r\n        -p 4317:4317/tcp \\\r\n        -e DD_API_KEY=$DATADOG_API_KEY \\\r\n        -e DD_SITE=\"datadoghq.eu\"  \\\r\n        -e DD_LOGS_ENABLED=true  \\\r\n        -e DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true  \\\r\n        -e DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true \\\r\n        -e DD_APM_ENABLED=true \\\r\n        -e DD_HOSTNAME=$DATADOG_HOSTNAME \\\r\n        -e DD_ENV=Local \\\r\n        -e NON_LOCAL_TRAFFIC=false \\\r\n        -e DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT=0.0.0.0:4318 \\\r\n        -e DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT=0.0.0.0:4317 \\\r\n        gcr.io/datadoghq/agent:latest\r\n`\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25974/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25974/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

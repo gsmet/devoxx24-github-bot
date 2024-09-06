@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26210",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26210/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26210/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26210/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26210",
+  "id": 1275194956,
+  "node_id": "I_kwDOCFbutM5MAe5M",
+  "number": 26210,
+  "title": "quarkus-amazon-lambda extension complement returned error json with cause and stackTrace",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-06-17T15:41:22Z",
+  "updated_at": "2022-06-20T17:47:48Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nAs of [https://docs.aws.amazon.com/lambda/latest/dg/java-exceptions.html](url) the information returned by the lambda execution when raising an error should contain a json structure with errorMessage, errorType, stackTrace and cause (cause is a recursive structure itself).\r\n\r\nCurrently the json structure contains solely errorMessage and errorType.\r\n\r\nWe are using versions:\r\n\r\n- Quarkus: 2.9.2.Final\r\n\r\n- Java: 11\r\n\r\n- Maven: 3.8.5\r\n\r\n\r\n**to reproduce**\r\nFollow the guide [https://quarkus.io/guides/amazon-lambda](url)\r\nCreate a project using the maven archetype.\r\nRun `mvn clean package quarkus:dev`\r\n\r\nChange TestLambda implementation, so it raises an error:\r\n`@Named(\"test\")\r\npublic class TestLambda implements RequestHandler<InputObject, OutputObject> {\r\n\r\n    @Inject\r\n    ProcessingService service;\r\n\r\n    @Override\r\n    public OutputObject handleRequest(InputObject input, Context context) {\r\n        throw new RuntimeException(\"external exception\", new RuntimeException(\"internal exception\"));\r\n    }\r\n}`\r\n\r\nInvoke a post to http://localhost:8080\r\nThe result contains only:\r\n`{\r\n    \"errorType\": \"java.lang.RuntimeException\",\r\n    \"errorMessage\": \"external exception\"\r\n}`\r\n\n\n### Implementation ideas\n\nChecking sources it seems class io.quarkus.amazon.lambda.runtime.FunctionError is lacking stackTrace and cause.\r\n\r\nSo, the FunctionError constructor could receive the exception and fill stackTrace and recursively, so it doesn't miss internal exceptions information, fill cause.\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26210/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26210/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

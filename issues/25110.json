@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25110",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25110/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25110/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25110/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25110",
+  "id": 1212634808,
+  "node_id": "I_kwDOCFbutM5IR1a4",
+  "number": 25110,
+  "title": "Panache reactive and Camel/SQS reactive-messaging consumer hangs on 4th message",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2022-04-22T17:59:19Z",
+  "updated_at": "2022-12-20T12:13:46Z",
+  "closed_at": "2022-12-20T12:13:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nConsuming messages from an SQS queue through Apache Camel + reactive-messaging and then persisting to PostgreSQL using Panache Reactive, hangs on the 4th message. Increasing the pool size, increases the amount of messages consumed before hanging.\r\n\r\nConsumer  code:\r\n\r\n```\r\n@Incoming(\"persons\")\r\npublic Uni<Void> consume(String payload) {\r\n    return Uni.createFrom()\r\n        .item(payload)\r\n        .map(json -> Json.decodeValue(json, Person.class))\r\n        .flatMap(repository::save)\r\n        .onFailure().invoke(t -> log.error(t.getMessage(), t));\r\n}\r\n```\r\n\r\nRepository code:\r\n\r\n```\r\n@ReactiveTransactional\r\npublic Uni<Void> save(Person person) {\r\n    return persist(person)\r\n        .invoke(() -> log.info(\"Saved person {}\", person.getFirstName()))\r\n        .replaceWithVoid();\r\n}\r\n```\r\n\r\n**Note that** this is reproducible with Quarkus 2.7.1 and later (up to 2.8.2). Downgrading to Quarkus 2.7.0 makes this issue not reproducible.\r\n\r\n_**Possibly related to**_  #23804 \r\n\r\n### Expected behavior\r\n\r\nShould be able to handle more than 4 messages without increasing the datasource pool size.\r\n\r\n### Actual behavior\r\n\r\nOn 4th consumed message the stream **times out** with the following error:\r\n\r\n```\r\nio.smallrye.reactive.messaging.providers.SubscriberMediator reportFailure\r\nERROR: SRMSG00201: Error caught while processing a message \r\nio.vertx.core.impl.NoStackTraceThrowable: Timeout\r\n\r\nio.smallrye.reactive.messaging.providers.SubscriberMediator$1 onError\r\nERROR: SRMSG00201: Error caught while processing a message\r\nio.vertx.core.impl.NoStackTraceThrowable: Timeout\r\n```\r\n\r\nno other stacktrace is thrown apart from Apache Camel subscription cancel error.\r\n\r\nUsing a `sessionFactory.withTransaction` instead of panache reactive will throw a different kind of error:\r\n\r\n```\r\nCaused by: java.lang.IllegalStateException: The current operation requires a safe (isolated) Vert.x sub-context, but the current context hasn't been flagged as such. You can still use Hibernate Reactive, you just need to avoid using the methods which implicitly require accessing the stateful context, such as MutinySessionFactory#withTransaction and #withSession.\r\n\tat io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.checkIsSafe(VertxContextSafetyToggle.java:80)\r\n\tat io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.validateContextIfExists(VertxContextSafetyToggle.java:63)\r\n\tat io.quarkus.hibernate.reactive.runtime.customized.CheckingVertxContext.put(CheckingVertxContext.java:40)\r\n\tat org.hibernate.reactive.mutiny.impl.MutinySessionFactoryImpl.lambda$withSession$17(MutinySessionFactoryImpl.java:251)\r\n\tat io.smallrye.mutiny.groups.UniOnItem.lambda$invoke$0(UniOnItem.java:59)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualConsumer.accept(SlowContextualConsumer.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemConsume$UniOnItemComsumeProcessor.invokeEventHandler(UniOnItemConsume.java:77)\r\n\t... 121 more\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Clone repo https://github.com/dgian/qpr-reproduce-sample\r\n2. Run the automated test: `./gradlew :test --tests \"sample.ConsumerTest\"` (or through IDE)\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n5.15.32-1-MANJARO #1 SMP PREEMPT Mon Mar 28 09:16:36 UTC 2022 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.3 2022-04-19 OpenJDK Runtime Environment (build 17.0.3+3) OpenJDK 64-Bit Server VM (build 17.0.3+3, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.8.2 (but reproduced from 2.7.1)\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.2\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25110/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25110/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

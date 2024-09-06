@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34143",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34143/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34143/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34143/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34143",
+  "id": 1763944137,
+  "node_id": "I_kwDOCFbutM5pI6bJ",
+  "number": 34143,
+  "title": "REST Client Reactive behaves differently from the classic one regarding query and body params",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-06-19T17:43:15Z",
+  "updated_at": "2023-06-20T12:33:42Z",
+  "closed_at": "2023-06-20T08:43:44Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nGiven the following two methods of a REST Client interface:\r\n\r\nhttps://github.com/hbelmiro/complex-queryparams-demo/blob/676c920f2a3aba452e7db523843377a35181284b/src/main/java/com/thegreatapi/Client.java\r\n\r\n```java\r\n    @GET\r\n    @Path(\"/get\")\r\n    @Produces({\"application/json\"})\r\n    String get(@BeanParam Person person);\r\n\r\n    @PATCH\r\n    @Path(\"/patch\")\r\n    @Consumes({\"application/json\"})\r\n    @Produces({\"application/json\"})\r\n    void patch(Person person);\r\n```\r\n\r\nAnd the following class:\r\n\r\nhttps://github.com/hbelmiro/complex-queryparams-demo/blob/84dddc1b308466435d5f197cf2f8ec5954770328/src/main/java/com/thegreatapi/Person.java\r\n\r\n```java\r\npublic class Person {\r\n\r\n    @QueryParam(\"id\")\r\n    private String id;\r\n\r\n    @QueryParam(\"name\")\r\n    private String name;\r\n\r\n    // getters and setters...\r\n}\r\n```\r\n\r\nWhen using REST Client Classic, the parameters are sent as query params for the GET method and in the request body for the PATCH method.\r\nBut when switching to REST Client Reactive it doesn't work anymore. In the PATCH method, the parameters are sent as Query params.\r\n\r\nI couldn't find anything related to this in the specification or in the docs. So, I don't know if this is a bug or if there's a better way to achieve the classic behavior.\r\n\r\nI created a reproducer in https://github.com/hbelmiro/complex-queryparams-demo. The expected behavior is defined in the [tests](https://github.com/hbelmiro/complex-queryparams-demo/blob/84dddc1b308466435d5f197cf2f8ec5954770328/src/test/java/com/thegreatapi/ClientTest.java). When we change the dependencies to the classic ones, both tests pass.\r\n\r\n### Expected behavior\r\n\r\nTests should pass.\r\n\r\n### Actual behavior\r\n\r\n`testPatch` fails with:\r\n\r\n```\r\ncom.github.tomakehurst.wiremock.client.VerificationException: No requests exactly matched. Most similar request was:  expected:<\r\nPATCH\r\n/patch\r\n\r\nContent-Type: application/json\r\n\r\n{\r\n  \"id\" : \"42\",\r\n  \"name\" : \"Ozzy Osbourne\"\r\n}> but was:<\r\nPATCH\r\n/patch?id=42&name=Ozzy+Osbourne\r\n\r\n\r\n\r\n>\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nRun `mvn verify`.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux fedora 6.3.7-200.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Jun  9 15:21:11 UTC 2023 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"20.0.1\" 2023-04-18 OpenJDK Runtime Environment Homebrew (build 20.0.1) OpenJDK 64-Bit Server VM Homebrew (build 20.0.1, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.0\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34143/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34143/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

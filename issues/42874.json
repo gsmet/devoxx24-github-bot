@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42874",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42874/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42874/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42874/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42874",
+  "id": 2495048554,
+  "node_id": "I_kwDOCFbutM6Ut2tq",
+  "number": 42874,
+  "title": "RunnerClassLoader - Some classes are loaded multiple times",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 7369959469,
+      "node_id": "LA_kwDOCFbutM8AAAABt0ioLQ",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/classloader",
+      "name": "area/classloader",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 24,
+  "created_at": "2024-08-29T16:42:49Z",
+  "updated_at": "2024-08-30T18:49:18Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "I think there is still some issue with the new `RunnerClassLoader` implementation from https://github.com/quarkusio/quarkus/pull/42139.\r\n\r\nI have already mentioned in some other work that I was under the impression something was odd with class loading stuff being a bit more present than in 3.13.\r\nI was experimenting with another patch today and just trying to start the very simple Quarkus GitHub Bot app in prod mode.\r\n\r\nAgain I saw the ClassLoader being a bit more present than in 3.13.\r\n\r\nI did something quite simple, I applied this patch:\r\n\r\n```diff\r\ndiff --git a/independent-projects/bootstrap/runner/src/main/java/io/quarkus/bootstrap/runner/RunnerClassLoader.java b/independent-projects/bootstrap/runner/src/main/java/io/quarkus/bootstrap/runner/RunnerClassLoader.java\r\nindex 071d77ffef1..4f6fdb1895f 100644\r\n--- a/independent-projects/bootstrap/runner/src/main/java/io/quarkus/bootstrap/runner/RunnerClassLoader.java\r\n+++ b/independent-projects/bootstrap/runner/src/main/java/io/quarkus/bootstrap/runner/RunnerClassLoader.java\r\n@@ -88,6 +88,9 @@ public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundExce\r\n         if (loaded != null) {\r\n             return loaded;\r\n         }\r\n+\r\n+        System.out.println(\"Loading class: \" + name);\r\n+\r\n         final ClassLoadingResource[] resources;\r\n         if (packageName == null) {\r\n             resources = resourceDirectoryMap.get(\"\");\r\n```\r\n\r\nWhile most classes are loaded once, I have several classes loaded multiple times, up to 16 times for some of them:\r\n\r\n```\r\n     16 Loading class: io.vertx.core.http.impl.HttpUtils\r\n     16 Loading class: io.vertx.core.http.impl.HttpServerImpl$HttpStreamHandler\r\n     16 Loading class: io.quarkus.vertx.http.runtime.VertxHttpRecorder$WebDeploymentVerticle$3\r\n     16 Loading class: io.netty.util.NetUtil\r\n      8 Loading class: io.vertx.core.net.impl.SocketAddressImpl\r\n      6 Loading class: io.vertx.core.http.impl.HttpServerImpl\r\n      5 Loading class: io.vertx.core.net.impl.TCPServerBase\r\n```\r\n\r\n(the rest of the classes are loaded only once)\r\n\r\nReverting https://github.com/quarkusio/quarkus/pull/42139 brings us back to normal AFAICS.\r\n\r\nIt doesn't sound like a desired behavior to me?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42874/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42874/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23608",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23608/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23608/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23608/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23608",
+  "id": 1132532522,
+  "node_id": "I_kwDOCFbutM5DgRMq",
+  "number": 23608,
+  "title": "Test with Testcontainer doesn't create relations",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-02-11T12:30:55Z",
+  "updated_at": "2022-02-17T12:06:14Z",
+  "closed_at": "2022-02-17T12:06:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi, \r\nI cannot run test using test_containers and table with foreign_keys. \r\nI can persist and check data for one table that's ok. But when this has a relation, this doesn't work.\r\nIt seems that all relations are broken launching the testcontainer. (It's currently postgres). \r\n\r\nI've found a log like this for all database relations that should be created. \r\n```\r\nfévr. 11, 2022 1:17:53 PM org.hibernate.engine.jdbc.spi.SqlExceptionHelper$StandardWarningHandler logWarning\r\nWARN: relation \"user_projects\" does not exist, skipping\r\n```\r\n\r\nI suspect that all foreign keys are not created  correctly and so my test fails. \n\n### Expected behavior\n\nTests should properly create the database as in a real environment. \n\n### Actual behavior\n\nFor example, I have this test. \r\nA simple project is associated to users. \r\nThe test keeps telling me that ```assertEquals(1, project.users.size());``` is false. \r\n\r\nNote: running quarkus and calling http methods manually correctly persist project + users with relation.\r\n\r\n```java\r\n@QuarkusTest\r\n@QuarkusTestResource(PostgresTestContainer.class)\r\npublic class ProjectCreateTest {\r\n\r\n    @InjectMock\r\n    UserAuthApi userAuthApiMock;\r\n\r\n    @Inject\r\n    UserProjectApi userProjectApi;\r\n\r\n    @Inject\r\n    EntityManager entityManager;\r\n\r\n    @AfterEach\r\n    @Transactional\r\n    public void tearDown() {\r\n        ProjectEntity.deleteAll();\r\n        UserEntity.deleteAll();\r\n        Mockito.reset(userAuthApiMock);\r\n    }\r\n\r\n    @Test\r\n    @Transactional\r\n    @DisplayName(\"send a non null project name => creates the project, user is associated to project\")\r\n    public void createProject() throws CreateProjectException {\r\n        var userId = createUser();\r\n        CreateProjectDtoReq req = new CreateProjectDtoReq(\"My project\");\r\n        userProjectApi.create(userId, req);\r\n        entityManager.flush();\r\n\r\n        List<ProjectEntity> projects = ProjectEntity.findAll().list();\r\n        assertEquals(1, projects.size());\r\n        var project = projects.get(0);\r\n        assertNotNull(project.users);\r\n        assertEquals(1, project.users.size());\r\n    }\r\n\r\n    @NotNull\r\n    private UserId createUser() {\r\n        final UserEntity user = new UserEntity();\r\n        user.name = \"John\";\r\n        user.firstname = \"Doe\";\r\n        user.email = \"jdoes@apparence.io\";\r\n        user.company = \"apparence\";\r\n        user.password = \"testtest123\";\r\n        user.persist();\r\n        return new UserId(user.uid);\r\n    }\r\n}\r\n```\n\n### How to Reproduce?\n\n1. Create entities with N..N relation for example\r\n2. create a method and persist \r\n3. test the http method directly using restAssured\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\nlast version\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23608/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23608/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

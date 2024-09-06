@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36449",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36449/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36449/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36449/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36449",
+  "id": 1940141953,
+  "node_id": "I_kwDOCFbutM5zpDeB",
+  "number": 36449,
+  "title": "Develop a tool to analyze our CI raw logs",
+  "labels": [
+    {
+      "id": 985346624,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjQ=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/good%20first%20issue",
+      "name": "good first issue",
+      "color": "7057ff",
+      "default": true,
+      "description": "Good for newcomers"
+    },
+    {
+      "id": 2323889171,
+      "node_id": "MDU6TGFiZWwyMzIzODg5MTcx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jbang",
+      "name": "area/jbang",
+      "color": "0052cc",
+      "default": false,
+      "description": "Issues related to when using jbang.dev with Quarkus"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2023-10-12T14:36:21Z",
+  "updated_at": "2023-10-24T11:41:33Z",
+  "closed_at": "2023-10-24T11:41:32Z",
+  "active_lock_reason": null,
+  "body": "## Context\r\n\r\nWe sometimes (often?) have CI jobs hitting the 6 hours timeout. When it does, we have absolutely no idea what's going on:\r\n\r\n- is it the GitHub Actions runner being slow?\r\n- is it a particular module causing issues?\r\n\r\nBeing in the dark is detrimental to us understanding what's going on.\r\n\r\n## Implementation ideas\r\n\r\nIn the case of the JVM builds, we do not use concurrency so we could parse the log sequentially.\r\n\r\nIdeally, it would take the form of a JBang script that we could call to analyze a particular file, previously downloaded locally:\r\n\r\n```\r\n./analyzeRawLogs.java my-raw-log.log\r\n```\r\n\r\nThe output would be:\r\n```\r\nname of module    | time\r\n```\r\nideally properly padded and with time units.\r\n\r\nWe would also need the sum of it all at the end of the output.\r\n\r\nIdeally we would have the ability to keep it chronological, sorted by name or sorted by duration (longer, first). The CLI needs to have options for sorting.\r\n\r\nAs the execution is sequential, we can start the counter for a given counter when we encounter a line starting with `[INFO] Building `:\r\n\r\n```\r\n2023-10-09T22:04:58.0208987Z [INFO] Building Quarkus - Analytics - Common 999-SNAPSHOT              [1/1057]\r\n```\r\n\r\nThe name of the module is whatever is between building and the version. The version will be of the form numbers and dots suffixed by `-SNAPSHOT` (`999-SNAPSHOT`, `2.16.999-SNAPSHOT`).\r\n\r\nYou would then consider a module finished when the next one starts and get the duration from there.\r\n\r\nThings are a bit more complex for the last module. I think it could be considered finished when you encounter `[INFO] --------------------------` followed by `[INFO] Reactor Summary` but you would have to take into account the timestamp of the separator line as going to the Reactor Summary line takes time.\r\n\r\nAnother option is that the last item might not be properly ended because the build timed out (and that's probably when we will have a look at the logs the most). In this case, I'm not sure what the end trigger would be but in any case, the module needs to be marked as unfinished and probably put at the top when sorted by longer. We can dig a bit more this case when we get there.\r\n\r\n## Resources\r\n\r\nAn example of a Quarkus-powered command line JBang script can be found here: https://github.com/gsmet/quarkus-release/blob/main/prerequisites.java \r\n\r\nAn example of raw log can be downloaded here:\r\n- [raw-log.log](https://github.com/quarkusio/quarkus/files/12883726/raw-log.log)\r\n\r\nAn example of unfinished job raw log can be downloaded here:\r\n- [unfinished-raw-log.log](https://github.com/quarkusio/quarkus/files/12883744/unfinished-raw-log.log)\r\n\r\n## Additional notes\r\n\r\n:warning: this is a good first issue but please work on it only if you think you can relatively autonomous on the coding side. The description has been made very detailed so that you have a good idea of what needs to be done. Obviously, if there are questions, don't hesitate to ask.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36449/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36449/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

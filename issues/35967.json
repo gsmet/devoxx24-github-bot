@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35967",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35967/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35967/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35967/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35967",
+  "id": 1899350794,
+  "node_id": "I_kwDOCFbutM5xNcsK",
+  "number": 35967,
+  "title": "Can't read SSE content type with plain Rest client",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2023-09-16T08:17:30Z",
+  "updated_at": "2023-09-19T06:12:36Z",
+  "closed_at": "2023-09-18T11:33:40Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen consuming an SSE source with `quarkus-rest-client-jsonb`, I get the following error: `RESTEASY003145: Unable to find a MessageBodyReader of content-type text/event-stream and type class org.jboss.resteasy.plugins.providers.sse.SseEventInputImpl`.\r\n\r\nFunnily, this only happens in the Quarkus app in the production code; in my unit test, it works as expected (reading the SSE events). My assumption is that the build-time optimization removes some classes it finds unnecessary.\r\n\r\nI'm not using `resteasy`, since this a cli app. This might be the isssue... I'm also not using `rest-client-reactive-*` because of #35966\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nThis code:\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class SomeClient {\r\n\r\n    private Client client;\r\n    private SseEventSource updateSource;\r\n\r\n    @PostConstruct\r\n    void init() {\r\n        client = ClientBuilder.newClient();\r\n    }\r\n\r\n    // [...]\r\n\r\n    @PreDestroy\r\n    void close() throws IOException {\r\n        client.close();\r\n        if (updateSource != null)\r\n            updateSource.close();\r\n    }\r\n\r\n    public void someMethod() {\r\n        // [...]\r\n\r\n        WebTarget target = client.target(\"http://localhost:8080/updates\");\r\n        updateSource = SseEventSource.target(target).build();\r\n        updateSource.register(ev -> {\r\n            System.out.println(ev.getName());\r\n            System.out.println(ev.readData());\r\n        }, thr -> {\r\n            System.err.println(\"Error in SSE updates\");\r\n            thr.printStackTrace();\r\n        });\r\n\r\n        System.out.println(\"SSE opened\");\r\n        updateSource.open();\r\n    }\r\n\r\n}\r\n```\r\n\r\nInvocation of the method results in:\r\n\r\n```\r\njakarta.ws.rs.ProcessingException: RESTEASY003145: Unable to find a MessageBodyReader of content-type text/event-stream and type class org.jboss.resteasy.plugins.providers.sse.SseEventInputImpl\r\n\tat org.jboss.resteasy.core.interception.jaxrs.ClientReaderInterceptorContext.throwReaderNotFound(ClientReaderInterceptorContext.java:46)\r\n  at org.jboss.resteasy.core.interception.jaxrs.AbstractReaderInterceptorContext.getReader(AbstractReaderInterceptorContext.java:129)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.AbstractReaderInterceptorContext.proceed(AbstractReaderInterceptorContext.java:76)\r\n\tat org.jboss.resteasy.client.jaxrs.internal.ClientResponse.readFrom(ClientResponse.java:192)\r\n\tat org.jboss.resteasy.specimpl.BuiltResponse.readEntity(BuiltResponse.java:75)\r\n\tat org.jboss.resteasy.specimpl.AbstractBuiltResponse.readEntity(AbstractBuiltResponse.java:232)\r\n\tat org.jboss.resteasy.plugins.providers.sse.client.SseEventSourceImpl$EventHandler.run(SseEventSourceImpl.java:292)\r\n\tat org.jboss.resteasy.plugins.providers.sse.client.SseEventSourceScheduler$1.run(SseEventSourceScheduler.java:80)\r\n\tat org.jboss.resteasy.concurrent.ContextualExecutors.lambda$runnable$2(ContextualExecutors.java:312)\r\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\r\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\r\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\nMaybe this issue is connected to #30935\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Temurin-18.0.1+10 (build 18.0.1+10)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35967/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35967/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

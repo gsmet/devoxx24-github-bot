@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40932",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40932/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40932/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40932/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40932",
+  "id": 2329157545,
+  "node_id": "I_kwDOCFbutM6K1B-p",
+  "number": 40932,
+  "title": "Jakarta Data requires Hibernate Dialect settings When Upgrading to 3.11.0 ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-06-01T13:53:01Z",
+  "updated_at": "2024-06-03T10:58:04Z",
+  "closed_at": "2024-06-03T08:01:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI tried to experience the new Jakarta Data feature shipped with the latest Hibernate 6.\r\n\r\nThe example project is here: https://github.com/hantsy/quarkus-sandbox/tree/master/jakarta-data which uses the latest stack:\r\n\r\n* Java 21\r\n* Quarkus 3.11.0\r\n* Hibernate ORM 6.6.0.Alpha1/Jakarta Data 1.0 RC1\r\n\r\nbesides the basic db-kind settings, I have to configure hibernate dialect `quarkus.hibernate-orm.dialect=org.hibernate.dialect.PostgreSQLDialect` to make it work.\r\n\r\nGavin King also confirmed this issue is introduced in the latest 3.11.0, https://hibernate.zulipchat.com/#narrow/stream/132096-hibernate-user/topic/SessionFacgory.20is.20null/near/441905256\r\n\r\n### Expected behavior\r\n\r\nIt should detect the dialect from db connection and `db-kind` settings as using `hibernate-orm-panache` module.\r\n\r\n### Actual behavior\r\n\r\nIf without this dialect line in the `application.properties`.\r\n\r\nRun the application, it will throw exception like the following.\r\n\r\n```bash \r\n2024-05-31 21:09:49,346 ERROR [io.qua.run.boo.StartupActionImpl] (Quarkus Main Thread) Error running Quarkus: java.lang.reflect.InvocationTargetException\r\n        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:118)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:113)\r\n        at java.base/java.lang.Thread.run(Thread.java:1583)\r\nCaused by: java.lang.ExceptionInInitializerError\r\n        at java.base/jdk.internal.misc.Unsafe.ensureClassInitialized0(Native Method)\r\n        at java.base/jdk.internal.misc.Unsafe.ensureClassInitialized(Unsafe.java:1160)\r\n        at java.base/jdk.internal.reflect.MethodHandleAccessorFactory.ensureClassInitialized(MethodHandleAccessorFactory.java:300)\r\n        at java.base/jdk.internal.reflect.MethodHandleAccessorFactory.newConstructorAccessor(MethodHandleAccessorFactory.java:103)\r\n        at java.base/jdk.internal.reflect.ReflectionFactory.newConstructorAccessor(ReflectionFactory.java:200)\r\n        at java.base/java.lang.reflect.Constructor.acquireConstructorAccessor(Constructor.java:549)\r\n        at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)\r\n        at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:70)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n        ... 3 more\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n        ... 16 more\r\nCaused by: org.hibernate.service.spi.ServiceException: Unable to create requested service [org.hibernate.engine.jdbc.env.spi.JdbcEnvironment] due to: Unable to determine Dialect without JDBC metadata (please set 'jakarta.persistence.jdbc.url' for common cases or 'hibernate.dialect' when a custom Dialect implementation must be provided)\r\n        at org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:276)\r\n        at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:238)\r\n        at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:215)\r\n        at org.hibernate.boot.model.relational.Database.<init>(Database.java:45)\r\n        at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.getDatabase(InFlightMetadataCollectorImpl.java:221)\r\n        at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.<init>(InFlightMetadataCollectorImpl.java:189)\r\n        at org.hibernate.boot.model.process.spi.MetadataBuildingProcess.complete(MetadataBuildingProcess.java:171)\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootMetadataBuilder.build(FastBootMetadataBuilder.java:415)\r\n        at io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.createMetadata(PersistenceUnitsHolder.java:101)\r\n        at io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.constructMetadataAdvance(PersistenceUnitsHolder.java:73)\r\n        at io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.initializeJpa(PersistenceUnitsHolder.java:40)\r\n        at io.quarkus.hibernate.orm.runtime.HibernateOrmRecorder$1.created(HibernateOrmRecorder.java:78)\r\n        at io.quarkus.arc.runtime.ArcRecorder.initBeanContainer(ArcRecorder.java:79)\r\n        at io.quarkus.deployment.steps.ArcProcessor$notifyBeanContainerListeners1304312071.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.ArcProcessor$notifyBeanContainerListeners1304312071.deploy(Unknown Source)\r\n        ... 17 more\r\nCaused by: org.hibernate.HibernateException: Unable to determine Dialect without JDBC metadata (please set 'jakarta.persistence.jdbc.url' for common cases or 'hibernate.dialect' when a custom Dialect implementation must be provided)        at org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl.determineDialect(DialectFactoryImpl.java:191)\r\n        at org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl.buildDialect(DialectFactoryImpl.java:87)\r\n        at io.quarkus.hibernate.orm.runtime.service.QuarkusStaticInitDialectFactory.buildDialect(QuarkusStaticInitDialectFactory.java:25)\r\n        at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.getJdbcEnvironmentWithDefaults(JdbcEnvironmentInitiator.java:156)\r\n        at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:148)\r\n        at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:76)\r\n        at org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.initiateService(StandardServiceRegistryImpl.java:130)\r\n        at org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:263)\r\n        ... 31 more\r\n\r\n\r\n2024-05-31 21:09:49,414 INFO  [io.qua.dep.dev.IsolatedDevModeMain] (main) Attempting to start live reload endpoint to recover from previous Quarkus startup failure\r\n\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Clone https://github.com/hantsy/quarkus-sandbox/tree/master/jakarta-data\r\n2. Comment out the line `quarkus.hibernate-orm.dialect=org.hibernate.dialect.PostgreSQLDialect` in the *application.properties*\r\n3. Run the application in dev mode, or run tests.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows 10\r\n\r\n### Output of `java -version`\r\n\r\n21\r\n\r\n### Quarkus version or git rev\r\n\r\n3.11.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n3.9.7\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40932/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40932/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

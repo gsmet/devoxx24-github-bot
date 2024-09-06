@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27168",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27168/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27168/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27168/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27168",
+  "id": 1330822825,
+  "node_id": "I_kwDOCFbutM5PUr6p",
+  "number": 27168,
+  "title": "Transactional Quartz jobs with WARN messages in the log: Datasource '<default>': Closing open connection prior to commit",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2955097332,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3MzMy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/agroal",
+      "name": "area/agroal",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-08-06T18:58:45Z",
+  "updated_at": "2024-08-26T11:21:35Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am trying to schedule Quartz jobs programmatically using `@Transactional`, similar to as suggested in https://quarkus.io/guides/quartz#scheduling-jobs-programmatically, but WARN messages can be seen in the log: `Datasource '<default>': Closing open connection prior to commit`:\r\n\r\n```\r\nListening for transport dt_socket at address: 5005\r\n2022-08-06 20:56:12,046 WARN  [io.qua.hib.orm.dep.HibernateOrmProcessor] (build-2) Hibernate ORM is disabled because no JPA entities were found\r\n2022-08-06 20:56:12,428 INFO  [io.qua.arc.pro.BeanProcessor] (build-5) Found unrecommended usage of private members (use package-private instead) in application beans:\r\n        - @Inject field com.example.MyScheduler#dataSource,\r\n        - @Inject field com.example.MyScheduler#quartz,\r\n        - @Inject field com.example.MyScheduler#transactionManager\r\n        - and 2 more - please enable debug logging to see the full list\r\n\r\n__  ____  __  _____   ___  __ ____  ______\r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2022-08-06 20:56:13,218 INFO  [com.exa.MyScheduler] (QuarkusQuartzScheduler_Worker-1) Execute: scheduler1\r\n\r\n2022-08-06 20:56:13,218 INFO  [io.quarkus] (Quarkus Main Thread) module1 1.0.0 on JVM (powered by Quarkus 2.7.6.Final) started in 1.961s.\r\n2022-08-06 20:56:13,223 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2022-08-06 20:56:13,224 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [agroal, cdi, hibernate-orm, hibernate-orm-panache, hibernate-validator, jdbc-h2, narayana-jta, quartz, scheduler, smallrye-context-propagation, vertx]\r\n2022-08-06 20:56:13,338 INFO  [com.exa.MyScheduler] (QuarkusQuartzScheduler_Worker-1) conn: wrapped[conn0: url=jdbc:h2:mem:MyDB user=DBUSER]\r\n2022-08-06 20:56:13,340 INFO  [com.exa.MyScheduler] (QuarkusQuartzScheduler_Worker-1) txman status: 6\r\n2022-08-06 20:56:13,370 INFO  [com.exa.MyScheduler$MyJob] (QuarkusQuartzScheduler_Worker-2) Execute: job\r\n2022-08-06 20:56:13,378 INFO  [com.exa.MyScheduler$MyJob] (QuarkusQuartzScheduler_Worker-2) conn: wrapped[conn1: url=jdbc:h2:mem:MyDB user=DBUSER]<<enrolled\r\n2022-08-06 20:56:13,379 INFO  [com.exa.MyScheduler$MyJob] (QuarkusQuartzScheduler_Worker-2) txman status: 0\r\n2022-08-06 20:56:13,379 INFO  [com.exa.MyScheduler$MyJob] (QuarkusQuartzScheduler_Worker-2) txm status: 0\r\n2022-08-06 20:56:13,380 WARN  [io.agr.pool] (QuarkusQuartzScheduler_Worker-2) Datasource '<default>': Closing open connection prior to commit\r\n2022-08-06 20:56:16,343 INFO  [com.exa.MyScheduler$MyJob] (QuarkusQuartzScheduler_Worker-3) Execute: job\r\n2022-08-06 20:56:16,346 INFO  [com.exa.MyScheduler$MyJob] (QuarkusQuartzScheduler_Worker-3) conn: wrapped[conn1: url=jdbc:h2:mem:MyDB user=DBUSER]<<enrolled\r\n2022-08-06 20:56:16,349 INFO  [com.exa.MyScheduler$MyJob] (QuarkusQuartzScheduler_Worker-3) txman status: 0\r\n2022-08-06 20:56:16,351 INFO  [com.exa.MyScheduler$MyJob] (QuarkusQuartzScheduler_Worker-3) txm status: 0\r\n2022-08-06 20:56:16,352 WARN  [io.agr.pool] (QuarkusQuartzScheduler_Worker-3) Datasource '<default>': Closing open connection prior to commit\r\n\r\n```\r\n\r\n### Expected behavior\r\n\r\nNo WARN messages in the log.\r\n\r\n### Actual behavior\r\n\r\nWARN messages can be seen in the log:\r\n```\r\nDatasource '<default>': Closing open connection prior to commit\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nSample project\r\nhttps://github.com/szxp/quartz-test/blob/main/module1/src/main/java/com/example/MyScheduler.java\r\n\r\nRun this Maven command in the `module1` directory from Windows Powershell:\r\n`mvn clean compile quarkus:dev -\"Dquarkus.quartz.start-mode=forced\"`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.22000.795]\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.2 2022-01-18 OpenJDK Runtime Environment GraalVM CE 22.0.0.2 (build 17.0.2+8-jvmci-22.0-b05) OpenJDK 64-Bit Server VM GraalVM CE 22.0.0.2 (build 17.0.2+8-jvmci-22.0-b05, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.6.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63) Maven home: c:\\Users\\szp05\\local\\apache-maven-3.8.6 Java version: 17.0.2, vendor: GraalVM Community, runtime: c:\\Users\\szp05\\local\\graalvm-ce-java17-22.0.0.2 Default locale: en_US, platform encoding: Cp1252 OS name: \"windows 11\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27168/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27168/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

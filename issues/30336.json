@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30336",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30336/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30336/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30336/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30336",
+  "id": 1530725428,
+  "node_id": "I_kwDOCFbutM5bPQQ0",
+  "number": 30336,
+  "title": "With the Kubernetes client version 6, using the client load method forces to register builders for reflection in native mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-01-12T13:34:23Z",
+  "updated_at": "2023-01-17T06:41:08Z",
+  "closed_at": "2023-01-17T06:41:03Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAs explained in the title, when running something like:\r\n\r\n```\r\nvar resources = kubernetesClient.load(new URL(\"https://raw.githubusercontent.com/kubernetes/ingress-nginx/5f2a79495a65c57106d8fab00bc95a029c3a8aab/deploy/static/provider/kind/deploy.yaml\").openStream()).get();\r\nkubernetesClient.resourceList(resources).createOrReplace();\r\n```\r\n\r\nIn native mode this will yields an error like:\r\n\r\n```\r\njava.lang.IllegalStateException: Failed to create builder for: class io.fabric8.kubernetes.api.model.rbac.ClusterRole\r\n\tat io.fabric8.kubernetes.api.builder.BaseFluent.builderOf(BaseFluent.java:31)\r\n\tat io.fabric8.kubernetes.api.model.KubernetesListFluentImpl.addToItems(KubernetesListFluentImpl.java:122)\r\n// ommited for brievity\r\nCaused by: java.lang.ClassNotFoundException: io.fabric8.kubernetes.api.model.rbac.ClusterRoleBuilder\r\n\tat java.base@17.0.5/java.lang.Class.forName(DynamicHub.java:1132)\r\n\tat java.base@17.0.5/java.lang.Class.forName(DynamicHub.java:1105)\r\n\tat io.fabric8.kubernetes.api.builder.BaseFluent.builderOf(BaseFluent.java:28)\r\n\t... 19 more\r\n```\r\n\r\n*Workaround*: register all the missing builders for reflection.\r\n\r\nI'm not 100% sure that what I'm asking for is reasonable since maybe in the more general case it's desirable not to have all the builders in the native image, but this scenario was working prior to the Kubernetes client version 6, so in a sense it's a regression :)\n\n### Expected behavior\n\nI don't have to declare those builders.\n\n### Actual behavior\n\nBuilders are pruned when building the native image.\n\n### How to Reproduce?\n\nPlease refer to https://github.com/PierreBtz/quarkus-kubernetes-client-bug:\r\n\r\nHave a Kubernetes cluster ready to receive an nginx ingress deployment in the ingress-nginx namespace.\r\n\r\n* clone this repository\r\n* run the command as a jar: `mvn quarkus:dev`, observe that the example is working.\r\n* build a native binary (`mvn verify -Pnative`) and run it `./target/quarkus-kubernetes-client-bug-1.0.0-SNAPSHOT-runner`, observe the failure.\r\n* uncomment the annotations, rebuild the binary, observe the example is working.\n\n### Output of `uname -a` or `ver`\n\nDarwin *****.local 22.1.0 Darwin Kernel Version 22.1.0: Sun Oct  9 20:15:09 PDT 2022; root:xnu-8792.41.9~2/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18 OpenJDK Runtime Environment GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08) OpenJDK 64-Bit Server VM GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.0.CR1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d)\n\n### Additional information\n\nNote: I have to run this sample on the release candidate since because of https://github.com/quarkusio/quarkus/issues/29532, this is the first version I can have the `load` method working on this example.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30336/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30336/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

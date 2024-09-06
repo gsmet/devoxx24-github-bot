@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33953",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33953/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33953/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33953/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33953",
+  "id": 1751002751,
+  "node_id": "I_kwDOCFbutM5oXi5_",
+  "number": 33953,
+  "title": "\"Could not set value of type\" Hibernate 6 org.hibernate.PropertyAccessException only on quarkus test rerun",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2023-06-10T15:01:20Z",
+  "updated_at": "2023-06-12T12:37:34Z",
+  "closed_at": "2023-06-12T11:52:38Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe upgraded from quarkus 2 to quarkus 3 (+h5 to h6) and use the PostgreSQLEnumType from https://github.com/vladmihalcea/hypersistence-utils.\r\n\r\nThe tests we have are fine, the application itself is also fine but when we re-run the test case in Quarkus, an exception is thrown for all cases where we use a Type which extends ImmutableDynamicParameterizedType from hibernate 6.\r\n\r\nhttps://github.com/vladmihalcea/hypersistence-utils/blob/master/hypersistence-utils-hibernate-62/src/main/java/io/hypersistence/utils/hibernate/type/basic/PostgreSQLEnumType.java\r\n\r\n\r\n\r\n\n\n### Expected behavior\n\nRe-running tests should not fail.\n\n### Actual behavior\n\nFollowing exception is thrown after re-run:\r\n\r\n```\r\n2023-06-09 23:13:05,427 ERROR [io.qua.test] (Test runner thread) ==================== TEST REPORT #2 ====================\r\n2023-06-09 23:13:05,428 ERROR [io.qua.test] (Test runner thread) Test CountryTest#Switzerland has a City attached() failed \r\n: org.hibernate.PropertyAccessException: Could not set value of type [foo.bar.enums.CurrencyCode] : 'foo.bar.entity.City.baseCurrency' (setter)\r\n        at org.hibernate.property.access.spi.SetterFieldImpl.set(SetterFieldImpl.java:86)\r\n        at org.hibernate.property.access.spi.EnhancedSetterImpl.set(EnhancedSetterImpl.java:40)\r\n        at org.hibernate.persister.entity.AbstractEntityPersister.setPropertyValues(AbstractEntityPersister.java:4155)\r\n        at org.hibernate.sql.results.graph.entity.AbstractEntityInitializer.initializeEntityInstance(AbstractEntityInitializer.java:844)\r\n        at org.hibernate.sql.results.graph.entity.AbstractEntityInitializer.initializeEntity(AbstractEntityInitializer.java:804)\r\n        at org.hibernate.sql.results.graph.entity.AbstractEntityInitializer.initializeInstance(AbstractEntityInitializer.java:790)\r\n        at org.hibernate.sql.results.internal.InitializersList.initializeInstance(InitializersList.java:70)\r\n        at org.hibernate.sql.results.internal.StandardRowReader.coordinateInitializers(StandardRowReader.java:111)\r\n        at org.hibernate.sql.results.internal.StandardRowReader.readRow(StandardRowReader.java:87)\r\n        at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:179)\r\n        at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:33)\r\n        at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:361)\r\n        at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:168)\r\n        at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.list(JdbcSelectExecutorStandardImpl.java:93)\r\n        at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:31)\r\n        at org.hibernate.loader.ast.internal.CollectionBatchLoaderArrayParam.initializeKeys(CollectionBatchLoaderArrayParam.java:145)\r\n        at org.hibernate.loader.ast.internal.CollectionBatchLoaderArrayParam.load(CollectionBatchLoaderArrayParam.java:107)\r\n        at org.hibernate.persister.collection.AbstractCollectionPersister.initialize(AbstractCollectionPersister.java:679)\r\n        at org.hibernate.event.internal.DefaultInitializeCollectionEventListener.onInitializeCollection(DefaultInitializeCollectionEventListener.java:75)\r\n        at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:127)\r\n        at org.hibernate.internal.SessionImpl.initializeCollection(SessionImpl.java:1702)\r\n        at org.hibernate.collection.spi.AbstractPersistentCollection.lambda$initialize$3(AbstractPersistentCollection.java:617)\r\n        at org.hibernate.collection.spi.AbstractPersistentCollection.withTemporarySessionIfNeeded(AbstractPersistentCollection.java:265)\r\n        at org.hibernate.collection.spi.AbstractPersistentCollection.initialize(AbstractPersistentCollection.java:615)\r\n        at org.hibernate.collection.spi.AbstractPersistentCollection.read(AbstractPersistentCollection.java:136)\r\n        at org.hibernate.collection.spi.AbstractPersistentCollection.lambda$readSize$0(AbstractPersistentCollection.java:163)\r\n        at org.hibernate.collection.spi.AbstractPersistentCollection.withTemporarySessionIfNeeded(AbstractPersistentCollection.java:265)\r\n        at org.hibernate.collection.spi.AbstractPersistentCollection.readSize(AbstractPersistentCollection.java:148)\r\n        at org.hibernate.collection.spi.PersistentBag.isEmpty(PersistentBag.java:360)\r\n        at foo.bar.country.CountryTest.Switzerland has a City attached(CountryTest.kt:33)\r\nCaused by: java.lang.IllegalArgumentException: Can not set foo.bar.enums.CurrencyCode field foo.bar.entity.City.baseCurrency to foo.bar.enums.CurrencyCode\r\n        at java.base/jdk.internal.reflect.FieldAccessorImpl.throwSetIllegalArgumentException(FieldAccessorImpl.java:228)\r\n        at java.base/jdk.internal.reflect.FieldAccessorImpl.throwSetIllegalArgumentException(FieldAccessorImpl.java:232)\r\n        at java.base/jdk.internal.reflect.MethodHandleObjectFieldAccessorImpl.set(MethodHandleObjectFieldAccessorImpl.java:115)\r\n        at java.base/java.lang.reflect.Field.set(Field.java:834)\r\n        at org.hibernate.property.access.spi.SetterFieldImpl.set(SetterFieldImpl.java:55)\r\n        ... 29 more\r\n```\r\n\n\n### How to Reproduce?\n\n### Example project, java based without panache\r\nhttps://github.com/neukunft/java-no-panache (most simplified version)\r\n\r\n### Example project, java based\r\nhttps://github.com/neukunft/pg-issue-java\r\n\r\n### Example project, kotlin based with panache (original setup)\r\nhttps://github.com/neukunft/pg-issue\n\n### Output of `uname -a` or `ver`\n\nhappens on linux and macos\n\n### Output of `java -version`\n\njdk17 and jdk20\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.1.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33953/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33953/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

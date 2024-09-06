@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40510",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40510/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40510/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40510/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40510",
+  "id": 2284002422,
+  "node_id": "I_kwDOCFbutM6IIxx2",
+  "number": 40510,
+  "title": "Quarkus jctools REF_ELEMENT_SHIFT substitution conflicts with DD substitution",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2024-05-07T18:46:11Z",
+  "updated_at": "2024-05-13T12:13:35Z",
+  "closed_at": "2024-05-10T14:50:32Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nBoth Quarkus and DataDog agent are trying to do JCTools substitutions which renders the following error:\r\n```\r\nError: Substition: org.jctools.util.UnsafeRefArrayAccess.REF_ELEMENT_SHIFT conflicts with previously registered: org.jctools.util.UnsafeRefArrayAccess.REF_ELEMENT_SHIFT\r\ncom.oracle.svm.core.util.UserError$UserException: Substition: org.jctools.util.UnsafeRefArrayAccess.REF_ELEMENT_SHIFT conflicts with previously registered: org.jctools.util.UnsafeRefArrayAccess.REF_ELEMENT_SHIFT\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:73)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.guarantee(UserError.java:97)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.substitute.AnnotationSubstitutionProcessor.register(AnnotationSubstitutionProcessor.java:952)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.substitute.AnnotationSubstitutionProcessor.handleFieldInAliasClass(AnnotationSubstitutionProcessor.java:599)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.substitute.AnnotationSubstitutionProcessor.handleAliasClass(AnnotationSubstitutionProcessor.java:428)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.substitute.AnnotationSubstitutionProcessor.handleClass(AnnotationSubstitutionProcessor.java:395)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.substitute.AnnotationSubstitutionProcessor.init(AnnotationSubstitutionProcessor.java:351)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.createAnnotationSubstitutionProcessor(NativeImageGenerator.java:1029)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.setupNativeImage(NativeImageGenerator.java:907)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:590)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:550)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:539)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:721)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.start(NativeImageGeneratorRunner.java:143)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:98)\r\n```\n\n### Expected behavior\n\nJCTools substitution works as expected\n\n### Actual behavior\n\nSubstitution fails\n\n### How to Reproduce?\n\nGet any simple app, (https://github.com/luneo7/bazinga-repro this one will do it)...\r\nDownload DD agent (https://github.com/DataDog/dd-trace-java/releases/tag/v1.33.0)...\r\nChange `quarkus.native.additional-build-args` and add the Java Agent... something like:\r\n```\r\nquarkus.native.additional-build-args= \\\r\n  -J-javaagent:/Downloads/dd-java-agent.jar,\\\r\n  -march=native\r\n```\r\nRun the native build `mvn clean package -Dnative -DskipTests=true` and you will get:\r\n<img width=\"1639\" alt=\"image\" src=\"https://github.com/quarkusio/quarkus/assets/8834774/82c2614b-d087-4619-a09b-8ed3fe2b31c6\">\r\n\n\n### Output of `uname -a` or `ver`\n\nDarwin C02C32WQMD6R 23.2.0 Darwin Kernel Version 23.2.0: Wed Nov 15 21:54:10 PST 2023; root:xnu-10002.61.3~2/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nopenjdk version \"21.0.2\" 2024-01-16 OpenJDK Runtime Environment GraalVM CE 21.0.2+13.1 (build 21.0.2+13-jvmci-23.1-b30) OpenJDK 64-Bit Server VM GraalVM CE 21.0.2+13.1 (build 21.0.2+13-jvmci-23.1-b30, mixed mode, sharing)\n\n### Mandrel or GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.10.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546) Maven home: /usr/local/Cellar/maven/3.9.5/libexec Java version: 21.0.2, vendor: GraalVM Community, runtime: /Library/Java/JavaVirtualMachines/graalvm-community-openjdk-21.0.2+13.1/Contents/Home Default locale: en_CA, platform encoding: UTF-8 OS name: \"mac os x\", version: \"14.2.1\", arch: \"x86_64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40510/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40510/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

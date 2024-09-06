@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32551",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32551/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32551/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32551/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32551",
+  "id": 1663160662,
+  "node_id": "I_kwDOCFbutM5jIdFW",
+  "number": 32551,
+  "title": "Mix shared QuarkusTestResource with restrictToAnnotatedClass restart all others QuarkusTestResource",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 7369959469,
+      "node_id": "LA_kwDOCFbutM8AAAABt0ioLQ",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/classloader",
+      "name": "area/classloader",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-04-11T20:23:20Z",
+  "updated_at": "2024-08-24T12:15:16Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe have a Pipeline Intregation tests with a lot of containers (10 to be exactly). \r\n\r\nWe refactored the `QuarkusTestResourceLifecycleManager` to a single global resource, because it was taking to long to start the containers for each testcase. \r\n\r\nOur application has a multi tenant architecture, so sharing all dependencies containers between tests cases is easy we just have to set a single property `app.tenant`\r\n\r\nSo we end up with this:\r\n\r\n```\r\n@QuarkusTestResource(GlobalSharedContainersResource::class)\r\n@QuarkusTestResource(value = UniqueAccountIdTestResource::class restrictToAnnotatedClass = true)\r\nclass TestA\r\n```\r\n\r\nThe problem is that once we add `UniqueAccountIdTestResource` the test stop and restart all `GlobalSharedContainersResource` containers. I know that we have to lunch a new quarkus application for each `UniqueAccountIdTestResource` however we could share the same containers from previous tests.\r\n\r\nOur UniqueAccountIdTestResource looks like this:\r\n\r\n```\r\nclass UniqueAccountIdTestResource : QuarkusTestResourceLifecycleManager {\r\n\r\n    override fun start(): MutableMap<String, String> {\r\n        return mutableMapOf(\r\n            \"app.tenant\" to UUID.randomUUID().toString()\r\n        )\r\n    }\r\n \r\n```\r\n\r\nWe also tried to use quarkus testProfile:\r\n\r\n\r\n```\r\n\r\nclass UniqueAccountIdTestProfile : QuarkusTestProfile {\r\n\r\n    override fun getConfigOverrides(): MutableMap<String, String> {\r\n        return mutableMapOf(\"importer.accountId\" to UUID.randomUUID().toString())\r\n    }\r\n}\r\n\r\n@QuarkusTestResource(GlobalSharedContainersResource::class)\r\n@TestProfile(UniqueAccountIdTestProfile::class)\r\nclass TestA\r\n```\r\n\r\nBut it restart all the GlobalSharedContainersResource either way.\r\n\n\n### Expected behavior\n\nMixing shared QuarkusTestResource with restrictToAnnotatedClass QuarkusTestResource should not restart the shared services.\n\n### Actual behavior\n\nThe framework restart the shared services\n\n### How to Reproduce?\n\n1. Create a shared  `QuarkusTestResourceLifecycleManager` Foo\r\n2. Create a exclusive  `QuarkusTestResourceLifecycleManager` Bar\r\n3. Create two test classes with:```\r\n\r\n@QuarkusTestResource(A::class)\r\n@QuarkusTestResource(value = B::class restrictToAnnotatedClass = true)\r\n```\r\n4. Observers that the shared resource `A` is started twice \n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32551/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32551/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

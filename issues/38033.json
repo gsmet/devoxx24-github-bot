@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38033",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38033/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38033/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38033/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38033",
+  "id": 2065720370,
+  "node_id": "I_kwDOCFbutM57IGQy",
+  "number": 38033,
+  "title": "PanacheQuery count method ignoring distinct after using project",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-01-04T14:05:36Z",
+  "updated_at": "2024-01-23T17:20:06Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a query that uses distinct on the select\r\n`select distinct entity.id from Entity entity...`\r\n\r\nI want to use this query in a EntityRepository from where I want to return a `PanacheQuery<Long>` instead of a `PanacheQuery<Entity>`\r\nWhen doing the following code:\r\n\r\n```\r\nString query = \"...\";\r\nPanacheQuery pQuery= (PanacheQuery) find(query);\r\npQuery.count();\r\n```\r\n\r\nThis will return a correct count value because it generates the following queries:\r\n\r\n```\r\nselect distinct entity.id from ...\r\nselect count(distinct entity.id) from ...\r\n```\r\n\r\nHowever when applying .project (so I can have a `PanacheQuery<Long>` and not use unchecked raw types) \r\n\r\n```\r\nString query = \"...\";\r\nPanacheQuery<Long> pQuery= find(query).project(Long.class);\r\npQuery.count();\r\n```\r\n\r\nIt will remove the distinct from the count\r\n\r\n```\r\nselect distinct entity.id from...\r\nselect count(*) from...\r\n```\r\n\r\nAnd not returning the same .count() value\n\n### Expected behavior\n\nAfter applying `.project()` to a generic PanacheQuery the `.count()` value should remain the same after the projection\n\n### Actual behavior\n\nThe `.count()` value changes because the distinct from the select clause is being removed after applying `.project()`\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17.0.7\n\n### Quarkus version or git rev\n\n3.2.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nAs a workarround it's possible to create a `EntityIdRepository implements PanacheRepository<Long>` to avoid the unchecked raw types",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38033/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38033/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22838",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22838/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22838/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22838/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22838",
+  "id": 1100375020,
+  "node_id": "I_kwDOCFbutM5BlmPs",
+  "number": 22838,
+  "title": "Transactions don't rolled back in JUnit tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2022-01-12T13:58:25Z",
+  "updated_at": "2022-01-12T15:28:03Z",
+  "closed_at": "2022-01-12T15:28:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThere is `@TestTransaction` annotation in Quarkus that assumes automatic rolling back transactions made inside each test case. But it doesn't work by this way. All data persisted during test cases saves from test to test and don't rolled back. This don't work using this annotation either for test class and for methods\n\n### Expected behavior\n\nEvery method annotated with `@Test` in test class with annotation `@TestTransaction` has individual data for testing, this data persisted by any ways. After end execution each of these methods data should be cleared.\n\n### Actual behavior\n\nData isn't cleared and persisted from test to test, from method to method. Each next test case has a saved data but it mustn't\n\n### How to Reproduce?\n\n```\r\npackage org.gs;\r\n\r\nimport static org.junit.jupiter.api.Assertions.assertEquals;\r\n\r\nimport io.quarkus.test.TestTransaction;\r\nimport io.quarkus.test.junit.QuarkusTest;\r\nimport javax.inject.Inject;\r\nimport org.junit.jupiter.api.Test;\r\n\r\n@QuarkusTest\r\n@TestTransaction\r\nclass Movie2IntegrationTest {\r\n\r\n  @Inject\r\n  MovieRepository movieRepository;\r\n\r\n  @Test\r\n  void create_TestPass() {\r\n    assertEquals(0, movieRepository.listAll().size());\r\n\r\n    Movie movie = new Movie();\r\n    movie.setTitle(\"Movie\");\r\n    movie.setDescription(\"The movie\");\r\n\r\n    movieRepository.persist(movie);\r\n\r\n    assertEquals(1, movieRepository.listAll().size());\r\n  }\r\n\r\n  @Test\r\n  void create_TestFails() {\r\n    // should have 0 elements but have 1 created at the previous point\r\n    assertEquals(0, movieRepository.listAll().size());\r\n  }\r\n}\r\n``\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n1.13.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22838/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22838/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

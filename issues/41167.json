@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41167",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41167/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41167/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41167/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41167",
+  "id": 2348990383,
+  "node_id": "I_kwDOCFbutM6MAr-v",
+  "number": 41167,
+  "title": "Integration tests against AWS deployed services",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-06-12T14:52:48Z",
+  "updated_at": "2024-06-18T14:44:11Z",
+  "closed_at": "2024-06-18T12:33:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello,\r\nI'm deploying an AWS stack exposing a REST API behind an API Gateway and, in addition to `testcontainers` based unit tests, I want to perform integration tests against the real services.\r\n\r\nThe Quarkus documentation mentions:\r\n\r\n> @QuarkusIntegrationTest supports executing tests against an already running instance of the application. This can be achieved by setting the quarkus.http.test-host system property when running the tests.\r\n\r\nSo, I'm running my integration tests as follows:\r\n\r\n    $ mvn ... -Dquarkus.http.test-host=$API_ENDPOINT failsafe:integration-test\r\n\r\nwhere `API_ENDPOINT` is something like `https://...lambda-url.eu-west-3.on.aws/`. \n\n### Expected behavior\n\nI expect that the test connects to the API endpoint and runs as expected, as when running locally with `localstack` and `testcontainers`.\n\n### Actual behavior\n\nThe following exception is raised:\r\n\r\n    [ERROR] Tests run: 3, Failures: 0, Errors: 3, Skipped: 0, Time elapsed: 8.775 s <<< FAILURE! -- in fr.simplex_software.aws.iac.quarkus.s3.tests.S3FileManagementIT\r\n    [ERROR] fr.simplex_software.aws.iac.quarkus.s3.tests.S3FileManagementIT.testUploadFile -- Time elapsed: 0.487 s <<< ERROR!\r\n    java.net.MalformedURLException: Error at index 0 in: \":8081\"\r\n        at java.base/java.net.URL.<init>(URL.java:806)\r\n        at java.base/java.net.URL.<init>(URL.java:654)\r\n        at java.base/java.net.URL.<init>(URL.java:590)\r\n    ...\r\n\r\nWhat seems to happen is that the TCP port #8081, which is the default for tests, is appended to the `quarkus.http.test-host` value and, of course, such a host doesn't exist. In order to define the port number the property `quarkus.http.test-port` should be used but there is no such a thing like a TCP port in an AWS endpoint.\r\n\r\nThe other thing is that `testcontainers` and `localstack` seem to be still started, as shown below, even if this doesn't make sense, 'cause I want to test against the real services, not against the mocked ones. \r\n\r\n    [INFO] -------------------------------------------------------\r\n    [INFO]  T E S T S\r\n    [INFO] -------------------------------------------------------\r\n    [INFO] Running fr.simplex_software.aws.iac.quarkus.s3.tests.S3FileManagementIT\r\n    2024-06-12 16:31:36,353 INFO  [io.qua.ama.lam.run.MockEventServer] (build-12) Mock Lambda Event Server Started\r\n    2024-06-12 16:31:36,888 INFO  [org.tes.doc.DockerClientProviderStrategy] (build-12) Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first\r\n    2024-06-12 16:31:37,059 INFO  [org.tes.doc.DockerClientProviderStrategy] (build-12) Found Docker environment with local Unix socket (unix:///var/run/docker.sock)\r\n    2024-06-12 16:31:37,060 INFO  [org.tes.DockerClientFactory] (build-12) Docker host IP address is localhost\r\n    2024-06-12 16:31:37,072 INFO  [org.tes.DockerClientFactory] (build-12) Connected to docker: \r\n      Server Version: 26.1.3\r\n      API Version: 1.45\r\n      Operating System: Ubuntu 22.04.4 LTS\r\n      Total Memory: 31730 MB\r\n    2024-06-12 16:31:37,080 INFO  [org.tes.ima.PullPolicy] (build-12) Image pull policy will be performed by: DefaultPullPolicy()\r\n    2024-06-12 16:31:37,081 INFO  [org.tes.uti.ImageNameSubstitutor] (build-12) Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')\r\n    2024-06-12 16:31:37,084 INFO  [org.tes.DockerClientFactory] (build-12) Checking the system...\r\n    2024-06-12 16:31:37,084 INFO  [org.tes.DockerClientFactory] (build-12) ✔︎ Docker server version should be at least 1.6.0\r\n    2024-06-12 16:31:37,150 INFO  [tc.loc.0.1] (build-12) LOCALSTACK_HOST environment variable set to localstack-kjhyz (to match last network alias on container with non-default network)\r\n    2024-06-12 16:31:37,151 INFO  [tc.tes.7.0] (build-12) Creating container for image: testcontainers/ryuk:0.7.0\r\n    2024-06-12 16:31:37,153 INFO  [org.tes.uti.RegistryAuthLocator] (build-12) Failure when attempting to lookup auth config. Please ignore if you don't have images in an authenticated registry. Details: (dockerImageName: testcontainers/ryuk:0.7.0, configFile: /home/nicolas/.docker/config.json, configEnv: DOCKER_AUTH_CONFIG). Falling back to docker-java default behaviour. Exception message: Status 404: No config supplied. Checked in order: /home/nicolas/.docker/config.json (file not found), DOCKER_AUTH_CONFIG (not set)\r\n    2024-06-12 16:31:37,255 INFO  [tc.tes.7.0] (build-12) Container testcontainers/ryuk:0.7.0 is starting: cd41e812ba8b83b3c563fba85994382305f537de651e5555a074093979b82d54\r\n    2024-06-12 16:31:37,602 INFO  [tc.tes.7.0] (build-12) Container testcontainers/ryuk:0.7.0 started in PT0.451637302S\r\n    2024-06-12 16:31:37,606 INFO  [tc.loc.0.1] (build-12) Creating container for image: localstack/localstack:3.0.1\r\n    2024-06-12 16:31:38,323 INFO  [tc.loc.0.1] (build-12) Container localstack/localstack:3.0.1 is starting: caba480d4d6a764b7a011b92fdafc28213decda4e58927ec3127fe1b6e68f95b\r\n    2024-06-12 16:31:40,827 INFO  [tc.loc.0.1] (build-12) Container localstack/localstack:3.0.1 started in PT3.220766362S\r\n    2024-06-12 16:31:43,028 INFO  [io.qua.ama.com.dep.DevServicesLocalStackProcessor] (build-12) Amazon Dev Services for localstack (s3) started. Other Quarkus applications in dev mode will find the LocalStack automatically.\n\n### How to Reproduce?\n\nDon't have a reproducer\n\n### Output of `uname -a` or `ver`\n\nLinux nicolas-XPS-15-9570 5.15.0-112-generic #122-Ubuntu SMP Thu May 23 07:48:21 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\njava version \"21.0.3\" 2024-04-16 LTS Java(TM) SE Runtime Environment (build 21.0.3+7-LTS-152) Java HotSpot(TM) 64-Bit Server VM (build 21.0.3+7-LTS-152, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.11.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546) Maven home: /opt/apache-maven-3.9.5 Java version: 21.0.3, vendor: Oracle Corporation, runtime: /usr/lib/jvm/jdk-21-oracle-x64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.0-112-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\nNone",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41167/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41167/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

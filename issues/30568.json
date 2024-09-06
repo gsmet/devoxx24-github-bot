@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30568",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30568/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30568/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30568/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30568",
+  "id": 1554722814,
+  "node_id": "I_kwDOCFbutM5cqy_-",
+  "number": 30568,
+  "title": "Liquibase is not able to parse resource location",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1956491735,
+      "node_id": "MDU6TGFiZWwxOTU2NDkxNzM1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/liquibase",
+      "name": "area/liquibase",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-01-24T10:36:36Z",
+  "updated_at": "2023-03-12T21:57:06Z",
+  "closed_at": "2023-01-25T07:30:23Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm using Quarkus with Liquibase in a docker container. Starting with Quarkus version 2.15.x and above Liquibase fails loading resources when starting the container. In DEV mode and under tests everything works fine. I'm using the includeAll feature and the scripts are located in resources.\r\n\r\nI got following error message when I try to start the container:\r\n`Cannot parse resource location: 'jar:file:/home/jboss/app/xxx-backend-0.1.0-SNAPSHOT.jar!/db/changelogs/v0.1'`\r\n\r\nIt seems that the dependency of liquibase in Quarkus has changed between 2.14.x and 2.15.0:\r\nIn Quarkus 2.15.x: org.liquibase:liquibase-core:jar:4.17.2:compile\r\nin Quarkus 2.14.x: org.liquibase:liquibase-core:jar:4.16.1:compile\r\n\r\nIn the Liquibase documentation I found this \"maybe\" breaking change:\r\n`The liquibase.resource.ResourceAccessor APIs were updated to take advantage of the new liquibase.resource.Resource abstraction that was introduced. Code that USES the existing ResourceAccessor methods will continue to work as before with no changes, but if you have written custom implementations of ResourceAccessor there are new and changed methods to implement`\r\n[Liquibase changes](https://github.com/liquibase/liquibase/releases/tag/v4.17.0)\r\n\r\nI don't know if Quarkus uses a custom implementation. In the pull request of this [change](https://github.com/liquibase/liquibase/pull/3064) additional information can be found.\r\n\n\n### Expected behavior\n\nLiquibase works in the same way than in Quarkus 2.14.x and is able to load the database sql scripts.\n\n### Actual behavior\n\nStartup of application is interrupted. You can see the stacktrace in additional information\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nOpenJDK 11\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.15.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 \n\n### Additional information\n\n`[li.changelog] (main) includeAll for db/changelogs/v0.1/`\r\n`[li.changelog] (main) Using file opener for includeAll: ClassLoaderResourceAccessor{}`\r\n`[li.servicelocator] (main) Loaded liquibase.resource.PathHandler instance liquibase.resource.DirectoryPathHandler`\r\n`[li.servicelocator] (main) Loaded liquibase.resource.PathHandler instance liquibase.resource.ZipPathHandler`\r\n...\r\n```\r\nERROR [io.qu.ru.Application] (main) Failed to start application (with profile prod): java.io.IOException: Cannot parse resource location: 'jar:file:/home/jboss/app/xxx-backend-0.1.0-SNAPSHOT.jar!/db/changelogs/v0.1'\r\n at liquibase.resource.PathHandlerFactory.getResourceAccessor(PathHandlerFactory.java:36)\r\n at liquibase.resource.ClassLoaderResourceAccessor.search(ClassLoaderResourceAccessor.java:124)\r\n at liquibase.changelog.DatabaseChangeLog.includeAll(DatabaseChangeLog.java:618)\r\n at liquibase.changelog.DatabaseChangeLog.handleChildNode(DatabaseChangeLog.java:462)\r\n at liquibase.changelog.DatabaseChangeLog.load(DatabaseChangeLog.java:364)\r\n at liquibase.parser.core.xml.AbstractChangeLogParser.parse(AbstractChangeLogParser.java:23)\r\n at liquibase.changelog.DatabaseChangeLog.include(DatabaseChangeLog.java:717)\r\n at liquibase.changelog.DatabaseChangeLog.handleChildNode(DatabaseChangeLog.java:411)\r\n at liquibase.changelog.DatabaseChangeLog.load(DatabaseChangeLog.java:364)\r\n at liquibase.parser.core.xml.AbstractChangeLogParser.parse(AbstractChangeLogParser.java:23)\r\n at liquibase.Liquibase.getDatabaseChangeLog(Liquibase.java:408)\r\n at liquibase.Liquibase.validate(Liquibase.java:2323)\r\n at io.quarkus.liquibase.runtime.LiquibaseRecorder.doStartActions(LiquibaseRecorder.java:67)\r\n at io.quarkus.deployment.steps.LiquibaseProcessor$startLiquibase763757012.deploy_0(Unknown Source)\r\n at io.quarkus.deployment.steps.LiquibaseProcessor$startLiquibase763757012.deploy(Unknown Source)\r\n at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n at io.quarkus.runtime.Application.start(Application.java:101)\r\n at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:109)\r\n at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)\r\n at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)\r\n at java.base/java.lang.reflect.Method.invoke(Unknown Source)\r\n at io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:61)\r\n at io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:32)\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30568/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30568/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

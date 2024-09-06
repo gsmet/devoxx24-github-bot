@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41946",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41946/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41946/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41946/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41946",
+  "id": 2413020513,
+  "node_id": "I_kwDOCFbutM6P08Vh",
+  "number": 41946,
+  "title": "implements ReaderInterceptor, WriterInterceptor could not get response headers",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-07-17T08:41:50Z",
+  "updated_at": "2024-07-19T09:39:13Z",
+  "closed_at": "2024-07-19T09:39:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n\r\n1. When i use Multi<String>，in aroundReadFrom method, System.out.println(context.getHeaders());//console print: []；But with Uni<String>，context.getHeaders() will get response's headers；I wonder if there's a problem...\r\n2. If i want to propagate X-Request-Id(a request header attribute), from aroundWriteTo method to aroundReadFrom method，Should i use [ThreadLocal]??? Or what should i do?\r\n\r\n```java\r\n@Path(\"/hello\")\r\npublic class ExampleResource {\r\n\r\n    @RestClient\r\n    MyRemoteService myRemoteService;\r\n\r\n    @GET\r\n    @Path(\"chart\")\r\n    @RestStreamElementType(MediaType.APPLICATION_JSON)\r\n    public Multi<String> chart() {\r\n        String token = \"\";\r\n        Map<String, String> msg = new HashMap<>();\r\n        msg.put(\"content\", \"Write a 1000-word news article about OpenAI\");\r\n        msg.put(\"role\", \"user\");\r\n\r\n        ArrayList<Map<String, String>> arrayList = new ArrayList<>();\r\n        arrayList.add(msg);\r\n\r\n        ChatParam param = new ChatParam();\r\n        param.max_output_tokens = 1500;\r\n        param.messages = arrayList;\r\n        param.setStream(true);\r\n\r\n        return myRemoteService.doSseChart(param, token);\r\n    }\r\n}\r\n\r\n@RegisterRestClient(baseUri = \"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop\")\r\npublic interface MyRemoteService {\r\n\r\n    @POST\r\n    @Path(\"/chat/ernie-4.0-turbo-8k\")\r\n    @RestStreamElementType(MediaType.APPLICATION_JSON)\r\n    Multi<String> doSseChart(ChatParam param, @QueryParam(\"access_token\") String token);\r\n}\r\n\r\n@Provider\r\n@ConstrainedTo(RuntimeType.CLIENT)\r\npublic class ClientInterceptor implements ReaderInterceptor, WriterInterceptor {\r\n\r\n    ThreadLocal<String> threadLocal = new ThreadLocal<>();\r\n\r\n    @Override\r\n    public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {\r\n        System.out.println(\"--------------------------\");\r\n        System.out.println(context.getHeaders());//console print: []\r\n        System.out.println(\"--------------------------\");\r\n\r\n        //Should i use [ThreadLocal] like this?\r\n        String requestId = threadLocal.get();\r\n        System.out.println(requestId);\r\n        return context.proceed();\r\n    }\r\n\r\n    @Override\r\n    public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {\r\n        //TODO\r\n        String requestId = (String) context.getHeaders().getFirst(\"X-Request-Id\");\r\n        threadLocal.set(requestId);\r\n\r\n        context.proceed();\r\n    }\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\n1. In aroundReadFrom method,context.getHeaders() return response headers.\r\n2. With reactive Multi<String> request and response,**public class ClientInterceptor implements ReaderInterceptor, WriterInterceptor** How to propagate some properties(like requestId、traceId、user,and etc)；Is there any problem with using ThreadLocal?\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nhttps://github.com/yangyuanqiang/quarkus-ai.git\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.11\" 2024-04-16 LTS OpenJDK Runtime Environment Zulu17.50+19-CA (build 17.0.11+9-LTS) OpenJDK 64-Bit Server VM Zulu17.50+19-CA (build 17.0.11+9-LTS, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: D:\\Develop\\apache-maven-3.9.6 Java version: 17.0.11, vendor: Azul Systems, Inc., runtime: C:\\Users\\yangyuanqiang\\.jdks\\azul-17.0.11 Default locale: zh_CN, platform encoding: GBK OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41946/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41946/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

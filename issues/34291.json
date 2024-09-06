@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34291",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34291/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34291/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34291/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34291",
+  "id": 1773196669,
+  "node_id": "I_kwDOCFbutM5psNV9",
+  "number": 34291,
+  "title": "Quarkus 3.1.2 Hibernate Reactive Panache requires a safe (isolated) Vert.x sub-context",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2023-06-25T10:17:48Z",
+  "updated_at": "2023-08-28T07:29:50Z",
+  "closed_at": "2023-08-28T07:29:41Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI've written a Kafka consumer in which I have to persist data into Postgres (Reactive Hibernate Panache) but when it read data from Kafka topic and it's time to write it to Postgres, there's an issue\r\n\r\n@ApplicationScoped\r\npublic class EventConsumer {\r\n    @Inject\r\n    CreditCardRepository creditCardRepository;\r\n\r\n    @Incoming(\"event-out\")\r\n    @Acknowledgment(Acknowledgment.Strategy.POST_PROCESSING)\r\n    public Uni<Void> consumeEvent(final CreditCardDto creditCardDto) {\r\n        Uni<Void> result = creditCardRepository.addCreditCard(creditCardDto);\r\n        return result;\r\n    }\r\n\r\n}\n\n### Expected behavior\n\nThe expectation would be it  to safely keep working after getting data from topic by using @WithTransaction on repository layer \r\n\r\n    @WithTransaction\r\n    public Uni<Void> addCreditCard(final CreditCardDto creditCardDto) {\r\n\r\n        var creditCardEntity = new CreditCardEntity();\r\n        creditCardEntity.availableCredit = creditCardDto.getAvailableCredit();\r\n        creditCardEntity.cardNumber = creditCardDto.getCardNumber();\r\n        creditCardEntity.ownerName = creditCardDto.getOwnerName();\r\n        creditCardEntity.expirationMonth = creditCardDto.getExpirationMonth();\r\n        creditCardEntity.expirationYear = creditCardDto.getExpirationYear();\r\n        creditCardEntity.securityCode = creditCardDto.getSecurityCode();\r\n\r\n        return creditCardEntity\r\n                .persistAndFlush()\r\n                .replaceWith(Uni\r\n                        .createFrom()\r\n                        .voidItem())\r\n                .onFailure()\r\n                .transform(t -> new IllegalStateException(\"Error\"));\r\n\r\n\r\n    }\n\n### Actual behavior\n\nit throws some an exception at the level of calling database operation\r\n\r\n Suppressed: java.lang.IllegalStateException: Hibernate Reactive Panache requires a safe (isolated) Vert.x sub-context, but the current context hasn't been flagged as such.\r\n                at io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.checkIsSafe(VertxContextSafetyToggle.java:89)\r\n                at io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.validateContextIfExists(VertxContextSafetyToggle.java:72)\r\n                at io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations.vertxContext(SessionOperations.java:183)\r\n                at io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations.withSession(SessionOperations.java:112)\r\n                at io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations.withTransaction(SessionOperations.java:86)\r\n                at io.quarkus.hibernate.reactive.panache.common.runtime.WithTransactionInterceptor.intercept(WithTransactionInterceptor.java:20)\r\n                at io.quarkus.hibernate.reactive.panache.common.runtime.WithTransactionInterceptor_Bean.intercept(Unknown Source)\r\n                at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n                at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n                at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n                at com.postnord.kafkaManager.EventConsumer_Subclass.consumeEvent(Unknown Source)\r\n                at com.postnord.kafkaManager.EventConsumer_ClientProxy.consumeEvent(Unknown Source)\r\n                at com.postnord.kafkaManager.EventConsumer_SmallRyeMessagingInvoker_consumeEvent_97dd6007b4cbfe809de9511b738c6531d7aa7015.invoke(Unknown Source)\r\n                at io.smallrye.reactive.messaging.providers.AbstractMediator.invoke(AbstractMediator.java:104)\r\n                at io.smallrye.reactive.messaging.providers.AbstractMediator.lambda$invokeOnMessageContext$1(AbstractMediator.java:112)\r\n                at io.smallrye.reactive.messaging.providers.locals.LocalContextMetadata.lambda$invokeOnMessageContext$0(LocalContextMetadata.java:34)\r\n                at io.smallrye.reactive.messaging.providers.locals.LocalContextMetadata.lambda$invokeOnMessageContext$1(LocalContextMetadata.java:53)\r\n                at io.smallrye.reactive.messaging.providers.helpers.VertxContext.lambda$runOnContext$0(VertxContext.java:26)\r\n                at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n                at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n                at io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n                at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n                at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n                at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n                at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:566)\r\n                at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n                at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n                at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n                at java.base/java.lang.Thread.run(Thread.java:833)\n\n### How to Reproduce?\n\nAs reproducer, I can refer you to the genuine gitlab repo of that project as below :\r\n\r\nhttps://gitlab.com/hamedhatami/quarkus-demo\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34291/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34291/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

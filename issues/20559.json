@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20559",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20559/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20559/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20559/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20559",
+  "id": 1018140684,
+  "node_id": "I_kwDOCFbutM48r5gM",
+  "number": 20559,
+  "title": "ClassNotFound - SignerOverrideInterceptor",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2550509852,
+      "node_id": "MDU6TGFiZWwyNTUwNTA5ODUy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-services",
+      "name": "area/amazon-services",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2021-10-06T11:49:33Z",
+  "updated_at": "2022-01-05T14:20:20Z",
+  "closed_at": "2022-01-05T14:20:20Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI´m having problems using aws-sdk-v2 for S3 client in my lambda project.\r\nI keep getting warnings during native builds and when I execute my lambda, an error happens.\r\nThe SDKs are included in a JAR dependency (not quarkus) and this JAR is included in my project (quarkus) using maven repo.\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\nDuring the native build, I get this warning:\r\n`WARNING: Could not resolve software.amazon.awssdk.services.s3.internal.handlers.SignerOverrideInterceptor for reflection configuration. Reason: java.lang.ClassNotFoundException: software.amazon.awssdk.services.s3.internal.handlers.SignerOverrideInterceptor.`\r\nAnd when I execute my lambda, I get this error:\r\n`2021-10-05 19:29:33,169 ERROR [io.qua.ama.lam.run.AbstractLambdaPollLoop] (Lambda Thread) Failed to run lambda: software.amazon.awssdk.core.exception.SdkClientException: Unable to instantiate executor interceptor for client.`\r\n...\r\n`Caused by: java.lang.ClassNotFoundException: software.amazon.awssdk.services.s3.internal.handlers.SignerOverrideInterceptor`\r\n\r\n### How to Reproduce?\r\n\r\nIn my pom.xml from my JAR dependency:\r\n`\r\n<dependencyManagement>\r\n\t<dependencies>\r\n\t\t<dependency>\r\n\t\t\t<groupId>com.amazonaws</groupId>\r\n\t\t\t<artifactId>aws-java-sdk-bom</artifactId>\r\n\t\t\t<version>${aws.sdk.version}</version>\r\n\t\t\t<type>pom</type>\r\n\t\t\t<scope>import</scope>\r\n\t\t</dependency>\r\n\t\t<dependency>\r\n\t\t\t<groupId>software.amazon.awssdk</groupId>\r\n\t\t\t<artifactId>bom</artifactId>\r\n\t\t\t<version>${aws.sdk2.version}</version>\r\n\t\t\t<type>pom</type>\r\n\t\t\t<scope>import</scope>\r\n\t\t</dependency>\r\n\t</dependencies>\r\n</dependencyManagement>\r\n<dependency>\r\n\t<groupId>software.amazon.awssdk</groupId>\r\n\t<artifactId>apache-client</artifactId>\r\n\t<exclusions>\r\n\t\t<exclusion>\r\n\t\t\t<groupId>commons-logging</groupId>\r\n\t\t\t<artifactId>commons-logging</artifactId>\r\n\t\t</exclusion>\r\n\t</exclusions>\r\n</dependency>\r\n<dependency>\r\n\t<groupId>software.amazon.awssdk</groupId>\r\n\t<artifactId>s3</artifactId>\r\n\t<exclusions>\r\n\t\t<exclusion>\r\n\t\t\t<groupId>software.amazon.awssdk</groupId>\r\n\t\t\t<artifactId>netty-nio-client</artifactId>\r\n\t\t</exclusion>\r\n\t\t<exclusion>\r\n\t\t\t<groupId>commons-logging</groupId>\r\n\t\t\t<artifactId>commons-logging</artifactId>\r\n\t\t</exclusion>\r\n\t</exclusions>\r\n</dependency>\r\n<dependency>\r\n\t<groupId>software.amazon.awssdk</groupId>\r\n\t<artifactId>url-connection-client</artifactId>\r\n</dependency>\r\n<dependency>\r\n\t<groupId>software.amazon.awssdk</groupId>\r\n\t<artifactId>apache-client</artifactId>\r\n</dependency>\r\n`\r\nIn my java class, I try to use S3 like this:\r\n`\r\n\t\tthis.s3Client = S3Client.builder().region(Region.US_EAST_1)\r\n\t\t\t\t.httpClient(UrlConnectionHttpClient.builder().build()).build();\r\n`\r\nAnd in my main project, in pom.xml, I have only this:\r\n`\r\n    <dependencyManagement>\r\n        <dependencies>\r\n            <dependency>\r\n                <groupId>io.quarkus</groupId>\r\n                <artifactId>quarkus-bom</artifactId>\r\n                <version>${quarkus.version}</version>\r\n                <type>pom</type>\r\n                <scope>import</scope>\r\n            </dependency>\r\n        </dependencies>\r\n    </dependencyManagement>\r\n`\r\nand the reference to my JAR project\r\n`\r\n\t\t<dependency>\r\n\t\t\t<groupId>MY_GROUP</groupId>\r\n\t\t\t<artifactId>MY_ARTIFACT</artifactId>\r\n\t\t\t<version>MY_VERSION</version>\r\n\t\t</dependency>\r\n`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njdk 11\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nGraalVM 21.2.0\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn 3.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20559/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20559/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34382",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34382/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34382/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34382/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34382",
+  "id": 1778960808,
+  "node_id": "I_kwDOCFbutM5qCMmo",
+  "number": 34382,
+  "title": "EXCEPTION_ACCESS_VIOLATION error occurs when running 'quarkus dev' on Windows",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-06-28T13:34:55Z",
+  "updated_at": "2023-10-18T09:50:27Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen starting Quarkus with the command \r\n\r\n`quarkus dev `\r\n\r\nin a Windows 10/11 command line interface (CMD or PowerShell), an error occurs related to Jansi library. The error specifically mentions an EXCEPTION_ACCESS_VIOLATION in the Java Runtime Environment (JRE). This issue does not occur when running under Linux, when using the Git-Bash or when starting Quarkus via Gradle (`./gradlew quarkusDev`).\r\n\r\n### Expected behavior\r\n\r\nNo JVM crash.\r\n\r\n### Actual behavior\r\n\r\nAfter successfully building the application, the VM crashes when starting the Quarkus shell, resulting in an EXCEPTION_ACCESS_VIOLATION error. The attached core dump file shows that the error originates from the Jansi library and occurs during a native call.\r\n\r\n- \r\n- A fatal error has been detected by the Java Runtime Environment:\r\n-\r\n-  EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x00007ffc325df8df, pid=2300, tid=10592\r\n-\r\n- JRE version: OpenJDK Runtime Environment (19.0.2+7) (build 19.0.2+7-44)\r\n- Java VM: OpenJDK 64-Bit Server VM (19.0.2+7-44, mixed mode, emulated-client, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, windows-amd64)\r\n- Problematic frame:\r\n- V  [jvm.dll+0x43f8df]\r\n-\r\n\r\n[hs_err_pid2300.log](https://github.com/quarkusio/quarkus/files/11895054/hs_err_pid2300.log)\r\n\r\nfrom above:\r\n\r\n```\r\n\r\n---------------  T H R E A D  ---------------\r\n\r\nCurrent thread (0x000001ba71894ab0):  JavaThread \"build-62\" [_thread_in_vm, id=10592, stack(0x000000518a500000,0x000000518a600000)]\r\n\r\nStack: [0x000000518a500000,0x000000518a600000],  sp=0x000000518a5fd890,  free space=1014k\r\nNative frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)\r\nV  [jvm.dll+0x43f8df]\r\nC  [jansi.dll+0x104e]\r\n\r\nJava frames: (J=compiled Java code, j=interpreted, Vv=VM code)\r\nj  org.fusesource.jansi.internal.CLibrary.init()V+0\r\nj  org.fusesource.jansi.internal.CLibrary.<clinit>()V+12\r\nv  ~StubRoutines::call_stub 0x000001ba5d13100e\r\nj  org.fusesource.jansi.AnsiConsole.ansiStream(Z)Lorg/fusesource/jansi/AnsiPrintStream;+62\r\nj  org.fusesource.jansi.AnsiConsole.initStreams()V+7\r\nj  org.fusesource.jansi.AnsiConsole.out()Lorg/fusesource/jansi/AnsiPrintStream;+0\r\nj  org.aesh.readline.terminal.impl.WinSysTerminal.<init>(Ljava/lang/String;ZLorg/aesh/terminal/Terminal$SignalHandler;)V+4\r\nj  org.aesh.readline.terminal.impl.WinSysTerminal.<init>(Ljava/lang/String;Z)V+6\r\nj  org.aesh.readline.terminal.TerminalBuilder.createWindowsTerminal(Ljava/lang/String;)Lorg/aesh/terminal/Terminal;+15\r\nj  org.aesh.readline.terminal.TerminalBuilder.build()Lorg/aesh/terminal/Terminal;+125\r\nj  org.aesh.readline.tty.terminal.TerminalConnection.<init>(Ljava/nio/charset/Charset;Ljava/nio/charset/Charset;Ljava/io/InputStream;Ljava/io/OutputStream;Ljava/util/function/Consumer;)V+85\r\nj  org.aesh.readline.tty.terminal.TerminalConnection.<init>(Ljava/util/function/Consumer;)V+14\r\nj  io.quarkus.deployment.console.ConsoleHelper.installConsole(Lio/quarkus/deployment/dev/testing/TestConfig;Lio/quarkus/deployment/console/ConsoleConfig;Lio/quarkus/runtime/console/ConsoleRuntimeConfig;Lio/quarkus/runtime/logging/ConsoleConfig;Z)V+95\r\nj  io.quarkus.deployment.console.ConsoleProcessor.setupConsole(Lio/quarkus/deployment/dev/testing/TestConfig;Lio/quarkus/deployment/annotations/BuildProducer;Lio/quarkus/deployment/builditem/LaunchModeBuildItem;Lio/quarkus/deployment/console/ConsoleConfig;)Lio/quarkus/deployment/console/ConsoleInstalledBuildItem;+101\r\nj  java.lang.invoke.LambdaForm$DMH+0x0000000801219800.invokeVirtual(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;+18 java.base@19.0.2\r\nj  java.lang.invoke.LambdaForm$MH+0x0000000801221000.invoke(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;+143 java.base@19.0.2\r\nJ 920 c1 java.lang.invoke.Invokers$Holder.invokeExact_MT(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; java.base@19.0.2 (24 bytes) @ 0x000001ba5d4d263c [0x000001ba5d4d2560+0x00000000000000dc]\r\nJ 818 c1 java.lang.reflect.Method.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object; java.base@19.0.2 (108 bytes) @ 0x000001ba5d4a99ac [0x000001ba5d4a91a0+0x000000000000080c]\r\nj  io.quarkus.deployment.ExtensionLoader$3.execute(Lio/quarkus/builder/BuildContext;)V+265\r\nj  io.quarkus.builder.BuildContext.run()V+70\r\nj  io.quarkus.builder.BuildContext$$Lambda$255+0x00000008011ce898.run()V+4\r\nj  org.jboss.threads.ContextHandler$1.runWith(Ljava/lang/Runnable;Ljava/lang/Object;)V+1\r\nj  org.jboss.threads.EnhancedQueueExecutor$Task.run()V+67\r\nj  org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run()V+33\r\nj  java.lang.Thread.run()V+13 java.base@19.0.2\r\nj  org.jboss.threads.JBossThread.run()V+12\r\nv  ~StubRoutines::call_stub 0x000001ba5d13100e\r\n\r\nsiginfo: EXCEPTION_ACCESS_VIOLATION (0xc0000005), reading address 0x0000000000000000\r\n```\r\n\r\n\r\n### How to Reproduce?\r\n\r\nSteps to reproduce:\r\n\r\n`quarkus create app org.foo:reproduce-me --gradle`\r\n`cd reproduce-me`\r\n`quarkus dev`\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.22000.2057]\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"19.0.2\" 2023-01-17 OpenJDK Runtime Environment (build 19.0.2+7-44) OpenJDK 64-Bit Server VM (build 19.0.2+7-44, mixed mode, sharing)  But happens also with 17.0.2 and others.\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.1.1\r\n\r\nBuild time:   2023-04-21 12:31:26 UTC\r\nRevision:     1cf537a851c635c364a4214885f8b9798051175b\r\n\r\nKotlin:       1.8.10\r\nGroovy:       3.0.15\r\nAnt:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021\r\nJVM:          19.0.2 (Oracle Corporation 19.0.2+7-44)\r\nOS:           Windows 11 10.0 amd64\r\n\r\n### Additional information\r\n\r\nIt seems to be related to the Windows CMD/Powershell environment in conjunction with Jansi 2.4.0. Initially, there was a suspicion that it could be an access rights issue on Windows, so all access protection was temporarily disabled for testing purposes. However, this did not resolve the problem. If the issue is indeed with Jansi itself, it may be necessary to report the bug to the Jansi project for further investigation and resolution.\r\n\r\n**What I find particularly peculiar is that the error does not occur when using Gradle directly via gradlew quarkusDev. In the end, aren't they both supposed to be using the same JVM and doing the same thing? Or am I mistaken in my understanding?**",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34382/reactions",
+    "total_count": 2,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34382/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

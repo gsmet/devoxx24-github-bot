@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41250",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41250/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41250/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41250/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41250",
+  "id": 2357077000,
+  "node_id": "I_kwDOCFbutM6MfiQI",
+  "number": 41250,
+  "title": "Dockerfile*.native could attempt to COPY *.so files by default",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-06-17T11:13:36Z",
+  "updated_at": "2024-06-17T12:01:11Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nThere has been this thing with *AWT* extension (that enables numerous document processing extensions such as Tika, POI, or general PDF or image processing integrations) where you had to copy not only the runner **executable**, but also all the **.so files libraries** the build generated, i.e. there are more artifacts then the single native executable.\r\n\r\nIt sounds trivial, but as usual, the topic has wide spread tentacles. See these cases:\r\n1. :heavy_check_mark: *.so files must be copied over to ./target dir #32432\r\n1. :heavy_check_mark: *.so files must be packaged to function.zip for AWS Lambda #35718\r\n1. :hourglass_flowing_sand: *.so files must be copied over from a remote container build #41201\r\n1. :hourglass: *.so files must be copied over to the runtime image\r\n\r\nAs noted in an [old discussion on the topic](https://github.com/quarkusio/quarkus/pull/32576#issuecomment-1506982287), trying to `COPY` an empty set of artifacts results in a container build error, both with Podman and Docker.\r\n\r\nA way around this I have been using in [awt-graphics-rest-quickstart](https://github.com/quarkusio/quarkus-quickstarts/tree/main/awt-graphics-rest-quickstart) is:\r\n\r\n*  edit `.dockerignore` to add:\r\n```\r\n!target/*.so\r\n!target/*.properties\r\n```\r\n* edit `Dockerfile.native` to add a line that copies `*.so` files and `*.properties`:\r\n```\r\n# Shared objects to be dynamically loaded at runtime as needed,\r\nCOPY --chown=1001:root target/*.properties target/*.so /work/\r\n```\r\nThat way, **some** file is always copied over, admittedly superfluously, and it is `quarkus-artifact.properties`. If the build produced `*.so` files, those are coped over too. Note that creating a **micro** image is [slightly more demanding](https://github.com/quarkusio/quarkus-quickstarts/blob/main/awt-graphics-rest-quickstart/src/main/docker/Dockerfile.native-micro).\r\n\r\n## Tackling case 4.: runtime image\r\n\r\n@gsmet [suggested](https://github.com/quarkusio/quarkus/pull/41201#issuecomment-2168446766) that our default template in [Dockerfile.tpl.qute.native](https://github.com/quarkusio/quarkus/blob/main/independent-projects/tools/base-codestarts/src/main/resources/codestarts/quarkus/tooling/dockerfiles/base/src/main/docker/Dockerfile.tpl.qute.native#L22) could be adjusted to deal with copying `*.so` files.\r\n\r\n## Question\r\n\r\nI poked around it and it is not entirely clear to me how to test it, where it is actually used.\r\nMy usual workflow I know is `quarkus-container-image-docker` and adding `-Dquarkus.native.container-build=true`,  `-Dquarkus.container-image.build=true`, but that requires user to already have `src/main/docker/Dockerfile.native` in the project, so no devtools/codestarts templace comes to play.\r\n\r\nDoes JIB use the template? Buildpack?\n\n### Implementation ideas\n\nEdit template in [Dockerfile.tpl.qute.native](https://github.com/quarkusio/quarkus/blob/main/independent-projects/tools/base-codestarts/src/main/resources/codestarts/quarkus/tooling/dockerfiles/base/src/main/docker/Dockerfile.tpl.qute.native#L22), according to what is described above.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41250/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41250/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34839",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34839/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34839/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34839/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34839",
+  "id": 1811215946,
+  "node_id": "I_kwDOCFbutM5r9PZK",
+  "number": 34839,
+  "title": "ContainerResponseContext has null default MediaType when using RESTEasy reactive",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1953921208,
+      "node_id": "MDU6TGFiZWwxOTUzOTIxMjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/consider-closing",
+      "name": "triage/consider-closing",
+      "color": "f99f63",
+      "default": false,
+      "description": "Bugs that are considered to be closed because too old. Using the label to do a mark and sweep proces"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2023-07-19T06:02:27Z",
+  "updated_at": "2024-05-23T14:23:32Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello,\r\n\r\nI noticed a difference between RESTEasy reactive and RESTEasy classic when using ContainerResponseFilter.\r\nA simple endpoint returning a `Response` and that does explicitly its type will result a in a `null` `MediaType` in the `ContainerResponseContext` of a `ContainerResponseFilter`.\r\n\r\nNotes:\r\n* The same code has a `MediaType` set correctly to the default application/json when using RESTEasy classic\r\n* The same filter works correctly is the type is set explicitly, hence I think the issue is only with the default MediaType\r\n* The contentType is nonetheless correct in the HTTP Response header\r\n\r\nConsidering a simple endpoint:\r\n```java\r\n    @GET\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public Response hello() {\r\n        Greeting greeting = new Greeting();\r\n        greeting.message = \"Hello RESTEasy\";\r\n        return Response.ok(greeting).build();\r\n    }\r\n````\r\n\r\nThe following filter will throw its exception in reactive mode, but not in classic.\r\n```java\r\n@Priority(5000)\r\n@Provider\r\npublic class MediaTypeResponseFilter implements ContainerResponseFilter {\r\n\r\n    @Override\r\n    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {\r\n        if (responseContext.getMediaType() == null) {\r\n            throw new IOException(\"Oh! MediaType is null\");\r\n        }\r\n    }\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\nIt would help is the MediaType was available to the ContainerResponseFilter.\r\n\r\n### Actual behavior\r\n\r\nUnfortunately, the MediaType is null.\r\n\r\nA workaround is to force on the response:\r\n```\r\nreturn Response.ok(greeting).type(MediaType.APPLICATION_JSON_TYPE).build();\r\n```\r\n\r\nIt is however a bit tedious to add to all the Response, and defeats the purpose of a default MediaType.\r\n\r\n### How to Reproduce?\r\n\r\nThe following project is a reproducer https://github.com/gnieser/quarkus-mediatype\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows 10\r\n\r\n### Output of `java -version`\r\n\r\nmandrel-java17-22.3.1.0-Final\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.8.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nOpenJDK Runtime Environment Temurin-17.0.6+10\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34839/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34839/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

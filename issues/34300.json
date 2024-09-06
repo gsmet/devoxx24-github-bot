@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34300",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34300/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34300/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34300/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34300",
+  "id": 1774104942,
+  "node_id": "I_kwDOCFbutM5pvrFu",
+  "number": 34300,
+  "title": "Seamlessly Integrate Quarkus/smallrye-jwt with AWS Application Load Balancer (ALB)",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2550509852,
+      "node_id": "MDU6TGFiZWwyNTUwNTA5ODUy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-services",
+      "name": "area/amazon-services",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2023-06-26T07:19:32Z",
+  "updated_at": "2023-07-07T09:12:58Z",
+  "closed_at": "2023-07-07T09:12:58Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nThe AWS Application Load Balancer (ALB) can authenticate users through an identity provider (IdP) that is OpenID Connect (OIDC) compliant (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html).\r\n \r\nHowever, the  AWS Application Load Balancer (ALB) creates invalid JWTs and requires dynamic public key lookups from the kid header. See documentation: (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html#user-claims-encoding):\r\n\r\n\"...\r\nConsiderations\r\nStandard libraries are not compatible with the padding that is included in the Application Load Balancer authentication token in JWT format.\r\n...\"\r\n\r\nToken example:\r\n\r\n```\r\neyJ0eXAiOiJKV1QiLCJraWQiOiJjMmY4MGM4Yi1jMDVjLTQwNjgtYWYxNC0xNzI5OWY3ODk2YjEiLCJhbGciOiJFUzI1NiIsImlzcyI6Imh0dHBzOi8vY29nbml0by1pZHAuZXUtY2VudHJhbC0xLmFtYXpvbmF3cy5jb20vZXUtY2VudHJhbC0xX015UnJPQ0hRdyIsImNsaWVudCI6IjRmbXZodDIydGpyZ2Q3ZDNrM3RnaHR0Y3Q3Iiwic2lnbmVyIjoiYXJuOmF3czplbGFzdGljbG9hZGJhbGFuY2luZzpldS1jZW50cmFsLTE6MTk3MjgwOTU4MjI1OmxvYWRiYWxhbmNlci9hcHAvZWNzLXdpdGgtY29nbml0by1sYi82Mjg0YmU2NWI4MjdjNTk4IiwiZXhwIjoxNjg3NzQ4MDQ1fQ==.eyJzdWIiOiIyM2Q0OThiMi0zMDMxLTcwZDItOGExNS00OWRkODg2YTA4N2IiLCJlbWFpbF92ZXJpZmllZCI6InRydWUiLCJlbWFpbCI6ImR1a2VAc3VuLmNvbSIsInVzZXJuYW1lIjoiZHVrZSIsImV4cCI6MTY4Nzc0ODA0NSwiaXNzIjoiaHR0cHM6Ly9jb2duaXRvLWlkcC5ldS1jZW50cmFsLTEuYW1hem9uYXdzLmNvbS9ldS1jZW50cmFsLTFfTXlSck9DSFF3In0=.Jd7RXHsOj8vw2b4irZCxxWO-0UQBZ2X1bRNsKZ9D02JWJaNOvOnrV8T-qrcmWNpl7MjNhsGSm1C4e2rAjaF0jg==\r\n```\r\n\r\nProblem:\r\n\r\nEach section ends with an unnecessary padding character, which yields the JWT invalid.\r\n\r\nWarnings from jwt.io:\r\n\r\nYour JWT signature is not encoded correctly using base64url (https://tools.ietf.org/html/rfc4648#section-5). Note that padding (\"=\") must be omitted as per https://tools.ietf.org/html/rfc7515#section-2\r\n\r\nYour JWT header is not encoded correctly using base64url (https://tools.ietf.org/html/rfc4648#section-5). Note that padding (\"=\") must be omitted as per https://tools.ietf.org/html/rfc7515#section-2\r\n\r\nYour JWT payload is not encoded correctly using base64url (https://tools.ietf.org/html/rfc4648#section-5). Note that padding (\"=\") must be omitted as per https://tools.ietf.org/html/rfc7515#section-2\r\n\n\n### Implementation ideas\n\nTo make smallrye-jwt work with alb, the following issues have to be resolved:\r\n\r\n1. (minor) The public key has to be looked up dynamically and fetched from the ALB. Quarkus configuration is static and set at build time.\r\nmp.jwt.verify.publickey.location=https://public-keys.auth.elb.eu-central-1.amazonaws.com/[fetch from kid header]\r\nThe \"kid\" resides in the first JWT section (header):\r\n{ \"typ\": \"JWT\", \"kid\": \"XXXX-a34d-4255-a779-YYYYYYY\", ... }\r\nThe key does not change frequently and can be \"hardcoded\" for evaluation purposes.\r\n\r\n2. (primary) The format of the JWT token issued by the ALB is invalid:\r\nfrom AWS / ALB documentation: The JWT Signature and the JWT Header contain a padding character \"=\" which is not allowed by the spec.\r\nPossible solution:\r\n1. Parse JWT header\r\n2. Obtain the kid value\r\n3. Use the value to fetch (and cache) the public key with Java HTTP client: GET https://public-keys.auth.elb.eu-central-1.amazonaws.com/[kid value]\r\n4. Verify the signature with Java built-in functionality\r\n5. Remove the padding (\"=\") characters\r\n6. Use e.g. Smallrye JWT to parse the token and use the principal/claims.\r\n\r\nThe extension of the MP / Smallrye JWT (Quarkus) mechanism (quarkus-smallrye-jwt extension) itself would seamlessly integrate ECS (Fargate), EKS, AWS Lambda applications running on quarkus with ALB OIDC functionality. This direct integration increases security, developer experience, and maintainability.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34300/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34300/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

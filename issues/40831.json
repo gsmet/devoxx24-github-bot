@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40831",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40831/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40831/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40831/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40831",
+  "id": 2315268789,
+  "node_id": "I_kwDOCFbutM6KADK1",
+  "number": 40831,
+  "title": "RestEasy reactive: Cannot use method with same name but different parameters",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-05-24T12:17:30Z",
+  "updated_at": "2024-05-28T07:38:46Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nDownloading a Quarkus project with \"Start Coding\" with only RESTEasy Reactive (3.2.12.FINAL), I modify the GreetingResource to have two @GET endpoints. I try to execute the first one.\n\n### Expected behavior\n\nGET endpoint working as expected.\n\n### Actual behavior\n\nGetting the following error:\r\n\r\n```java\r\n2024-05-24 13:55:20,630 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-1) HTTP Request to /hello/z failed, error id: 510e7f82-47e1-425a-b730-1cda0e5eade2-1: java.lang.ClassCastException: class java.lang.String cannot be cast to class java.util.List (java.lang.String and java.util.List are in module java.base of loader 'bootstrap')\r\n\tat org.acme.GreetingResource$quarkusrestinvoker$hello_b14314082eb006718a61dd4be4a41cda1d994f26.invoke(Unknown Source)\r\n\tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:141)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n```\n\n### How to Reproduce?\n\nGet the quarkus project from Quarkus website --> \"Start Coding\". Select Quarkus 3.2 to get the 3.2.12.FINAL version.\r\n\r\nModify the GreetingResource.java file with the following content:\r\n\r\n```java\r\npackage org.acme;\r\n\r\nimport jakarta.enterprise.context.ApplicationScoped;\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\nimport jakarta.ws.rs.PathParam;\r\nimport jakarta.ws.rs.Produces;\r\nimport jakarta.ws.rs.core.MediaType;\r\n\r\nimport java.util.List;\r\n\r\n@Path(\"/hello\")\r\n@ApplicationScoped\r\npublic class GreetingResource {\r\n\r\n    @GET\r\n    @Path(\"/{variable}\")\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello(@PathParam(\"variable\") String variable) {\r\n        return \"Hello from RESTEasy Reactive\";\r\n    }\r\n\r\n    @GET\r\n    @Path(\"/{variable}/abc\")\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello(@PathParam(\"variable\") List<String> variable) {\r\n        return \"Hello from RESTEasy Reactive\";\r\n    }\r\n}\r\n```\r\n\r\n(I have also deleted the class test)\r\n\r\nAdd the following dependancy in pom.xml:\r\n```\r\n<dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-openapi</artifactId>\r\n        </dependency>\r\n```\r\n\r\nUsing swagger, I execute the first endpoint with any value for the path param \"variable\".\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.9\"\n\n### Quarkus version or git rev\n\n3.2.12.FINAL\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.9.2\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40831/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40831/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

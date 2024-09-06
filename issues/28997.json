@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28997",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28997/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28997/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28997/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28997",
+  "id": 1432659914,
+  "node_id": "I_kwDOCFbutM5VZKfK",
+  "number": 28997,
+  "title": "6 failed tests in `h2spec` (conformance testing tool for HTTP/2) run",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2022-11-02T07:48:44Z",
+  "updated_at": "2023-07-21T11:26:22Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n6 failed tests in `h2spec` (conformance testing tool for HTTP/2) run\r\n\r\n```\r\nFailures:\r\n\r\nHypertext Transfer Protocol Version 2 (HTTP/2)\r\n  3. Starting HTTP/2\r\n    3.5. HTTP/2 Connection Preface\r\n      using source address 127.0.0.1:56873\r\n      × 2: Sends invalid connection preface\r\n        -> The endpoint MUST terminate the TCP connection.\r\n           Expected: GOAWAY Frame (Error Code: PROTOCOL_ERROR)\r\n                     Connection closed\r\n             Actual: Error: unexpected EOF\r\n\r\n  5. Streams and Multiplexing\r\n    5.1. Stream States\r\n      using source address 127.0.0.1:56888\r\n      × 6: half closed (remote): Sends a HEADERS frame\r\n        -> The endpoint MUST respond with a stream error of type STREAM_CLOSED.\r\n           Expected: GOAWAY Frame (Error Code: STREAM_CLOSED)\r\n                     RST_STREAM Frame (Error Code: STREAM_CLOSED)\r\n                     Connection closed\r\n             Actual: Timeout\r\n      using source address 127.0.0.1:56894\r\n      × 12: closed: Sends a HEADERS frame\r\n        -> The endpoint MUST treat this as a connection error of type STREAM_CLOSED.\r\n           Expected: GOAWAY Frame (Error Code: STREAM_CLOSED)\r\n                     Connection closed\r\n             Actual: RST_STREAM Frame (length:4, flags:0x00, stream_id:1)\r\n\r\n      5.1.1. Stream Identifiers\r\n        using source address 127.0.0.1:56897\r\n        × 2: Sends stream identifier that is numerically smaller than previous\r\n          -> The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.\r\n             Expected: GOAWAY Frame (Error Code: PROTOCOL_ERROR)\r\n                       Connection closed\r\n               Actual: DATA Frame (length:0, flags:0x01, stream_id:5)\r\n\r\n  8. HTTP Message Exchanges\r\n    8.1. HTTP Request/Response Exchange\r\n      8.1.2. HTTP Header Fields\r\n        8.1.2.3. Request Pseudo-Header Fields\r\n          using source address 127.0.0.1:56961\r\n          × 1: Sends a HEADERS frame with empty \":path\" pseudo-header field\r\n            -> The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.\r\n               Expected: GOAWAY Frame (Error Code: PROTOCOL_ERROR)\r\n                         RST_STREAM Frame (Error Code: PROTOCOL_ERROR)\r\n                         Connection closed\r\n                 Actual: HEADERS Frame (length:9, flags:0x25, stream_id:1)\r\n\r\nHPACK: Header Compression for HTTP/2\r\n  4. Dynamic Table Management\r\n    4.2. Maximum Table Size\r\n      using source address 127.0.0.1:56973\r\n      × 1: Sends a dynamic table size update at the end of header block\r\n        -> The endpoint MUST treat this as a decoding error.\r\n           Expected: GOAWAY Frame (Error Code: COMPRESSION_ERROR)\r\n                     Connection closed\r\n             Actual: DATA Frame (length:0, flags:0x01, stream_id:1)\r\n\r\nFinished in 10.6355 seconds\r\n146 tests, 140 passed, 0 skipped, 6 failed\r\n```\r\n\r\nTried to run it against WildFly and they have just 2 failed tests.\n\n### Expected behavior\n\nTo be on par with WildFly, ideally all tests pass\n\n### Actual behavior\n\n146 tests, 140 passed, 0 skipped, 6 failed\n\n### How to Reproduce?\n\n - get h2spec\r\n   - build it - https://github.com/summerwind/h2spec#build\r\n   - use released bits - https://github.com/summerwind/h2spec/releases\r\n - get Quarkus app from https://code.quarkus.io/ (with resteasy reactive as default)\r\n - run Quarkus app (`mvn quarkus:dev`)\r\n - run h2spec - `./h2spec --host 127.0.0.1 --port 8080`\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nJava 17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.13.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28997/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28997/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

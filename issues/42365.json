@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42365",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42365/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42365/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42365/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42365",
+  "id": 2453590448,
+  "node_id": "I_kwDOCFbutM6SPtGw",
+  "number": 42365,
+  "title": "QuarkusTest reloading CDI for each test class with v3.13 (related to @WithTestResource)",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-08-07T14:10:26Z",
+  "updated_at": "2024-08-08T06:33:01Z",
+  "closed_at": "2024-08-08T06:32:32Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nNew annotation `@WithTestResource` from v3.13.0 restricts the resource to the annotated class by default, so I would expect it to be executed once per test class. But I noticed that using it in this way also makes the CDI to be reloaded, as my `@Startup` method is being called more than once when running the whole test set, so the execution time increase becomes remarkable if tasks are heavy.\r\nWhen setting `restrictToAnnotatedClass` to _false_, it seems to fall back to the previous behavior, sharing both the resource and the context across the test classes (as with `@QuarkusTestResource` in v3.12.3).\r\n\r\nIs this expected? I currently need to use dependency injection to configure an instance and execute some code just once when running all tests. I'm not using test resources for that since I can't inject a bean into these. \n\n### Expected behavior\n\nI'd expect the `QuarkusTestResourceLifecycleManager` implementations to be isolated for each test class with the new `@WithTestResource` annotation default behavior, while my `@ApplicationScoped` class being created just once.\n\n### Actual behavior\n\nBoth `QuarkusTestResourceLifecycleManager` implementations and `@ApplicationScoped` classes are being created for each test class when using `@WithTestResource(restrictedToAnnotatedClass = true)`.\n\n### How to Reproduce?\n\nI uploaded [this little project](https://github.com/PedroRodP/quarkus-test-behavior-3.13) so you can check it. You can test the behavior by playing with the `restrictToAnnotatedClass` flag and checking the logs my test resource and my application scoped class are printing.\n\n### Output of `uname -a` or `ver`\n\nDarwin Pedros-MacBook-Pro.local 23.3.0 Darwin Kernel Version 23.3.0: Wed Dec 20 21:30:59 PST 2023; root:xnu-10002.81.5~7/RELEASE_ARM64_T6030 arm64\n\n### Output of `java -version`\n\nopenjdk version \"21.0.2\" 2024-01-16\n\n### Quarkus version or git rev\n\n3.13.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.8\n\n### Additional information\n\n### Time taken when restrictToAnnotatedClass = true\r\n<img width=\"881\" alt=\"image\" src=\"https://github.com/user-attachments/assets/7c3f1d4e-f777-4f59-a6ef-5504e8ba4794\">\r\n<img width=\"999\" alt=\"image\" src=\"https://github.com/user-attachments/assets/9bc3da3b-70e0-40e9-8870-b70b9eb67671\">\r\n\r\nYou can see that my logs are printed twice (once per test class) and Quarkus was reloaded.\r\n\r\n### Time taken when restrictToAnnotatedClass = false\r\n<img width=\"865\" alt=\"image\" src=\"https://github.com/user-attachments/assets/6e1eced3-1369-4c47-8143-2fdb1df4592d\">\r\n<img width=\"539\" alt=\"image\" src=\"https://github.com/user-attachments/assets/88957e2a-476f-43a7-b6cd-31ee1a77f3e8\">\r\n\r\nHere there's no new logs, no reloading. And time has clearly decreased.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42365/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42365/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30616",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30616/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30616/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30616/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30616",
+  "id": 1557063226,
+  "node_id": "I_kwDOCFbutM5czuY6",
+  "number": 30616,
+  "title": "Failed to start quarkus in 2.16.0.Final: `Ambiguous dependencies for type java.util.Optional<io.prometheus.client.exemplars.ExemplarSampler> and qualifiers [@Default]`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 41,
+  "created_at": "2023-01-25T17:58:54Z",
+  "updated_at": "2023-02-09T08:39:00Z",
+  "closed_at": "2023-02-06T15:51:04Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIt  looks like a conflict between:\r\n- `io.smallrye.config.inject.ConfigProducer`\r\n- `io.quarkus.micrometer.runtime.export.OpentelemetryExemplarSamplerProvider`\r\n\r\nDependencies are:\r\n```kt\r\nimplementation(platform(\"$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion\"))\r\nimplementation(\"io.quarkus:quarkus-agroal\")\r\nimplementation(\"io.quarkus:quarkus-arc\")\r\nimplementation(\"io.quarkus:quarkus-cache\")\r\nimplementation(\"io.quarkus:quarkus-kotlin\")\r\nimplementation(\"io.quarkus:quarkus-micrometer-registry-prometheus\")\r\nimplementation(\"io.quarkus:quarkus-resteasy-reactive\")\r\nimplementation(\"io.quarkus:quarkus-resteasy-reactive-jackson\")\r\nimplementation(\"com.fasterxml.jackson.module:jackson-module-kotlin:${GlobalVersions.jackson}\")\r\nimplementation(\"io.quarkus:quarkus-smallrye-fault-tolerance\")\r\nimplementation(\"io.quarkus:quarkus-smallrye-openapi\")\r\nimplementation(\"io.quarkus:quarkus-vertx\")\r\nimplementation(\"io.quarkus:quarkus-reactive-routes\")\r\n\r\nimplementation(\"io.quarkus:quarkus-opentelemetry\")\r\nimplementation(\"io.opentelemetry:opentelemetry-extension-kotlin\")\r\nimplementation(\"io.opentelemetry.instrumentation:opentelemetry-jdbc\")\r\n```\r\n\r\nError is:\r\n```java\r\n2023-01-25 12:56:09,282 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (main) Failed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        [error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: javax.enterprise.inject.spi.DeploymentException: javax.enterprise.inject.AmbiguousResolutionException: Ambiguous dependencies for type java.util.Optional<io.prometheus.client.exemplars.ExemplarSampler> and qualifiers [@Default]\r\n        - java member: io.quarkus.micrometer.runtime.export.PrometheusMeterRegistryProducer#registry():exemplarSampler\r\n        - declared on PRODUCER METHOD bean [types=[io.micrometer.core.instrument.MeterRegistry, java.lang.Object, io.micrometer.prometheus.PrometheusMeterRegistry], qualifiers\r\n=[@Default, @Any], target=io.micrometer.prometheus.PrometheusMeterRegistry registry(io.micrometer.prometheus.PrometheusConfig config, io.prometheus.client.CollectorRegistry co\r\nllectorRegistry, java.util.Optional<io.prometheus.client.exemplars.ExemplarSampler> exemplarSampler, io.micrometer.core.instrument.Clock clock), declaringBean=io.quarkus.micrometer.runtime.export.PrometheusMeterRegistryProducer]\r\n        - available beans:\r\n                - PRODUCER METHOD bean [types=[java.util.Optional<T>, java.lang.Object], qualifiers=[@Default, @Any], target=java.util.Optional<T> produceOptionalConfigProperty(javax.enterprise.inject.spi.InjectionPoint ip), declaringBean=io.smallrye.config.inject.ConfigProducer]\r\n                - PRODUCER METHOD bean [types=[java.lang.Object, java.util.Optional<io.prometheus.client.exemplars.ExemplarSampler>], qualifiers=[@Default, @Any], target=java.util.Optional<io.prometheus.client.exemplars.ExemplarSampler> exemplarSampler(), declaringBean=io.quarkus.micrometer.runtime.export.OpentelemetryExemplarSamplerProvider]      \r\n        at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1223)\r\n        at io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:288)\r\n        at io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:148)\r\n        at io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:526)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n        at io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n        at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n        at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\nCaused by: javax.enterprise.inject.AmbiguousResolutionException: Ambiguous dependencies for type java.util.Optional<io.prometheus.client.exemplars.ExemplarSampler> and qualifiers [@Default]\r\n        - java member: io.quarkus.micrometer.runtime.export.PrometheusMeterRegistryProducer#registry():exemplarSampler\r\n        - declared on PRODUCER METHOD bean [types=[io.micrometer.core.instrument.MeterRegistry, java.lang.Object, io.micrometer.prometheus.PrometheusMeterRegistry], qualifiers\r\n=[@Default, @Any], target=io.micrometer.prometheus.PrometheusMeterRegistry registry(io.micrometer.prometheus.PrometheusConfig config, io.prometheus.client.CollectorRegistry co\r\nllectorRegistry, java.util.Optional<io.prometheus.client.exemplars.ExemplarSampler> exemplarSampler, io.micrometer.core.instrument.Clock clock), declaringBean=io.quarkus.micrometer.runtime.export.PrometheusMeterRegistryProducer]\r\n        - available beans:\r\n                - PRODUCER METHOD bean [types=[java.util.Optional<T>, java.lang.Object], qualifiers=[@Default, @Any], target=java.util.Optional<T> produceOptionalConfigProperty(javax.enterprise.inject.spi.InjectionPoint ip), declaringBean=io.smallrye.config.inject.ConfigProducer]\r\n                - PRODUCER METHOD bean [types=[java.lang.Object, java.util.Optional<io.prometheus.client.exemplars.ExemplarSampler>], qualifiers=[@Default, @Any], target=java.util.Optional<io.prometheus.client.exemplars.ExemplarSampler> exemplarSampler(), declaringBean=io.quarkus.micrometer.runtime.export.OpentelemetryExemplarSamplerProvider]      \r\n        at io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:449)\r\n        at io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:539)\r\n        at io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:276)\r\n        ... 13 more\r\n\r\n        at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:335)\r\n        at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:252)\r\n        at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.firstStart(IsolatedDevModeMain.java:86)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:447)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:59)\r\n        at io.quarkus.bootstrap.app.CuratedApplication.runInCl(CuratedApplication.java:149)\r\n        at io.quarkus.bootstrap.app.CuratedApplication.runInAugmentClassLoader(CuratedApplication.java:104)\r\n        at io.quarkus.deployment.dev.DevModeMain.start(DevModeMain.java:131)\r\n        at io.quarkus.deployment.dev.DevModeMain.main(DevModeMain.java:62)\r\n```\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30616/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30616/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

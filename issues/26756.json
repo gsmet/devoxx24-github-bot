@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26756",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26756/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26756/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26756/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26756",
+  "id": 1305959406,
+  "node_id": "I_kwDOCFbutM5N11vu",
+  "number": 26756,
+  "title": "Injecting io.quarkus.scheduler.Scheduler throws StackoverFlowError",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-07-15T12:08:48Z",
+  "updated_at": "2022-09-12T11:58:47Z",
+  "closed_at": "2022-09-12T11:58:42Z",
+  "active_lock_reason": null,
+  "body": "### Discussed in https://github.com/quarkusio/quarkus/discussions/26746\r\n\r\n<div type='discussions-op-text'>\r\n\r\n<sup>Originally posted by **ramila** July 15, 2022</sup>\r\nHi;\r\n\r\nI'm trying to Inject the built-in Scheduler to pause/resume a scheduled job. I followed the documentation https://quarkus.io/guides/scheduler-reference. \r\n\r\nimport io.quarkus.logging.Log;\r\nimport io.quarkus.scheduler.Scheduled;\r\nimport io.quarkus.scheduler.Scheduler;\r\n\r\nimport javax.inject.Inject;\r\nimport java.sql.SQLException;\r\n\r\nimport static io.quarkus.scheduler.Scheduled.ConcurrentExecution.SKIP;\r\n\r\npublic class ForwarderBean extends TimerBean {\r\n    @Inject\r\n    Scheduler scheduler;\r\n\r\n    @Override\r\n    @Scheduled(\r\n        identity = \"forwarderSchedule\",\r\n        every = \"5s\",\r\n        concurrentExecution = SKIP,\r\n        skipExecutionIf = ForwarderPredicate.class)\r\n    protected void action() throws SQLException {\r\n        Log.infof(\"Fired Forwarder timer\");\r\n    }\r\n}\r\n\r\nwhen the applications starts up i get the following error:\r\n\r\n2022-07-15 10:26:05,567 ERROR [io.qua.run.Application] (Quarkus Main Thread) Failed to start application (with profile dev): java.lang.StackOverflowError\r\n        at java.base/java.security.AccessController.doPrivileged(Native Method)\r\n        at io.smallrye.config.SysPropConfigSource.getValue(SysPropConfigSource.java:53)\r\n        at io.smallrye.config.ConfigValueConfigSourceWrapper.getConfigValue(ConfigValueConfigSourceWrapper.java:20)\r\n        at io.smallrye.config.SmallRyeConfigSources.getValue(SmallRyeConfigSources.java:29)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.SecretKeysConfigSourceInterceptor.getValue(SecretKeysConfigSourceInterceptor.java:22)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.RelocateConfigSourceInterceptor.getValue(RelocateConfigSourceInterceptor.java:25)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.RelocateConfigSourceInterceptor.getValue(RelocateConfigSourceInterceptor.java:25)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.ProfileConfigSourceInterceptor.getProfileValue(ProfileConfigSourceInterceptor.java:62)\r\n        at io.smallrye.config.ProfileConfigSourceInterceptor.getValue(ProfileConfigSourceInterceptor.java:43)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.ExpressionConfigSourceInterceptor.getValue(ExpressionConfigSourceInterceptor.java:46)\r\n        at io.smallrye.config.ExpressionConfigSourceInterceptor.getValue(ExpressionConfigSourceInterceptor.java:38)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.FallbackConfigSourceInterceptor.getValue(FallbackConfigSourceInterceptor.java:24)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.PropertyNamesConfigSourceInterceptor.getValue(PropertyNamesConfigSourceInterceptor.java:17)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.SmallRyeConfig.getConfigValue(SmallRyeConfig.java:307)\r\n        at io.smallrye.config.SmallRyeConfig.getValue(SmallRyeConfig.java:225)\r\n        at io.smallrye.config.SmallRyeConfig.getOptionalValue(SmallRyeConfig.java:324)\r\n        at io.quarkus.scheduler.common.runtime.util.SchedulerUtils$1.accept(SchedulerUtils.java:122)\r\n        at io.quarkus.scheduler.common.runtime.util.SchedulerUtils$1.accept(SchedulerUtils.java:119)\r\n        at io.smallrye.common.expression.ExpressionNode.emit(ExpressionNode.java:22)\r\n        at io.smallrye.common.expression.Expression.evaluateException(Expression.java:56)\r\n        at io.smallrye.common.expression.Expression.evaluate(Expression.java:70)\r\n        at io.quarkus.scheduler.common.runtime.util.SchedulerUtils.resolvePropertyExpression(SchedulerUtils.java:119)\r\n        at io.quarkus.scheduler.common.runtime.util.SchedulerUtils.lookUpPropertyValue(SchedulerUtils.java:87)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler.createTrigger(SimpleScheduler.java:234)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler_Subclass.createTrigger$$superforward1(Unknown Source)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler_Subclass.createTrigger(Unknown Source)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler.<init>(SimpleScheduler.java:106)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler_Subclass.<init>(Unknown Source)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler_Bean.create(Unknown Source)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler_Bean.create(Unknown Source)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:111)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:35)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:32)\r\n        at io.quarkus.arc.impl.LazyValue.get(LazyValue.java:26)\r\n        at io.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:69)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:32)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler_Bean.get(Unknown Source)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler_Bean.get(Unknown Source)\r\n        at com.ifs.notification.ForwarderBean_Bean.create(Unknown Source)\r\n        at com.ifs.notification.ForwarderBean_Bean.create(Unknown Source)\r\n\r\nIt seems to be complaining about privileges/configsource. I have included following dependencies. Am I missing something?\r\n\r\n<quarkus.platform.version>2.10.1.Final</quarkus.platform.version>\r\n...\r\n....\r\n<dependencies>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-websockets</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-agroal</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-jdbc-oracle</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-health</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-arc</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-scheduler</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-junit5</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n  </dependencies>\r\n\r\nThanx in advance\r\n- ramila</div>",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26756/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26756/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

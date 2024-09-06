@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25607",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25607/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25607/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25607/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25607",
+  "id": 1237310637,
+  "node_id": "I_kwDOCFbutM5Jv9yt",
+  "number": 25607,
+  "title": "Hibernate ORM SchemaManagementException when running tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2022-05-16T15:13:03Z",
+  "updated_at": "2022-08-03T14:24:40Z",
+  "closed_at": "2022-08-02T10:59:24Z",
+  "active_lock_reason": null,
+  "body": "When updating an application from Quarkus 2.1.4 to version 2.4.0, it started to show a schema validation error when starting the application with the command: mvn quarkus:dev.\r\n\r\n```\r\nFailed to start application (with profile dev): org.hibernate.tool.schema.spi.SchemaManagementException: SQL strings added more than once for: '<table_name>'\r\n        at org.hibernate.tool.schema.internal.SchemaCreatorImpl.checkExportIdentifier(SchemaCreatorImpl.java:409)\r\n        at org.hibernate.tool.schema.internal.SchemaCreatorImpl.createFromMetadata(SchemaCreatorImpl.java:314)\r\n        at org.hibernate.tool.schema.internal.SchemaCreatorImpl.performCreation(SchemaCreatorImpl.java:167)\r\n        at org.hibernate.tool.schema.internal.SchemaCreatorImpl.doCreation(SchemaCreatorImpl.java:136)\r\n        at org.hibernate.tool.schema.internal.SchemaCreatorImpl.doCreation(SchemaCreatorImpl.java:122)\r\n        at org.hibernate.tool.hbm2ddl.SchemaExport.doExecution(SchemaExport.java:314)\r\n        at io.quarkus.hibernate.orm.runtime.devconsole.HibernateOrmDevConsoleInfoSupplier.generateDDL(HibernateOrmDevConsoleInfoSupplier.java:77)\r\n        at io.quarkus.hibernate.orm.runtime.devconsole.HibernateOrmDevConsoleInfoSupplier.pushPersistenceUnit(HibernateOrmDevConsoleInfoSupplier.java:35)\r\n```\r\n\r\n\r\nI noticed that this error also occurs in versions prior to 2.4.0 and that in version 2.4.1 or higher this error was corrected, however, when running the tests, a similar error occurs: mvn test...\r\nI have the same error with: mvn clean package...\r\n\r\n```\r\njava.lang.RuntimeException: java.lang.RuntimeException: Failed to start quarkus\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\nCaused by: java.lang.RuntimeException: javax.persistence.PersistenceException: [PersistenceUnit: Pu1] Unable to build Hibernate SessionFactory\r\nCaused by: javax.persistence.PersistenceException: [PersistenceUnit: Pu1] Unable to build Hibernate SessionFactory\r\nCaused by: org.hibernate.tool.schema.spi.SchemaManagementException: SQL strings added more than once for: <table_name>\r\n```\r\n\r\nI also noticed post-boot validation errors:\r\n\r\n`(Hibernate post-boot validation thread for App1) Failed to validate Schema: Schema-validation: wrong column type encountered in column...`\r\n\r\nAs it is a legacy system and I cannot change the hibernate mappings or the database, I ended up using the following properties to resolve post-boot errors:\r\n\r\n```\r\nquarkus.hibernate-orm.\"Pu1\".database.generation=none\r\nquarkus.hibernate-orm.\"Pu1\".validate-in-dev-mode=false\r\nquarkus.hibernate-orm.\"Pu2\".database.generation=none\r\nquarkus.hibernate-orm.\"Pu2\".validate-in-dev-mode=false\r\n```\r\n\r\nThere are two Persistence Units that use the same mappings!\r\nI'm using java 11, Maven 3.8.1, and currently on Quarkus 2.9.0.\r\n\r\n@Sanne @yrodiere @gsmet \r\nAny ideas to solve the schema validation problem when running the tests? I tried to create a new project and reproduce the problem, but I couldn't.\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25607/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25607/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34099",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34099/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34099/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34099/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34099",
+  "id": 1760671171,
+  "node_id": "I_kwDOCFbutM5o8bXD",
+  "number": 34099,
+  "title": "Running a QuarkusTest fails due to class load errors with Kotlin after quarkus 3 migration",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2023-06-16T13:44:39Z",
+  "updated_at": "2024-05-22T08:48:46Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a small kotlin/resteasy-reactive reproducer that has nothing but a single test calling the `assertTimeout` function from junit jupiter. The reproducer was made by following the official instructions [here](https://quarkus.io/guides/kotlin#creating-the-maven-project). When running the test, it fails with \r\n\r\n` GreetingResourceTest.testHelloEndpoint:13 » Linkage loader constraint violation: loader 'app' wants to load interface kotlin.jvm.functions.Function0. A different interface with the same name was previously loaded by io.quarkus.bootstrap.classloading.QuarkusClassLoader @7b8aebd0. (kotlin.jvm.functions.Function0 is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @7b8aebd0, p\r\narent loader 'app')\r\n`\r\n\r\nNote that this doesn't happen if I remove the `@QuarkusTest` annotation and just run it as a plain test, which leads me to believe that the Quarkus context and the test runner are knocking heads.\r\n\r\nThis previously worked fine with Quarkus 2.16. I've tried multiple Quarkus 3 versions, before and after 3.1, same behavior each time.\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nTest should pass instantly after Quarkus starts up\r\n\r\n### Actual behavior\r\n\r\nTest fails with the error pasted in the bug description\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\n\r\n1.\r\n\r\nRun the quarkus or maven command to generate the project\r\n```\r\nmvn io.quarkus.platform:quarkus-maven-plugin:3.1.2.Final:create \\\r\n    -DprojectGroupId=org.acme \\\r\n    -DprojectArtifactId=rest-kotlin-quickstart \\\r\n    -Dextensions='kotlin,resteasy-reactive-jackson'\r\ncd rest-kotlin-quickstart\r\n```\r\n\r\n2. (optional) delete every class that isn't `GreetingResourceTest`, to get the absolute minimal reproducer\r\n3. The test class should be like this:\r\n\r\n```kotlin\r\npackage org.acme\r\n\r\nimport io.quarkus.test.junit.QuarkusTest\r\nimport org.junit.jupiter.api.Test\r\nimport org.junit.jupiter.api.assertTimeout\r\nimport java.time.Duration\r\n\r\n@QuarkusTest\r\nclass GreetingResourceTest {\r\n\r\n    @Test\r\n    fun testHelloEndpoint() {\r\n        assertTimeout(Duration.ofSeconds(1)) {}\r\n    }\r\n}\r\n```\r\n\r\n4. run `mvn install` and observe the error\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows 10 Enterprise 19044.2846 Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz   2.11 GHz\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.5 2022-10-18 OpenJDK Runtime Environment GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08) OpenJDK 64-Bit Server VM GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nEnvironment GraalVM CE 22.3.0\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven home: C:\\Program Files\\Maven\\apache-maven-3.9.2 Java version: 17.0.5, vendor: GraalVM Community, runtime: C:\\Program Files\\Java\\graalvm-ce-java17-22.3.0 Default locale: en_US, platform encoding: Cp1252 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\nThis linking issue may actually be affecting another area of my project, but I cannot 100% confirm. I'll write a brief explanation here, maybe it's relevant and it helps.\r\n\r\nMy main project has several maven modules, one of them is a `commons` type artifact imported as a dependency by the other modules. \r\n\r\nOne such file is this `JsonUtils.kt`, very basic content:\r\n\r\n```kotlin\r\npackage com.orange.vp.bo.utils\r\n\r\nimport com.fasterxml.jackson.databind.ObjectMapper\r\nimport com.fasterxml.jackson.databind.SerializationFeature\r\nimport com.fasterxml.jackson.datatype.jsr310.JavaTimeModule\r\nimport com.fasterxml.jackson.module.kotlin.jacksonObjectMapper\r\n\r\nval objectMapper: ObjectMapper = jacksonObjectMapper()\r\n    .registerModule(JavaTimeModule())\r\n    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)\r\n    .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)\r\n\r\nfun Any?.asJson(): String = objectMapper.writeValueAsString(this)\r\n\r\ninline fun <reified T> Any?.convertTo(): T = objectMapper.convertValue(this, T::class.java)\r\n```\r\n\r\nWhen a test tries to use the `objectMapper`, it fails with:\r\n\r\n` SearchCriterionTest.get null terminal value:32 NoClassDefFound Could not initialize class com.orange.vp.bo.utils.JsonUtilsKt `\r\n\r\nAgain, this worked prior to Quarkus 3. All of the modules (including the commons) inherit the same parent pom that gives the quarkus and the kotlin versions (and some common pom dependencies), so there is no desynchronization here. \r\n\r\nSimilarly to the main bug, this only happens when running tests. The same `objectMapper` is used in the main classes, without issue.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34099/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34099/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

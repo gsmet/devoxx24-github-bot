@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27383",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27383/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27383/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27383/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27383",
+  "id": 1344485033,
+  "node_id": "I_kwDOCFbutM5QIzap",
+  "number": 27383,
+  "title": "MockitoExtension is ignored during continuous testing",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2955098535,
+      "node_id": "MDU6TGFiZWwyOTU1MDk4NTM1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/continuous-testing",
+      "name": "area/continuous-testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-08-19T14:00:57Z",
+  "updated_at": "2024-02-23T21:42:14Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nApplying `@ExtendWith(MockitoExtension.class)` to a test annotated with `@QuarkusTest` will work, but only with \"normal\" testing (`mvn clean test`), not with continuous testing (`mvn quarkus:test` or `mvn quarkus:dev` + type `r`).\r\n\r\nOne of the goals of `MockitoExtension` is to enable \"strict stubs\", which among other things will remove the need for verifying each stubbed invocation explicitly (`Mock.verify(...)`).\r\n\r\nEvidently, in continuous testing, \"strict stubs\" are *not* enabled, resulting in test failures if the tests were written with strict stubs in mind.\r\n\r\n### Expected behavior\r\n\r\nI would expect continuous testing to yield the same result as a normal `mvn clean test`: Mockito interaction verifications pass without me needing to verify each stubbed invocation explicitly.\r\n\r\n### Actual behavior\r\n\r\nMockito interaction verifications fail because some stubbed invocations were not verified (`Mockito.verify(...)`) explicitly.\r\n\r\n### How to Reproduce?\r\n\r\nSee reproducer: https://github.com/yrodiere/quarkus-playground/tree/mockito-extension (careful, the reproducer is not on the main branch, but on branch `mockito-extension`)\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux yrodiere.redhat 5.18.16-200.fc36.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Aug 3 15:44:49 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.2\" 2022-01-18 OpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8) OpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nN/A\r\n\r\n### Quarkus version or git rev\r\n\r\n2.11.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63) Maven home: /home/yrodiere/tools/sdkman/candidates/maven/current Java version: 17.0.2, vendor: Eclipse Adoptium, runtime: /home/yrodiere/tools/java/jdk-17.0.2+8 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.18.16-200.fc36.x86_64\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\nThe cause for this problem seems to be that `MockitoExtension` relies on a static variable (a threadlocal, but that's irrelevant) to store the information \"strict stubs are enabled\", and it turns out the classloader is different when `MockitoExtension` executes and when the test executes.\r\n\r\n* When `MockitoExtension` executes:\r\n  * With \"normal\" testing, the TCCL is `jdk.internal.loader.ClassLoaders$AppClassLoader`\r\n  * With continuous testing, the TCCL is `QuarkusClassLoader:Deployment Class Loader: TEST`\r\n* When the test executes, the TCCL is (always) `Quarkus Base Runtime ClassLoader: TEST`\r\n\r\nI suspect that `Quarkus Base Runtime ClassLoader: TEST` is a child of `AppClassLoader` and thus eventually reuses classes from `AppClassLoader` (and the corresponding static variables). It's not a child of `QuarkusClassLoader:Deployment Class Loader: TEST`, though, so it cannot \"see\" the classes and static variables from that classloader.\r\n\r\nShouldn't continuous testing and normal testing use a similar TCCL when initializing tests / executing extensions?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27383/reactions",
+    "total_count": 2,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27383/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

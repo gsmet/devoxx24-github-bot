@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31021",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31021/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31021/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31021/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31021",
+  "id": 1577063342,
+  "node_id": "I_kwDOCFbutM5eABOu",
+  "number": 31021,
+  "title": "Jakarta SOAP service in native mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-02-09T01:25:36Z",
+  "updated_at": "2023-02-09T07:49:45Z",
+  "closed_at": "2023-02-09T07:49:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe are using an existing soap client built using Jakarta EE, and it works fine in the JVM mode. However it does not work in Native mode.\r\n\r\nThe client is using following dependencies:\r\n```\r\n   <dependency>\r\n      <groupId>jakarta.xml.ws</groupId>\r\n      <artifactId>jakarta.xml.ws-api</artifactId>\r\n      <version>4.0.0</version>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>com.sun.xml.ws</groupId>\r\n      <artifactId>jaxws-rt</artifactId>\r\n      <scope>runtime</scope>\r\n      <version>4.0.0</version>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>com.sun.xml.ws</groupId>\r\n      <artifactId>jaxws-ri</artifactId>\r\n      <type>pom</type>\r\n      <version>4.0.0</version>\r\n    </dependency>\r\n```\r\nTo Inject the client\r\n```\r\n    @Produces\r\n    @ApplicationScoped\r\n    public AwesomeClient awesomeClient() {\r\n        return AwesomeClient.builder().url(\"localhost:8080\").connectTimeout(30).build();\r\n    }\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\nIt should successfully communicate with the soap service\r\n\r\n### Actual behavior\r\n\r\nwhen triggering the soap call, getting following error\r\n```\r\n20:00:01 SEVERE b91d1ca4-5060-41ea-8760-a4e2e09686cc [ja.xm.ws] (executor-thread-0) Class org.glassfish.hk2.osgiresourcelocator.ServiceLoader cannot be loaded: java.lang.ClassNotFoundException: org.glassfish.hk2.osgiresourcelocator.ServiceLoader. This exception was synthesized during native image building from a call to java.lang.Class.forName(String) with constant arguments.\r\n```\r\n\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin B09S9O22 21.6.0 Darwin Kernel Version 21.6.0: Mon Dec 19 20:43:09 PST 2022; root:xnu-8020.240.18~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.5\" 2022-10-18 OpenJDK Runtime Environment GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08) OpenJDK 64-Bit Server VM GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\n\r\n### Additional information\r\n\r\nThe error seems like it can't find the class when it is looking for the provider implementation, which is documented here https://www.graalvm.org/22.0/reference-manual/native-image/Reflection/\r\n\r\nSo I tried adding following to the reflection configuration\r\n```\r\n[\r\n  {\r\n    \"name\": \"jakarta.xml.ws.spi.Provider\",\r\n    \"allDeclaredConstructors\": true,\r\n    \"allPublicConstructors\": true,\r\n    \"allDeclaredMethods\": true,\r\n    \"allPublicMethods\": true,\r\n    \"allDeclaredFields\": true,\r\n    \"allPublicFields\": true\r\n  },\r\n  {\r\n    \"name\": \"com.sun.xml.ws.spi.ProviderImpl\",\r\n    \"allDeclaredConstructors\": true,\r\n    \"allPublicConstructors\": true,\r\n    \"allDeclaredMethods\": true,\r\n    \"allPublicMethods\": true,\r\n    \"allDeclaredFields\": true,\r\n    \"allPublicFields\": true\r\n  }\r\n]\r\n```\r\nThen it starts to fail at build time\r\n```\r\nCaused by: com.oracle.graal.pointsto.constraints.UnresolvedElementException: Discovered unresolved type during parsing: jakarta.annotation.PreDestroy. This error is reported at image build time because class com.sun.xml.ws.server.SingletonResolver is registered for linking at image build time by command line\r\n```\r\nSo I am just wondering if there is a solution for this? We clearly don't want to rebuild our client using the extension quarkus-cxf, since we do have other applications are using those soap clients.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31021/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31021/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

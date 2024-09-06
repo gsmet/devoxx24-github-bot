@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41003",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41003/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41003/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41003/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41003",
+  "id": 2337466505,
+  "node_id": "I_kwDOCFbutM6LUuiJ",
+  "number": 41003,
+  "title": "Add support for the TLS registry to the reactive DB2 and MSSQL client extensions",
+  "labels": [
+    {
+      "id": 2955124662,
+      "node_id": "MDU6TGFiZWwyOTU1MTI0NjYy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-sql-clients",
+      "name": "area/reactive-sql-clients",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-06-06T06:48:15Z",
+  "updated_at": "2024-08-13T15:45:50Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nWith the integrated TLS registry, it should be possible to configure the reactive DB2 and MSSQL clients using the TLS registry instead of the specific configuration.\n\n### Implementation ideas\n\nThis is the code used for the mailer:\r\n\r\n```java\r\n private void configureTLS(String name, MailerRuntimeConfig config, TlsConfigurationRegistry tlsRegistry, MailConfig cfg,\r\n            boolean globalTrustAll) {\r\n        TlsConfiguration configuration = null;\r\n\r\n        // Check if we have a named TLS configuration or a default configuration:\r\n        if (config.tlsConfigurationName.isPresent()) {\r\n            Optional<TlsConfiguration> maybeConfiguration = tlsRegistry.get(config.tlsConfigurationName.get());\r\n            if (!maybeConfiguration.isPresent()) {\r\n                throw new IllegalStateException(\"Unable to find the TLS configuration \"\r\n                        + config.tlsConfigurationName.get() + \" for the mailer \" + name + \".\");\r\n            }\r\n            configuration = maybeConfiguration.get();\r\n        } else if (tlsRegistry.getDefault().isPresent() && tlsRegistry.getDefault().get().isTlsEnabled()) {\r\n            configuration = tlsRegistry.getDefault().get();\r\n        }\r\n\r\n       // Apply the configuration\r\n        if (configuration != null) {\r\n            // This part is often the same (or close) for every Vert.x client:\r\n            cfg.setSsl(true);\r\n\r\n            if (configuration.getTrustStoreOptions() != null) {\r\n                cfg.setTrustOptions(configuration.getTrustStoreOptions());\r\n            }\r\n\r\n           // For mTLS:\r\n            if (configuration.getKeyStoreOptions() != null) {\r\n                cfg.setKeyCertOptions(configuration.getKeyStoreOptions());\r\n            }\r\n\r\n            if (configuration.isTrustAll()) {\r\n                cfg.setTrustAll(true);\r\n            }\r\n            if (configuration.getHostnameVerificationAlgorithm().isPresent()) {\r\n               // ACHTUNG HERE - this is protocol specific. The HTTP-based protocols should use HTTPS by default. \r\n                cfg.setHostnameVerificationAlgorithm(configuration.getHostnameVerificationAlgorithm().get());\r\n            }\r\n\r\n            SSLOptions sslOptions = configuration.getSSLOptions();\r\n            if (sslOptions != null) {\r\n                cfg.setSslHandshakeTimeout(sslOptions.getSslHandshakeTimeout());\r\n                cfg.setSslHandshakeTimeoutUnit(sslOptions.getSslHandshakeTimeoutUnit());\r\n                for (String suite : sslOptions.getEnabledCipherSuites()) {\r\n                    cfg.addEnabledCipherSuite(suite);\r\n                }\r\n                for (Buffer buffer : sslOptions.getCrlValues()) {\r\n                    cfg.addCrlValue(buffer);\r\n                }\r\n                cfg.setEnabledSecureTransportProtocols(sslOptions.getEnabledSecureTransportProtocols());\r\n\r\n            }\r\n\r\n        } else {\r\n           // Mailer specific configuration (very incomplete as you can see:\r\n            boolean trustAll = config.trustAll.isPresent() ? config.trustAll.get() : globalTrustAll;\r\n            cfg.setSsl(config.ssl);\r\n            cfg.setTrustAll(trustAll);\r\n            applyTruststore(config, cfg);\r\n        }\r\n    }\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41003/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41003/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

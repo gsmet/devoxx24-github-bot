@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37029",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37029/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37029/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37029/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37029",
+  "id": 1989543679,
+  "node_id": "I_kwDOCFbutM52lgb_",
+  "number": 37029,
+  "title": "Reactive client wrapping mapped exceptions in ClientWebApplicationException",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2023-11-12T19:52:34Z",
+  "updated_at": "2023-11-14T16:44:01Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMigrating from rest client classic to reactive, the exception handling behavior is different.\r\n\r\nUp until now, a custom `org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper` was in use (enabled using the resources' `org.eclipse.microprofile.rest.client.spi.RestClientBuilderListener` SPI-listing). It is outputting instances of `jakarta.ws.rs.ClientErrorException`, e.g. the `jakarta.ws.rs.NotFoundException`, depending on the HTTP response status code.\r\n\r\nThis allowed for easy catching and servicing of exceptions based on concrete result type, e.g.\r\n```java\r\ntry {\r\n    doSomething();\r\n} catch (NotFoundException xxx) {\r\n    reactToNotFound();\r\n} ...\r\n```\r\n\r\nThe reactive client is wrapping all instances of `jakarta.ws.rs.WebApplicationException` (that is, also the `ClientErrorException`) in its own `org.jboss.resteasy.reactive.ClientWebApplicationException`, where the original mapped exception is the cause. This requires catching the general exception (`org.jboss.resteasy.reactive.ClientWebApplicationException` or `jakarta.ws.rs.WebApplicationException`) and only then looking at what it really contains, which doesn't allow for writing separate, specific catch clauses.\r\n\r\nThis happens in `org.jboss.resteasy.reactive.client.impl.RestClientRequestContext#unwrapException`.\r\n\r\nWhat is the general / cohesive idea for correct (and preferably simple) exception handling here? The wrapping is not mandated by the spec (3.0 at the moment) and maybe even acts against the intention of response exception mappers.\r\n\r\n### Expected behavior\r\n\r\nThe exceptions are thrown by clients as returned by response exception mapper(s).\r\n\r\n### Actual behavior\r\n\r\nThe mapped exceptions are additionally wrapped.\r\n\r\n### How to Reproduce?\r\n\r\nCreate and register (as SPI using a file in resources/), the following MicroProfile client exception mapper:\r\n\r\n```java\r\npublic class ClientResponseExceptionMapper implements ResponseExceptionMapper<WebApplicationException> {\r\n\r\n    @Override\r\n    public WebApplicationException toThrowable(Response response) {\r\n\r\n        Response.Status status = response.getStatusInfo().toEnum();\r\n\r\n        if (status == null) {\r\n            return null;\r\n        }\r\n\r\n        switch (status) {\r\n            case NOT_FOUND:\r\n                return new NotFoundException(response); // in reality a custom type extending the exception gets returned, not included here for simplicity\r\n            default:\r\n                return new ClientErrorException(response);\r\n        }\r\n\r\n        return null;\r\n    }\r\n```\r\n\r\nCreate a client and call an endpoint returning 404. Observe the returned exception type and its cause.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37029/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37029/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

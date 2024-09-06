@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35307",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35307/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35307/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35307/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35307",
+  "id": 1845123363,
+  "node_id": "I_kwDOCFbutM5t-lkj",
+  "number": 35307,
+  "title": "Hibernate in Quarkus does not lazy load field when it is not based on the Primary Key from the parent table",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-08-10T12:49:07Z",
+  "updated_at": "2023-08-10T12:53:49Z",
+  "closed_at": "2023-08-10T12:50:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn the previous version of Quarkus (2.16.9.Final) using the Hibernate (5.6.15.Final) the following relationship worked well\r\n\r\n`package com.mda;\r\n\r\nimport java.io.Serializable;\r\n\r\nimport javax.persistence.Column;\r\nimport javax.persistence.Entity;\r\nimport javax.persistence.GeneratedValue;\r\nimport javax.persistence.Id;\r\n\r\n@Entity\r\npublic class MyEntity implements Serializable {\r\n    @Id\r\n    @GeneratedValue\r\n    public Long id;\r\n\r\n    @Column(nullable = false, unique = true)\r\n    public String field;\r\n\r\n    public Long getId() {\r\n        return id;\r\n    }\r\n\r\n    public void setId(Long id) {\r\n        this.id = id;\r\n    }\r\n\r\n    public String getField() {\r\n        return field;\r\n    }\r\n\r\n    public void setField(String field) {\r\n        this.field = field;\r\n    }\r\n}`\r\n\r\n`package com.mda;\r\n\r\nimport java.io.Serializable;\r\n\r\nimport javax.persistence.Column;\r\nimport javax.persistence.Entity;\r\nimport javax.persistence.FetchType;\r\nimport javax.persistence.GeneratedValue;\r\nimport javax.persistence.Id;\r\nimport javax.persistence.JoinColumn;\r\nimport javax.persistence.ManyToOne;\r\n\r\n@Entity\r\npublic class MyEntityB implements Serializable {\r\n    @Id\r\n    @GeneratedValue\r\n    public Long id;\r\n\r\n    @Column\r\n    private String field;\r\n    \r\n    @ManyToOne(fetch = FetchType.LAZY, optional = false)\r\n    @JoinColumn(name = \"field\", referencedColumnName = \"field\", insertable = false, updatable = false)\r\n    private MyEntity myEntity;\r\n\r\n    public Long getId() {\r\n        return id;\r\n    }\r\n\r\n    public void setId(Long id) {\r\n        this.id = id;\r\n    }\r\n\r\n    public String getField() {\r\n        return field;\r\n    }\r\n\r\n    public void setField(String field) {\r\n        this.field = field;\r\n    }\r\n\r\n    public MyEntity getMyEntity() {\r\n        return myEntity;\r\n    }\r\n\r\n    public void setMyEntity(MyEntity myEntity) {\r\n        this.myEntity = myEntity;\r\n    }\r\n}`\r\n\r\nTo check I created a simple test:\r\n\r\n`package com.mda;\r\n\r\nimport static org.junit.jupiter.api.Assertions.assertNotNull;\r\n\r\nimport javax.inject.Inject;\r\nimport javax.persistence.EntityManager;\r\nimport javax.transaction.Transactional;\r\n\r\nimport org.junit.jupiter.api.BeforeEach;\r\nimport org.junit.jupiter.api.Test;\r\nimport org.slf4j.Logger;\r\nimport org.slf4j.LoggerFactory;\r\n\r\nimport io.quarkus.test.junit.QuarkusTest;\r\n\r\n@QuarkusTest\r\npublic class MyEntityTest {\r\n    Logger logger = LoggerFactory.getLogger(MyEntityTest.class);\r\n\r\n    @Inject\r\n    EntityManager entityManager;\r\n\r\n    private Long myEntityBId = null;\r\n    \r\n    @BeforeEach\r\n    @Transactional\r\n    void setup() {\r\n        MyEntity myEntity = new MyEntity();\r\n        myEntity.setField(\"Any\");\r\n        entityManager.persist(myEntity);\r\n\r\n        MyEntityB myEntityB = new MyEntityB();\r\n        myEntityB.setField(\"Any\");\r\n        entityManager.persist(myEntityB);\r\n        myEntityBId = myEntityB.getId();\r\n    }\r\n\r\n    @Test\r\n    void shouldDo() {\r\n        MyEntityB myEntityB = entityManager.find(MyEntityB.class, myEntityBId);\r\n        assertNotNull(myEntityB.getMyEntity());\r\n    }\r\n}`\r\n\r\nAnd I could see in the logs the both SQL Select statement to get the data from the database:\r\n\r\n`        myentityb0_.field as field2_1_0_ \r\n    from\r\n        MyEntityB myentityb0_ \r\n    where\r\n        myentityb0_.id=?\r\nHibernate: \r\n    select\r\n        myentityb_.field as field2_1_ \r\n    from\r\n        MyEntityB myentityb_ \r\n    where\r\n        myentityb_.id=?\r\nHibernate: \r\n    select\r\n        myentity0_.id as id1_0_0_,\r\n        myentity0_.field as field2_0_0_ \r\n    from\r\n        MyEntity myentity0_ \r\n    where\r\n        myentity0_.field=?`\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux L-PW03AH72 5.15.90.1-microsoft-standard-WSL2 #1 SMP Fri Jan 27 02:56:13 UTC 2023 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nPicked up JAVA_TOOL_OPTIONS: -Dos.version=arch openjdk version \"17.0.5\" 2022-10-18 LTS OpenJDK Runtime Environment Zulu17.38+21-CA (build 17.0.5+8-LTS) OpenJDK 64-Bit Server VM Zulu17.38+21-CA (build 17.0.5+8-LTS, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nPicked up JAVA_TOOL_OPTIONS: -Dos.version=arch Apache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39) Maven home: {HOME}/.m2/wrapper/dists/apache-maven-3.8.8-bin/67c30f74/apache-maven-3.8.8 Java version: 17.0.5, vendor: Azul Systems, Inc., runtime: {HOME}/.asdf/installs/java/zulu-17.38.21 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"arch\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35307/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35307/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

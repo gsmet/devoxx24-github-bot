@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29642",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29642/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29642/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29642/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29642",
+  "id": 1473123288,
+  "node_id": "I_kwDOCFbutM5XzhPY",
+  "number": 29642,
+  "title": "I am not able to set `QUARKUS_OPTS` on my Openshift dpeloyment",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2022-12-02T16:23:23Z",
+  "updated_at": "2022-12-16T15:15:38Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am experimenting an `java.lang.OutOfMemoryError: Array allocation too large` on a native application on OpenShift and could be related to the default Quarkus application memory settings\r\n\r\nOn Applicaiton Starts\r\n```\r\n17:03:02,390 INFO  [app] [app-1-zp2cj-app] QUARKUS_OPTS environment variable was not set, using default values of -Xmx24M -Xms16M -Xmn24M\r\n17:03:02,391 INFO  [app] __  ____  __  _____   ___  __ ____  ______ \r\n17:03:02,391 INFO  [app]  --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n17:03:02,391 INFO  [app]  -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n17:03:02,391 INFO  [app] --\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n17:03:02,391 INFO  [app] 16:03:00,751 jaxrs-reactive 1.0.0-SNAPSHOT native (powered by Quarkus 999-SNAPSHOT) started in 0.019s. Listening on: http://0.0.0.0:8080\r\n17:03:02,391 INFO  [app] 16:03:00,755 Profile prod activated. \r\n17:03:02,392 INFO  [app] 16:03:00,755 Installed features: [cdi, rest-client-reactive, resteasy-reactive, resteasy-reactive-jackson, smallrye-context-propagation, vertx]\r\n17:03:08,283 INFO  [app] Service started (Quarkus NATIVE mode)\r\n\r\n``` \r\nMore in detail:\r\n`QUARKUS_OPTS environment variable was not set, using default values of -Xmx24M -Xms16M -Xmn24M`\r\n\r\nWhen I try to set my own values through this documented property `quarkus.openshift.env.vars`, seems that doesn't have any impact (any effect):\r\n\r\nExample:\r\nApplication.properties\r\n```\r\nquarkus.openshift.env.vars.quarkus-opts=\"-Xmx2024M -Xms80M -Xmn120M\"\r\n```\r\n\r\nFrom Documentation:\r\n```\r\nquarkus.openshift.env.vars.my-env-var=foobar\r\n\r\nThe command above will add MY_ENV_VAR=foobar as an environment variable. Please note that the key my-env-var will be converted to uppercase and dashes will be replaced by underscores resulting in MY_ENV_VAR.\r\n```\r\n\r\nBut I also tried `quarkus.openshift.env.vars.QUARKUS_OPTS` with the same result.\r\n\r\nOpenShift.yaml\r\n```\r\n      spec:\r\n        containers:\r\n        - env:\r\n          - name: \"KUBERNETES_NAMESPACE\"\r\n            valueFrom:\r\n              fieldRef:\r\n                fieldPath: \"metadata.namespace\"\r\n          - name: \"QUARKUS_HOME\"\r\n            value: \"/home/quarkus/\"\r\n          - name: \"QUARKUS_OPTS\"\r\n            value: \"\"\r\n          - name: \"JAVA_APP_JAR\"\r\n            value: \"/deployments/jaxrs-reactive-1.0.0-SNAPSHOT-runner\"\r\n```\r\n\r\nSo the issue is, that I am not able to set my own \"QUARKUS_OPTS\". \r\n\r\n### Expected behavior\r\n\r\nAn Openshift.yaml with the user QUARKUS_OPTS. \r\n\r\n### Actual behavior\r\n\r\nEmpty QUARKUS_OPTS.\r\n\r\n### How to Reproduce?\r\n\r\n`git clone --branch feat/compresion_biffiles git@github.com:pjgg/quarkus-test-suite.git`\r\n`cd quarkus-test-suite/http/jaxrs-reactive`\r\n`mvn clean verify -Dnative -Dopenshift -Dit.test=OpenShiftExecutionModelIT#bigCompression`\r\n\r\nand in the middle time an Openshift.yaml will be generated on `/quarkus-test-suite/http/jaxrs-reactive/target/OpenShiftExecutionModelIT/app/openshift.yml`\r\n\r\n\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29642/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29642/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

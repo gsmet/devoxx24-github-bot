@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38052",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38052/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38052/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38052/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38052",
+  "id": 2066959306,
+  "node_id": "I_kwDOCFbutM57M0vK",
+  "number": 38052,
+  "title": "Change in behavior after SmallRye Config update to 3.5.1",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-01-05T08:52:16Z",
+  "updated_at": "2024-01-15T11:27:05Z",
+  "closed_at": "2024-01-08T18:25:04Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe have noticed change in behavior after SmallRye Config update to 3.5.1 in https://github.com/quarkusio/quarkus/pull/37794.\r\n\r\nWe have testing application which is using `quarkus.stork.pong-replica.load-balancer=round-robin` property which was valid ~Quarkus 2.7, later it was replaced by `quarkus.stork.pong.load-balancer.type`.\r\n\r\nTill now the app worked fine because roun-robin is the default load-balancer type, there was just warning about unrecognized property.\r\n\r\nAfter SmallRye Config update to 3.5.1 there is error when booting the app.\r\n\r\nOn one side it's good that users are forced to update the config, but on the other hand I miss any information in https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.7 about the changes around config.\r\n\r\nAlso raising this issue as @radcortez's comment https://github.com/quarkusio/quarkus/pull/37794#issuecomment-1876083176 indicated he would like to know about the side-effects of this SmallRye Config change.\r\n\r\nStacktrace:\r\n```\r\nWARN: Unrecognized configuration key \"quarkus.stork.pong-replica.load-balancer\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\nConfiguration validation failed:\r\n\tjava.util.NoSuchElementException: SRCFG00042: Value does not match the expected map format \"<key1>=<value1>;<key2>=<value2>...\" (value was \"round-robin\")\r\njava.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:62)\r\n\tat io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:33)\r\nCaused by: io.quarkus.runtime.configuration.ConfigurationException: Failed to read configuration properties\r\n\tat io.quarkus.deployment.steps.RuntimeConfigSetup.deploy(Unknown Source)\r\n\t... 13 more\r\nCaused by: io.smallrye.config.ConfigValidationException: Configuration validation failed:\r\n\tjava.util.NoSuchElementException: SRCFG00042: Value does not match the expected map format \"<key1>=<value1>;<key2>=<value2>...\" (value was \"round-robin\")\r\n\tat io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:73)\r\n\tat io.smallrye.config.SmallRyeConfig.<init>(SmallRyeConfig.java:86)\r\n\tat io.smallrye.config.SmallRyeConfigBuilder.build(SmallRyeConfigBuilder.java:720)\r\n\tat io.quarkus.runtime.generated.Config.readConfig(Unknown Source)\r\n\tat io.quarkus.runtime.generated.Config.createRunTimeConfig(Unknown Source)\r\n```\r\n\r\n### Expected behavior\r\n\r\nApplication starts just with warning about unrecognized property\r\n\r\n### Actual behavior\r\n\r\nAfter SmallRye Config update to 3.5.1 there is error when booting the app.\r\n\r\nI think it's connected with `@WithParentName` usage in https://github.com/quarkusio/quarkus/blob/main/extensions/smallrye-stork/runtime/src/main/java/io/quarkus/stork/StorkLoadBalancerConfiguration.java#L25\r\n\r\n### How to Reproduce?\r\n\r\n```\r\nquarkus create app app -P io.quarkus::999-SNAPSHOT --extensions=stork,resteasy-reactive\r\ncd app\r\nmvn clean package -Dquarkus.stork.pong-replica.service-discovery.type=consul -Dquarkus.stork.pong-replica.load-balancer=round-robin\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nmacOS\r\n\r\n### Output of `java -version`\r\n\r\nJava 17\r\n\r\n### Quarkus version or git rev\r\n\r\n5fcc268ce44\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38052/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38052/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

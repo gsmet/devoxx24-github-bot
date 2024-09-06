@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30781",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30781/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30781/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30781/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30781",
+  "id": 1566035619,
+  "node_id": "I_kwDOCFbutM5dV86j",
+  "number": 30781,
+  "title": "Quarkus job (Scheduled annotation) ignored quartz annotation DisallowConcurrentExecution",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-02-01T12:34:31Z",
+  "updated_at": "2023-03-14T08:21:34Z",
+  "closed_at": "2023-03-14T08:21:34Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMultiple triggers for a single job detail execute concurrently for a job annotated with @DisallowConcurrentExecution when the triggers are scheduled for the same time and the scheduler is in a cluster.\r\n\r\n### Expected behavior\r\n\r\nThe job will not execute concurrently across the cluster\r\n\r\nCluster Host 1\r\n```log\r\n2023-02-01 15:27:42 INFO  [com.tst.MyJob]] (MyJob_Worker-1) start\r\n```\r\n\r\nCluster Host 2\r\nnothing\r\n\r\ndatabase\r\n| SCHED_NAME      | JOB_NAME    | JOB_GROUP   | JOB_CLASS_NAME       | IS_DURABLE | IS_CONCURRENT | IS_UPDATE_DATA | REQUESTS_RECOVERY |\r\n| ------------- | ------------- |------------- |------------- |------------- |------------- |------------- |------------- |\r\n| MyClusteredScheduler | MyJob | MyJob | *io.quarkus.quartz.runtime.QuartzScheduler$InvokerJob* | 1          | 1             | 0              | 0                 |\r\n\r\n### Actual behavior\r\n\r\nThe job will execute concurrently across the cluster\r\n\r\nCluster Host 1\r\n```log\r\n2023-02-01 15:27:42 INFO  [com.tst.MyJob]] (MyJob_Worker-1) start\r\n```\r\n\r\nCluster Host 2\r\n```log\r\n2023-02-01 15:27:52 INFO  [com.tst.MyJob]] (MyJob_Worker-5) start\r\n```\r\n\r\ndatabase\r\n| SCHED_NAME      | JOB_NAME    | JOB_GROUP   | JOB_CLASS_NAME       | IS_DURABLE | IS_CONCURRENT | IS_UPDATE_DATA | REQUESTS_RECOVERY |\r\n| ------------- | ------------- |------------- |------------- |------------- |------------- |------------- |------------- |\r\n| MyClusteredScheduler | MyJob | MyJob | *io.quarkus.quartz.runtime.QuartzScheduler$InvokerJob* | 0          | 0             | 0              | 0                 |\r\n\r\n### How to Reproduce?\r\n\r\nJob class\r\n```java\r\n@ApplicationScoped\r\n@DisallowConcurrentExecution\r\npublic class MyJob {\r\n   @Inject\r\n    Logger logger;\r\n\r\n    @Scheduled(cron = \"{my.job.cron.expr}\", identity = \"myJobTest\",\r\n            concurrentExecution = Scheduled.ConcurrentExecution.SKIP)\r\n    public void myJobTest() throws Exception {\r\n        logger.infov(\"start\");\r\n        Thread.sleep(30000);\r\n        logger.infov(\"end\");\r\n    }\r\n\r\n}\r\n```\r\n# Quartz configuration\r\n```properties\r\nquarkus.quartz.clustered=true\r\nquarkus.quartz.store-type=jdbc-tx\r\nquarkus.quartz.instance-name=MyClusteredScheduler\r\nmy.job.cron.expr=0/10 * * ? * *\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin cab-wsm-0279148 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:08:47 PST 2022; root:xnu-8792.61.2~4/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08) OpenJDK 64-Bit Server VM GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.11.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.1\r\n\r\n### Additional information\r\n\r\n[old issue](https://github.com/quartz-scheduler/quartz/issues/761) is ignored",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30781/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30781/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

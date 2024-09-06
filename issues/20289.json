@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20289",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20289/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20289/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20289/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20289",
+  "id": 1001659620,
+  "node_id": "I_kwDOCFbutM47tBzk",
+  "number": 20289,
+  "title": "io.undertow.websockets.handshake.ExchangeHandshakeRequest - Allow access to remote IP address",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1359391180,
+      "node_id": "MDU6TGFiZWwxMzU5MzkxMTgw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/undertow",
+      "name": "area/undertow",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2021-09-21T01:47:06Z",
+  "updated_at": "2022-11-03T09:47:31Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nio.undertow.websockets.handshake.ExchangeHandshakeRequest implements javax.websocket.server.HandshakeRequest, which doesn't allow access to the remote IP address. \r\n\r\nHowever, it seems that [other implementations do allow access to the remote IP address](https://stackoverflow.com/questions/14644629/getting-ip-address-of-the-remote-peer-in-websocket-api-for-java-ee-7).\r\n\r\nI am not sure if it would be better to allow access to `VertxWebSocketHttpExchange.request`, or `VertxWebSocketHttpExchange.request.remoteAddress()` or `RoutingContext`\r\n\r\nAt the moment I'm having to use reflection to access the IP address during `modifyHandshake`, e.g. \r\n\r\n```kotlin\r\nclass CustomConfigurator : ServerEndpointConfig.Configurator() {\r\n    val exchangeField: Field by lazy {\r\n        val f = ExchangeHandshakeRequest::class.java.getDeclaredField(\"exchange\")\r\n        f.isAccessible = true\r\n        f\r\n    }\r\n\r\n    val requestField: Field by lazy {\r\n        val f = VertxWebSocketHttpExchange::class.java.getDeclaredField(\"request\")\r\n        f.isAccessible = true\r\n        f\r\n    }\r\n\r\n    override fun modifyHandshake(\r\n        conf: ServerEndpointConfig,\r\n        req: HandshakeRequest,\r\n        resp: HandshakeResponse\r\n    ) {\r\n        val exchange = exchangeField.get(req) as VertxWebSocketHttpExchange\r\n        val httpRequest = requestField.get(exchange) as HttpServerRequest\r\n        val ipAddress = (httpRequest.remoteAddress() as SocketAddressImpl).ipAddress()\r\n    }\r\n}\r\n```\r\n\r\n\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20289/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20289/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

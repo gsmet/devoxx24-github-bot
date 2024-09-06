@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25297",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25297/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25297/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25297/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25297",
+  "id": 1222809448,
+  "node_id": "I_kwDOCFbutM5I4pdo",
+  "number": 25297,
+  "title": "Serverless apps fails to start when deployed via quarkus-openshift extension",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-05-02T12:10:32Z",
+  "updated_at": "2022-05-02T13:26:36Z",
+  "closed_at": "2022-05-02T13:17:54Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen Quarkus 2.7.5 application is deployed on OCP cluster via quarkus-openshift it fails to start, and have this error in the log: \"the object has been modified; please apply your changes to the latest version and try again\"\n\n### Expected behavior\n\nApplication should not fail in this scenario and start successfully. Applications build with 2.2.5.Final version don't have these problems.\n\n### Actual behavior\n\nApplication is not deployed and has these warning in log:\r\n\r\n```\r\n13:51:45,725 INFO  oc: 35s         Warning   InternalError           revision/app-00001                           failed to update deployment \"app-00001-deployment\": Operation cannot be fulfilled on deployments.apps \"app-00001-deployment\": the object has been modified; please apply your changes to the latest version and try again\r\n<...>\r\n13:51:45,726 INFO  oc: 82s         Normal    Created                 pod/app-1-build                              Created container git-clone\r\n\r\n13:51:45,728 INFO  oc: 38s         Normal    BuildCompleted          build/app-1                                  Build ts-yvguifanbg/app-1 completed successfully\r\n13:51:45,728 INFO  oc: 36s         Normal    Created                 service/app                                  Created Configuration \"app\"\r\n13:51:45,728 INFO  oc: 36s         Normal    Created                 service/app                                  Created Route \"app\"\r\n13:51:45,728 INFO  oc: 36s         Normal    Created                 configuration/app                            Created Revision \"app-00001\"\r\n13:51:45,729 INFO  oc: 36s         Normal    FinalizerUpdate         route/app                                    Updated \"app\" finalizers\r\n13:51:45,729 INFO  oc: 29s         Normal    ConfigurationReady      configuration/app                            Configuration becomes ready\r\n13:51:45,729 INFO  oc: 29s         Normal    LatestReadyUpdate       configuration/app                            LatestReadyRevisionName updated to \"app-00001\"\r\n13:51:45,729 INFO  oc: 29s         Normal    Created                 route/app                                    Created placeholder service \"app\"\r\n13:51:45,729 INFO  oc: 29s         Normal    Created                 route/app                                    Created Ingress \"app\"\r\n13:51:45,729 INFO  oc: 29s         Warning   FinalizerUpdateFailed   ingress/app                                  Failed to update finalizers for \"app\": Operation cannot be fulfilled on ingresses.networking.internal.knative.dev \"app\": the object has been modified; please apply your changes to the latest version and try again\r\n13:51:45,730 INFO  oc: 29s         Normal    FinalizerUpdate         ingress/app                                  Updated \"app\" finalizers\r\n```\n\n### How to Reproduce?\n\n1. Clone the reproducer: `git clone git@github.com:quarkus-qe/quarkus-test-suite.git`. I can reproduce the issue on git hash `745cf18ae398c9bd55a144637a2f49d2c4b98292`\r\n2. Enter the reproducer folder ` cd quarkus-test-suite/http/http-minimum`\r\n3. Log in openshift cluster through `oc` command\r\n4. Run tests: \r\n```\r\nmvn clean verify \\\r\n-Dts.openshift.ephemeral.namespaces.enabled=true \\\r\n-Dquarkus.platform.version=2.7.5.Final -Dquarkus-plugin.version=2.7.5.Final -Dts.global.version-number=2.7.5.Final \\\r\n-Dquarkus.platform.artifact-id=quarkus-bom \\\r\n-Dopenshift -Dall-modules -Dinclude.operator-scenarios -Dinclude.serverless \\\r\n -Dts.global.service-name=rhbq-2.7-rhel8-jdk11-openshift-ts-jvm-ocp-4-stable # the name can be any\r\n```\r\n5. Verify that the same tests works with 2.2:\r\n```\r\ngit checkout 2.2\r\nmvn clean verify \\\r\n-Dts.openshift.ephemeral.namespaces.enabled=true \\\r\n-Dquarkus.platform.version=2.2.5.Final -Dquarkus-plugin.version=2.2.5.Final -Dts.global.version-number=2.2.5.Final \\\r\n-Dquarkus.platform.artifact-id=quarkus-bom \\\r\n-Dopenshift -Dall-modules -Dinclude.operator-scenarios -Dinclude.serverless \\\r\n -Dts.global.service-name=any-name\r\n```\n\n### Output of `uname -a` or `ver`\n\n5.16.20-200.fc35.x86_64\n\n### Output of `java -version`\n\n11.0.12, vendor: GraalVM Community\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.5.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\n```\r\n$ oc version\r\noc v3.11.420\r\nkubernetes v1.11.0+d4cacc0\r\nfeatures: Basic-Auth GSSAPI Kerberos SPNEGO\r\n\r\nServer <...>\r\nkubernetes v1.23.5+9ce5071\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25297/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25297/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

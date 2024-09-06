@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28826",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28826/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28826/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28826/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28826",
+  "id": 1423043381,
+  "node_id": "I_kwDOCFbutM5U0es1",
+  "number": 28826,
+  "title": "Inject ApplicationScoped inside ApplicationScoped throws NullPointerException",
+  "labels": [
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2022-10-25T20:34:32Z",
+  "updated_at": "2023-04-28T13:38:09Z",
+  "closed_at": "2022-11-08T13:45:49Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nBasically:\r\nI want the Controller class to have a generic IUseCase (constructor injected) and the UseCase to have a generic IService (constructor injection).\r\n\r\n\r\nController -> UseCase -> Server\r\nController -> UseCase -> MockServer\r\nController -> UseCaseMock\t             \r\n\r\n```\r\npublic class Controller {\r\n    private final IUseCase useCase;\r\n\r\n    @Inject\r\n    public Controller(IUseCase getUseCase) {\r\n        this.useCase = getUseCase;\r\n    }\r\n```\r\n\t\r\n```\r\n@ApplicationScoped\r\npublic class UseCase implements IUseCase {\r\n\r\n    private IService service;\r\n\r\n    @Inject\r\n    public UseCase(IService webService) {\r\n        this.service = webService;\r\n        service.init();\r\n    }\r\n}\r\n```\r\n\t\r\n```\r\npublic class UseCaseMock implements IUseCase {\r\n...\r\n}\r\n```\t\r\n\t\r\n```\r\n@ApplicationScoped\r\npublic class Service implements IService {\r\n...\r\n}\r\n```\r\n\r\n```\r\npublic class ServiceMock implements IService {\r\n...\r\n}\r\n```\r\n\n\n### Expected behavior\n\nWhen running the application, because of the @ApplicationScoped annotation, I expect that:\r\nController has the UseCase constructor injected \r\nand \r\nthat the UseCase has Service constructor injected.\n\n### Actual behavior\n\nMethod threw 'java.lang.NullPointerException' exception. Cannot evaluate ...usecases.impl.UseCase_ClientProxy.toString()\r\n\r\nit didnt inject it, even tho it was annotated with ApplicationScoped.\r\n\n\n### How to Reproduce?\n\nIn a nutshell:\r\nhave a class which constructor injects an ApplicationScoped class which constructor injects an ApplicationScoped class.\r\n\r\n```\r\npublic class Controller {\r\n    private final IUseCase useCase;\r\n\r\n    @Inject\r\n    public Controller(IUseCase getUseCase) {\r\n        this.useCase = getUseCase;\r\n    }\r\n```\r\n\t\r\n```\r\n@ApplicationScoped\r\npublic class UseCase implements IUseCase {\r\n\r\n    private IService service;\r\n\r\n    @Inject\r\n    public UseCase(IService webService) {\r\n        this.service = webService;\r\n        service.init();\r\n    }\r\n}\r\n```\r\n\t\r\n```\r\npublic class UseCaseMock implements IUseCase {\r\n...\r\n}\r\n```\t\r\n\t\r\n```\r\n@ApplicationScoped\r\npublic class Service implements IService {\r\n...\r\n}\r\n```\r\n\r\n```\r\npublic class ServiceMock implements IService {\r\n...\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"1.8.0_312\"\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.4.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.5\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28826/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28826/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21923",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21923/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21923/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21923/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21923",
+  "id": 1070792252,
+  "node_id": "I_kwDOCFbutM4_0v48",
+  "number": 21923,
+  "title": "[Resteasy Reactive] Can't upload files from cURL",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2021-12-03T17:08:59Z",
+  "updated_at": "2022-01-03T10:12:09Z",
+  "closed_at": "2022-01-03T10:12:04Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm uploading some files from a cURL request and everything went fine using the v.1.12.x without resteasy reactive\r\nAfter the upload to Quarkus 2.5.1.Final I got this error\r\n\r\n```\r\n\r\n2021-12-03 17:49:11 ERROR AbstractResteasyReactiveContext                    Request failed: java.io.IOException: Connection terminated parsing multipart request\r\n        at org.jboss.resteasy.reactive.server.core.multipart.MultiPartParserDefinition$MultiPartUploadHandler.parseBlocking(MultiPartParserDefinition.java:221)\r\n        at org.jboss.resteasy.reactive.server.handlers.FormBodyHandler.handle(FormBodyHandler.java:88)\r\n        at org.jboss.resteasy.reactive.server.handlers.FormBodyHandler.handle(FormBodyHandler.java:25)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:141)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$13.runWith(VertxCoreRecorder.java:543)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n```\r\n\r\nThis is the cURL ​command\r\n\r\n```\r\n  curl -vvv --insecure --noproxy \"*\" \\\r\n       --header \"Content-Type: multipart/form-data; boundary=---------------BOUNDARY\" \\\r\n       --request PUT \\\r\n       --form \"filename=$filename\" \\\r\n       --form \"isRestricted=false\" \\\r\n       --form \"file=@$filePath\" \\\r\n       \"$STORAGE_ADDRESS/v1/public/$PRINT_TEMPLATES_BUCKET_NAME\"\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\nNo regressions are found updating to Resteasy reactive\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin NMOL539819.local 21.1.0 Darwin Kernel Version 21.1.0: Wed Oct 13 17:33:23 PDT 2021; root:xnu-8019.41.5~1/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 11.0.11 2021-04-20\r\nOpenJDK Runtime Environment AdoptOpenJDK-11.0.11+9 (build 11.0.11+9)\r\nOpenJDK 64-Bit Server VM AdoptOpenJDK-11.0.11+9 (build 11.0.11+9, mixed mode)\r\n\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.5.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nThis is the sign of the API. Its code is never reached. We currently don't use native mode. Only JVM. \r\nThe upload from Postman or from a custom Java multipart request works well.\r\n\r\n```java\r\nimport org.jboss.resteasy.reactive.MultipartForm;\r\n\r\npublic Response save(String bucket, @MultipartForm UploadRequest body)\r\n\r\n@Data\r\n@RegisterForReflection\r\npublic class UploadRequest {\r\n\r\n\t/**\r\n\t * The file data\r\n\t */\r\n\t@RestForm\r\n\t@PartType(MediaType.APPLICATION_OCTET_STREAM)\r\n\tprivate FileUpload file;\r\n\r\n\t/**\r\n\t * The file name\r\n\t */\r\n\t@RestForm\r\n\t@PartType(MediaType.TEXT_PLAIN)\r\n\tprivate String filename;\r\n\r\n\t/**\r\n\t * The file metadata\r\n\t */\r\n\t@RestForm\r\n\t@PartType(MediaType.APPLICATION_JSON)\r\n\tprivate Map<String, String> metadata;\r\n\r\n\t/**\r\n\t * TRUE if the file must be temporary (Deleted at first access)\r\n\t */\r\n\t@RestForm\r\n\t@PartType(MediaType.TEXT_PLAIN)\r\n\tprivate boolean isTemporary;\r\n\r\n\t/**\r\n\t * The input stream of the uploaded file\r\n\t */\r\n\tprivate InputStream uploadedFileStream;\r\n\r\n\t/**\r\n\t * Converts the uploaded file to an InputStream\r\n\t * @throws IOException in case of read errors\r\n\t */\r\n\tpublic void setUploadedFileStream() throws IOException {\r\n\t\tthis.uploadedFileStream = Files.newInputStream(this.file.uploadedFile());\r\n\t}\r\n\r\n}\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21923/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21923/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

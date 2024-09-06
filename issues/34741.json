@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34741",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34741/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34741/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34741/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34741",
+  "id": 1803776451,
+  "node_id": "I_kwDOCFbutM5rg3HD",
+  "number": 34741,
+  "title": "Error: response status is 403 for simple POST REST API",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-07-13T21:17:50Z",
+  "updated_at": "2023-07-14T22:25:03Z",
+  "closed_at": "2023-07-14T16:35:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nImplementing a simple POST API like this with Quarkus 2.16.5.Final | 2.16.8.Final\r\n\r\n```\r\n@Path(\"/onboarding\")\r\n@RequestScoped\r\npublic class OnboardingApi {\r\n\r\n    @POST\r\n    @Consumes(MediaType.APPLICATION_JSON)\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    @Path(\"/send\")\r\n    public Response onboarding(OnboardingRequest onboardingRequest){\r\n        return Response.ok().status(Response.Status.NOT_IMPLEMENTED).build();\r\n    }\r\n}\r\n```\r\n\r\nThe response inside swagger embedded inside Chrome/Safari returns\r\n\r\n`403 Undocumented Error: response status is 403` when deployed inside container within a kubernetes cluster with ingress configuration. On localhost it works\r\n\r\nIf I rollback to Quarkus 2.9.2.Final it returns 200 OK like expected\r\n\r\nThe list of dependencies \r\n\r\n```\r\n<dependencies>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-resteasy-qute</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-mailer</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.mindrot</groupId>\r\n      <artifactId>jbcrypt</artifactId>\r\n      <version>0.4</version>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.apache.poi</groupId>\r\n      <artifactId>poi</artifactId>\r\n      <version>5.2.0</version>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.apache.poi</groupId>\r\n      <artifactId>poi-ooxml</artifactId>\r\n      <version>5.2.0</version>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.vavr</groupId>\r\n      <artifactId>vavr</artifactId>\r\n      <version>0.10.4</version>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.projectlombok</groupId>\r\n      <artifactId>lombok</artifactId>\r\n      <version>1.18.24</version>\r\n      <scope>provided</scope>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-hibernate-orm</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-jdbc-mysql</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-rest-client-jackson</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-rest-client</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-openapi</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-scheduler</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-resteasy-jackson</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-health</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-jdbc-h2</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-arc</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-resteasy</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-junit5</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.rest-assured</groupId>\r\n      <artifactId>rest-assured</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n  </dependencies>\r\n```\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\n200 OK Response\r\n\r\n### Actual behavior\r\n\r\n403 Http Status\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.18\" 2023-01-17 LTS\r\nOpenJDK Runtime Environment Corretto-11.0.18.10.1 (build 11.0.18+10-LTS)\r\nOpenJDK 64-Bit Server VM Corretto-11.0.18.10.1 (build 11.0.18+10-LTS, mixed mode)\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.2 (c9616018c7a021c1c39be70fb2843d6f5f9b8a1c)\r\nMaven home: /opt/homebrew/Cellar/maven/3.9.2/libexec\r\nJava version: 11.0.18, vendor: Amazon.com Inc., runtime: /Users/lorenzovannucchi/.sdkman/candidates/java/11.0.18-amzn\r\nDefault locale: en_IT, platform encoding: UTF-8\r\nOS name: \"mac os x\", version: \"13.2.1\", arch: \"aarch64\", family: \"mac\"\r\n\r\nDockerfile\r\n\r\nFROM registry.access.redhat.com/ubi8/openjdk-11:1.14\r\n\r\nENV LANGUAGE='en_US:en'\r\n\r\n\r\n# We make four distinct layers so if there are application changes the library layers can be re-used\r\nCOPY --chown=185 target/quarkus-app/lib/ /deployments/lib/\r\nCOPY --chown=185 target/quarkus-app/*.jar /deployments/\r\nCOPY --chown=185 target/quarkus-app/app/ /deployments/app/\r\nCOPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/\r\n\r\nEXPOSE 8080\r\nUSER 185\r\nENV AB_JOLOKIA_OFF=\"\"\r\nENV JAVA_OPTS=\"-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager\"\r\nENV JAVA_APP_JAR=\"/deployments/quarkus-run.jar\"\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34741/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34741/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

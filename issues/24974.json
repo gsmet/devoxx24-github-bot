@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24974",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24974/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24974/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24974/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24974",
+  "id": 1206050454,
+  "node_id": "I_kwDOCFbutM5H4t6W",
+  "number": 24974,
+  "title": "Diferent behaviour between quarkus-resteasy and quarkus-resteasy-reactive with @QueryParam with special characters",
+  "labels": [
+    {
+      "id": 1710069947,
+      "node_id": "MDU6TGFiZWwxNzEwMDY5OTQ3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/housekeeping",
+      "name": "area/housekeeping",
+      "color": "d1d86a",
+      "default": false,
+      "description": "Issue type for generalized tasks not related to bugs or enhancements"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-04-16T08:08:43Z",
+  "updated_at": "2022-05-10T10:41:53Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nI have found people talking about this issue with the quarkus-rest-client-reactive but no one talking about the server side.\r\n* [quarkus-rest-client-reactive does not URL encode some @QueryParam values](https://github.com/quarkusio/quarkus/issues/24426)\r\n\r\nI have pushed [this](https://github.com/martincalvodaniel/quarkus-resteasy-vs-quarkus-resteasy-reactive) project to GitHub with the following two examples.\r\n\r\nAny thoughts?\r\n\r\n#### quarkus-resteasy\r\nAs it is, the quarkus-resteasy server can be executed like this:\r\n```shell\r\n$ ./gradlew -p quarkus-resteasy quarkusDev                                                                                                                                                                                                                                                                                                                                                                                        ─╯\r\n\r\n> Task :quarkus-resteasy:quarkusDev\r\nListening for transport dt_socket at address: 5005\r\nPress [h] for more options>\r\nTests paused\r\nPress [r] to resume testing, [h] for more options>\r\nPress [r] to resume testing, [o] Toggle test output, [h] for more options>\r\n __             __             __      __   ___  __  ___  ___       __\r\n/  \\ |  |  /\\  |__) |__/ |  | /__` __ |__) |__  /__`  |  |__   /\\  /__` \\ /\r\n\\__X \\__/ /~~\\ |  \\ |  \\ \\__/ .__/    |  \\ |___ .__/  |  |___ /~~\\ .__/  |\r\n\r\n                                              Powered by Quarkus 2.8.0.Final\r\n2022-04-16 09:33:32,316 INFO  [io.quarkus] (Quarkus Main Thread) quarkus-resteasy 1.0-SNAPSHOT on JVM (powered by Quarkus 2.8.0.Final) started in 1.463s. Listening on: http://0.0.0.0:8080\r\n2022-04-16 09:33:32,320 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2022-04-16 09:33:32,320 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, resteasy, resteasy-jackson, smallrye-context-propagation, smallrye-openapi, swagger-ui, vertx\r\n```\r\nThis server exposes the following simple endpoint:\r\n```java\r\n@Path(\"/hello\")\r\npublic class ExampleResource {\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello(@QueryParam(\"queryParam\") String queryParam) {\r\n        return format(\"Hello RESTEasy CLASSIC. This was your received queryParam: %s\", queryParam);\r\n    }\r\n}\r\n```\r\nIf you query the server endpoint with `arg;123` as the queryParam value the server answers with the same value:\r\n```shell\r\n$ curl 'localhost:8080/hello?queryParam=arg;123'\r\nHello RESTEasy CLASSIC. This was your received queryParam: arg;123\r\n```\r\nIf you query the server endpoint with `arg;123` url-encoded (`arg%3B123`)  as the queryParam value the server answers with the same no url-encoded value:\r\n```shell\r\n$ curl 'localhost:8080/hello?queryParam=arg%3B123'\r\nHello RESTEasy CLASSIC. This was your received queryParam: arg;123\r\n```\r\n\r\n#### quarkus-resteasy-reactive\r\nAs it is, the quarkus-resteasy-reactive server can be executed like this:\r\n```shell\r\n$ ./gradlew -p quarkus-resteasy-reactive quarkusDev                                                                                                                                                                                                                                                                                                                                                                               ─╯\r\n\r\n> Task :quarkus-resteasy-reactive:quarkusDev\r\nListening for transport dt_socket at address: 5005\r\nPress [h] for more options>\r\nTests paused\r\nPress [r] to resume testing, [h] for more options>\r\nPress [r] to resume testing, [o] Toggle test output, [h] for more options>\r\n __             __             __      __   ___  __  ___  ___       __          __   ___       __  ___         ___\r\n/  \\ |  |  /\\  |__) |__/ |  | /__` __ |__) |__  /__`  |  |__   /\\  /__` \\ / __ |__) |__   /\\  /  `  |  | \\  / |__\r\n\\__X \\__/ /~~\\ |  \\ |  \\ \\__/ .__/    |  \\ |___ .__/  |  |___ /~~\\ .__/  |     |  \\ |___ /~~\\ \\__,  |  |  \\/  |___\r\n\r\n                                                                                    Powered by Quarkus 2.8.0.Final\r\n2022-04-16 09:32:27,178 INFO  [io.quarkus] (Quarkus Main Thread) quarkus-resteasy-reactive 1.0-SNAPSHOT on JVM (powered by Quarkus 2.8.0.Final) started in 1.437s. Listening on: http://0.0.0.0:8080\r\n2022-04-16 09:32:27,182 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2022-04-16 09:32:27,183 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, resteasy-reactive, resteasy-reactive-jackson, smallrye-context-propagation, smallrye-openapi, swagger-ui, vertx]\r\n```\r\nThis server exposes the following simple endpoint:\r\n```java\r\n@Path(\"/hello\")\r\npublic class ExampleResource {\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello(@QueryParam(\"queryParam\") String queryParam) {\r\n        return format(\"Hello RESTEasy REACTIVE. This was your received queryParam: %s\", queryParam);\r\n    }\r\n}\r\n```\r\nIf you query the server endpoint with `arg;123` as the queryParam value the server answers only with the content preceding the `;` character:\r\n```shell\r\n$ curl 'localhost:8080/hello?queryParam=arg;123'\r\nHello RESTEasy REACTIVE. This was your received queryParam: arg\r\n```\r\nIf you query the server endpoint with `arg;123` url-encoded (`arg%3B123`)  as the queryParam value the server answers with the same no url-encoded value:\r\n```shell\r\n$ curl 'localhost:8080/hello?queryParam=arg%3B123'\r\nHello RESTEasy REACTIVE. This was your received queryParam: arg;123\r\n```\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24974/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24974/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

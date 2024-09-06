@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40813",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40813/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40813/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40813/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40813",
+  "id": 2313041523,
+  "node_id": "I_kwDOCFbutM6J3jZz",
+  "number": 40813,
+  "title": "JDBC Driver - Microsoft SQL Server extension doesn't work in FIPS-enabled environment with OpenJDK 17 and RHEL8 but works with OpenJDK 21",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 3866841773,
+      "node_id": "LA_kwDOCFbutM7me1Kt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/securepipeline",
+      "name": "area/securepipeline",
+      "color": "0366d6",
+      "default": false,
+      "description": "issues related to ensure Quarkus can be used in a secure pipeline setups like FIPS or similar"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-05-23T14:13:47Z",
+  "updated_at": "2024-05-24T07:30:30Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI run Quarkus application with MSSQL extension in FIPS-enabled environment with Red Hat OpenJDK 17 and encrypted communication is always forced, even though I disable it. That seems appropriate as official Microsoft SQL Server 2022 docs suggested that encrypted communication should be used in FIPS-enabled environment https://learn.microsoft.com/en-us/sql/connect/jdbc/fips-mode?view=sql-server-ver16. However even when I configure everything according to the SQL Server FIPS docs, SSL handshake timeouts.\r\n\r\nI expected issue is in my setup or certs, but I use `SHA256WithRSAEncryption` signature algorithm and then there is OpenJDK 21. I run the app with the latest Red Hat OpenJDK 21 and both connection that trusts server certificates and stricter setup with PKCS12 truststore and verified hostname works. I've verified logged SSL handshake, certs etc.\r\n\r\nI run the tests on RHEL 8.9, therefore FIPS-mode is enabled automatically with the Red Hat OpenJDK 21.\r\n\r\n### Expected behavior\r\n\r\nI am actually confused why this behavior is OpenJDK specific and don't understand why my setup doesn't work with the OpenJDK 17. It works with OpenJDK 21:\r\n\r\n```\r\n13:00:09,036 INFO  [app] 13:00:07,236 TDSChannel (ConnectionID:1) Enabling SSL...\r\n13:00:09,036 INFO  [app] 13:00:07,237 TDSChannel (ConnectionID:1) SSL handshake will validate server certificate\r\n13:00:09,036 INFO  [app] 13:00:07,270 X509Certificate: Alg:SHA256withRSA, Serial:f0daa261c60, Subject:CN=localhost, Issuer:CN=localhost, Key type:RSA, Length:2048, Cert Id:3076419420, Valid from:5/20/24, 12:59 PM, Valid until:5/24/24, 12:59 PM\r\n13:00:09,036 INFO  [app] 13:00:07,328 TDSChannel (ConnectionID:1) Starting SSL handshake\r\n13:00:09,036 INFO  [app] 13:00:07,374 X509Certificate: Alg:SHA256withRSA, Serial:f0daa261c60, Subject:CN=localhost, Issuer:CN=localhost, Key type:RSA, Length:2048, Cert Id:3076419420, Valid from:5/20/24, 12:59 PM, Valid until:5/24/24, 12:59 PM\r\n13:00:09,036 INFO  [app] 13:00:07,401  TLSHandshake: localhost:32788, TLSv1.2, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, 3076419420\r\n13:00:09,036 INFO  [app] 13:00:07,402 TDSChannel (ConnectionID:1) SSL enabled\r\n13:00:09,036 INFO  [app] 13:00:07,418 ConnectionID:1 ClientConnectionId: 36417244-0c5d-4281-b2d8-b49bfe9e45c1 Network packet size is 8000 bytes\r\n13:00:09,036 INFO  [app] 13:00:07,418 ConnectionID:1 ClientConnectionId: 36417244-0c5d-4281-b2d8-b49bfe9e45c1 Received feature extension acknowledgement for AE.\r\n13:00:09,036 INFO  [app] 13:00:07,418 ConnectionID:1 ClientConnectionId: 36417244-0c5d-4281-b2d8-b49bfe9e45c1 Received feature extension acknowledgement for Data Classification.\r\n13:00:09,036 INFO  [app] 13:00:07,418 ConnectionID:1 ClientConnectionId: 36417244-0c5d-4281-b2d8-b49bfe9e45c1 Received feature extension acknowledgement for UTF8 support.\r\n13:00:09,036 INFO  [app] 13:00:07,419 ConnectionID:1 ClientConnectionId: 36417244-0c5d-4281-b2d8-b49bfe9e45c1 Received feature extension acknowledgement for Azure SQL DNS Caching.\r\n13:00:09,036 INFO  [app] 13:00:07,419 ConnectionID:1 ClientConnectionId: 36417244-0c5d-4281-b2d8-b49bfe9e45c1 Received feature extension acknowledgement for Idle Connection Resiliency.\r\n13:00:09,036 INFO  [app] 13:00:07,420 ConnectionID:1 ClientConnectionId: 36417244-0c5d-4281-b2d8-b49bfe9e45c1 End of connect\r\n13:00:09,036 INFO  [app] 13:00:07,420 RETURN ConnectionID:1 ClientConnectionId: 36417244-0c5d-4281-b2d8-b49bfe9e45c1\r\n13:00:09,036 INFO  [app] 13:00:07,420 ENTRY true\r\n```\r\n\r\n### Actual behavior\r\n\r\nConnection timeouts and app startup fails:\r\n\r\n```\r\n14:05:06,597 INFO  [app] 14:05:04,365 TDSChannel (ConnectionID:1) Enabling SSL...\r\n14:05:06,597 INFO  [app] 14:05:04,366 TDSChannel (ConnectionID:1) SSL handshake will validate server certificate\r\n14:05:06,597 INFO  [app] 14:05:04,378 X509Certificate: Alg:SHA256withRSA, Serial:6508f801e10d, Subject:CN=localhost, Issuer:CN=localhost, Key type:RSA, Length:2048, Cert Id:1935473840, Valid from:5/21/24, 2:04 PM, Valid until:5/25/24, 2:04 PM\r\n14:05:06,597 INFO  [app] 14:05:04,446 TDSChannel (ConnectionID:1) Starting SSL handshake\r\n14:05:06,597 INFO  [app] 14:05:04,585 TDSReader@1 (ConnectionID:1 ClientConnectionId: 121f498d-eccb-4dd8-bbd2-7ccc3b4284c1) Premature EOS in response. packetNum:0 headerBytesRead:0\r\n14:05:06,597 INFO  [app] 14:05:04,586 *** SQLException:ConnectionID:1 ClientConnectionId: 121f498d-eccb-4dd8-bbd2-7ccc3b4284c1 com.microsoft.sqlserver.jdbc.SQLServerException: SQL Server did not return a response. The connection has been closed. ClientConnectionId:121f498d-eccb-4dd8-bbd2-7ccc3b4284c1 SQL Server did not return a response. The connection has been closed. ClientConnectionId:121f498d-eccb-4dd8-bbd2-7ccc3b4284c1\r\n14:05:06,597 INFO  [app] 14:05:04,586 com.microsoft.sqlserver.jdbc.SQLServerConnection.terminate(SQLServerConnection.java:4266)com.microsoft.sqlserver.jdbc.SQLServerConnection.terminate(SQLServerConnection.java:4255)com.microsoft.sqlserver.jdbc.TDSReader.readPacket(IOBuffer.java:6872)com.microsoft.sqlserver.jdbc.TDSChannel$SSLHandshakeInputStream.ensureSSLPayload(IOBuffer.java:892)com.microsoft.sqlserver.jdbc.TDSChannel$SSLHandshakeInputStream.readInternal(IOBuffer.java:949)com.microsoft.sqlserver.jdbc.TDSChannel$SSLHandshakeInputStream.read(IOBuffer.java:942)com.microsoft.sqlserver.jdbc.TDSChannel$ProxyInputStream.readInternal(IOBuffer.java:1206)com.microsoft.sqlserver.jdbc.TDSChannel$ProxyInputStream.read(IOBuffer.java:1192)java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:484)java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:478)java.base/sun.security.ssl.SSLSocketInputRecord.decode(SSLSocketInputRecord.java:160)java.base/sun.security.ssl.SSLTransport.decode(SSLTransport.java:111)java.base/sun.security.ssl.SSLSocketImpl.decode(SSLSocketImpl.java:1510)java.base/sun.security.ssl.SSLSocketImpl.readHandshakeRecord(SSLSocketImpl.java:1425)java.base/sun.security.ssl.SSLSocketImpl.startHandshake(SSLSocketImpl.java:455)java.base/sun.security.ssl.SSLSocketImpl.startHandshake(SSLSocketImpl.java:426)com.microsoft.sqlserver.jdbc.TDSChannel.enableSSL(IOBuffer.java:1854)com.microsoft.sqlserver.jdbc.SQLServerConnection.connectHelper(SQLServerConnection.java:3792)com.microsoft.sqlserver.jdbc.SQLServerConnection.login(SQLServerConnection.java:3348)com.microsoft.sqlserver.jdbc.SQLServerConnection.connectInternal(SQLServerConnection.java:3179)com.microsoft.sqlserver.jdbc.SQLServerConnection.connect(SQLServerConnection.java:1953)com.microsoft.sqlserver.jdbc.SQLServerDriver.connect(SQLServerDriver.java:1263)io.agroal.pool.ConnectionFactory.createConnection(ConnectionFactory.java:225)io.agroal.pool.ConnectionPool$CreateConnectionTask.call(ConnectionPool.java:545)io.agroal.pool.ConnectionPool$CreateConnectionTask.call(ConnectionPool.java:526)java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)io.agroal.pool.util.PriorityScheduledExecutor.beforeExecute(PriorityScheduledExecutor.java:75)java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)java.base/java.lang.Thread.run(Thread.java:840)\r\n14:05:06,597 INFO  [app] 14:05:04,586 ENTRY\r\n14:05:06,597 INFO  [app] 14:05:04,587 TDSChannel (ConnectionID:1) Disabling SSL...\r\n14:05:06,597 INFO  [app] 14:05:04,587 TDSChannel (ConnectionID:1) Closing SSL socket\r\n14:05:06,597 INFO  [app] 14:05:04,589 TDSChannel (ConnectionID:1) SSL disabled\r\n14:05:06,597 INFO  [app] 14:05:04,589 TDSChannel (ConnectionID:1): Closing TCP socket...\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nSteps to reproduce the behavior:\r\n\r\n0. RHEL8.9, FIPS-enabled, Red_Hat-17.0.10.0.7-1.el7openjdkportable\r\n1. `git clone git@github.com:quarkus-qe/quarkus-test-suite.git`\r\n\r\n_strict_ version with verified hostname, server certs:\r\n3. `cd quarkus-test-suite/sql-db/sql-app`\r\n4. `mvn clean verify -Dit.test=MssqlDatabaseIT`\r\n\r\ntrusting version:\r\n3. `cd quarkus-test-suite/sql-db/sql-app-compatibility`\r\n4. `mvn clean verify -Dit.test=MssqlDatabaseIT`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nRHEL 8.9 4.18.0-513.24.1.el8_9.x86_64\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment (Red_Hat-17.0.10.0.7-1.el7openjdkportable) (build 17.0.10+7-LTS)\r\n\r\n### Quarkus version or git rev\r\n\r\n999-SNAPSHOT, 3.8.x + (didn't try older versions)\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40813/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40813/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

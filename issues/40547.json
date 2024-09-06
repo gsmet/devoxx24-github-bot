@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40547",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40547/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40547/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40547/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40547",
+  "id": 2289297908,
+  "node_id": "I_kwDOCFbutM6Ic-n0",
+  "number": 40547,
+  "title": "ContainerResponseFilter does not filter OIDC redirects",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 18,
+  "created_at": "2024-05-10T08:50:12Z",
+  "updated_at": "2024-05-13T14:35:03Z",
+  "closed_at": "2024-05-10T19:09:39Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nContainerResponseFilter and ServerRequestFilter do not filter OIDC redirects for unauthorized requests\n\n### Expected behavior\n\nContainerResponseFilter and ServerRequestFilter filters all http responses\n\n### Actual behavior\n\nOIDC redirects are not filtered\n\n### How to Reproduce?\n\nusing \r\n\r\n```xml\r\n<dependency>\r\n  <groupId>io.quarkus</groupId>\r\n  <artifactId>quarkus-oidc</artifactId>\r\n</dependency>\r\n```\r\n\r\nAnd adding a ContainerResponseFilter \r\n\r\n```java\r\nimport jakarta.ws.rs.container.ContainerRequestContext;\r\nimport jakarta.ws.rs.container.ContainerResponseContext;\r\nimport jakarta.ws.rs.container.ContainerResponseFilter;\r\nimport jakarta.ws.rs.core.Response;\r\nimport jakarta.ws.rs.ext.Provider;\r\nimport java.io.IOException;\r\n\r\n@Provider\r\npublic class ResponseInterceptor implements ContainerResponseFilter {\r\n\r\n  @Override\r\n  public void filter(\r\n      ContainerRequestContext requestContext, ContainerResponseContext responseContext)\r\n      throws IOException {\r\n\r\n    if (responseContext.getStatus() == Response.Status.FOUND.getStatusCode()\r\n        && Boolean.parseBoolean(requestContext.getHeaderString(\"HX-Request\"))) {\r\n      String location = responseContext.getHeaderString(\"Location\");\r\n      if (location != null) {\r\n        responseContext.getHeaders().add(\"HX-Redirect\", location);\r\n        responseContext.setStatus(Response.Status.OK.getStatusCode());\r\n      }\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\n5.4.204-113.362.amzn2.x86_64 #1 SMP Wed Jul 13 21:34:30 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk 21.0.3 2024-04-16 LTS OpenJDK Runtime Environment (Red_Hat-21.0.3.0.9-1) (build 21.0.3+9-LTS) OpenJDK 64-Bit Server VM (Red_Hat-21.0.3.0.9-1) (build 21.0.3+9-LTS, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n<quarkus.platform.version>3.10.0</quarkus.platform.version>\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40547/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40547/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

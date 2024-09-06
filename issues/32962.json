@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32962",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32962/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32962/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32962/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32962",
+  "id": 1686965189,
+  "node_id": "I_kwDOCFbutM5kjQvF",
+  "number": 32962,
+  "title": "Quarkus 3 : In native mode, Kafka streams extension doesn't support Snappy compression",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1449536431,
+      "node_id": "MDU6TGFiZWwxNDQ5NTM2NDMx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka-streams",
+      "name": "area/kafka-streams",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-04-27T14:17:37Z",
+  "updated_at": "2023-06-02T13:03:09Z",
+  "closed_at": "2023-06-02T13:01:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter upgrading from Quarkus 2.16.1.Final to Quarkus 3.0.1.Final in native mode,\r\nan exception  java.lang.UnsatisfiedLinkError is thrown when kafka streams uses Snappy compression.\r\nIn JVM mode, there is no issue.\r\n\r\n[quarkus3-kafka-snappy.log](https://github.com/quarkusio/quarkus/files/11344449/quarkus3-kafka-snappy.log)\r\n\r\n2023-04-27 12:43:00,081 INFO  [com.ale.ovn.per.ser.DataPersistencyService] (main) The application is starting...\r\n2023-04-27 12:43:00,081 INFO  [com.ale.ovn.per.ser.DataPersistencyService] (main) The application is starting done\r\n2023-04-27 12:43:00,084 INFO  [io.quarkus] (main) ovng-datapersistency 1.0.0-SNAPSHOT native (powered by Quarkus 3.0.1.Final) started in 0.179s. Listening on: http://0.0.0.0:8080\r\n2023-04-27 12:43:00,084 INFO  [io.quarkus] (main) Profile prod activated.\r\n2023-04-27 12:43:00,084 INFO  [io.quarkus] (main) Installed features: [cdi, confluent-registry-avro, hibernate-validator, kafka-client, kafka-streams, logging-manager, micrometer, rest-client-reactive, rest-client-reactive-jackson, resteasy-reactive, resteasy-reactive-jsonb, scheduler, smallrye-context-propagation, smallrye-health, smallrye-openapi, smallrye-reactive-messaging, smallrye-reactive-messaging-kafka, swagger-ui, vertx]\r\n2023-04-27 12:43:01,087 INFO  [org.apa.kaf.str.KafkaStreams] (pool-7-thread-1) stream-client [ovng_datapersistency-229cf6d1-46b7-4f7f-9404-5e5b5ee72578] State transition from CREATED to REBALANCING\r\n2023-04-27 12:43:01,102 INFO  [org.apa.kaf.str.pro.int.GlobalStateManagerImpl] (ovng_datapersistency-229cf6d1-46b7-4f7f-9404-5e5b5ee72578-GlobalStreamThread) global-stream-thread [ovng_datapersistency-229cf6d1-46b7-4f7f-9404-5e5b5ee72578-GlobalStreamThread] Restoring state for global store DATA_PERSISTENCY_STATE_STORE\r\nException in thread \"ovng_datapersistency-229cf6d1-46b7-4f7f-9404-5e5b5ee72578-GlobalStreamThread\" java.lang.UnsatisfiedLinkError: org.xerial.snappy.SnappyNative.uncompressedLength(Ljava/lang/Object;II)I [symbol: Java_org_xerial_snappy_SnappyNative_uncompressedLength or Java_org_xerial_snappy_SnappyNative_uncompressedLength__Ljava_lang_Object_2II]\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.jni.access.JNINativeLinkage.getOrFindEntryPoint(JNINativeLinkage.java:152)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.jni.JNIGeneratedMethodSupport.nativeCallAddress(JNIGeneratedMethodSupport.java:53)\r\n        at org.xerial.snappy.SnappyNative.uncompressedLength(SnappyNative.java)\r\n        at org.xerial.snappy.Snappy.uncompressedLength(Snappy.java:638)\r\n        at org.xerial.snappy.SnappyInputStream.hasNextChunk(SnappyInputStream.java:435)\r\n        at org.xerial.snappy.SnappyInputStream.read(SnappyInputStream.java:466)\r\n        at java.base@17.0.5/java.io.DataInputStream.readByte(DataInputStream.java:271)\r\n        at org.apache.kafka.common.utils.ByteUtils.readUnsignedVarint(ByteUtils.java:170)\r\n        at org.apache.kafka.common.utils.ByteUtils.readVarint(ByteUtils.java:205)\r\n\r\n\n\n### Expected behavior\n\nKafka streams with Snappy compression works in native mode.\n\n### Actual behavior\n\n An exception is thrown with kafka streams\r\n java.lang.UnsatisfiedLinkError: org.xerial.snappy.SnappyNative.uncompressedLength(Ljava/lang/Object;II)I\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux ovng-data-persistency-94d879475-cvhvt 5.15.77-flatcar #1 SMP Tue Dec 6 22:49:50 -00 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08)\n\n### GraalVM version (if different from Java)\n\nquay.io/quarkus/ubi-quarkus-native-image:22.3-java17\n\n### Quarkus version or git rev\n\n3.0.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32962/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32962/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

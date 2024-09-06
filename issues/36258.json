@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36258",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36258/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36258/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36258/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36258",
+  "id": 1923663375,
+  "node_id": "I_kwDOCFbutM5yqMYP",
+  "number": 36258,
+  "title": "Using Hibernate Panache Reactive with Virtual Threads causing \"This method should exclusively be invoked from a Vert.x EventLoop thread; currently running on thread 'quarkus-virtual-thread-0'\"",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-10-03T09:00:50Z",
+  "updated_at": "2023-10-09T07:47:00Z",
+  "closed_at": "2023-10-09T07:46:54Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe examples regarding Virtual Threads are using the **RESTEasy Reactive** extension in combination with the **Hibernate Panache Classic** extension. However, **I'd like** to use the **Hibernate Panache Reactive** extension **instead** as **only parts of the application should be migrated to Virtual Threads for now**, while the rest should keep using the **reactive approach**.\r\n\r\nI **haven't found any explicit mention that Quarkus Panache Reactive and Virtual Threads cannot work together at all**, so I assumed it somehow also works, although reactive code normally has to run on the event loop thread. \r\nEspecially after finding this piece of documentation that explicitly mentions that you can use `uni.await().atMost(..)` within virtual threads:\r\n\r\n> API returning Uni can be used directly using uni.await().atMost(…​). It blocks the virtual thread, without blocking the carrier thread, and also improves the resilience of your application with an easy (non-blocking) timeout support.\r\n\r\nhttps://quarkus.io/guides/virtual-threads#use-virtual-thread-friendly-clients\r\n\r\n\r\nIt indeed works using Uni calls on the virtual thread, unless no database operations are in play.\r\n\r\nWhenever I use Hibernate Reactive calls within a virtual thread, it complains with\r\n\r\n> This method should exclusively be invoked from a Vert.x EventLoop thread; currently running on thread 'quarkus-virtual-thread-2'\r\n\r\nas it **requires the event loop thread.**\r\n\r\n\r\n**Can anything be done to shift reactive calls back onto the event-loop-thread from the virtual thread to be able to use Reactive Panache, or shouldn't this dependency (and probably other reactive dependencies) used with Virtual Threads at all?**\r\n\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n```\r\n2023-10-03 10:27:21,964 ERROR [org.jbo.res.rea.ser.cor.RuntimeExceptionMapper] (quarkus-virtual-thread-2) An operation that needed be run on a Vert.x EventLoop thread was run on a worker pool thread. This likely means you need to annotate com.example.ExampleResource#reactiveVirtuals() with @io.smallrye.common.annotation.NonBlocking. Alternatively you can annotate the class com.example.ExampleResource to make every method on the class run on a Vert.x EventLoop thread, or annotate your sub class of the jakarta.ws.rs.core.Application class to affect the entire application\r\n2023-10-03 10:27:21,964 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (quarkus-virtual-thread-2) HTTP Request to /reactive-virtual-entity failed, error id: 09344a90-a7fe-4893-94e4-d9e54fc46c9f-3: java.lang.IllegalStateException: HR000068: This method should exclusively be invoked from a Vert.x EventLoop thread; currently running on thread 'quarkus-virtual-thread-2'\r\n\tat org.hibernate.reactive.common.InternalStateAssertions.assertUseOnEventLoop(InternalStateAssertions.java:40)\r\n\tat org.hibernate.reactive.mutiny.impl.MutinySessionFactoryImpl.connection(MutinySessionFactoryImpl.java:139)\r\n\tat org.hibernate.reactive.mutiny.impl.MutinySessionFactoryImpl.lambda$openSession$0(MutinySessionFactoryImpl.java:90)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage.subscribe(UniCreateFromCompletionStage.java:24)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniRunSubscribeOn.lambda$subscribe$0(UniRunSubscribeOn.java:27)\r\n\tat org.hibernate.reactive.context.impl.VertxContext.execute(VertxContext.java:91)\r\n\tat io.smallrye.mutiny.operators.uni.UniRunSubscribeOn.subscribe(UniRunSubscribeOn.java:25)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni.subscribe(UniOnItemTransformToUni.java:25)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransform.subscribe(UniOnItemTransform.java:22)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemConsume.subscribe(UniOnItemConsume.java:30)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni.subscribe(UniOnItemTransformToUni.java:25)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemOrFailureFlatMap.subscribe(UniOnItemOrFailureFlatMap.java:27)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemOrFailureFlatMap.subscribe(UniOnItemOrFailureFlatMap.java:27)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.withSubscriber(UniSubscribe.java:51)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:110)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:88)\r\n\tat org.jboss.resteasy.reactive.server.handlers.UniResponseHandler.handle(UniResponseHandler.java:19)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:150)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n\tat io.quarkus.virtual.threads.ContextPreservingExecutorService$1.run(ContextPreservingExecutorService.java:36)\r\n\tat java.base/java.util.concurrent.ThreadPerTaskExecutor$TaskRunner.run(ThreadPerTaskExecutor.java:314)\r\n\tat java.base/java.lang.VirtualThread.run(VirtualThread.java:311)\r\n\r\n\r\n```\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36258/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36258/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22072",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22072/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22072/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22072/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22072",
+  "id": 1075696740,
+  "node_id": "I_kwDOCFbutM5AHdRk",
+  "number": 22072,
+  "title": "Provide test class orderer to order based on test annotations",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2021-12-09T15:22:55Z",
+  "updated_at": "2021-12-13T17:00:39Z",
+  "closed_at": "2021-12-09T19:05:19Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nCurrently when testing with different profiles, one needs to be careful about the order of the classes so that you don't have to stand up the Quarkus service more than is necessary.\r\n\r\nWe should provide a `ClassOrderer` that developers can enter in `junit-platform.properties` that can automatically determine the appropriate ordering of test classes based on their annotations.\r\n\r\nI would suggest ordering based on all test annotations, not just test profile. Perhaps there could also be a new test class annotation that would let the developer determine their own order.\n\n### Implementation ideas\n\nI already do this (for just test profiles) in my project:\r\n\r\n```java\r\n@Slf4j\r\npublic class TestTypeOrder implements ClassOrderer {\r\n    private static final int ORDER_VAL_NOT_RUNNING = 1;\r\n    private static final int ORDER_VAL_DEFAULT = 2;\r\n    private static final int ORDER_VAL_TEST_PROFILE_EXTERNAL_AUTH = 3;\r\n    private static final int ORDER_VAL_TEST_PROFILE_OTHER = 4;\r\n\r\n    @Override\r\n    public void orderClasses(ClassOrdererContext context) {\r\n        log.info(\"Getting order for classes.\");\r\n        context.getClassDescriptors().sort(Comparator.comparingInt(TestTypeOrder::getOrderFor));\r\n    }\r\n\r\n    private static int getOrderFor(ClassDescriptor classDescriptor) {\r\n        int order = getOrder(classDescriptor);\r\n        log.info(\"Order for {}: {}\", classDescriptor.getTestClass().getName(), order);\r\n        return order;\r\n    }\r\n\r\n    private static int getOrder(ClassDescriptor classDescriptor) {\r\n        if (!classDescriptor.findAnnotation(QuarkusTestResource.class).isPresent()) {\r\n            return ORDER_VAL_NOT_RUNNING;\r\n        }\r\n\r\n        Optional<TestProfile> testProfileAnnotation = classDescriptor.findAnnotation(TestProfile.class);\r\n        if (testProfileAnnotation.isPresent()) {\r\n            if (ExternalAuthTestProfile.class.equals(testProfileAnnotation.get().value())) {\r\n                return ORDER_VAL_TEST_PROFILE_EXTERNAL_AUTH;\r\n            }\r\n            return ORDER_VAL_TEST_PROFILE_OTHER;\r\n        }\r\n        return ORDER_VAL_DEFAULT;\r\n    }\r\n}\r\n```\r\n\r\nThis will obviously need expanding/ improvements but is along the lines of what I am suggesting to provide.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22072/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22072/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

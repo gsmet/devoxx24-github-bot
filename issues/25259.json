@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25259",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25259/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25259/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25259/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25259",
+  "id": 1220892244,
+  "node_id": "I_kwDOCFbutM5IxVZU",
+  "number": 25259,
+  "title": "Create value property on io.smallrye.common.annotation.Blocking to allow the configuration of the worker thread pool to a specific ConsumeEvent",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-04-29T13:57:54Z",
+  "updated_at": "2023-02-06T13:27:15Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\n## My problem\r\n\r\nI want to be able to configure the thread pool size of a specific ConsumeEvent, because in my current project I must respect some throttling rules of one API that my application will access. The reason is that I want to parallelize my process, but I need to control the number of parallel threads running.\r\n \r\nI [posted this question on StackOverflow](https://stackoverflow.com/questions/72048764/can-i-configure-the-pool-size-of-a-specific-quarkus-vertx-consumeevent) to know if this is possible.\r\n\r\nI don't want to set the global worker thread pool, I only want to set the thread pool for this specific ConsumeEvent.\r\n\r\n## Setting the global size of the worker thread pool\r\n\r\nIf I understood correctly, today I can only set the global thread size of the worker thread pool using:\r\n```properties\r\nquarkus.vertx.worker-pool-size=2\r\n```\r\n\r\n## Similar solution on Smallrye Reactive Messaging to configure a specific thread pool\r\n\r\nOn the [SmallRye Reactive Messaging guide](https://smallrye.io/smallrye-reactive-messaging/smallrye-reactive-messaging/3.1/advanced/blocking.html) there's one example of what I want to do.\r\n\r\nHere, I can use one Blocking annotation, define one name for it and configure the thread pool:\r\n\r\n```java\r\n@Outgoing(\"Y\")\r\n@Incoming(\"X\")\r\n@Blocking(\"my-custom-pool\")\r\npublic String process(String s) {\r\n  return s.toUpperCase();\r\n}\r\n```\r\n\r\n> Specifying the concurrency for the above worker pool requires the following configuration property to be defined:\r\n\r\n```properties\r\nsmallrye.messaging.worker.my-custom-pool.max-concurrency=3\r\n```\r\n\r\nIn this example, I can configure the size of the thread pool that will process the messages from the `my-custom-pool`.\r\n\n\n### Implementation ideas\n\nBased on the [answer of tsegismont](https://stackoverflow.com/users/2133695/tsegismont) on [my post on StackOverflow](https://stackoverflow.com/questions/72048764/can-i-configure-the-pool-size-of-a-specific-quarkus-vertx-consumeevent), the idea would be to create the possibility to set a `value` of the `@io.smallrye.common.annotation.Blocking` and then to set the thread size to this specific worker thread pool.\r\n\r\nExample of the ConsumeEvent:\r\n```java\r\n@io.quarkus.vertx.ConsumeEvent(\"my-consume-event\")\r\n@io.smallrye.common.annotation.Blocking(\"my-custom-pool\")\r\npublic void start(String value) {\r\n  // do the work\r\n}\r\n```\r\n\r\nExample of the property configuring the size of \"my-custom-pool\":\r\n```properties\r\nquarkus.vertx.worker.\"my-custom-pool\"-pool-size=2\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25259/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25259/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

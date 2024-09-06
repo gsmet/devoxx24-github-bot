@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26029",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26029/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26029/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26029/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26029",
+  "id": 1266126434,
+  "node_id": "I_kwDOCFbutM5Ld45i",
+  "number": 26029,
+  "title": "Unable to register classes for reflection (Jandex)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2022-06-09T13:23:02Z",
+  "updated_at": "2024-03-21T10:11:36Z",
+  "closed_at": "2022-06-10T08:22:41Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am using gradle and Java.\r\ngets the below warning.\r\n\r\n```\r\nUnable to properly register the hierarchy of the following classes for reflection as they are not in the Jandex index:\r\n        - org.jooq.Catalog (source: JacksonProcessor > com.sumit.models.TestClass2)\r\n        - org.jooq.Schema (sources: JacksonProcessor > com.sumit.models.TestClass2, SmallRyeOpenApiProcessor > com.sumit.models.TestClass1)\r\nConsider adding them to the index either by creating a Jandex index for your dependency via the Maven plugin, an empty META-INF/beans.xml or quarkus.index-dependency properties.\r\n```\r\n\r\nI got the point from where I am getting this warning from this code.\r\n\r\n```java\r\npackage com.sumit.models;\r\n\r\nimport com.fasterxml.jackson.databind.annotation.JsonDeserialize;\r\nimport org.immutables.value.Value;\r\nimport org.jooq.Catalog;\r\n\r\n@Value.Immutable\r\n@JsonDeserialize(as = ImmutableTestClass2.class)\r\npublic interface TestClass2 {\r\n  String name();\r\n  int value();\r\n  float quantity();\r\n\r\n  org.jooq.Schema another();\r\n  Catalog catalog();\r\n}\r\n```\r\n\r\n\r\nIn above code if you remove `@JsonDeserialize(as = ImmutableTestClass2.class)` warning will disapprear.\r\n\r\n\r\n```java\r\npackage com.sumit.models;\r\n\r\nimport com.fasterxml.jackson.annotation.JsonProperty;\r\nimport org.eclipse.microprofile.openapi.annotations.enums.SchemaType;\r\nimport org.eclipse.microprofile.openapi.annotations.media.Schema;\r\n\r\n@Schema(type = SchemaType.DEFAULT)\r\npublic record TestClass1 (\r\n    String name,\r\n    @JsonProperty(value = \"schema_type\")\r\n    org.jooq.Schema schemaType) {\r\n}\r\n```\r\n\r\nIn above code if you remove `@Schema(type = SchemaType.DEFAULT)` warning will disapprear.\r\n\r\nthis code is just a my attempt to reproduce the warning.\r\n\r\nI have tried many thing like adding jandex, beans.xml, adding \r\n```properties\r\nquarkus.index-dependency.jooq1.group-id=org.jooq\r\nquarkus.index-dependency.jooq1.artifact-id=jooq\r\n```\r\nin `application.properties`\r\n\r\n### Expected behavior\r\n\r\nI would expect no warning in the log for \r\n_Unable to properly register the hierarchy... ...... Jandex index:_\r\n\r\n### Actual behavior\r\n\r\n`./gradlew clean build`\r\n\r\n```\r\nUnable to properly register the hierarchy of the following classes for reflection as they are not in the Jandex index:\r\n        - org.jooq.Catalog (source: JacksonProcessor > com.sumit.models.TestClass2)\r\n        - org.jooq.Schema (sources: JacksonProcessor > com.sumit.models.TestClass2, SmallRyeOpenApiProcessor > com.sumit.models.TestClass1)\r\nConsider adding them to the index either by creating a Jandex index for your dependency via the Maven plugin, an empty META-INF/beans.xml or quarkus.index-dependency properties.\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nTo Reproduce\r\nSteps to reproduce the behavior:\r\n\r\n`git clone https://github.com/sumitchoudharycodes/reproduce-quarkus-jandex-warnings.git`\r\n`./gradlew quarkusDev` or `./gradlew clean build`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux a-18r489e3kansl 4.14.276-211.499.amzn2.x86_64 #1 SMP Wed Apr 27 21:08:48 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.3\" 2022-04-19 LTS OpenJDK Runtime Environment Corretto-17.0.3.6.1 (build 17.0.3+6-LTS) OpenJDK 64-Bit Server VM Corretto-17.0.3.6.1 (build 17.0.3+6-LTS, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nnot using\r\n\r\n### Quarkus version or git rev\r\n\r\n2.9.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.2\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26029/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26029/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

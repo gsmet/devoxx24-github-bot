@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31593",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31593/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31593/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31593/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31593",
+  "id": 1608941583,
+  "node_id": "I_kwDOCFbutM5f5oAP",
+  "number": 31593,
+  "title": "Null Values allowed in @BeanParam?",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1282147660,
+      "node_id": "MDU6TGFiZWwxMjgyMTQ3NjYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/resteasy-classic",
+      "name": "area/resteasy-classic",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-03-03T16:40:03Z",
+  "updated_at": "2023-03-18T18:56:01Z",
+  "closed_at": "2023-03-18T18:56:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nSorry if this is a simple question, but I'm having trouble with empty fields on my HTML pages being sent to Quarkus using the `@BeanParam`.\r\n\r\nMy Bean has these fields:\r\n```\r\n@Data\r\n@NoArgsConstructor\r\npublic class VersionFormData {\r\n    \r\n    @RestForm\r\n    private Long id;\r\n    \r\n    @RestForm\r\n    private Integer major;\r\n    \r\n    @RestForm\r\n    private Integer minor;\r\n    \r\n    @RestForm\r\n    private Integer build;\r\n    \r\n    @RestForm\r\n    private Integer patch;\r\n    \r\n    @RestForm\r\n    private String tag;\r\n    \r\n    @RestForm\r\n    private String notes;\r\n    \r\n}\r\n```\r\n\r\nAnd my endpoint is defined as: \r\n\r\n```\r\n@Authenticated\r\n    @POST\r\n    @Path(\"/admin/version\")\r\n    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)\r\n    public Response saveVersion(@BeanParam VersionFormData data) {\r\n        log.info(\"Saving version: \" + data);\r\n        return ok(\"OK\");\r\n    }\r\n```\r\n\r\nBut when I send an empty form, ie. the `Integer` fields are not filled from the form, I get a `400 Bad Request`.\r\n\r\n```\r\nResponse\r\nHTTP/1.1 400 Bad Request\r\nAccess-Control-Allow-Credentials: false\r\nContent-Length: 0\r\nSet-Cookie: _renarde_crsf=Nu05kXAPRzuixctYUlb6oA==; Path=/\r\nSet-Cookie: _renarde_flash=e30=; Path=/\r\nAccess-Control-Allow-Origin: http://localhost:8080\r\n\r\nRequest Data\r\nMIME Type: application/x-www-form-urlencoded\r\n_renarde_crsf_token: Nu05kXAPRzuixctYUlb6oA==\r\nmajor\r\nminor\r\npatch\r\nbuild\r\ntag\r\nnotes\r\nid: 0\r\n```\r\nIs this supported? I would've thought that the empty/missing fields would have just been NULL in my POJO and not throw and error. It works fine for the STRING fields, just not any of the Int,Double, etc.\r\n\r\n\r\nI even tried using `@FormParam` with `@DefaultValue` and still no luck:\r\n```\r\n@FormParam(\"id\")\r\n    private Long id;\r\n    \r\n    @FormParam(\"major\")\r\n    @DefaultValue(value = \"0\")\r\n    private Integer major;\r\n    \r\n    @FormParam(\"minor\")\r\n    @DefaultValue(value = \"0\")\r\n    private Integer minor;\r\n    \r\n    @FormParam(\"build\")\r\n    @DefaultValue(value = \"0\")\r\n    private Integer build;\r\n    \r\n    @FormParam(\"patch\")\r\n    @DefaultValue(value = \"0\")\r\n    private Integer patch;\r\n```\r\n\r\n### Expected behavior\r\n\r\nForm should still post and parse and the missing/empty fields should be NULL\r\n\r\n### Actual behavior\r\n\r\nI got a `400 Bad Request`\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31593/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31593/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

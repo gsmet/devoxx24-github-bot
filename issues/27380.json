@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27380",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27380/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27380/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27380/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27380",
+  "id": 1344331223,
+  "node_id": "I_kwDOCFbutM5QIN3X",
+  "number": 27380,
+  "title": "Consume grpc stream with quarkus-grpc",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-08-19T11:43:23Z",
+  "updated_at": "2023-08-30T05:07:15Z",
+  "closed_at": "2023-08-30T05:07:14Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI am trying to consume SalesForce pub/sub API with quarkus-grpc. I am invoking successfully getTopic and getSchema methods but am having troubles when trying to invoke the subscribe method which accepts and returns grpc streams. Here's a link to the SalesForce proto file https://github.com/developerforce/pub-sub-api/blob/main/pubsub_api.proto\r\n\r\nFor the quarkus app I am following this article https://quarkus.io/guides/grpc-service-consumption\r\n\r\nBut I am getting the following exception when trying to invoke the \"subscribe\" method which uses grpc streams:\r\n\r\n`17:51:07 ERROR traceId=, spanId=, trId= [or.jb.re.re.co.co.AbstractResteasyReactiveContext] (vert.x-eventloop-thread-3) Request failed: io.grpc.StatusRuntimeException: INTERNAL: Received unexpected EOS on empty DATA frame from server\r\n        at io.grpc.Status.asRuntimeException(Status.java:535)\r\n        at io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:479)\r\n        at io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)\r\n        at io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)\r\n        at io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)\r\n        at io.quarkus.grpc.runtime.supports.IOThreadClientInterceptor$1$1.lambda$onClose$3(IOThreadClientInterceptor.java:70)\r\n        at io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n        at io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n        at io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:38)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:829)`\r\n\r\nAnd Here's my code:\r\n\r\n`package com.salesforce.quarkus.grpc.example.controller;\r\n\r\nimport com.salesforce.quarkus.grpc.example.service.AuthenticationService;\r\nimport com.salesforce.eventbus.protobuf.*;\r\nimport io.quarkus.grpc.GrpcClient;\r\nimport io.quarkus.grpc.GrpcClientUtils;\r\nimport io.smallrye.mutiny.Multi;\r\nimport org.slf4j.Logger;\r\nimport org.slf4j.LoggerFactory;\r\n\r\nimport javax.inject.Inject;\r\nimport javax.ws.rs.GET;\r\nimport javax.ws.rs.Path;\r\nimport javax.ws.rs.Produces;\r\nimport javax.ws.rs.core.MediaType;\r\n\r\n@Path(\"/streaming\")\r\n@Produces(MediaType.APPLICATION_JSON)\r\npublic class Streaming {\r\n\r\n    @Inject\r\n    AuthenticationService authenticationService;\r\n\r\n    private final Logger log = LoggerFactory.getLogger(getClass());\r\n\r\n    @GrpcClient(\"pubsub\")\r\n    MutinyPubSubGrpc.MutinyPubSubStub pubsub;\r\n\r\n\r\n    @GET\r\n    public Multi<String> invokeSource() throws InterruptedException {\r\n        log.info(\"Endpoint invoked\");\r\n\r\n        var metadata = authenticationService.connect();\r\n        var alteredClient = GrpcClientUtils.attachHeaders(pubsub, metadata);\r\n        log.info(\"Headers attached to grpc client\");\r\n\r\n\r\n        Multi<FetchRequest> fetchRequestMulti = Multi.createFrom().item(\r\n                FetchRequest.newBuilder()\r\n                        .setNumRequested(1)\r\n                        .setTopicName(\"/data/AccountChangeEvent\")\r\n                        .build());\r\n\r\n\r\n        return alteredClient.subscribe(fetchRequestMulti)\r\n                .onSubscription().invoke(() -> log.info(\"⬇️ Subscribed\"))\r\n                .onFailure().invoke(f -> log.info(\"⬇️ Failed with \" + f))\r\n                .onCompletion().invoke(() -> log.info(\"⬇️ Completed\"))\r\n                .onRequest().invoke(l -> log.info(\"⬆️ Requested: \" + l))\r\n                .onItem().transform(fetchResponse -> {\r\n                    log.info(fetchResponse.getRpcId());\r\n                    return fetchResponse.getRpcId();\r\n                });\r\n    }\r\n}`\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27380/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27380/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

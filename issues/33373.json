@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33373",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33373/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33373/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33373/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33373",
+  "id": 1709815247,
+  "node_id": "I_kwDOCFbutM5l6bXP",
+  "number": 33373,
+  "title": "@QuarkusTest @InjectMock runs too often in stateful tests",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-05-15T10:40:49Z",
+  "updated_at": "2024-08-24T12:47:22Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a stateful `@QuarkusTest` with `@TestInstance(Lifecycle.PER_CLASS)`. \r\nWith `@InjectMock` I can't set up my mocks in `@BeforeAll` because the behavior gets cleared either after every single test.\r\n\r\n```\r\n@TestClassOrder(ClassOrderer.OrderAnnotation.class)\r\n@TestMethodOrder(MethodOrderer.OrderAnnotation.class)\r\n@TestInstance(TestInstance.Lifecycle.PER_CLASS)\r\n@QuarkusTest\r\nclass StatefulTest {\r\n\r\n  @InjectMock Greeter greeter;\r\n\r\n  @BeforeAll\r\n  void setup() {\r\n    when(greeter.sayHello()).thenReturn(\"Hello, stateful test!\");\r\n  }\r\n\r\n  @Order(0)\r\n  @Test\r\n  void hello() {\r\n    given().when().get(\"/hello\").then().statusCode(200).body(is(\"Hello, stateful test!\"));\r\n  }\r\n\r\n  // this fails\r\n  @Order(1)\r\n  @Test\r\n  void helloAgain() {\r\n    given().when().get(\"/hello\").then().statusCode(200).body(is(\"Hello, stateful test!\"));\r\n  }\r\n}\r\n```\r\n\r\nLooks like `io.quarkus.test.junit.callback.QuarkusTestAfterConstructCallback#afterConstruct` runs too often.\r\nWorkarund is to use `QuarkusMock.installMockForType` in `@BeforeAll`.\r\nUsing `@Nested` shows a slightly different problem with mocks being cleared after the first `@Nested` test class (see repro).\r\n\r\nRepro can be found at https://github.com/atamanroman/quarkus-injectmock-stateful-repro\n\n### Expected behavior\n\n`@InjectMock` with `@TestInstance(Lifecycle.PER_CLASS)` should work like:\r\n\r\n```\r\n@TestClassOrder(ClassOrderer.OrderAnnotation.class)\r\n@TestMethodOrder(MethodOrderer.OrderAnnotation.class)\r\n@TestInstance(Lifecycle.PER_CLASS)\r\nclass TestClass {\r\n\r\n  Greeter greeter;\r\n\r\n  @BeforeAll\r\n  void setup() {\r\n    QuarkusMock.installMockForType(greeter = mock(Greeter.class), Greeter.class);\r\n    when(greeter.sayHello()).thenReturn(\"Hello, stateful test!\");\r\n  }\r\n\r\n// tests...\r\n\r\n}\r\n```\n\n### Actual behavior\n\n`@InjectMock` resets (or recreates?) the mock after every test.\r\nThat's fine for `@TestInstance(Lifecycle.PER_METHOD)` when mocking is done in `@BeforeEach` but not really for `@TestInstance(Lifecycle.PER_CLASS)`.\n\n### How to Reproduce?\n\n- clone https://github.com/atamanroman/quarkus-injectmock-stateful-repro\r\n- run `$ mvn verify`\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.3.Final and 2.16.6.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33373/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33373/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35359",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35359/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35359/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35359/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35359",
+  "id": 1851857952,
+  "node_id": "I_kwDOCFbutM5uYRwg",
+  "number": 35359,
+  "title": "Scheduler with coroutines and hibernate-reactive does not run on worker-thread/executor-thread",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-08-15T17:42:50Z",
+  "updated_at": "2024-08-14T15:10:33Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello Quarkus community! I currently have an application that has a scheduled job. The job executes a database operation (to retrieve records) and returns (to test performance, mainly). The application is in Kotlin and I am attempting to leverage coroutines for this. The way I currently have it is by denoting the scheduled method type as suspend and then running a coroutine function within (the aforementioned database operation). The problem is that this operation somehow runs on the event-loop thread and therefore I encounter a lot of BlockedThreadChecker warnings since it is a long running operation. How would I be able to shift this operation to a worker thread?\r\n\r\nDatabase operation:\r\n```\r\nsuspend fun getAll(): List<SomeEntity> {\r\n        val entities = listOf<SomeEntity>()\r\n        val duration = measureTimeMillis {\r\n            sessionFactory.withTransaction { session ->\r\n                session.createNativeQuery(\r\n                    FETCH_SOME_ENTITY_CONSTANT,\r\n                    SomeEntity::class.java,\r\n                ).setMaxResults(DATABASE_FETCH_SIZE).resultList.map { entities }\r\n            }.awaitSuspending()\r\n        }\r\n\r\n        log.info(\"SomeEntity retrieval successful. Duration: $duration milliseconds\")\r\n\r\n        return entities\r\n    }\r\n```\r\nScheduled job:\r\n```\r\n@Scheduled(\r\n        every = \"5s\",\r\n        identity = SOME_IDENTITY_CONSTANT,\r\n        skipExecutionIf = QuartzSkipPredicate::class,\r\n        concurrentExecution = Scheduled.ConcurrentExecution.SKIP,\r\n    )\r\n    suspend fun executeJob() {\r\n        callCoroutineDatabaseOperation()\r\n }\r\n```\r\n\r\n### Expected behavior\r\n\r\nI should be able to run a long-running coroutine function within the Vertx worker-thread or executor-thread. \r\n\r\n### Actual behavior\r\n\r\nCoroutine functions under a scheduled method run under the event-loop-thread and thus emit many BlockedThread warnings when a long-running operation is encountered.\r\n\r\n### How to Reproduce?\r\n\r\n1. Start a brand new project (Kotlin/Gradle/hibernate-reactive/quartz)\r\n2. Create a scheduled function using the `suspend` type and ensure a long-running operation is invoked (preferably using hibernate-reactive's coroutines extension functions).\r\n3. Start the application and observe logs coming in the event-loop-thread with multiple BlockedThread warnings.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin C02G54SCMD6R 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:08:47 PST 2022; root:xnu-8792.61.2~4/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\n11\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.3.3\r\n\r\n### Additional information\r\n\r\nI started this same discussion over in Quarkus ZulipChat but I don't believe anyone knows how to switch from the event-loop thread to a worker-thread when dealing with coroutines in the reactive world. The last statement I got was that hibernate-reactive + coroutine support would need to be implemented first but I'm a bit unsure of what this means (without elaboration), hence why I'm asking a broader audience here.\r\n\r\nZulipChat Link: https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/How.20to.20run.20a.20scheduled.20coroutine.20job.20on.20worker.20thread",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35359/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35359/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26736",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26736/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26736/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26736/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26736",
+  "id": 1304918061,
+  "node_id": "I_kwDOCFbutM5Nx3gt",
+  "number": 26736,
+  "title": "BouncyCastleFipsJsse application hangs on systems which do not have enough entropy",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 3866841773,
+      "node_id": "LA_kwDOCFbutM7me1Kt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/securepipeline",
+      "name": "area/securepipeline",
+      "color": "0366d6",
+      "default": false,
+      "description": "issues related to ensure Quarkus can be used in a secure pipeline setups like FIPS or similar"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-07-14T15:04:03Z",
+  "updated_at": "2024-05-16T10:17:03Z",
+  "closed_at": "2024-05-16T10:17:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have an application with BouncyCastleFipsJsse endpoint. When I start the application on a freshly created virtual machine, it hangs on start up with messages \"Thread blocked\". After looking into code from stacktraces, I found, that the code blocks, while reading from `/dev/random` which does not have enough entropy yet(`cat /proc/sys/kernel/random/entropy_avail` returns 35). This problem does not affect BouncyCastleFips without JSSE.\n\n### Expected behavior\n\nThe application should not hang on any system.\n\n### Actual behavior\n\nThe application hangs and puts these stacktraces into cli:\r\n```\r\n2022-07-14 14:53:04,347 WARN  [io.ver.cor.imp.BlockedThreadChecker] (vertx-blocked-thread-checker) Thread Thread[vert.x-eventloop-thread-2,5,main] has been blocked for 7933 ms, time limit is 2000 ms: io.vertx.core.VertxException: Thread blocked\r\n\tat io.vertx.core.net.impl.TCPServerBase.listen(TCPServerBase.java:125)\r\n\tat io.vertx.core.net.impl.TCPServerBase.bind(TCPServerBase.java:100)\r\n\tat io.vertx.core.http.impl.HttpServerImpl.listen(HttpServerImpl.java:217)\r\n\tat io.vertx.core.http.impl.HttpServerImpl.listen(HttpServerImpl.java:149)\r\n\tat io.vertx.core.http.impl.HttpServerImpl.listen(HttpServerImpl.java:154)\r\n\tat io.quarkus.vertx.http.runtime.VertxHttpRecorder$WebDeploymentVerticle.setupTcpHttpServer(VertxHttpRecorder.java:1069)\r\n\tat io.quarkus.vertx.http.runtime.VertxHttpRecorder$WebDeploymentVerticle.start(VertxHttpRecorder.java:1011)\r\n\tat io.vertx.core.impl.DeploymentManager.lambda$doDeploy$5(DeploymentManager.java:196)\r\n\tat io.vertx.core.impl.DeploymentManager$$Lambda$715/0x00000001005f7440.handle(Unknown Source)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:38)\r\n\tat io.vertx.core.impl.EventLoopContext$$Lambda$716/0x00000001005f6040.run(Unknown Source)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base@11.0.13/java.lang.Thread.run(Thread.java:829)\r\n\r\n```\r\nand\r\n```\r\n2022-07-14 14:53:04,345 WARN  [io.ver.cor.imp.BlockedThreadChecker] (vertx-blocked-thread-checker) Thread Thread[vert.x-eventloop-thread-7,5,main] has been blocked for 7932 ms, time limit is 2000 ms: io.vertx.core.VertxException: Thread blocked\r\n\tat java.base@11.0.13/java.io.FileInputStream.readBytes(Native Method)\r\n\tat java.base@11.0.13/java.io.FileInputStream.read(FileInputStream.java:279)\r\n\tat java.base@11.0.13/java.io.FilterInputStream.read(FilterInputStream.java:133)\r\n\tat java.base@11.0.13/sun.security.provider.NativePRNG$RandomIO.readFully(NativePRNG.java:424) # here it blocks\r\n\tat java.base@11.0.13/sun.security.provider.NativePRNG$RandomIO.implGenerateSeed(NativePRNG.java:441)\r\n\tat java.base@11.0.13/sun.security.provider.NativePRNG$Blocking.engineGenerateSeed(NativePRNG.java:274)\r\n\tat java.base@11.0.13/java.security.SecureRandom.generateSeed(SecureRandom.java:857)\r\n\tat org.bouncycastle.crypto.util.BasicEntropySourceProvider$1.getEntropy(Unknown Source)\r\n\tat org.bouncycastle.crypto.fips.ContinuousTestingEntropySource.getEntropy(Unknown Source)\r\n\tat org.bouncycastle.crypto.fips.HashSP800DRBG.getEntropy(Unknown Source)\r\n\tat org.bouncycastle.crypto.fips.HashSP800DRBG.init(Unknown Source)\r\n\tat org.bouncycastle.crypto.fips.HashSP800DRBG.<init>(Unknown Source)\r\n\tat org.bouncycastle.crypto.fips.FipsDRBG$HashDRBGProvider.get(Unknown Source)\r\n\tat org.bouncycastle.crypto.fips.DRBGPseudoRandom.lazyInitDRBG(Unknown Source)\r\n\tat org.bouncycastle.crypto.fips.DRBGPseudoRandom.getSecurityStrength(Unknown Source)\r\n\tat org.bouncycastle.crypto.fips.FipsSecureRandom.getSecurityStrength(Unknown Source)\r\n\tat org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider.getDefaultSecureRandom(Unknown Source)\r\n\tat org.bouncycastle.jcajce.provider.ProvRandom$1.createInstance(Unknown Source)\r\n\tat org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider$BcService.newInstance(Unknown Source)\r\n\tat java.base@11.0.13/java.security.SecureRandom.getDefaultPRNG(SecureRandom.java:290)\r\n\tat java.base@11.0.13/java.security.SecureRandom.<init>(SecureRandom.java:219)\r\n\tat java.base@11.0.13/javax.crypto.JceSecurity.<clinit>(JceSecurity.java:80)\r\n\tat java.base@11.0.13/javax.crypto.Mac.getInstance(Mac.java:273)\r\n\tat org.bouncycastle.jcajce.provider.ProvBCFKS$BCFIPSKeyStoreSpi.calculateMac(Unknown Source)\r\n\tat org.bouncycastle.jcajce.provider.ProvBCFKS$BCFIPSKeyStoreSpi.verifyMac(Unknown Source)\r\n\tat org.bouncycastle.jcajce.provider.ProvBCFKS$BCFIPSKeyStoreSpi.engineLoad(Unknown Source)\r\n\tat java.base@11.0.13/java.security.KeyStore.load(KeyStore.java:1479)\r\n\tat io.vertx.core.net.impl.KeyStoreHelper.loadKeyStore(KeyStoreHelper.java:216)\r\n\tat io.vertx.core.net.KeyStoreOptionsBase.getHelper(KeyStoreOptionsBase.java:187)\r\n\tat io.vertx.core.net.KeyStoreOptionsBase.getTrustManagerFactory(KeyStoreOptionsBase.java:217)\r\n\tat io.vertx.core.net.impl.SSLHelper.getTrustMgrFactory(SSLHelper.java:314)\r\n\tat io.vertx.core.net.impl.SSLHelper.getContext(SSLHelper.java:465)\r\n\tat io.vertx.core.net.impl.SSLHelper.getContext(SSLHelper.java:456)\r\n\tat io.vertx.core.net.impl.SSLHelper.validate(SSLHelper.java:494)\r\n\tat io.vertx.core.net.impl.TCPServerBase.listen(TCPServerBase.java:151)\r\n\tat io.vertx.core.net.impl.TCPServerBase.bind(TCPServerBase.java:100)\r\n\tat io.vertx.core.http.impl.HttpServerImpl.listen(HttpServerImpl.java:217)\r\n\tat io.vertx.core.http.impl.HttpServerImpl.listen(HttpServerImpl.java:149)\r\n\tat io.vertx.core.http.impl.HttpServerImpl.listen(HttpServerImpl.java:154)\r\n\tat io.quarkus.vertx.http.runtime.VertxHttpRecorder$WebDeploymentVerticle.setupTcpHttpServer(VertxHttpRecorder.java:1069)\r\n\tat io.quarkus.vertx.http.runtime.VertxHttpRecorder$WebDeploymentVerticle.start(VertxHttpRecorder.java:1023)\r\n\tat io.vertx.core.impl.DeploymentManager.lambda$doDeploy$5(DeploymentManager.java:196)\r\n\tat io.vertx.core.impl.DeploymentManager$$Lambda$715/0x00000001005f7440.handle(Unknown Source)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:38)\r\n\tat io.vertx.core.impl.EventLoopContext$$Lambda$716/0x00000001005f6040.run(Unknown Source)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base@11.0.13/java.lang.Thread.run(Thread.java:829)\r\n\r\n```\n\n### How to Reproduce?\n\n1. make sure, that your system(preferably on a VM) doesn't have much entropy: `cat /proc/sys/kernel/random/entropy_avail` should return a small value, I reproduced this robustly, with results between 35 to 851.\r\n2. `git clone -b 2.7 git@github.com:quarkus-qe/quarkus-test-suite.git tests`\r\n3. `cd tests/security/bouncycastle-fips/bcFipsJsse`\r\n4. mvn quarkus:dev # be careful! You will not be able to stop this process  with Ctrl+c, you will have to use Ctrl+z, `jobs -l` and `kill`\r\n\r\nFor debugging, do this instead of step 4:\r\n1. `mvn clean package -DskipTests -DskipITs`\r\n2. ` java  -Djava.security.debug=provider -jar target/quarkus-app/quarkus-run.jar > debug.txt 2>&1` and Ctrl+C after several seconds.\r\n3. `grep \"NativePRNG\" debug.txt` \n\n### Output of `uname -a` or `ver`\n\n4.18.0-372.9.1.el8.x86_64\n\n### Output of `java -version`\n\n11.0.13, vendor: Red Hat, Inc.\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.6.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26736/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26736/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34676",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34676/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34676/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34676/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34676",
+  "id": 1798819736,
+  "node_id": "I_kwDOCFbutM5rN8-Y",
+  "number": 34676,
+  "title": "Coffeine Cache does not expire",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-07-11T12:22:43Z",
+  "updated_at": "2023-07-11T12:22:47Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nCache does not expire, if _.withBackOff(Duration.ofSeconds(30), Duration.ofMinutes(1))_ is used after the retry command. Without it, everything works as expected.\n\n### Expected behavior\n\nCache shoud be expired after 5s. The rest client response should replace the old value.\n\n### Actual behavior\n\nCache value is not expired after 5s. Still getting the old value.\n\n### How to Reproduce?\n\n**application.properties**\r\n\r\n`quarkus.cache.caffeine.expire-after-access=5S`\r\n\r\n\r\n```\r\n@Path(\"/somePath\")\r\n@RegisterRestClient\r\npublic interface RestClient {\r\n\r\n    @CacheResult(cacheName = \"foo-query\")\r\n    @POST\r\n    Uni<FooModel> sendQuery(String query);\r\n}\r\n```\r\n\r\n```\r\n@ApplicationScoped\r\npublic class Application {\r\n    @RestClient\r\n    RestClient restClient;\r\n\r\n    void foo() {\r\n        restClient.sendQuery(\"some query\")\r\n            //.onFailure().retry().indefinitely() // *** works fine ***\r\n            .onFailure().retry().withBackOff(Duration.ofSeconds(30), Duration.ofMinutes(1)).indefinitely()\r\n            .subscribe()\r\n            .with(i -> {\r\n              System.out.println(i);\r\n            });\r\n    }\r\n}\r\n```\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux work 5.19.0-46-generic #47~22.04.1-Ubuntu\n\n### Output of `java -version`\n\n20.0.1 2023-04-18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.9.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34676/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34676/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

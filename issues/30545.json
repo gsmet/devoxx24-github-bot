@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30545",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30545/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30545/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30545/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30545",
+  "id": 1553047641,
+  "node_id": "I_kwDOCFbutM5ckaBZ",
+  "number": 30545,
+  "title": "`librocksdbjni` for Kafka Streams is hardcoded to `linux64` variant for native builds using container",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1449536431,
+      "node_id": "MDU6TGFiZWwxNDQ5NTM2NDMx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka-streams",
+      "name": "area/kafka-streams",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 20,
+  "created_at": "2023-01-23T12:55:39Z",
+  "updated_at": "2024-08-21T13:41:50Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen building native images for applications using `quarkus-kafka-streams` in a container (`quarkus.native.container-build=true`), Quarkus will always include the `linux64` variant of `librocksdbjni` in the binary:\r\n\r\nhttps://github.com/quarkusio/quarkus/blob/a349a662b9876028aae3896763d987b44f127d64/extensions/kafka-streams/deployment/src/main/java/io/quarkus/kafka/streams/deployment/KafkaStreamsProcessor.java#L132-L141\r\n\r\nIn doing so, it's not possible to build native images targeting `linux/arm64` in a container. While the build itself runs fine and produces a valid binary, the embedded `librocksdbjni` shared library does not match the container's platform, preventing the application from starting:\r\n\r\n```\r\njava.lang.RuntimeException: librocksdbjni-linux-aarch64.so was not found inside JAR.\r\n\tat org.rocksdb.NativeLibraryLoader.loadLibraryFromJarToTemp(NativeLibraryLoader.java:118)\r\n\tat org.rocksdb.NativeLibraryLoader.loadLibraryFromJar(NativeLibraryLoader.java:102)\r\n\tat org.rocksdb.NativeLibraryLoader.loadLibrary(NativeLibraryLoader.java:82)\r\n\tat org.rocksdb.RocksDB.loadLibrary(RocksDB.java:69)\r\n\tat org.rocksdb.RocksDB.<clinit>(RocksDB.java:38)\r\n\tat io.quarkus.kafka.streams.runtime.KafkaStreamsRecorder.loadRocksDb(KafkaStreamsRecorder.java:14)\r\n\tat io.quarkus.deployment.steps.KafkaStreamsProcessor$loadRocksDb1611413226.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.KafkaStreamsProcessor$loadRocksDb1611413226.deploy(Unknown Source)\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:109)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n```\r\n\r\n### Expected behavior\r\n\r\nQuarkus should use the appropriate `librocksdbjni` variant for the platform on which the build is running. This should be true even if the build is running in a container. \r\n\r\nCompiling for `linux/arm64` is important in the following scenarios:\r\n\r\n* Building container images locally on a macOS machine with ARM processor\r\n* Cross-compiling for ARM on a x64 machine (using `-Dquarkus.native.container-runtime-options='--platform=linux/arm64'`)\r\n\r\nA similar case could be made for the `-musl` variants of `librocksdbjni`. As currently the `libc`-based JNI library is used, it's not possible to run the produced binary on musl-based OSes like Alpine.\r\n\r\n### Actual behavior\r\n\r\nThe `librocksdbjni` variant is hardcoded to `linux64`.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30545/reactions",
+    "total_count": 2,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30545/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

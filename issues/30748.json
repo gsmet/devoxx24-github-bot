@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30748",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30748/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30748/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30748/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30748",
+  "id": 1564432246,
+  "node_id": "I_kwDOCFbutM5dP1d2",
+  "number": 30748,
+  "title": "Unable to extract REST API into shared gradle module",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 19,
+  "created_at": "2023-01-31T14:34:41Z",
+  "updated_at": "2024-09-01T11:20:28Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe have a Quarkus service that exposes a rest api and one that consumes the same rest api. Both are submodules of a multi-module gradle project and we use Kotlin.\r\n\r\nSince we don't want to write the DTOs and the rest api interface twice, we added another gradle module where we extracted the rest client interface and the dtos to. Both Quarkus services now have this library module as a dependency. In the service that provides the API, I have now implemented this interface to provide the implementation for the api. \r\n\r\nThe library code looks like this (also checkout the reproducer below):\r\n\r\n```\r\n@Path(\"/books\")\r\n@Produces(MediaType.APPLICATION_JSON)\r\n@Consumes(MediaType.APPLICATION_JSON)\r\ninterface BookApi {\r\n    @GET\r\n    fun getBooks(): List<BookDto>\r\n}\r\n\r\ndata class BookDto(val name: String)\r\n```\r\n\r\nand the server code looks like this\r\n```\r\nclass BookResource : BooksApi {\r\n    override fun getBooks(): List<BookDto> {\r\n        return listOf(BookDto(\"Abc\"))\r\n    }\r\n}\r\n```\r\n\r\nUnfortunately, when you start the server, no resource is loaded and no endpoint is available. \r\n\r\nWe also tried adding `@ApplicationScoped` to the `BookResource`. Then we get warnings:\r\n```\r\n2023-01-30 18:01:41,134 WARN  [io.qua.arc.pro.BeanArchives] (build-39) Failed to index com.arconsis.books.BooksApi: Class does not exist in ClassLoader QuarkusClassLoader:Deployment Class Loader: DEV@68567e20\r\n2023-01-30 18:01:43,021 WARN  [io.qua.arc.ComponentsProvider] (Quarkus Main Thread) Unable to load removed bean type [com.arconsis.planconfig.resource.BookResource]: java.lang.NoClassDefFoundError: com/arconsis/books/BooksApi\r\n```\r\n\r\nSo it seems the interface is somehow not included in the code. Also the endpoint is not available.\r\n\r\nWhen we add the `@Path(\"/books\")` annotation to the `BooksResource`, we get an error like this:\r\n```\r\n2023-01-30 18:10:12,035 INFO  [io.qua.oid.dep.dev.OidcDevConsoleProcessor] (build-17) OIDC Dev Console: discovering the provider metadata at http://localhost:13501/realms/master/.well-known/openid-configuration\r\n2023-01-30 18:10:12,240 WARN  [io.qua.arc.pro.BeanArchives] (build-31) Failed to index com.arconsis.books.BooksApi: Class does not exist in ClassLoader QuarkusClassLoader:Deployment Class Loader: DEV@17a7f733\r\n2023-01-30 18:10:12,272 INFO  [io.qua.arc.pro.IndexClassLookupUtils] (build-31) Class for name: com.arconsis.books.BooksApi was not found in Jandex index. Please ensure the class is part of the index.\r\n2023-01-30 18:10:14,061 ERROR [io.qua.run.boo.StartupActionImpl] (Quarkus Main Thread) Error running Quarkus: java.lang.reflect.InvocationTargetException\r\n    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n    at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n    at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n    at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:104)\r\n    at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.ExceptionInInitializerError\r\n    at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n    at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)\r\n    at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n    at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)\r\n    at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:480)\r\n    at io.quarkus.runtime.Quarkus.run(Quarkus.java:70)\r\n    at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n    at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n    at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n    ... 6 more\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n    at io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n    ... 15 more\r\nCaused by: java.lang.NoClassDefFoundError: com/arconsis/books/BooksApi\r\n    at java.base/java.lang.ClassLoader.defineClass1(Native Method)\r\n    at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1012)\r\n    at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:497)\r\n    at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:457)\r\n    at java.base/java.lang.Class.forName0(Native Method)\r\n    at java.base/java.lang.Class.forName(Class.java:467)\r\n    at com.arconsis.books.BookResource_Bean.<init>(Unknown Source)\r\n    at io.quarkus.arc.setup.Default_ComponentsProvider.addBeans3(Unknown Source)\r\n    at io.quarkus.arc.setup.Default_ComponentsProvider.getComponents(Unknown Source)\r\n    at io.quarkus.arc.impl.ArcContainerImpl.<init>(ArcContainerImpl.java:117)\r\n    at io.quarkus.arc.Arc.initialize(Arc.java:31)\r\n    at io.quarkus.arc.runtime.ArcRecorder.initContainer(ArcRecorder.java:43)\r\n    at io.quarkus.deployment.steps.ArcProcessor$generateResources844392269.deploy_0(Unknown Source)\r\n    at io.quarkus.deployment.steps.ArcProcessor$generateResources844392269.deploy(Unknown Source)\r\n    ... 16 more\r\nCaused by: java.lang.ClassNotFoundException: com.arconsis.books.BooksApi\r\n    at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)\r\n    at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n    at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n    at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:507)\r\n    at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:457)\r\n    at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:507)\r\n    at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:457)\r\n    ... 30 more\r\n\r\n2023-01-30 18:10:14,064 INFO  [io.qua.dep.dev.IsolatedDevModeMain] (main) Attempting to start live reload endpoint to recover from previous Quarkus startup failure\r\n```\r\n\r\nFurthermore, if we create a client like the following:\r\n```\r\n@RegisterRestClient(configKey = \"books-api\")\r\ninterface BooksClient : BooksApi\r\n```\r\n\r\nit is also not loaded when the application starts.\n\n### Expected behavior\n\nWe should be able to extract the DTOs and API definiton to a different module to reuse it in resources and clients in multiple projects in order to not duplicate the code. \n\n### Actual behavior\n\nThe interface of the API seems to get lost and the setup is not working. \n\n### How to Reproduce?\n\nReproducer: [2023-01-31-gradle-multimodule.zip](https://github.com/quarkusio/quarkus/files/10547318/2023-01-31-gradle-multimodule.zip)\r\n\r\n1. Download & Unpack the reproducer\r\n2. Start the server by running `./gradlew :server:quarkusDev`\r\n3. The should be an endpoint http://localhost:8080/books. But it is not there. You can test and see the behavior described above. \r\n4. Start the client by running `./gradlew :client:quarkusDev`\r\n5. You can test and see the behavior described above.\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nkotlin 1.7.22\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\nTested 2.16.0 and 2.15.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle\n\n### Additional information\n\nThis ticket is the result of this Zulip chat here: https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/How.20to.20extract.20REST.20API.20into.20shared.20gradle.20module",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30748/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30748/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

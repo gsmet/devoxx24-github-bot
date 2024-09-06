@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27382",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27382/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27382/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27382/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27382",
+  "id": 1344405259,
+  "node_id": "I_kwDOCFbutM5QIf8L",
+  "number": 27382,
+  "title": "Native build runtime lib error",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2022-08-19T12:55:08Z",
+  "updated_at": "2022-11-28T09:36:30Z",
+  "closed_at": "2022-09-08T13:10:07Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI use Jenkins to build my native application. Jenkins is running as a Pod in a Kubernetes cluster. Jenkins doesn't have a docker runtime environment. I use JIB for container building.\r\nThis is a part of my Jenkinsfile:\r\n\r\n```\r\nsh('''\r\n                        \t    wget -c https://github.com/graalvm/mandrel/releases/download/mandrel-22.2.0.0-Final/mandrel-java17-linux-amd64-22.2.0.0-Final.tar.gz\r\n\t\t\t                  \ttar -xf mandrel-java17-linux-amd64-22.2.0.0-Final.tar.gz\r\n\t\t\t\t\t\t\t\texport JAVA_HOME=\"$( pwd )/mandrel-java17-22.2.0.0-Final\"\r\n\t\t\t\t\t\t\t\texport GRAALVM_HOME=\"${JAVA_HOME}\"\r\n\t\t\t\t\t\t\t\texport PATH=\"${JAVA_HOME}/bin:${PATH}\"\t  \r\n                        \r\n                            mvn clean package -U -Pnative \\\r\n\t\t\t\t\t\t\t\t-Dintegration-tests.skip=true \\\r\n\t\t\t\t\t\t\t\t-Dmaven.test.skip=true \\\r\n\t\t\t\t\t\t\t\t-DsendCredentialsOverHttp=true \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.container-image.push=true \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.container-image.group=kubernetes \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.container-image.tag=${RELEASE_VERSION} \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.container-image.name=${ARTIFACT_ID} \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.container-image.insecure=true \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.container-image.registry=nexus-docker.xxxx.local \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.container-image.username=${NEXUS_USERNAME} \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.container-image.password=${NEXUS_PASSWORD} \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.container-image.build=true \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.jib.base-registry-username=${DOCKER_USERNAME} \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.jib.base-registry-password=${DOCKER_PASSWORD} \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.jib.base-native-image=quay.io/quarkus/ubi-quarkus-native-image:22.2.0-java17 \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.kubernetes.version=${RELEASE_VERSION} \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.kubernetes.image-pull-secrets=regcred \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.kubernetes.deployment-target=kubernetes \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.kubernetes.deployment-kind=StatefulSet \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.kubernetes.namespace=${Namespace} \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.kubernetes.ingress.expose=true \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.kubernetes.ingress.host=${ARTIFACT_ID_LOWERCASE}.xxxxx.local \\\r\n\t\t\t\t\t\t\t\t-Dquarkus.native.native-image-xmx=6G\r\n\t\t\t\t\t\t\t\t\r\n\t\t\t\t\t\t\tcp target/kubernetes/kubernetes.yml target/kubernetes/${ARTIFACT_ID_LOWERCASE}.yml\r\n                        ''')\r\n```\r\n\r\nThe docker image is building and deployed as a Pod on the Kubernetes cluster. After the Pod started I got this exception:\r\n./application: /lib64/libm.so.6: version `GLIBC_2.29' not found (required by ./application)\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.11.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.4\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27382/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27382/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

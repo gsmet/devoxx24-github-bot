@@ -1,0 +1,101 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39099",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39099/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39099/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39099/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39099",
+  "id": 2162891940,
+  "node_id": "I_kwDOCFbutM6A6xyk",
+  "number": 39099,
+  "title": "Kafka MutinyEmitter.sendAndAwait sometimes ruins blocking DB transaction. #context-propagation, smallrye-kafka, narayana",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3700813587,
+      "node_id": "LA_kwDOCFbutM7cle8T",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/context-propagation",
+      "name": "area/context-propagation",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 4147701997,
+      "node_id": "LA_kwDOCFbutM73OOjt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/m1",
+      "name": "env/m1",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Apple M1 machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-03-01T08:37:45Z",
+  "updated_at": "2024-03-01T09:21:48Z",
+  "closed_at": "2024-03-01T09:17:37Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nReproducer example can be found here:\r\nhttps://github.com/MatejPucihar/kafka-db-tx\r\n\r\nScenario: \r\n- send rest http request (from test, every 1ms, to force exception)\r\n- rest request is handler is a `@Transactional` method, which inserts something in DB and sends something to kafka. It must be blocking send, we want to commit out DB TX only if kafka message is ACKed. \r\n\r\nThere is ~1:1000 chance that the handler will fail dramatically:\r\n```\r\n2024-03-01 08:32:55,162 WARN  [com.arj.ats.arjuna] (executor-thread-2) ARJUNA012094: Commit of action id 0:ffff0a010a48:e441:65e18477:d1d0 invoked while multiple threads active within it.\r\n2024-03-01 08:32:55,163 WARN  [com.arj.ats.arjuna] (executor-thread-2) ARJUNA012107: CheckedAction::check - atomic action 0:ffff0a010a48:e441:65e18477:d1d0 commiting with 2 threads active!\r\n2024-03-01 08:32:55,163 WARN  [com.arj.ats.jta] (executor-thread-2) ARJUNA016039: onePhaseCommit on < formatId=131077, gtrid_length=35, bqual_length=36, tx_uid=0:ffff0a010a48:e441:65e18477:d1d0, node_name=quarkus, branch_uid=0:ffff0a010a48:e441:65e18477:d1d3, subordinatenodename=null, eis_name=0 > (io.agroal.narayana.LocalXAResource@2ea67dc) failed with exception XAException.XA_RBROLLBACK: javax.transaction.xa.XAException: Error trying to transactionCommit local transaction: Enlisted connection used without active transaction\r\n```\n\n### Expected behavior\n\nException should never occur\n\n### Actual behavior\n\nException \n\n### How to Reproduce?\n\nhttps://github.com/MatejPucihar/kafka-db-tx\r\n`./mvnw test`\n\n### Output of `uname -a` or `ver`\n\nhappens on multiple OS/ARCHITECTURES. Linux amd64, Mac M1, K8s cluster...\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39099/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39099/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

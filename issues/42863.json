@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42863",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42863/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42863/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42863/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42863",
+  "id": 2494265037,
+  "node_id": "I_kwDOCFbutM6Uq3bN",
+  "number": 42863,
+  "title": "Hibernate Search with Panache",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1553869078,
+      "node_id": "MDU6TGFiZWwxNTUzODY5MDc4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/extension-proposal",
+      "name": "kind/extension-proposal",
+      "color": "abfcbb",
+      "default": false,
+      "description": "Discuss and Propose new extensions"
+    },
+    {
+      "id": 1664142960,
+      "node_id": "MDU6TGFiZWwxNjY0MTQyOTYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-search",
+      "name": "area/hibernate-search",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Search / Elasticsearch"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-08-29T12:12:04Z",
+  "updated_at": "2024-08-30T13:58:23Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nCreating this for tracking, to assess demand and collect suggestions.\r\n\r\nWe currently have a Panache extensions for Hibernate ORM, one for Hibernate Reactive, and one for MongoDB.\r\n\r\nWe don't have one for Hibernate Search, despite Hibernate Search exposing very advanced and useful search features. We should aim to change that.\r\n\r\nThe idea would be to allow an extra interface on Panache repositories, exposing a `search()` method which can then be used this way:\r\n\r\n```java\r\nList<Book> hits = Book.search()\r\n                    .where( f -> f.match().field( \"title\" ).matching( \"robot\" ) )\r\n                    .find()\r\n                    .page( Page.of( 0, 20 ) )\r\n                    .list();\r\n```\r\n\r\nWith plenty of variants, e.g. to project on an entity reference only:\r\n\r\n```java\r\nList<EntityReference> hits = Book.search()\r\n                    .select( f -> f.entityReference() )\r\n                    .where( f -> f.match().field( \"title\" ).matching( \"robot\" ) )\r\n                    .find()\r\n                    .page( Page.of( 0, 20 ) )\r\n                    .list();\r\n```\r\n\r\nFor the active record pattern, we'll probably need a dedicated superclass, e.g. `PanacheSearchableEntityBase`.\r\n\n\n### Implementation ideas\n\nSee https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/case.20-insenstive-query-panache/near/207954740 for the whole discussion\r\n\r\nIn particular:\r\n\r\n> As to how we'd expose it, I'd say:\r\n>\r\n> * create a separate extension hibernate-search-orm-elasticsearch-panache\r\n> * add an SPI in hibernate-orm-panache to allow other extensions to register extended PanacheEntityBase/PanacheRepository types\r\n> * create a `PanacheSearchableEntityBase` and register it to the `hibernate-orm-panache` extension so that it triggers the correct bytecode generation\r\n> * create a `PanacheSearchableRepository` interface and register it in a similar way\r\n> * Later, we might need to support multiple extensions in the same entity class, for example to support both Envers and Search. For these (admittedly rare) cases, I'd be inclined to expose a method like this in PanacheEntityBase: `static <T> T extension(Class<T> extension)`. A user would select one \"main\" base class, e.g. `PanacheEnversEntityBase`, and to access other extensions they would write `MyEntity.extension(PanacheSearch.class).search()`.\r\n\r\nNote there is a (very early) prototype already available here: https://github.com/yrodiere/hibernate-search/tree/panache",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42863/reactions",
+    "total_count": 2,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 2,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42863/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

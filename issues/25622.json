@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25622",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25622/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25622/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25622/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25622",
+  "id": 1238548816,
+  "node_id": "I_kwDOCFbutM5J0sFQ",
+  "number": 25622,
+  "title": "Reactive REST client ignores property \"microprofile.rest.client.disable.default.mapper\"",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-05-17T12:13:24Z",
+  "updated_at": "2022-05-24T14:11:48Z",
+  "closed_at": "2022-05-24T08:20:20Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI am using Reactive REST client to communicate with remote endpoint. The endpoint may return HTTP status 403. Usual behavior of Quarkus in such cases is to throw an exception, but I want to handle this response as an ordinary one. According to an answer[1] on Stackoverflow, which was seemingly made by a member of Quarkus team, the recommended way is to use `microprofile.rest.client.disable.default.mapper=false` property. Unfortunately, this doesn't help and client throws an exception anyway.\r\n\r\n[1] https://stackoverflow.com/questions/67278358/quarkus-microprofile-rest-client-how-to-handle-errors-differently\n\n### Expected behavior\n\nWhen using this property, I expect the client to pass http responses as they are.\n\n### Actual behavior\n\nClient returns an exception:\r\n\r\n```\r\n13:28:42,447 INFO  [app] 13:28:41,579 HTTP Request to /client/book/?title=Necronomicon&author=Alhazred failed, error id: 40e0950f-a82a-4296-853b-5176de8558c2-1: org.jboss.resteasy.reactive.ClientWebApplicationException: Received: 'Forbidden, status code 403' when invoking: Rest Client method: 'io.quarkus.ts.http.restclient.reactive.BookClient#getBook'\r\n13:28:42,448 INFO  [app] \tat org.jboss.resteasy.reactive.client.impl.RestClientRequestContext.unwrapException(RestClientRequestContext.java:166)\r\n13:28:42,448 INFO  [app] \tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.handleException(AbstractResteasyReactiveContext.java:315)\r\n13:28:42,449 INFO  [app] \tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:169)\r\n13:28:42,449 INFO  [app] \tat org.jboss.resteasy.reactive.client.impl.RestClientRequestContext$1.lambda$execute$0(RestClientRequestContext.java:272)\r\n13:28:42,449 INFO  [app] \tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n13:28:42,449 INFO  [app] \tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n13:28:42,450 INFO  [app] \tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:38)\r\n13:28:42,450 INFO  [app] \tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n13:28:42,450 INFO  [app] \tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n13:28:42,451 INFO  [app] \tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:500)\r\n13:28:42,451 INFO  [app] \tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n13:28:42,451 INFO  [app] \tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n13:28:42,451 INFO  [app] \tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n13:28:42,452 INFO  [app] \tat java.base/java.lang.Thread.run(Thread.java:829)\r\n13:28:42,452 INFO  [app] Caused by: javax.ws.rs.WebApplicationException: Forbidden, status code 403\r\n13:28:42,452 INFO  [app] \tat io.quarkus.rest.client.reactive.runtime.DefaultMicroprofileRestClientExceptionMapper.toThrowable(DefaultMicroprofileRestClientExceptionMapper.java:18)\r\n13:28:42,452 INFO  [app] \tat io.quarkus.rest.client.reactive.runtime.MicroProfileRestClientResponseFilter.filter(MicroProfileRestClientResponseFilter.java:36)\r\n13:28:42,453 INFO  [app] \tat org.jboss.resteasy.reactive.client.handlers.ClientResponseFilterRestHandler.handle(ClientResponseFilterRestHandler.java:20)\r\n13:28:42,453 INFO  [app] \tat org.jboss.resteasy.reactive.client.handlers.ClientResponseFilterRestHandler.handle(ClientResponseFilterRestHandler.java:9)\r\n13:28:42,453 INFO  [app] \tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:141)\r\n13:28:42,453 INFO  [app] \t... 11 more\r\n\r\n```\n\n### How to Reproduce?\n\n1. `git clone -b reproducer/error-mapping git@github.com:fedinskiy/quarkus-test-suite.git`\r\n2. `cd quarkus-test-suite/http/rest-client-reactive`\r\n3. `mvn clean verify -Dit.test=ReactiveRestClientIT`\r\n\r\nTest method `errorHandling` fails when it gets 500 instead of 403 from the wrapper around the client.\n\n### Output of `uname -a` or `ver`\n\n5.16.20-200.fc35.x86_64\n\n### Output of `java -version`\n\n11.0.12, vendor: GraalVM Community\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.5.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\nExternal resource method:\r\n```\r\n    @GET\r\n    @Path(\"/\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public Uni<Response> getBook(@QueryParam(\"title\") String title, @QueryParam(\"author\") String author) {\r\n        return Uni.createFrom().item(() -> author.equalsIgnoreCase(\"Alhazred\")\r\n                ? Response.status(Response.Status.FORBIDDEN)\r\n                : Response.ok(new Book(title, author)))\r\n                .map(Response.ResponseBuilder::build);\r\n    }\r\n```\r\nClient method: \r\n```\r\n    @GET\r\n    @Path(\"/\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    Uni<Response> getBook(@QueryParam(\"title\") String title, @QueryParam(\"author\") String author);\r\n```\r\nClient wrapper class:\r\n```\r\n@Path(\"/client/book\")\r\npublic class ReactiveClientBookResource {\r\n<...>\r\n    @GET\r\n    @Path(\"/\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public Uni<Response> getResource(@QueryParam(\"title\") String title, @QueryParam(\"author\") String author) {\r\n        return bookInterface.getBook(title, author);\r\n    }\r\n```\r\nTest class:\r\n```\r\n  @QuarkusApplication\r\n    static RestService app = new RestService().withProperties(\"modern.properties\");\r\n<...>\r\n    @Test\r\n    public void errorHandling() {\r\n        Response response = app.given()\r\n                .when()\r\n                .get(\"/client/book/?title=Necronomicon&author=Alhazred\");\r\n        assertEquals(HttpStatus.SC_FORBIDDEN, response.statusCode());\r\n    }\r\n```\r\nmodern.properties file:\r\n```\r\nquarkus.rest-client.\"io.quarkus.ts.http.restclient.reactive.json.JsonRestInterface\".url=http://localhost:${quarkus.http.port}\r\nquarkus.rest-client.\"io.quarkus.ts.http.restclient.reactive.files.FileClient\".url=http://localhost:${quarkus.http.port}\r\nquarkus.rest-client.\"io.quarkus.ts.http.restclient.reactive.BookClient\".url=http://localhost:${quarkus.http.port}\r\nquarkus.rest-client.\"io.quarkus.ts.http.restclient.reactive.BookClient.AuthorClient\".url=http://localhost:${quarkus.http.port}\r\nquarkus.rest-client.logging.scope=request-response\r\nquarkus.log.category.\"org.jboss.resteasy.reactive.client.logging\".level=DEBUG\r\nquarkus.http.limits.max-body-size=3G\r\nquarkus.rest-client.read-timeout = 60000\r\nmicroprofile.rest.client.disable.default.mapper=false\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25622/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25622/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

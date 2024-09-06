@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27821",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27821/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27821/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27821/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27821",
+  "id": 1367008399,
+  "node_id": "I_kwDOCFbutM5ReuSP",
+  "number": 27821,
+  "title": "Templated test contexts do not see transformed test classes (classloader/ordering issues in tests)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-09-08T21:29:17Z",
+  "updated_at": "2023-02-23T14:14:59Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI think something is not right in classloading for test classes. If an extension transforms a test class, what gets executed is the transformed class (as you'd expect) - *except* that if the test is parameterised or uses a TestTemplate, the template gets passed a context which has the *untransformed* class. \r\n\r\nFor example, in this test, `MyContextProvider` gets handed a context which has the test class in it, loaded by the `QuarkusClassLoader`, but un-transformed. \r\n\r\n```\r\n    @TestTemplate\r\n    @ExtendWith(MyContextProvider.class)\r\n    void verificationTestTemplate(ExtensionContext context) {\r\n        ClassLoader loader = this.getClass().getClassLoader();\r\n        Annotation[] contextAnnotations = context.getRequiredTestClass().getAnnotations();\r\n        Annotation[] myAnnotations = this.getClass().getAnnotations();\r\n\r\n        Assertions.assertEquals(myAnnotations.length, contextAnnotations.length, \"The test template sees a different version of the class than the test execution\" + Arrays.toString(myAnnotations) + \" vs \" + Arrays.toString(contextAnnotations));\r\n    }\r\n```\r\n\r\n\n\n### Expected behavior\n\nI would expect the view of the test class would be consistent across the whole test execution, including in the `ExtensionContext`. \n\n### Actual behavior\n\nThe test above fails; the ExtensionContext has a version of the class which does not have transformations on it. \n\n### How to Reproduce?\n\nReproducer: https://github.com/holly-cummins/parameterized-test-reproducer/blob/main/README.md\r\n\r\nWhat’s the reproducer doing? An extension defines some byte code transformations which apply to a test class.\r\n\r\nThe test uses a Junit 5 @TestTemplate for tests. At runtime, the version of the test that runs is the version which was transformed by the extension. However, the ContextProvider for the test template is initialised with the non-transformed version of the test class (this is the problem).\r\n\r\nNote that QuarkusDevModeTest may not seem to be enough to show this issue, it may need a proper integration testing running in dev mode. (I had another issue which definitely did not show up in the QuarkusDevModeTest but did with mvn Quarkus:dev.)\r\n\r\n```\r\n2022-09-08 21:59:10,425 INFO  [io.qua.test] (Test runner thread) Running 1/0. Running: sample.house.ParameterizedTest#verificationTestTemplate(ExtensionContext)\r\nTest class is class sample.house.ParameterizedTest\r\nTest class annotations is [@io.quarkus.test.junit.QuarkusTest()]\r\nTest class classloader is QuarkusClassLoader:Deployment Class Loader: TEST@7881b3d8\r\n2022-09-08 21:59:10,428 INFO  [io.qua.test] (Test runner thread) Running 1/0. Running: sample.house.ParameterizedTest#[@io.quarkus.test.junit.QuarkusTest()]\r\nThis tests's loader is QuarkusClassLoader:Quarkus Runtime ClassLoader: TEST restart no:1@576a1438\r\nThis tests's annotations is [@quarkus.io.pact.runtime.AnnotationAddedByExtension(), @io.quarkus.test.junit.QuarkusTest()]\r\n```\r\n\r\nTo see the failure,\r\n```\r\nrm -rf integration-tests/src/test/resources-filtered/projects/bff/target && mvn clean  install verify  -DskipTests=false -DskipITs=false\r\n```\r\nTo play with the failing test in more detail,\r\n```\r\ncd integration-tests/src/test/resources-filtered/projects/bff\r\nmvn quarkus:dev\r\n```\r\n\r\n`mvn verify` also fails.\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.2\" 2022-01-18 OpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8) OpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n    <quarkus.version>2.12.0.Final</quarkus.version>\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27821/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27821/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

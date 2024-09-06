@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20497",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20497/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20497/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20497/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20497",
+  "id": 1013169232,
+  "node_id": "I_kwDOCFbutM48Y7xQ",
+  "number": 20497,
+  "title": "@ConfigMapping fails to start when there is a REST cleint mapped to the same configuration root",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2021-10-01T10:17:42Z",
+  "updated_at": "2021-11-08T12:29:28Z",
+  "closed_at": "2021-11-08T12:29:22Z",
+  "active_lock_reason": null,
+  "body": "When there is a REST client mapped to the configuration root that has `@ConfigMapping` configured, the application would fail to start.\r\n\r\n### Actual behavior\r\n\r\n```\r\n2021-10-01 13:13:59,408 ERROR [io.qua.run.Application] (Quarkus Main Thread) Failed to start application (with profile dev): io.smallrye.config.ConfigValidationException: Configuration validation failed:\r\n        greeting-integration.api-url/mp-rest/url does not map to any root\r\n        greeting-integration.api-url/mp-rest/scope does not map to any root\r\n        at io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:838)\r\n        at io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:794)\r\n        at io.smallrye.config.ConfigMappings.mapConfiguration(ConfigMappings.java:54)\r\n        at io.smallrye.config.ConfigMappings.registerConfigMappings(ConfigMappings.java:36)\r\n        at io.quarkus.arc.runtime.ConfigRecorder.registerConfigMappings(ConfigRecorder.java:81)\r\n        at io.quarkus.deployment.steps.ConfigBuildStep$registerConfigClasses-2116437784.deploy_0(ConfigBuildStep$registerConfigClasses-2116437784.zig:132)\r\n        at io.quarkus.deployment.steps.ConfigBuildStep$registerConfigClasses-2116437784.deploy(ConfigBuildStep$registerConfigClasses-2116437784.zig:40)\r\n        at io.quarkus.runner.ApplicationImpl.doStart(ApplicationImpl.zig:645)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:101)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:66)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:42)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:119)\r\n        at io.quarkus.runner.GeneratedMain.main(GeneratedMain.zig:29)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:64)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:564)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:98)\r\n        at java.base/java.lang.Thread.run(Thread.java:832)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Generate a Quarkus project with Kotlin, Gradle, Resteasy, Resteasy client, and yaml.\r\n2. Add the following into `application.yml`:\r\n```\r\ngreeting-integration:\r\n  enabled: false\r\n  api-url/mp-rest/scope: javax.enterprise.context.ApplicationScoped\r\n  api-url/mp-rest/url: https://greeting-api\r\n```\r\n3. Create a `GreetingConfig` interface with the following contant:\r\n```\r\n@ConfigMapping(prefix = \"greeting-integration\")\r\ninterface GreetingConfig {\r\n    fun enabled(): Boolean\r\n}\r\n```\r\n4. Create a REST client:\r\n```\r\n@Path(\"/\")\r\n@RegisterRestClient(configKey = \"greeting-integration.api-url\")\r\ninterface GreetingClient {\r\n    @POST\r\n    @Consumes(MediaType.APPLICATION_JSON)\r\n    fun greet(message: String): String\r\n}\r\n```\r\n4. Run: `./gradlew quarkusDev` and observer the error.\r\n\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.3.Final",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20497/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20497/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36007",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36007/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36007/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36007/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36007",
+  "id": 1902659666,
+  "node_id": "I_kwDOCFbutM5xaEhS",
+  "number": 36007,
+  "title": "Rootless docker & podman build fails on Linux with `/usr/bin/ld: cannot open output file /project/x: Permission denied`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-09-19T10:17:52Z",
+  "updated_at": "2023-10-13T02:06:01Z",
+  "closed_at": "2023-10-13T02:05:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n## The issue\r\n\r\nI was trying to build a project using my default docker setup on my Ubuntu 22.04.3 LTS laptop and got this issue during the docker-based native build step. The issue happens with [both GraalVM and Mandrel via this configuration](https://quarkus.io/guides/building-native-image#container-runtime), as well as using both podman and docker. \r\n\r\nI understand it is related to the rootless mode not assigning the permissions properly to be able to read/write to `/project/x` inside the container.\r\n\r\nIt appears to be close to or the same issue as in #33188 and #10637\r\n\r\n\r\n### Some debugging I've done\r\n\r\nIf I set it to use podman using the property `<quarkus.native.container-runtime>podman</quarkus.native.container-runtime>` and copy the command it is running from  [full output log](https://gist.github.com/parawanderer/0c6a8c972e2801ba35ae57a9a8208bc4) and add `--userns=keep-id` after the `--user 1000:1000` parameter, the command succeeds. \r\n\r\nI am not sure if any similar solution exists for rootless docker.\r\n\r\nI have also looked at the current logic for determining when to add `--userns=keep-id` and am confused as to why it is not being included in my parameters list when I configure it to use podman: https://github.com/quarkusio/quarkus/blob/f974941e4fbcc147f49bc1734eaa0df885762647/core/deployment/src/main/java/io/quarkus/deployment/pkg/steps/NativeImageBuildLocalContainerRunner.java#L31\r\n\r\nI cloned this project at the latest main and ran the tests in [`NativeImageBuildContainerRunnerTest`](https://github.com/quarkusio/quarkus/blob/f974941e4fbcc147f49bc1734eaa0df885762647/core/deployment/src/test/java/io/quarkus/deployment/pkg/steps/NativeImageBuildContainerRunnerTest.java) and believe that it is not properly detecting me to be using rootless podman, seemingly because of the `quarkus-local-container-runtime` system property being set here:\r\n\r\nhttps://github.com/quarkusio/quarkus/blob/f974941e4fbcc147f49bc1734eaa0df885762647/core/runtime/src/main/java/io/quarkus/runtime/util/ContainerRuntimeUtil.java#L132\r\n\r\nWhich then immediately returns it here without determining if it is \"rootless\" or not (below): https://github.com/quarkusio/quarkus/blob/f974941e4fbcc147f49bc1734eaa0df885762647/core/runtime/src/main/java/io/quarkus/runtime/util/ContainerRuntimeUtil.java#L43\r\n\r\n`ContainerRuntime.of()` seems like it will match the first enum value with \"podman\" as the name, which I believe will always be the one with rootless set to false here: \r\n\r\nhttps://github.com/quarkusio/quarkus/blob/f974941e4fbcc147f49bc1734eaa0df885762647/core/runtime/src/main/java/io/quarkus/runtime/util/ContainerRuntimeUtil.java#L218\r\n\r\nTherefore it never adds the `--userns`.\r\n\r\n\r\nAs I've found a workaround and it is not extremely clear to me how to properly contribute to this project, I will not be pursuing an MR to try and fix the above issue. \r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nThe build should work as it does with non-rootless mode docker.\r\n\r\n### Actual behavior\r\n\r\nI get a failure inside the container due to being unable to access path `/project/x`:\r\n\r\nFull output may be found back [here](https://gist.github.com/parawanderer/0c6a8c972e2801ba35ae57a9a8208bc4)\r\n\r\n```\r\n/usr/bin/ld: cannot open output file /project/my-proj-1.0-SNAPSHOT-runner: Permission denied\r\ncollect2: error: ld returned 1 exit status\r\n    at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.image.NativeImageViaCC.handleLinkerFailure(NativeImageViaCC.java:203)\r\n    at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.image.NativeImageViaCC.runLinkerCommand(NativeImageViaCC.java:151)\r\n    at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.image.NativeImageViaCC.write(NativeImageViaCC.java:117)\r\n    at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:718)\r\n    at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:535)\r\n    at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:403)\r\n    at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:580)\r\n    at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:128)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Run Ubuntu as the host OS with `docker desktop` and `podman desktop`. Use the default configuration for both, which appears to be \"rootless\" mode.\r\n2. Add quarkus native compilation as a build step in maven \r\n3. Invoke this build step, in my case `mvn clean install -U`\r\n4. The final step of the build process for a module then invokes docker (the step name was `quarkus:3.1.1.Final:build`) and fails with the above error\r\n\r\nIt is unclear to me if the `quarkus-local-container-runtime` System Property is being set anywhere as I am not setting it in my project nor in my `~/.m2/settings.xml` file. But this being set seems like it might be a prerequisite too. \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux parawanderer-Latitude-7430 6.2.0-32-generic #32~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Aug 18 10:40:13 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"20.0.2\" 2023-07-18 OpenJDK Runtime Environment Homebrew (build 20.0.2) OpenJDK 64-Bit Server VM Homebrew (build 20.0.2, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.1 (2e178502fcdbffc201671fb2537d0cb4b4cc58f8) Maven home: /home/linuxbrew/.linuxbrew/Cellar/maven/3.9.1/libexec Java version: 17.0.6, vendor: Azul Systems, Inc., runtime: /home/parawanderer/zulu17.40.19-ca-jdk17.0.6-linux_x64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"6.2.0-32-generic\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\nA workaround for me has been to use docker instead of podman, and change my docker context (`docker context list`) to `default`, which seems to be non-rootless mode:\r\n```bash\r\ndocker context use default\r\n```\r\nAfter this, the build succeeded.\r\n\r\nBefore doing this change, it was set to using `desktop-linux` for me, which in the `docker context list` output was reported as the following:\r\n\r\n```\r\nNAME                TYPE                DESCRIPTION                               DOCKER ENDPOINT                                    KUBERNETES ENDPOINT   ORCHESTRATOR\r\ndefault             moby                Current DOCKER_HOST based configuration   unix:///var/run/docker.sock                                              \r\ndesktop-linux *     moby                                                          unix:///home/parawanderer/.docker/desktop/docker.sock\r\n```\r\n\r\nWhich I figured to be \"rootless\" mode, whereas `default` seemed to be \"non-rootless\". \r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36007/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36007/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

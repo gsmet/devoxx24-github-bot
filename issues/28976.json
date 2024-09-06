@@ -1,0 +1,101 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28976",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28976/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28976/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28976/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28976",
+  "id": 1431005203,
+  "node_id": "I_kwDOCFbutM5VS2gT",
+  "number": 28976,
+  "title": "[quarkus-hibernate-orm-panache] Incorrect query parameter binding for fields with custom converter",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-11-01T07:30:35Z",
+  "updated_at": "2022-11-01T09:43:06Z",
+  "closed_at": "2022-11-01T09:38:56Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nParameter value is being set with no regard for custom `@Converter`, causing incorrect result.\r\nTake example of following table and entity\r\n```sql\r\ncreate table subscription\r\n(\r\n    billingCycle int not null comment '0:none, 1:monthly, 12:yearly'\r\n);\r\n```\r\n\r\n```kotlin\r\n@Entity\r\n@Table(name = \"subscription\")\r\nclass SubscriptionEntity(\r\n    @Convert(converter = BillingCycle.Converter::class)\r\n    var billingCycle: BillingCycle\r\n) {\r\n    companion object : PanacheCompanion<Subscription>\r\n}\r\n\r\nenum class BillingCycle(val value: int) {\r\n    ONE_TIME(0), MONTHLY(1), YEARLY(12);\r\n\r\n    class Converter: AttributeConverter<BillingCycle, Int> {\r\n        override fun convertToDatabaseColumn(attribute: BillingCycle?): Int? = attribute?.value\r\n        override fun convertToEntityAttribute(dbData: Int?): BillingCycle? = dbData?.let { values().first { it.value == dbData } }\r\n    }\r\n} \r\n```\r\n\r\nPassing `YEARLY` to query will be treated at ordinal enum (value=3), thus yield no results\r\n```kotlin\r\n// Following coincidentally work due to converted value is the same as ordinal value\r\nSubscriptionEntity.list(\"billingCycle\", BillingCycle.ONE_TIME) // select * from subscription where billingCycle = 0\r\nSubscriptionEntity.list(\"billingCycle\", BillingCycle.MONTHLY) // select * from subscription where billingCycle = 1\r\n// Ordinal value `2` is being passed instead of converted value `12`\r\nSubscriptionEntity.list(\"billingCycle\", BillingCycle.YEARLY) // select * from subscription where billingCycle = 2\r\n```\r\n\r\n### Expected behavior\r\n\r\nParameter value to be converted with customer converter before passing to query.\r\n```kotlin\r\nSubscriptionEntity.list(\"billingCycle\", BillingCycle.YEARLY)\r\n```\r\nshould generate\r\n```sql\r\nselect * from subscription where billingCycle = 12\r\n```\r\n\r\n### Actual behavior\r\n\r\nConverter is ignored, and enum value is treated as ordinal value.\r\n```kotlin\r\nSubscriptionEntity.list(\"billingCycle\", BillingCycle.YEARLY)\r\n```\r\ngenerates\r\n```sql\r\nselect * from subscription where billingCycle = 2\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nDescription should be self-explanatory enough, here is the code of interest\r\nhttps://github.com/quarkusio/quarkus/blob/82700f1f75455655accb335df85ec8d9fc258807/extensions/panache/hibernate-orm-panache-common/runtime/src/main/java/io/quarkus/hibernate/orm/panache/common/runtime/AbstractJpaOperations.java#L149-L165\r\n\r\nFrom [hibernate docs](https://docs.jboss.org/hibernate/orm/5.6/userguide/html_single/Hibernate_User_Guide.html#basic-attribute-converter-query-parameter), JPA standard `javax.persistence.Query.setParameter(position, value)` won't take custom converter into account. \r\nWe should use Hibernate's `org.hibernate.query.Query.setParameter(position, value, type)` instead.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.22000.1042]\r\n\r\n### Output of `java -version`\r\n\r\njava 11.0.12 2021-07-20 LTS Java(TM) SE Runtime Environment 18.9 (build 11.0.12+8-LTS-237) Java HotSpot(TM) 64-Bit Server VM 18.9 (build 11.0.12+8-LTS-237, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n--\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n```\r\n------------------------------------------------------------ \r\nGradle 7.6-rc-1 \r\n------------------------------------------------------------  \r\nBuild time:   2022-10-28 07:52:11 UTC \r\nRevision:     62973455a8df25d003949f3f573593cd10d083a3  \r\nKotlin:       1.7.10 \r\nGroovy:       3.0.13 \r\nAnt:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 \r\nJVM:          11.0.12 (Oracle Corporation 11.0.12+8-LTS-237) \r\nOS:           Windows 10 10.0 amd64\r\n```\r\n### Additional information\r\n\r\n1. Theoretically, there should be similar issue by the same cause, that is lazy-fetching association with join column uses custom converter also yield incorrect result. But I haven't confirmed it yet\r\n2. Passing converted value (int) instead of enum won't work since hibernate does a query parameter binding validation by default\r\n`java.lang.IllegalArgumentException: Parameter value [int] did not match expected type [enum]`\r\n3. Potential workaround: wrap value around `org.hibernate.type.Type.TypedParameterValue` with its specified type",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28976/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28976/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

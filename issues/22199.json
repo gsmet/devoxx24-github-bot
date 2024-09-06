@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22199",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22199/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22199/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22199/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22199",
+  "id": 1079896567,
+  "node_id": "I_kwDOCFbutM5AXen3",
+  "number": 22199,
+  "title": "OIDC: better user-logout",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-12-14T15:27:14Z",
+  "updated_at": "2021-12-21T11:32:53Z",
+  "closed_at": "2021-12-14T15:44:39Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nWhen using public OIDC providers, most sites will want to be able to logout of their site without logging the user out of the OIDC provider. For example, when I am on StackOverflow via Google OIDC, and I log out of StackOverflow, I most definitely don't want to log out of GMail. That's the last thing I want.\r\n\r\nSo there has to be a way for users to log out of OIDC without logging out of OIDC providers. ATM this is the code I have to do:\r\n\r\n```java\r\n    @Inject\r\n    OidcConfig oidcConfig;\r\n\r\n    @Path(\"/logout\")\r\n    public Response logout() {\r\n        List<NewCookie> cookies = new ArrayList<>(oidcConfig.namedTenants.size() + 1);\r\n        // Default tenant\r\n        cookies.add(new NewCookie(\"q_session\", null, \"/\", null, null, 0, false, true));\r\n        // Named tenants\r\n        for (String tenant : oidcConfig.namedTenants.keySet()) {\r\n            cookies.add(new NewCookie(\"q_session_\"+tenant, null, \"/\", null, null, 0, false, true));\r\n        }\r\n        // Manual\r\n        cookies.add(new NewCookie(\"QuarkusUser\", null, \"/\", null, null, 0, false, true));\r\n        return Response.seeOther(Router.getURI(Application::index)).cookie(cookies.toArray(new NewCookie[0])).build();\r\n    }\r\n```\r\n\r\nI'm pretty sure we should at the very least document such logout options in our guide, and perhaps we should also add an API to support logging out? Not sure what or where, but something as easy as:\r\n\r\n```java\r\n    @Inject\r\n    SecurityIdentity identity;\r\n\r\n    @Path(\"/logout\")\r\n    public void logout() {\r\n        identity.logout();\r\n    }\r\n```\r\n\r\nNot sure it belongs on `SecurityIdentity`, and not sure how to make it tell `quarkus-resteasy-reactive` about the response cookies required, but it would at least forward the logout request to all current `IdentityProvider` (in my case OIDC and JWT).\r\n\r\nWDYT, @stuartwdouglas ?\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22199/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22199/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

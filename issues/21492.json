@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21492",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21492/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21492/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21492/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21492",
+  "id": 1055176563,
+  "node_id": "I_kwDOCFbutM4-5Ldz",
+  "number": 21492,
+  "title": "ConstraintViolation - Reactive endpoint in RESTEasy reactive doesn't behave the same as a blocking endpoint",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2021-11-16T18:10:10Z",
+  "updated_at": "2021-11-22T13:07:10Z",
+  "closed_at": "2021-11-22T10:44:06Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using RESTEasy reactive, code which throws `ConstraintViolationException` behaves differently whether or not the jax-rs endpoint is a reactive endpoint or not.\r\n\r\n### Expected behavior\r\n\r\nI would expect that any downstream code which throws `ConstraintViolationException` to be interpreted by RESTEasy reactive and handled appropriately, returning an http `400` status.\r\n\r\n### Actual behavior\r\n\r\nWhen using reactive endpoints which throw `ConstraintViolationException` somewhere in the reactive pipeline, RESTEasy reactive instead errors out with a `500` and a stack trace:\r\n\r\n```shell\r\nERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-11) HTTP Request to /api/fruits/reactiveNotWorking failed, error id: 098981a0-af22-4772-9914-911b8910a7b1-1: javax.validation.ConstraintViolationException: name: must not be empty\r\n\tat org.acme.ExampleService.validateFruit(ExampleService.java:19)\r\n\tat org.acme.ExampleService_ClientProxy.validateFruit(ExampleService_ClientProxy.zig:205)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransform$UniOnItemTransformProcessor.onItem(UniOnItemTransform.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription.forward(UniCreateFromKnownItem.java:38)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription.access$100(UniCreateFromKnownItem.java:26)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem.subscribe(UniCreateFromKnownItem.java:23)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransform.subscribe(UniOnItemTransform.java:22)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.withSubscriber(UniSubscribe.java:50)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:90)\r\n\tat org.jboss.resteasy.reactive.server.handlers.UniResponseHandler.handle(UniResponseHandler.java:17)\r\n\tat org.jboss.resteasy.reactive.server.handlers.UniResponseHandler.handle(UniResponseHandler.java:8)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:141)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxResteasyReactiveRequestContext$1$1.handle(VertxResteasyReactiveRequestContext.java:72)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxResteasyReactiveRequestContext$1$1.handle(VertxResteasyReactiveRequestContext.java:69)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:38)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:497)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\nERROR [org.jbo.res.rea.com.cor.AbstractResteasyReactiveContext] (vert.x-eventloop-thread-11) Request failed: javax.validation.ConstraintViolationException: name: must not be empty\r\n\tat org.acme.ExampleService.validateFruit(ExampleService.java:19)\r\n\tat org.acme.ExampleService_ClientProxy.validateFruit(ExampleService_ClientProxy.zig:205)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransform$UniOnItemTransformProcessor.onItem(UniOnItemTransform.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription.forward(UniCreateFromKnownItem.java:38)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription.access$100(UniCreateFromKnownItem.java:26)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem.subscribe(UniCreateFromKnownItem.java:23)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransform.subscribe(UniOnItemTransform.java:22)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.withSubscriber(UniSubscribe.java:50)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:90)\r\n\tat org.jboss.resteasy.reactive.server.handlers.UniResponseHandler.handle(UniResponseHandler.java:17)\r\n\tat org.jboss.resteasy.reactive.server.handlers.UniResponseHandler.handle(UniResponseHandler.java:8)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:141)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxResteasyReactiveRequestContext$1$1.handle(VertxResteasyReactiveRequestContext.java:72)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxResteasyReactiveRequestContext$1$1.handle(VertxResteasyReactiveRequestContext.java:69)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:38)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:497)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nSee the attached sample project which has unit tests that showcase this behavior.\r\n[resteasy-reactive-behavior.zip](https://github.com/quarkusio/quarkus/files/7548814/resteasy-reactive-behavior.zip)\r\n\r\nYou can see from the `ExampleResource` class\r\n\r\n```java\r\n@POST\r\n@Path(\"/blocking\")\r\n@Consumes(APPLICATION_JSON)\r\npublic Fruit addFruitBlocking(@NotNull Fruit fruit) {\r\n    return this.exampleService.validateFruit(fruit);\r\n}\r\n\r\n@POST\r\n@Path(\"/reactiveNotWorking\")\r\n@Consumes(APPLICATION_JSON)\r\npublic Uni<Fruit> addFruitReactiveNotWorkingCorrectly(@NotNull Fruit fruit) {\r\n    return Uni.createFrom().item(fruit)\r\n      .map(this.exampleService::validateFruit);\r\n}\r\n\r\n@POST\r\n@Path(\"/reactiveWorking\")\r\n@Consumes(APPLICATION_JSON)\r\npublic Uni<Fruit> addFruitReactive(@NotNull Fruit fruit) {\r\n    return Uni.createFrom().item(fruit)\r\n      .map(this.exampleService::validateFruit)\r\n      .onFailure(ConstraintViolationException.class)\r\n      .transform(cve -> new ResteasyReactiveViolationException(((ConstraintViolationException) cve).getConstraintViolations()));\r\n}\r\n```\r\n\r\nIf on the reactive pipeline I add\r\n\r\n```java\r\n.onFailure(ConstraintViolationException.class)\r\n.transform(cve -> new ResteasyReactiveViolationException(((ConstraintViolationException) cve).getConstraintViolations()));\r\n```\r\n\r\nwhich maps the `ConstraintViolationException` to a `ResteasyReactiveViolationException`, then everything works as expected.\r\n\r\nSee the `ExampleResourceTest` class for the unit tests\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n`Darwin edeandre-mac 21.1.0 Darwin Kernel Version 21.1.0: Wed Oct 13 17:33:23 PDT 2021; root:xnu-8019.41.5~1/RELEASE_X86_64 x86_64`\r\n\r\n### Output of `java -version`\r\n\r\n```\r\nopenjdk version \"11.0.2\" 2019-01-15\r\nOpenJDK Runtime Environment 18.9 (build 11.0.2+9)\r\nOpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode)\r\n```\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n```\r\nopenjdk version \"11.0.12\" 2021-07-20\r\nOpenJDK Runtime Environment GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08)\r\nOpenJDK 64-Bit Server VM GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08, mixed mode, sharing)\r\n```\r\n\r\n### Quarkus version or git rev\r\n\r\n`2.4.2.Final`\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21492/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21492/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

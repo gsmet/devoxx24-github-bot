@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35948",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35948/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35948/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35948/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35948",
+  "id": 1897714116,
+  "node_id": "I_kwDOCFbutM5xHNHE",
+  "number": 35948,
+  "title": "MicroProfile OpenAPI generation does not support anyOf or oneOf for schema type array",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-09-15T05:05:41Z",
+  "updated_at": "2023-09-18T13:52:46Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am trying to define a response type that looks like the following in OpenAPI.\r\n\r\n```yaml\r\nresponses:\r\n   \"200\":\r\n   description: OK\r\n   content:\r\n     application/json:\r\n       schema:\r\n         type: array\r\n         items:\r\n           anyOf:\r\n           - $ref: '#/components/schemas/SubClassADto'\r\n           - $ref: '#/components/schemas/SubClassBDto'\r\n           - $ref: '#/components/schemas/SubClassCDto'\r\n```\r\n\r\nI'm using the following MicroProfile OpenAPI annotations to do so.\r\n\r\n```\r\n@APIResponse(responseCode = \"200\", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(type = SchemaType.ARRAY, anyOf = { SubClassADto.class, SubClassBDto.class, SubClassCDto.class })))\r\n```\r\n\r\nHowever, Quarkus' MicroProfile OpenAPI generator does not generate the proper OpenAPI specification for either anyOf or oneOf. It is generating a invalid specification that does not make sense instead.\r\n\r\n### Expected behavior\r\n\r\nThe Quarkus' MicroProfile OpenAPI generator should generate the following specification for an array type that utilizes the anyOf or oneOf field.\r\n\r\nanyOf:\r\n```\r\n@Schema(type = SchemaType.ARRAY, anyOf = { ... })\r\n```\r\n\r\n```yaml\r\n schema:\r\n   type: array\r\n   items:\r\n     anyOf:\r\n     - ...\r\n```\r\n\r\noneOf:\r\n```\r\n@Schema(type = SchemaType.ARRAY, oneOf= { ... })\r\n```\r\n\r\n```yaml\r\n schema:\r\n   type: array\r\n   items:\r\n     oneOf:\r\n     - ...\r\n```\r\n\r\n### Actual behavior\r\n\r\nThe Quarkus' MicroProfile OpenAPI generator presently generates the following specification for an array type that utilizes the anyOf or oneOf field.\r\n\r\nanyOf:\r\n```\r\n@Schema(type = SchemaType.ARRAY, anyOf = { ... })\r\n```\r\n\r\n```yaml\r\n schema:\r\n   type: array\r\n   anyOf:\r\n   - ...\r\n```\r\n\r\noneOf:\r\n```\r\n@Schema(type = SchemaType.ARRAY, oneOf= { ... })\r\n```\r\n\r\n```yaml\r\n schema:\r\n   type: array\r\n   oneOf:\r\n   - ...\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: https://github.com/colesturza/quarkus-microprofile-openapi-bug-reproducer\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n`Linux desktop 5.15.0-25-generic #25-Ubuntu SMP Wed Mar 30 15:54:22 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux`\r\n\r\n### Output of `java -version`\r\n\r\n```\r\nopenjdk version \"17.0.8\" 2023-07-18\r\nOpenJDK Runtime Environment (build 17.0.8+7-Ubuntu-122.04)\r\nOpenJDK 64-Bit Server VM (build 17.0.8+7-Ubuntu-122.04, mixed mode, sharing)\r\n```\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n`2.16.11.Final`\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nTested with `Gradle 8.2.1` and `Apache Maven 3.9.3`\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35948/reactions",
+    "total_count": 3,
+    "+1": 3,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35948/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

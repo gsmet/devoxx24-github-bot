@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34621",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34621/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34621/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34621/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34621",
+  "id": 1795232008,
+  "node_id": "I_kwDOCFbutM5rAREI",
+  "number": 34621,
+  "title": "Negotiation or dynamic media type not supported yet for Multi",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-07-09T04:39:43Z",
+  "updated_at": "2023-07-10T11:51:34Z",
+  "closed_at": "2023-07-10T07:57:42Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMy example stack: Mongo reactive, Kotlin/Kotlin Coroutines/ Resteasy Reactive\r\n\r\n```bash \r\nSuppressed: java.lang.IllegalStateException: Negotiation or dynamic media type not supported yet for Multi: please use the @Produces annotation when returning a Multi\r\n\t\tat org.jboss.resteasy.reactive.server.handlers.PublisherResponseHandler.handle(PublisherResponseHandler.java:310)\r\n\t\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:150)\r\n\t\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n\t\tat org.jboss.resteasy.reactive.server.runtime.kotlin.FlowToPublisherHandler$handle$1.invokeSuspend$lambda$0(FlowToPublisherHandler.kt:34)\r\n\t\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.resume(AbstractResteasyReactiveContext.java:92)\r\n\t\tat org.jboss.resteasy.reactive.server.runtime.kotlin.FlowToPublisherHandler$handle$1.invokeSuspend(FlowToPublisherHandler.kt:34)\r\n\t\tat kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)\r\n\t\tat kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)\r\n\t\tat org.jboss.resteasy.reactive.server.runtime.kotlin.VertxDispatcher.dispatch$lambda$0(ApplicationCoroutineScope.kt:45)\r\n\t\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\t\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n\t\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n\t\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\t\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\t\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\t\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:566)\r\n\t\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\t\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\t\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\t\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\n\n### Expected behavior\n\nIn My example, I use `asFlow` to convert `Multi` to `Flow` and use a endpoint to expose it.\r\n\r\n```kotlin \r\n@ApplicationScoped\r\nclass PostRepository : ReactivePanacheMongoRepository<Post> {\r\n    fun findByTitle(title: String) = find(\"title\", title).firstResult()\r\n}\r\n```\r\n\r\nIn the `PostResources`:\r\n\r\n```kotlin\r\n@GET\r\nsuspend fun all() = postRepository.streamAll().asFlow()\r\n```\r\n\r\nThe testing codes to raise the exception.\r\n\r\n```kotlin\r\n@QuarkusTest\r\nclass PostResourcesTest {\r\n\r\n    @InjectMock\r\n    lateinit var postRepository: PostRepository\r\n\r\n    @Test\r\n    fun `get all posts`() {\r\n        `when`(postRepository.streamAll())\r\n            .thenReturn(\r\n                Multi.createFrom().items(\r\n                    Post(ObjectId(), \"foo\", \"bar\", LocalDateTime.now()),\r\n                    Post(ObjectId(), \"foo2\", \"bar2\", LocalDateTime.now())\r\n                )\r\n            )\r\n\r\n        //@formatter:off\r\n        given()\r\n            .accept(ContentType.JSON)\r\n        .`when`()\r\n            .get(\"/posts\")\r\n        .then()\r\n            .statusCode(200)\r\n            .log().all()\r\n            .body(\"size()\", `is`(2),\r\n                \"[0].title\", `is`(\"foo\")\r\n            )\r\n        //@formatter:on\r\n\r\n        verify(postRepository, times(1)).streamAll()\r\n        verifyNoMoreInteractions(postRepository)\r\n    }\r\n}\r\n```\n\n### Actual behavior\n\nResteasy(reactive) can not render the `Flow` result as expected.\n\n### How to Reproduce?\n\nExample codes: https://github.com/hantsy/quarkus-sandbox/tree/master/mongodb-kotlin-co\r\n\r\n1. clone \r\n2. Run the PostResourceTest\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### GraalVM version (if different from Java)\n\nnot test\n\n### Quarkus version or git rev\n\n3.2.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven home: C:\\Users\\hantsy\\.m2\\wrapper\\dists\\apache-maven-3.8.8-bin\\67c30f74\\apache-maven-3.8.8\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34621/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34621/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

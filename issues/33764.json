@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33764",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33764/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33764/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33764/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33764",
+  "id": 1735888767,
+  "node_id": "I_kwDOCFbutM5nd49_",
+  "number": 33764,
+  "title": "3.1.0.Final - io.quarkus.builder.BuildException: Build failure: Build failed due to errors",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-06-01T09:36:29Z",
+  "updated_at": "2023-06-01T12:42:20Z",
+  "closed_at": "2023-06-01T10:08:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe only change I made was upgrading quarkus.platform.version from 3.0.3.Final to 3.1.0.Final\r\n\r\nWhen I execute `mvn install -Pnative` it fails when trying to run the tests. It produced the native image successfully in 3.0.3.Final.\r\n\r\n```\r\n[INFO] Running com.fanthreesixty.program.consumers.SmsMessageAddedConsumerTest\r\n[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 4.764 s <<< FAILURE! - in com.fanthreesixty.program.consumers.SmsMessageAddedConsumerTest\r\n[ERROR] com.fanthreesixty.program.consumers.SmsMessageAddedConsumerTest.testConsumingSmsMessage  Time elapsed: 0.005 s  <<< ERROR!\r\njava.lang.RuntimeException: \r\njava.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        [error]: Build step io.quarkiverse.loggingmanager.deployment.LoggingManagerProcessor#includeUiAndWebsocket threw an exception: java.lang.NoSuchMethodError: 'io.quarkus.bootstrap.model.AppModel io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem.getEffectiveModel()'\r\n        at io.quarkiverse.loggingmanager.deployment.LoggingManagerProcessor.includeUiAndWebsocket(LoggingManagerProcessor.java:152)\r\n```\n\n### Expected behavior\n\n`mvn install -Pnative` finishes successfully\n\n### Actual behavior\n\n```\r\n[ERROR] Errors: \r\n[ERROR]   SmsMessageAddedConsumerTest.testConsumingSmsMessage » Runtime java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        [error]: Build step io.quarkiverse.loggingmanager.deployment.LoggingManagerProcessor#includeUiAndWebsocket threw an exception: java.lang.NoSuchMethodError: 'io.quarkus.bootstrap.model.AppModel io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem.getEffectiveModel()'\r\n        at io.quarkiverse.loggingmanager.deployment.LoggingManagerProcessor.includeUiAndWebsocket(LoggingManagerProcessor.java:152)\r\n```\n\n### How to Reproduce?\n\n```\r\n<properties>\r\n    <compiler-plugin.version>3.11.0</compiler-plugin.version>\r\n    <failsafe.useModulePath>false</failsafe.useModulePath>\r\n    <maven.compiler.source>17</maven.compiler.source>\r\n    <maven.compiler.target>17</maven.compiler.target>\r\n    <maven.compiler.release>17</maven.compiler.release>\r\n    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\r\n    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>\r\n    <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>\r\n    <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>\r\n    <quarkus.platform.version>3.1.0.Final</quarkus.platform.version>\r\n    <surefire-plugin.version>3.0.0</surefire-plugin.version>\r\n  </properties>\r\n  <dependencyManagement>\r\n    <dependencies>\r\n      <dependency>\r\n        <groupId>${quarkus.platform.group-id}</groupId>\r\n        <artifactId>${quarkus.platform.artifact-id}</artifactId>\r\n        <version>${quarkus.platform.version}</version>\r\n        <type>pom</type>\r\n        <scope>import</scope>\r\n      </dependency>\r\n    </dependencies>\r\n  </dependencyManagement>\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin FTSRoot-100268.attlocal.net 22.5.0 Darwin Kernel Version 22.5.0: Mon Apr 24 20:51:50 PDT 2023; root:xnu-8796.121.2~5/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18 OpenJDK Runtime Environment GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08) OpenJDK 64-Bit Server VM GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.1.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39) Maven home: /Users/sethpiepergerdes/Public/apache-maven-3.8.8 Java version: 17.0.5, vendor: GraalVM Community, runtime: /Library/Java/JavaVirtualMachines/graalvm-ce-java17-22.3.0/Contents/Home Default locale: en_US, platform encoding: UTF-8 OS name: \"mac os x\", version: \"13.4\", arch: \"x86_64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33764/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33764/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41334",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41334/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41334/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41334/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41334",
+  "id": 2364315345,
+  "node_id": "I_kwDOCFbutM6M7JbR",
+  "number": 41334,
+  "title": "Panache Entities extending an abstract class use wrong table mapping and throw errors on query execution",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2024-06-20T12:25:52Z",
+  "updated_at": "2024-06-20T12:27:35Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nOur project want to have a set of common column across multiple entities.\r\nMy approach was to have a `@MappedSuperClass` abstract class \"AbstractEntity\" extending `PanacheEntityBase` and defining the common columns there.\r\nThe @Entity classes \"ChildEntityA\" and \"ChildEntityB\" would extend from that AbstractEntity and add their specific columns in their classes.\r\n\r\nFor the static query methods defined in `PanacheEntityBase`, this works fine. However, if I write my own query method in the AbstractEntity with `@GenerateBridge`, hibernate seems to get confused what the target entity was.\r\nIn my test, I call `ChildEntityA.deleteBulkById(Set.of(...))` which calls the static `AbstractEntity.deleteBulkById()` method. \r\n\r\nIn the hibernate sql log, it is inconsistent and sometimes logs \r\n```\r\ndelete \r\nfrom\r\n    child_entity_a \r\nwhere\r\n```\r\nor \r\n```\r\ndelete \r\nfrom\r\n    child_entity_b \r\nwhere\r\n```\r\n\r\nI noticed that the chosen child_entity table is consistent per test run, so it will stay the same on multiple executions of the `@RepeatedTest` but might change after starting the test again.\r\n\r\nIn addition, the query fails (even when the right table was in the sql log)  with an exception (see \"Actual behaviour\").\r\n\r\nAm i even on the right path with this setup for my requirement? \r\nEven if not, I think the static query method in the abstract class should choose the affected table consistently.\r\n\r\n### Expected behavior\r\n\r\nI can define common static query methods in a abstract class that works for the children entity classes.\r\nA delete() method from the abstract class can be called by the children classes and the deletion is executed successfully.\r\n\r\n### Actual behavior\r\n\r\nThe deletion / query method in the abstract class is unable to delete the entities and throws this error:\r\n\r\n```\r\njava.lang.AssertionError\r\n        at org.hibernate.query.sqm.internal.SqmUtil.createJdbcParameterBindings(SqmUtil.java:326)\r\n        at org.hibernate.query.sqm.internal.SimpleDeleteQueryPlan.executeUpdate(SimpleDeleteQueryPlan.java:93)\r\n        at org.hibernate.query.sqm.internal.AggregatedNonSelectQueryPlanImpl.executeUpdate(AggregatedNonSelectQueryPlanImpl.java:26)\r\n        at org.hibernate.query.sqm.internal.QuerySqmImpl.doExecuteUpdate(QuerySqmImpl.java:704)\r\n        at org.hibernate.query.sqm.internal.QuerySqmImpl.executeUpdate(QuerySqmImpl.java:675)\r\n        at io.quarkus.hibernate.orm.panache.common.runtime.AbstractJpaOperations.delete(AbstractJpaOperations.java:415)\r\n        at debugging.AbstractEntity.delete(AbstractEntity.java)\r\n        at debugging.AbstractEntity.deleteBulkById(AbstractEntity.java:34)\r\n        at debugging.EntityTest.createAndDeleteEntitiesById(EntityTest.java:34)\r\n        at debugging.EntityTest_Subclass.createAndDeleteEntitiesById$$superforward(Unknown Source)\r\n        at debugging.EntityTest_Subclass$$function$$1.apply(Unknown Source)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:73)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:62)\r\n        at io.quarkus.narayana.jta.runtime.interceptor.TestTransactionInterceptor.intercept(TestTransactionInterceptor.java:45)\r\n        at io.quarkus.narayana.jta.runtime.interceptor.TestTransactionInterceptorGenerated_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n        at debugging.EntityTest_Subclass.createAndDeleteEntitiesById(Unknown Source)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.runExtensionMethod(QuarkusTestExtension.java:1013)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.interceptTestMethod(QuarkusTestExtension.java:827)\r\n        at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n        at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nCheck out the [showcase project](https://github.com/fantasticExecution/abstract-panache-showcase) and run ./mvnw verify or execute the test debugging.EntityTest.createAndDeleteEntitiesById()\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n6.8.0-76060800daily20240311-generic\r\n\r\n### Output of `java -version`\r\n\r\n17.0.11\r\n\r\n### Quarkus version or git rev\r\n\r\n3.8.5\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41334/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41334/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

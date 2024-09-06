@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30267",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30267/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30267/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30267/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30267",
+  "id": 1526003569,
+  "node_id": "I_kwDOCFbutM5a9Pdx",
+  "number": 30267,
+  "title": "Internal server error exception mapping inconsistent in dev and prod  ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-01-09T17:23:35Z",
+  "updated_at": "2023-01-10T05:50:03Z",
+  "closed_at": "2023-01-10T05:49:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nBy defining a full override of the default handler (html) for `Throwable` class, trying to still leverage the already provided handlers for e.g.: `javax.ws.rs.NotFoundException`, I am having inconsistencies through dev and prod.\r\n\r\n### Expected behavior\r\n\r\nConsistent behavior through environments. I.e.:\r\n\r\n404 outputs 404 page in both dev and prod\r\n500 outputs 500 page in both dev and prod.\r\n\r\n### Actual behavior\r\n\r\n500 page is always shown in prod.\r\n\r\n### How to Reproduce?\r\n\r\nAdding the following mapper to the codebase:\r\n\r\n```\r\nimport io.quarkus.arc.Priority;\r\n\r\nimport javax.ws.rs.core.Response;\r\nimport javax.ws.rs.ext.ExceptionMapper;\r\nimport javax.ws.rs.ext.Provider;\r\n\r\n@Priority(10_000)\r\n@Provider\r\npublic class InternalServerErrorMapper implements ExceptionMapper<Throwable> {\r\n    @Override\r\n    public Response toResponse(final Throwable exception) {\r\n        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();\r\n    }\r\n}\r\n\r\n```\r\n\r\nWith these sample endpoints:\r\n```\r\n    @GET\r\n   @Path(\"throw500\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public LocalDateTime time() {\r\n            return LocalDateTime.of(2022, Month.NOVEMBER, 31, 13, 10);\r\n    }\r\n\r\n    @GET\r\n    @Path(\"throw404\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public Slot okSlot() {\r\n        throw new NotFoundException();\r\n    }\r\n```\r\n\r\nWill override the Internal Server Error page in dev but not the 404 on dev i.e.,\r\n\r\nAccessing /throw404 will show the 404 page.\r\nAccessing /throw500 will show a blank page but with a 500 in the network call as expected.\r\n\r\nGenerating the prod image:\r\nAccessing /throw404 will show a blank page but with a 500 in the network call and this is not expected. We are expecting a 404.\r\nAccessing /throw500 will show a blank page but with a 500 in the network call as expected.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nIrrelevant\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 19.0.1 2022-10-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nIrrelevant\r\n\r\n### Quarkus version or git rev\r\n\r\n2.15.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nIrrelevant\r\n\r\n### Additional information\r\n\r\nN/A",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30267/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30267/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

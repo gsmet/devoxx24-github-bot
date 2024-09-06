@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25412",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25412/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25412/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25412/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25412",
+  "id": 1227610131,
+  "node_id": "I_kwDOCFbutM5JK9gT",
+  "number": 25412,
+  "title": "Problem with @ConfigMapping",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2022-05-06T09:10:22Z",
+  "updated_at": "2022-09-23T15:31:10Z",
+  "closed_at": "2022-09-23T15:31:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMy application is based on Quarkus and the runtime environment is OpenShift.\r\nI want to use a configuration parameter, in the form of a list in the code. \r\nFor this I define the configuration parameter in the application.properties, in the form:\r\n`my.select.parameters=val0,val1 `.\r\nThen I do the mapping, according to [MAPPING CONFIGURATION TO OBJECTS](https://quarkus.io/guides/config-mappings), with the annotation:\r\n```\r\n@ConfigMapping(prefix = \"my.select\")\r\npublic interface MySelectParameters {\r\n\r\n  List<String> parameters();\r\n}\r\n```\r\nThis works fine! \r\nNow comes the requirement to adjust the configuration parameter in the ConfigMap. \r\nFor this I define in the ConfigMap:\r\n`MY_SELECT_PARAMETERS=val0,val1`\r\n...and in the application.properties:\r\n`my.select.parameters=${MY_SELECT_PARAMETERS}`\r\nThis works without problems for mapping using `@ConfigProperty`, but not for mapping using `@ConfigMapping`! \r\nAs soon as I do the mapping using `@ConfigMapping`, I get the error message:\r\n```\r\nException in thread \"main\" java.lang.reflect.InvocationTargetException\r\n.\r\n.\r\n.\r\nCaused by: java.lang.ExceptionInInitializerError\r\n.\r\n.\r\n.\r\nCaused by: java.util.NoSuchElementException: SRCFG00014: The config property my.select.parameters is required but it could not be found in any config source\r\n```\r\nWhat is wrong?\r\n\r\nDid I miss something?\r\n\r\n\r\n### Expected behavior\r\n\r\nMapping properties, in the form of lists, using `@ConfigMapping` works for properties in the application.properties regardless of whether their values are declared directly, such as `my.select.parameters=val0,val1`, or are fed from a ConfigMap, such as `my.select.parameters=${MY_SELECT_PARAMETERS}`.\r\n\r\n\r\n### Actual behavior\r\n\r\nWhen I do the mapping of properties, in the form of lists, using `@ConfigMapping` and their value is fed from a ConfigMap, such `as my.select.parameters=${MY_SELECT_PARAMETERS}`, I get the error:\r\n\r\n```\r\nException in thread \"main\" java.lang.reflect.InvocationTargetException\r\n.\r\n.\r\n.\r\nCaused by: java.lang.ExceptionInInitializerError\r\n.\r\n.\r\n.\r\nCaused by: java.util.NoSuchElementException: SRCFG00014: The config property my.select.parameters is required but it could not be found in any config source\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n**pom.xml**\r\n```\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-kubernetes-config</artifactId>\r\n</dependency>\r\n```\r\n\r\n**application.properties**\r\n```\r\nquarkus.kubernetes-config.enabled=true\r\nquarkus.kubernetes-config.config-maps=configmap.env\r\nquarkus.arc.remove-unused-beans=false\r\n\r\ndemo.select.stringparameterfromap.stringfromap=1000,2000\r\ndemo.select.stringparameterfromcm.stringfromcm=${STRING_VALUES}\r\ndemo.select.listparameterfromap.listfromap=1000,2000\r\ndemo.select.listparameterfromcm.listfromcm=${LIST_VALUES}\r\n# demo.select.listparameterfromcm.listfromcm=1000,2000\r\n```\r\n\r\n**configmap.env**\r\n```\r\nSTRING_VALUES=1000,2000\r\nLIST_VALUES=1000,2000\r\n```\r\n\r\n**IListFromAp.java**\r\n```\r\n@StaticInitSafe\r\n@ConfigMapping(prefix = \"demo.select.listparameterfromap\")\r\npublic interface IListFromAp {\r\n\r\n  List<String> listfromap();\r\n}\r\n```\r\n\r\n**IListFromCm.java**\r\n```\r\n@StaticInitSafe\r\n@ConfigMapping(prefix = \"demo.select.listparameterfromcm\")\r\npublic interface IListFromCm {\r\n\r\n  List<String> listfromcm();\r\n}\r\n```\r\n\r\n**ConfigMappingSample.java**\r\n```\r\n@Log\r\n@ApplicationScoped\r\npublic class ConfigMappingSample {\r\n\r\n  // Test #1\r\n  @ConfigProperty(name = \"demo.select.stringparameterfromap.stringfromap\")\r\n  String stringfromap;\r\n\r\n  List<String> listfromstringfromap;\r\n\r\n  // Test #2\r\n  @ConfigProperty(name = \"demo.select.stringparameterfromcm.stringfromcm\")\r\n  String stringfromcm;\r\n\r\n  List<String> listfromstringfromcm;\r\n\r\n  // Test #3\r\n  @Inject IListFromAp iListFromAp;\r\n\r\n  // Test #4\r\n  @Inject IListFromCm iListFromCm;\r\n\r\n  @PostConstruct\r\n  public void verify() {\r\n    // Test #1 - Create list from string, from application.properties.\r\n    log.log(Level.INFO, \"stringfromap:         {0}\", stringfromap);\r\n    listfromstringfromap = Arrays.asList(stringfromap.split(\",\", -1));\r\n    log.log(Level.INFO, \"listfromstringfromap: {0}\", listfromstringfromap.toString());\r\n\r\n    // Test #2 - Create list from string, from configmap.\r\n    log.log(Level.INFO, \"stringfromcm:         {0}\", stringfromcm);\r\n    listfromstringfromcm = Arrays.asList(stringfromcm.split(\",\", -1));\r\n    log.log(Level.INFO, \"listfromstringfromcm: {0}\", listfromstringfromcm.toString());\r\n\r\n    // Test #3 - Create list from application.properties.\r\n    log.log(Level.INFO, \"listfromap:           {0}\", iListFromAp.listfromap().toString());\r\n\r\n    // Test #4 - Create list from configmap.\r\n    log.log(Level.INFO, \"listfromcm:           {0}\", iListFromCm.listfromcm().toString());\r\n  }\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux LAPTOP-KBBJVPB3 5.10.60.1-microsoft-standard-WSL2 #1 SMP Wed Aug 25 23:20:18 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.13\" 2021-10-19 LTS OpenJDK Runtime Environment Corretto-11.0.13.8.1 (build 11.0.13+8-LTS) OpenJDK 64-Bit Server VM Corretto-11.0.13.8.1 (build 11.0.13+8-LTS, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.6.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Maven home: /usr/local/mvn Java version: 11.0.13, vendor: Amazon.com Inc., runtime: /opt/java/amazon-corretto-11.0.13.8.1-linux-x64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.10.60.1-microsoft-standard-wsl2\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25412/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25412/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

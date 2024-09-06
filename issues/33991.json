@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33991",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33991/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33991/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33991/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33991",
+  "id": 1753108393,
+  "node_id": "I_kwDOCFbutM5ofk-p",
+  "number": 33991,
+  "title": "camel-quarkus-opentelemetry gives empty traceId in the logs",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-06-12T16:22:37Z",
+  "updated_at": "2023-06-13T12:36:55Z",
+  "closed_at": "2023-06-13T12:36:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello. We use camel kafka quarkus in our project with these dependencies \r\n`<dependency>\r\n    <groupId>org.apache.camel.quarkus</groupId>\r\n    <artifactId>camel-quarkus-opentelemetry</artifactId>\r\n  </dependency> `\r\n  `<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-opentelemetry</artifactId>\r\n  </dependency>`\r\n\r\nAnd the logger is configured in the application.properties file by this line\r\n`%quarkus.log.console.format=%d{HH:mm:ss} %-5p traceId=%X{traceId}, spanId=%X{spanId} [%c{2.}] (%t) %s%e%n`\r\n\r\nSince I added the `camel-quarkus-opentelemetry` dependency, I see a trace created when a camel route is triggered (using jaeger). But all the logs that are created has empty traceId and spanId.\r\n\r\nSample code from our apllication :\r\n`@ApplicationScoped\r\npublic class Routes extends RouteBuilder {\r\n    @Override\r\n    public void configure() throws Exception {\r\n        from(\"kafka:{{kafka.x.in.topic.name}}\").routeId(\"x\")\r\n                .log(\"Received : \\\"${body}\\\"\").etc\r\n}`\r\n\r\nSample output: \r\n`12:48:13 INFO  traceId=, spanId= [x] (Camel (camel-1) thread #17 - KafkaConsumer[x.topic.in]) Received : \"{\r\n\t\"payload\": {\r\n\t\t...\r\n\t},\r\n\t\"time\": \"2023-06-05T07:00:07Z\"\r\n}\"`\r\n\r\n### Expected behavior\r\n\r\ntraceId and spanId fields in the logs should have been filled with the created trace's info such as: \r\n`12:48:13 INFO  traceId=xyz, spanId=abc [x] (Camel (camel-1) thread #17 - KafkaConsumer[x.topic.in]) Received : \"{\r\n\t\"payload\": {\r\n\t\t...\r\n\t},\r\n\t\"time\": \"2023-06-05T07:00:07Z\"\r\n}\"`\r\n\r\n### Actual behavior\r\n\r\ntraceId and spanId fields are empty\r\n`12:48:13 INFO  traceId=, spanId= [x] (Camel (camel-1) thread #17 - KafkaConsumer[x.topic.in]) Received : \"{\r\n\t\"payload\": {\r\n\t\t...\r\n\t},\r\n\t\"time\": \"2023-06-05T07:00:07Z\"\r\n}\"`\r\n\r\n### How to Reproduce?\r\n\r\n1. add these dependencies `<dependency>\r\n    <groupId>org.apache.camel.quarkus</groupId>\r\n    <artifactId>camel-quarkus-opentelemetry</artifactId>\r\n  </dependency> `\r\n  `<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-opentelemetry</artifactId>\r\n  </dependency>`\r\n2. add this line to your application properties file `%quarkus.log.console.format=%d{HH:mm:ss} %-5p traceId=%X{traceId}, spanId=%X{spanId} [%c{2.}] (%t) %s%e%n`\r\n3. Trigger a camel kafka route\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava 17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\nquarkus 3.1.1 final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvnw\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33991/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33991/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

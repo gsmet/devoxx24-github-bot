@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26056",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26056/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26056/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26056/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26056",
+  "id": 1267717413,
+  "node_id": "I_kwDOCFbutM5Lj9Ul",
+  "number": 26056,
+  "title": "ExceptionMapper does not work when using RESTEasy reactive routes",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-06-10T15:42:06Z",
+  "updated_at": "2022-06-10T17:14:42Z",
+  "closed_at": "2022-06-10T17:14:28Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm trying to globally handle a custom exception that's thrown when a RESTEasy reactive endpoint, written in Kotlin, is called.  When I submit the following `GET` request via Postman:\r\n```\r\nhttp://localhost:7333/greetings/null\r\n```\r\n\r\nThe request gets processed by the following endpoint:\r\n```\r\n@Singleton\r\nclass HelloWorldController {\r\n    @Route(methods = [Route.HttpMethod.GET], path = \"/greetings/:name\", produces = [MediaType.TEXT_PLAIN])\r\n    fun greetingsToPerson(@Param name: String): Uni<String> {\r\n        if (name == \"null\") {\r\n            throw CustomException(\"Argument \\\"name\\\" contains an invalid value.\")\r\n        }\r\n\r\n        return Uni.createFrom().item(\"Greetings, ${name}!\")\r\n    }\r\n}\r\n```\r\n\r\nThe application contains the following custom global exception handler:\r\n```\r\nimport com.example.exceptions.CustomException\r\nimport com.example.models.ProblemDetails\r\nimport javax.ws.rs.core.Response\r\nimport javax.ws.rs.ext.ExceptionMapper\r\nimport javax.ws.rs.ext.Provider\r\n\r\n\r\n@Provider\r\nclass CustomExceptionHandler : ExceptionMapper<CustomException> {\r\n    override fun toResponse(e: CustomException): Response {\r\n        var problemDetails = ProblemDetails(\r\n            status = Response.Status.BAD_REQUEST,\r\n            detail = \"Something bad happened.\",\r\n            data = mapOf(\"someValue\" to e.someValue)\r\n        )\r\n\r\n        var response = Response\r\n            .status(problemDetails.status)\r\n            .entity(problemDetails)\r\n            .build()\r\n\r\n        return response\r\n    }\r\n}\r\n```\n\n### Expected behavior\n\nThe `CustomExceptionHandler.toResponse()` method should be called, which would then produce a response that looks something like this:\r\n```\r\n{\r\n    \"status\": 400,\r\n    \"detail\": \"Something bad happened.\",\r\n    \"instance\": null,\r\n    \"data\": {\r\n        \"someValue\": \"This value was set by the CustomException(message: String) constructor.\"\r\n    },\r\n    \"type\": \"about:config\"\r\n}\r\n```\n\n### Actual behavior\n\nThe `CustomExceptionHandler.toResponse()` method is not being called; a response body like this is being returned instead:\r\n```\r\n{\r\n    \"details\": \"Error id 315741ed-bb70-4bf9-8ebd-3a97a8d7d9ec-3, com.example.exceptions.CustomException: Argument \\\"name\\\" contains an invalid value.\",\r\n    \"stack\": \"com.example.exceptions.CustomException: Argument \\\"name\\\" contains an invalid value.\\n\\t<STACK TRACE SPAM>\"\r\n}\r\n```\n\n### How to Reproduce?\n\nSee https://github.com/jehrenzweig-leagueapps/quarkus-global-exception-handling/ for an example of this behavior.\n\n### Output of `uname -a` or `ver`\n\nDarwin Kernel Version 19.6.0\n\n### Output of `java -version`\n\nJava(TM) SE Runtime Environment (build 1.8.0_301-b09)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.4.2\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26056/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26056/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

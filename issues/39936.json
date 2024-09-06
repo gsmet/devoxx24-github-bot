@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39936",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39936/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39936/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39936/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39936",
+  "id": 2230180973,
+  "node_id": "I_kwDOCFbutM6E7dxt",
+  "number": 39936,
+  "title": "from *v1.Ingress: selector for *v1.Ingress not implemented",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-04-08T03:32:17Z",
+  "updated_at": "2024-04-16T03:18:37Z",
+  "closed_at": "2024-04-16T03:18:37Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n```yaml\r\n---\r\napiVersion: v1\r\nkind: Service\r\nmetadata:\r\n  annotations:\r\n    app.quarkus.io/quarkus-version: 3.9.1\r\n    app.quarkus.io/build-timestamp: 2024-04-08 - 03:12:44 +0000\r\n  labels:\r\n    app.kubernetes.io/name: kubernetes-quickstart\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n    app.kubernetes.io/managed-by: quarkus\r\n  name: kubernetes-quickstart\r\nspec:\r\n  ports:\r\n    - name: http\r\n      port: 80\r\n      protocol: TCP\r\n      targetPort: 8080\r\n  selector:\r\n    app.kubernetes.io/name: kubernetes-quickstart\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n  type: ClusterIP\r\n---\r\napiVersion: apps/v1\r\nkind: Deployment\r\nmetadata:\r\n  annotations:\r\n    app.quarkus.io/quarkus-version: 3.9.1\r\n    app.quarkus.io/build-timestamp: 2024-04-08 - 03:12:44 +0000\r\n  labels:\r\n    app.kubernetes.io/name: kubernetes-quickstart\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n    app.kubernetes.io/managed-by: quarkus\r\n  name: kubernetes-quickstart\r\nspec:\r\n  replicas: 1\r\n  selector:\r\n    matchLabels:\r\n      app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n      app.kubernetes.io/name: kubernetes-quickstart\r\n  template:\r\n    metadata:\r\n      annotations:\r\n        app.quarkus.io/quarkus-version: 3.9.1\r\n        app.quarkus.io/build-timestamp: 2024-04-08 - 03:12:44 +0000\r\n      labels:\r\n        app.kubernetes.io/managed-by: quarkus\r\n        app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n        app.kubernetes.io/name: kubernetes-quickstart\r\n    spec:\r\n      containers:\r\n        - env:\r\n            - name: KUBERNETES_NAMESPACE\r\n              valueFrom:\r\n                fieldRef:\r\n                  fieldPath: metadata.namespace\r\n          image: 10.7.0.147:8088/library/demo-app:1.0\r\n          imagePullPolicy: Always\r\n          name: kubernetes-quickstart\r\n          ports:\r\n            - containerPort: 8080\r\n              name: http\r\n              protocol: TCP\r\n---\r\napiVersion: networking.k8s.io/v1\r\nkind: Ingress\r\nmetadata:\r\n  annotations:\r\n    app.quarkus.io/quarkus-version: 3.9.1\r\n    app.quarkus.io/build-timestamp: 2024-04-08 - 03:12:44 +0000\r\n  labels:\r\n    app.kubernetes.io/name: kubernetes-quickstart\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n    app.kubernetes.io/managed-by: quarkus\r\n  name: kubernetes-quickstart\r\nspec:\r\n  rules:\r\n    - host: prod.svc.url\r\n      http:\r\n        paths:\r\n          - backend:\r\n              service:\r\n                name: kubernetes-quickstart\r\n                port:\r\n                  name: http\r\n            path: /prod\r\n            pathType: Prefix\r\n    - host: dev.svc.url\r\n      http:\r\n        paths:\r\n          - backend:\r\n              service:\r\n                name: kubernetes-quickstart\r\n                port:\r\n                  name: http\r\n            path: /dev\r\n            pathType: ImplementationSpecific\r\n    - host: alt.svc.url\r\n      http:\r\n        paths:\r\n          - backend:\r\n              service:\r\n                name: updated-service\r\n                port:\r\n                  name: tcpurl\r\n            path: /ea\r\n            pathType: Prefix\r\n\r\n```\r\n\r\ncurl http://prod.svc.com/prod/hello, 无法获取数据\r\n\r\n以下是日志：\r\n> kubectl logs ing/kubernetes-quickstart\r\nerror: cannot get the logs from *v1.Ingress: selector for *v1.Ingress not implemented\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39936/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39936/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

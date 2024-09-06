@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23100",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23100/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23100/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23100/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23100",
+  "id": 1110687100,
+  "node_id": "I_kwDOCFbutM5CM718",
+  "number": 23100,
+  "title": "Quarkus 2.6.3.Final - Quartz @Scheduled test fails on Linux after upgrading from 2.6.2.Final",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-01-21T16:50:50Z",
+  "updated_at": "2022-01-23T10:51:47Z",
+  "closed_at": "2022-01-23T10:49:16Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a Quartz scheduled task which clears some old entries from my database:\r\n\r\n```\r\n@ApplicationScoped\r\npublic class ScheduledTask {\r\n  private final MyRepository repository\r\n\r\n  public ScheduledTask(MyRepository repository) {\r\n    this.repository = repository;\r\n  }\r\n\r\n  @Scheduled(\r\n      cron = \"{delete.cron}\",\r\n      identity = \"DeleteOldRecordsJob\")\r\n  @Transactional\r\n  public void deleteOldRecords() {\r\n    repository.deleteOldRecords();\r\n  }\r\n}\r\n```\r\n\r\nI have set up my test configuration to disable the scheduled task running by default for other tests:\r\n\r\n```\r\n\"%test\":\r\n  quarkus:\r\n    quartz:\r\n      # disable scheduler for tests\r\n      start-mode: halted\r\n```\r\n\r\nAnd then in my scheduled task test I explicitly enable the scheduler for this specific test (the database is initially populated with 3 entries - 2 new and 1 old that should be deleted - I've omitted other test configuration that sets a fixed clock)\r\n\r\n```\r\n@QuarkusTest\r\n@TestTransaction\r\n@TestProfile(ScheduledTaskIntegrationTest.TestProfile.class)\r\nclass ScheduledTaskIntegrationTest {\r\n  public static class TestProfile implements QuarkusTestProfile {\r\n    @Override\r\n    public Map<String, String> getConfigOverrides() {\r\n      return Map.of(\r\n          // Enable scheduler\r\n          \"quarkus.quartz.start-mode\",\r\n          \"normal\",\r\n          // Every second\r\n          \"delete.cron\",\r\n          \"* * * * * ?\");\r\n    }\r\n  }\r\n\r\n  ScheduledTaskIntegrationTest(\r\n      MyRepository repository) {\r\n    this.repository = repository;\r\n  }\r\n\r\n  private final MyRepository repository;\r\n\r\n  @Test\r\n  void shouldDeleteOldRecords() {\r\n    await()\r\n        .atMost(5, SECONDS)\r\n        .pollInSameThread()\r\n        .untilAsserted(\r\n            () -> {\r\n              assertThat(repository.listAll()))\r\n                  .hasSize(2);\r\n            });\r\n  }\r\n}\r\n```\r\n\r\nOn Quarkus 2.6.2.Final this test passes both locally (macOS) and on CI (Jenkins/Linux) - one entry is removed the database and so only 2 are left.\r\n\r\nOn Quarkus 2.6.3.Final this works on locally, but not on CI it fails with:\r\n\r\n```\r\njava.lang.AssertionError: Expected size: 2 but was: 3\r\n```\r\n\r\nwhich looks like the scheduled task has not run \r\n\r\nStandard Output\r\n\r\n```\r\n2022-01-21 10:13:23,206 INFO  [org.fly.cor.int.lic.VersionPrinter] (Test worker) Flyway Community Edition 8.1.0 by Redgate\r\n2022-01-21 10:13:23,207 INFO  [org.fly.cor.int.dat.bas.BaseDatabaseType] (Test worker) Database: jdbc:postgresql://localhost/default (PostgreSQL 12.7)\r\n2022-01-21 10:13:23,254 INFO  [org.fly.cor.int.com.DbMigrate] (Test worker) Current version of schema \"public\": 9001\r\n2022-01-21 10:13:23,255 INFO  [org.fly.cor.int.com.DbMigrate] (Test worker) Schema \"public\" is up to date. No migration necessary.\r\n2022-01-21 10:13:23,727 INFO  [org.qua.imp.jdb.JobStoreCMT] (Test worker) Freed 0 triggers from 'acquired' / 'blocked' state.\r\n2022-01-21 10:13:23,730 INFO  [org.qua.imp.jdb.JobStoreCMT] (Test worker) Recovering 0 jobs that were in-progress at the time of the last shut-down.\r\n2022-01-21 10:13:23,730 INFO  [org.qua.imp.jdb.JobStoreCMT] (Test worker) Recovery complete.\r\n2022-01-21 10:13:23,731 INFO  [org.qua.imp.jdb.JobStoreCMT] (Test worker) Removed 0 'complete' triggers.\r\n2022-01-21 10:13:23,731 INFO  [org.qua.imp.jdb.JobStoreCMT] (Test worker) Removed 0 stale fired job entries.\r\n```\r\n\r\nStandard Error\r\n\r\n```\r\nJan 21, 2022 10:13:15 AM io.quarkus.bootstrap.runner.Timing printStopTime\r\nINFO: Quarkus stopped in 0.496s\r\nJan 21, 2022 10:13:22 AM io.quarkus.runtime.configuration.ConfigDiagnostic unknown\r\nJan 21, 2022 10:13:23 AM io.quarkus.bootstrap.runner.Timing printStartupTime\r\nINFO: Quarkus 2.6.3.Final on JVM started in 7.934s. Listening on: http://localhost:8081\r\nJan 21, 2022 10:13:23 AM io.quarkus.bootstrap.runner.Timing printStartupTime\r\nINFO: Profile test activated. \r\nJan 21, 2022 10:13:23 AM io.quarkus.bootstrap.runner.Timing printStartupTime\r\nINFO: Installed features: [agroal, cdi, config-yaml, flyway, hibernate-orm, hibernate-orm-panache, jacoco, jdbc-postgresql, narayana-jta, quartz, resteasy, resteasy-jackson, scheduler, smallrye-context-propagation, smallrye-health, smallrye-openapi, swagger-ui, vertx]\r\n```\r\n\r\n### Expected behavior\r\n\r\nTest passes both locally and on CI with 2.6.3.Final, as it did with 2.6.2.Final\r\n\r\n### Actual behavior\r\n\r\nOn 2.6.3.Final test fails on CI because there are 3 records remaining because the scheduled task has not run\r\n\r\n### How to Reproduce?\r\n\r\nUnsure.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nJava 17 (haven't checked exactly which version CI is running)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.6.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\ngradle 7.3.3\r\n\r\n### Additional information\r\n\r\nGiven it passes locally, I'm guessing it is something potentially to do with my setup rather than Quarkus itself., although the only change I've made is to bump the Quarkus version.\r\nAny tips to debug/troubleshoot why this works on my macOS machine but not on CI would be much appreciated.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23100/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23100/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31783",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31783/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31783/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31783/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31783",
+  "id": 1619957161,
+  "node_id": "I_kwDOCFbutM5gjpWp",
+  "number": 31783,
+  "title": "Codegen API and docs improvements",
+  "labels": [
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1617558663,
+      "node_id": "MDU6TGFiZWwxNjE3NTU4NjYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/epic",
+      "name": "kind/epic",
+      "color": "28a846",
+      "default": false,
+      "description": "Large issue with links to sub-issues"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-03-11T10:15:41Z",
+  "updated_at": "2023-11-14T12:41:08Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "Thoughts that are coming to my mind while working on my first CodeGenProvider. Some of those may evolve to separate issues if there is enough agreement about their usefulness.\r\n\r\n1. Pretty please add some basic JavaDoc on all CodeGenProvider API classes and methods:\r\n\r\n* `io.quarkus.deployment.CodeGenContext` - no single line of JavaDoc. Esp. it would be nice to know what `outDir()`, `workDir()` and  `inputDir()` are good for. Are they absolute or relative (to what?) Examples would be nice.\r\n* `io.quarkus.bootstrap.model.ApplicationModel` - no single line of JavaDoc\r\n* `CodeGenProvider` - what is its life cycle? May I keep some state? May I assume the individual methods to be called in some particular order? May I return different values from inputExtension() and inputDirectory() at different times? Some general info and implications about invoking from Maven/Gradle vs. invoking in dev mode would be nice.\r\n\r\n2. The JavaDoc of `CodeGenProvider.[inputExtension|inputDirectory]()` awakes the impression that one can support only one kind of files under a single `src/main` subdirectory. That's very limiting. Users may choose to name their files however they like (including no extension at all) for whatever good and bad reasons. Sometimes, they may want to have them under `src/main/resources`, because they need them in the app and some other time they may want the opposite. It would be nice if CodeGenProviders could advertise the set of their input files using Ant-like FileSets defined via directory/includes/excudes. At the same time, it should be possible for a CodeGenProvider to output a FileSet based on directories, includes and excludes **defined in build time application configuration**. \r\n\r\n   Making the code generation configuration driven is currently possible (see also 3.), but I doubt the generation is re-triggered in dev mode if the user changes some relevant config key in application.properties. This can be seen as a bug from end user perspective and I do not see any way how I could fix this with the current API.\r\n\r\n   @jamesnetherton mentioned that a potential CodeGenProviders for Salesforce DTO would be 100% config driven. No input files at all beyond application.properties. With the current API, this should be done with inputDir `resources` and inputExtension `properties`, right? Shouldn't we maybe let CodeGenProviders to advertise their input properties?\r\n\r\n3. ~Make it possible to access build time config POJOs from CodeGenProvider. Currently CodeGenProvider.trigger() gives an access to a `org.eclipse.microprofile.config.Config` instance, but there is no (correct me if I am wrong) way to get my config POJO with all defaults set. I have to check the optionals and set defaults manually.~ moved to a separate issue: https://github.com/quarkusio/quarkus/issues/35962\r\n\r\n4. `generate-code` and code generation phase are mentioned several times on various quarkus.io pages, but still it would be nice to have a paragraph somewhere, that would explain the general concept of code generation - that it is extension driven, that `generate-code` must be there for Maven projects, the limitations of source folders and extensions, support during normal builds and dev mode.\r\n\r\n5. `wsdl2java` that I am wrapping in my `CodeGenProvider` has its own plugin SPI. It does not look like there is a way how end users could add custom artifacts to the classpath of my CodeGenProvider? ~~Is there any chance to have this, perhaps as a part of Maven/Gradle config of the `generate-code` mojo?~~ Edit: I decided to wrap all those plugins in a separate extension and advised the users to add it whenever they need any of the plugins. I need that extension anyway, because there is a jar ('cxf-xjc-runtime') that the code generated by those plugins requires.  ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31783/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31783/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

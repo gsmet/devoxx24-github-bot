@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26253",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26253/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26253/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26253/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26253",
+  "id": 1278137627,
+  "node_id": "I_kwDOCFbutM5MLtUb",
+  "number": 26253,
+  "title": "Multi does not terminate if an error is thrown",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5080736243,
+      "node_id": "LA_kwDOCFbutM8AAAABLtXh8w",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/quarkus-3",
+      "name": "triage/quarkus-3",
+      "color": "BA41B2",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2022-06-21T09:08:22Z",
+  "updated_at": "2023-05-25T09:53:24Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have an api returning a Multi<Object>. When the api throws an error, the call gets stuck and never terminates. \r\n\r\nThe API call:\r\n```\r\n@POST\r\n@Produces(MediaType.SERVER_SENT_EVENTS)\r\n@RestStreamElementType(MediaType.APPLICATION_JSON)\r\n@Path(\"/ids\")\r\n    public Multi<Object> getByIds(List<String> ids) {\r\n        return service.getByIds(ids);\r\n    }\r\n```\r\n\r\nAs seen in the screenshot, an error is thrown, and the curl call never terminates and has status code 200.  However, the following test case passes when asserted for status code 500:\r\n\r\n```\r\n@Test\r\n    public void testGetByIds() {\r\n        Dummy dummy1 = Dummy.builder().hello(\"hello\").a(1).b(1).build();\r\n        Dummy dummy2 = Dummy.builder().hello(\"hello\").a(2).b(2).build();\r\n        Dummy dummy3 = Dummy.builder().hello(\"hello\").a(3).b(3).build();\r\n        Dummy createdDummy1 = service.create(dummy1).await().indefinitely();\r\n        Dummy createdDummy2 = service.create(dummy2).await().indefinitely();\r\n        Dummy createdDummy3 = service.create(dummy3).await().indefinitely();\r\n        List<Dummy> dummies = service.getByIds(List.of(createdDummy1.getId(), createdDummy2.getId(), createdDummy3.getId())).collect().asList().await().indefinitely();\r\n        assert (dummies.size() == 3);\r\n\r\n        List<String> dummyIds = new ArrayList<>(dummies.stream().map(Dummy::getId).toList());\r\n\r\n        given()\r\n                .headers(\"Content-Type\", \"application/json\")\r\n                .body(dummyIds, ObjectMapperType.GSON).post(\"/api/v1/dummy/ids\")\r\n                .then()\r\n                .statusCode(200);\r\n\r\n        dummyIds.add(\"123\");\r\n\r\n        given()\r\n                .headers(\"Content-Type\", \"application/json\")\r\n                .body(dummyIds, ObjectMapperType.GSON).post(\"/api/v1/dummy/ids\")\r\n                .then()\r\n                .statusCode(500);\r\n\r\n    }\r\n```\r\n\r\n<img width=\"1534\" alt=\"Screenshot 2022-06-21 at 9 59 47 AM\" src=\"https://user-images.githubusercontent.com/47735999/174762163-2d44b5c5-69d4-4ee5-b083-bf335a8a377d.png\">\r\n    \r\n<img width=\"1728\" alt=\"Screenshot 2022-06-21 at 9 59 37 AM\" src=\"https://user-images.githubusercontent.com/47735999/174762122-fe299474-751d-4ca6-b22e-ce76374257b2.png\">\r\n\r\n\r\n<img width=\"1299\" alt=\"Screenshot 2022-06-21 at 10 05 29 AM\" src=\"https://user-images.githubusercontent.com/47735999/174762253-c8263c4e-a5d8-4926-878c-26f9bdbdfd7d.png\">\r\n\n\n### Expected behavior\n\nThe call should fail and terminate.\n\n### Actual behavior\n\nThe curl call gets stuck, both from terminal and postman.\n\n### How to Reproduce?\n\n1. Create an API that returns a Multi and throws an error.\r\n2. Start the server and hit the api call.\n\n### Output of `uname -a` or `ver`\n\nDarwin 192.168.1.111 21.1.0 Darwin Kernel Version 21.1.0: Wed Oct 13 17:33:01 PDT 2021; root:xnu-8019.41.5~1/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.2\" 2022-01-18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven home: /opt/homebrew/Cellar/maven/3.8.5/libexec\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26253/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26253/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "reopened"
+}

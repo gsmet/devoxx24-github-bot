@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31625",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31625/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31625/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31625/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31625",
+  "id": 1611265610,
+  "node_id": "I_kwDOCFbutM5gCfZK",
+  "number": 31625,
+  "title": "Maven extension plugin should enforce schema of extension metadata yaml",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-03-06T12:05:14Z",
+  "updated_at": "2023-03-06T14:18:49Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nSeveral fields in the quarkus-extension.yaml file are treated as an array by some extensions, and a string by other extensions. We should enforce the typing to match what's in [the docs](https://quarkus.io/version/main/guides/extension-metadata#quarkus-extension-yaml).\r\n\r\nWe may also want to put similar enforcement in the registry itself to complain if improper data is uploaded, but let's start with catching the issue close to the source, so that the feedback loop is as small as possible. \r\n\r\nHere are the fields where I've noticed problems:\r\n\r\n### Status (should be a string, sometimes treated as an array)\r\n\r\nExample bad-case registry output (irrelevant bits trimmed):\r\n\r\n```\r\n  {\r\n      \"name\": \"Camel Async HTTP Client (AHC) Websocket\",\r\n      \"metadata\": {\r\n...\r\n        \"status\": [\r\n          \"stable\",\r\n          \"deprecated\"\r\n        ]\r\n      }\r\n```\r\n\r\n```\r\n   {\r\n      \"name\": \"Camel IPFS\",\r\n      \"description\": \"Access the Interplanetary File System (IPFS)\",\r\n      \"metadata\": {\r\n...\r\n        \"status\": [\r\n          \"stable\"\r\n        ]\r\n      },\r\n      \"artifact\": \"org.apache.camel.quarkus:camel-quarkus-ipfs::jar:2.7.1\",\r\n      \"origins\": [\r\n        \"io.quarkus.platform:quarkus-camel-bom-quarkus-platform-descriptor:quarkus-bom-quarkus-platform-descriptor:2.7.7.Final:json:2.7.7.Final\"\r\n      ]\r\n    }\r\n ```\r\n\r\nThis is most noticeable for deprecated extensions, where `deprecated` gets added on to the previous status. See, for example, https://github.com/apache/camel-quarkus/pull/3560/files#diff-853fef7d94cc4a8d9d8a7ed01a653a4fe0071710ce25e27f0923f1d75e79bf02 which added a deprecation element. However, there are 329 non-core extensions which treat status as an array, even if there is only one. \r\n\r\n ### Codestart languages (should be an array, sometimes treated as a string)\r\n\r\nExample bad-case registry output (irrelevant bits trimmed):\r\n\r\n```\r\n   {\r\n      \"name\": \"AWS Lambda\",\r\n      \"description\": \"Write AWS Lambda functions\",\r\n      \"metadata\": {\r\n...\r\n        \"codestart\": {\r\n          \"name\": \"amazon-lambda\",\r\n          \"kind\": \"example\",\r\n          \"languages\": \"java\",\r\n          \"artifact\": \"io.quarkus:quarkus-project-core-extension-codestarts::jar:3.0.0.Alpha4\"\r\n        },\r\n      },\r\n      \"artifact\": \"io.quarkus:quarkus-amazon-lambda::jar:3.0.0.Alpha4\",\r\n      \"origins\": [\r\n        \"io.quarkus.platform:quarkus-bom-quarkus-platform-descriptor:3.0.0.Alpha4:json:3.0.0.Alpha4\"\r\n      ]\r\n    },\r\n```\r\n\r\nThere are about 9 of these in the registry.\r\n\r\n ### Config (should be an array, sometimes treated as a string)\r\n\r\nExample bad-case registry output (irrelevant bits trimmed):\r\n\r\n```\r\n    {\r\n      \"name\": \"JBeret - Batch Processing\",\r\n      \"metadata\": {\r\n       \"config\": \"quarkus.jberet.\",\r\n        \"scm-url\": \"https://github.com/quarkiverse/quarkus-jberet\",\r\n      },\r\n      \"artifact\": \"io.quarkiverse.jberet:quarkus-jberet::jar:2.0.0\",\r\n      \"origins\": [\r\n        \"io.quarkus.registry:quarkus-non-platform-extensions:3.0.0.Alpha4:json:1.0-SNAPSHOT\"\r\n      ]\r\n    },\r\n```    \r\n\r\nJBeret seems to be the only extension with this issue.\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31625/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31625/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

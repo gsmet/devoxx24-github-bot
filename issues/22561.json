@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22561",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22561/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22561/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22561/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22561",
+  "id": 1091080305,
+  "node_id": "I_kwDOCFbutM5BCJBx",
+  "number": 22561,
+  "title": "Kafka processing prop throttled.unprocessed-record-max-age.ms unexpected behavior",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2021-12-30T12:38:23Z",
+  "updated_at": "2022-01-16T17:08:27Z",
+  "closed_at": "2022-01-16T17:08:17Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi guys!\r\nRecently I've noticed some interesting behavior in records from kafka processing: if I set throttled.unprocessed-record-max-age.ms = 12000, and then use Thread.sleep(8000) inside a record processing method like this:\r\n\r\n> @Blocking\r\n@Acknowledgment(value = POST_PROCESSING)\r\n@Incoming(\"test-incoming\")\r\npublic void receiveEvent(SomeObject event) {\r\n    log.info(\"starting processing event {}\", event.getId());\r\n    try {\r\n        Thread.sleep(8000);\r\n    } catch (Exception ex) {}\r\n    log.info(\"finished processing event {}\", event.getId());\r\n}\r\n\r\nAnd then I send, let's say 10 messages into this topic. From time to time, it fails because of \"hasTooManyMessagesWithoutAck\" which is not kind of clear because the message is processed much faster than 12 seconds.\r\nI made a small investigation and found out that problem is not with the already processed message, but with the next one, which is waited for too long in Queue<OffsetReceivedAt> receivedOffsets (KafkaThrottledLatestProcessedCommit). This method takes part in hasTooManyMessagesWithoutAck consideration. The next message stays in receivedOffsets for some time before processing the record actually started. \r\nAnd it happens more often when @Retry annotation is used: 2 corrupted records (record processing ends with exception and takes all retries) in a row, and default throttled.unprocessed-record-max-age.ms = 60s is easily used in case of @Retry(delay = 5000, maxRetries = 6)\r\n\r\n### Expected behavior\r\n\r\nthrottled.unprocessed-record-max-age.ms config applies individually for each record after its processing starts. Otherwise, there should be a way to configure something like \"processing.records.queue.max.size\", which does not equal 1 in the current implementation.\r\n\r\n### Actual behavior\r\n\r\nthrottled.unprocessed-record-max-age.ms config applies to all received offsets, even for records whose processing hasn't started yet\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava version \"11.0.12\" 2021-07-20 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.4.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.0\r\n\r\n### Additional information\r\n\r\nI believe it's not really a bug, just a way how throttled commit processing works. But I would be definitely glad to see a small explanation about such behavior in your commit strategies guide [here](https://quarkus.io/guides/kafka#commit-strategies)",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22561/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22561/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

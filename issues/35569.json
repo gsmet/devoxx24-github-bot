@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35569",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35569/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35569/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35569/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35569",
+  "id": 1867302822,
+  "node_id": "I_kwDOCFbutM5vTMem",
+  "number": 35569,
+  "title": "Quarkus 3 dev mode classloader issue - not working with aws crt http client",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-08-25T16:02:00Z",
+  "updated_at": "2024-02-07T20:09:41Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nQuarkus dev mode classloader seems to have issues with the aws-crt http client that can be used with dynamodb. Everything works perfectly when compiled natively, but in dev mode get a strange QuarkusConfigFactory error. Looking at some old threads with similar errors, it seems like classloading is typically the culprit.\r\n\r\nThe issues appear to be limited to certain mutiny methods, as using \"invoke\" vs \"call\" does not produce the error.\r\n\r\n### Expected behavior\r\n\r\nOperation returns successfully, just as it does when using netty-nio http client in dev mode, or the same as it does when using aws-crt client in native executable.\r\n\r\n### Actual behavior\r\n\r\nBelow error occurs when attempting to work with the Uni created from the aws sdk's response. Same thing occurs if using their SDKPublisher methods.\r\n\r\n```posh\r\n2023-08-25 11:51:44,739 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-0) HTTP Request to /fruits failed, error id: 29981583-2563-4019-bac3-f820f0fdc29d-1: java.util.ServiceConfigurationError: io.smallrye.config.SmallRyeConfigFactory: io.quarkus.runtime.configuration.QuarkusConfigFactory not a subtype\r\n\tat java.base/java.util.ServiceLoader.fail(ServiceLoader.java:589)\r\n\tat java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNextService(ServiceLoader.java:1237)\r\n\tat java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNext(ServiceLoader.java:1265)\r\n\tat java.base/java.util.ServiceLoader$2.hasNext(ServiceLoader.java:1300)\r\n\tat java.base/java.util.ServiceLoader$3.hasNext(ServiceLoader.java:1385)\r\n\tat io.smallrye.config.SmallRyeConfigProviderResolver.getFactoryFor(SmallRyeConfigProviderResolver.java:100)\r\n\tat io.smallrye.config.SmallRyeConfigProviderResolver.getConfig(SmallRyeConfigProviderResolver.java:76)\r\n\tat io.smallrye.config.SmallRyeConfigProviderResolver.getConfig(SmallRyeConfigProviderResolver.java:64)\r\n\tat org.eclipse.microprofile.config.ConfigProvider.getConfig(ConfigProvider.java:85)\r\n\tat io.smallrye.context.impl.DefaultValues.<init>(DefaultValues.java:41)\r\n\tat io.smallrye.context.SmallRyeContextManager.<init>(SmallRyeContextManager.java:63)\r\n\tat io.smallrye.context.SmallRyeContextManager$Builder.build(SmallRyeContextManager.java:337)\r\n\tat io.smallrye.context.SmallRyeContextManagerProvider.getContextManager(SmallRyeContextManagerProvider.java:48)\r\n\tat io.smallrye.context.SmallRyeContextManagerProvider.getContextManager(SmallRyeContextManagerProvider.java:37)\r\n\tat io.smallrye.context.SmallRyeContextManagerProvider.getManager(SmallRyeContextManagerProvider.java:97)\r\n\tat io.smallrye.context.SmallRyeThreadContext.getCurrentThreadContextOrDefaultContexts(SmallRyeThreadContext.java:160)\r\n\tat io.smallrye.mutiny.context.DefaultContextPropagationInterceptor.getThreadContext(DefaultContextPropagationInterceptor.java:12)\r\n\tat io.smallrye.mutiny.context.BaseContextPropagationInterceptor.decorate(BaseContextPropagationInterceptor.java:92)\r\n\tat io.smallrye.mutiny.infrastructure.Infrastructure.decorate(Infrastructure.java:254)\r\n\tat io.smallrye.mutiny.groups.UniOnItem.transform(UniOnItem.java:114)\r\n\tat io.smallrye.mutiny.groups.UniOnItem.lambda$call$2(UniOnItem.java:80)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.performInnerSubscription(UniOnItemTransformToUni.java:68)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:57)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage$CompletionStageUniSubscription.forwardResult(UniCreateFromCompletionStage.java:63)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:859)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:837)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:506)\r\n\tat java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2073)\r\n\tat software.amazon.awssdk.core.internal.http.pipeline.stages.AsyncApiCallMetricCollectionStage.lambda$execute$0(AsyncApiCallMetricCollectionStage.java:56)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:859)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:837)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:506)\r\n\tat java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2073)\r\n\tat software.amazon.awssdk.core.internal.http.pipeline.stages.AsyncApiCallTimeoutTrackingStage.lambda$execute$2(AsyncApiCallTimeoutTrackingStage.java:69)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:859)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:837)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:506)\r\n\tat java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2073)\r\n\tat software.amazon.awssdk.core.internal.http.pipeline.stages.AsyncRetryableStage$RetryingExecutor.lambda$attemptExecute$1(AsyncRetryableStage.java:177)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:859)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:837)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:506)\r\n\tat java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2073)\r\n\tat software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage.lambda$null$0(MakeAsyncHttpRequestStage.java:105)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:859)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:837)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:506)\r\n\tat java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2073)\r\n\tat software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage.completeResponseFuture(MakeAsyncHttpRequestStage.java:238)\r\n\tat software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage.lambda$executeHttpRequest$3(MakeAsyncHttpRequestStage.java:163)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:930)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:907)\r\n\tat java.base/java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:478)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:581)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: https://github.com/madocx/quarkus-reproducer\r\n\r\n1. Run with mvn quarkus:dev\r\n2. Make request to fruits resource\r\n\r\nTo eliminate error, either change http client to netty-nio, or replace call inocation with invoke.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux a-20b6iv5ait3pg 5.15.122-77.145.amzn2.x86_64 #1 SMP Tue Aug 1 20:49:01 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.14.1\" 2022-02-08 OpenJDK Runtime Environment Temurin-11.0.14.1+1 (build 11.0.14.1+1) OpenJDK 64-Bit Server VM Temurin-11.0.14.1+1 (build 11.0.14.1+1, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.4.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\napache-maven-3.9.4 (also occurs with older versions)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35569/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35569/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

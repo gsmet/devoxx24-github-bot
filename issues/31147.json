@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31147",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31147/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31147/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31147/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31147",
+  "id": 1583942209,
+  "node_id": "I_kwDOCFbutM5eaQpB",
+  "number": 31147,
+  "title": "RESTEasy Reactive @Context is empty or not mapping correctly",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-02-14T10:58:33Z",
+  "updated_at": "2023-02-15T09:36:00Z",
+  "closed_at": "2023-02-15T09:34:18Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm trying to receive context using @Context AwsProxyRequestContext or @Context AwsProxyRequest.\r\nThanks to 2.16.2 Final release, resteasy reactive no longer produce 404. \r\nHowever now context data is missing.\r\n\r\nThis is my app code:\r\n\r\n    @GET\r\n    @Path(\"/hello1\")\r\n    public String hello(@Context AwsProxyRequestContext context) {\r\n        Gson gson = new GsonBuilder().setPrettyPrinting().create();\r\n\r\n        log.info(\"hello1 \" + gson.toJson(context));\r\n        return \"hello1\";\r\n    }\r\n\r\n    @GET\r\n    @Path(\"/hello2\")\r\n    public String hello2(@Context AwsProxyRequest contex) {\r\n        Gson gson = new GsonBuilder().setPrettyPrinting().create();\r\n\r\n        log.info(\"HEH \" + gson.toJson(contex));\r\n        return \"hello2\";\r\n    }\r\n\r\nLogs for lambda AWS: \r\nhello1\r\n![image](https://user-images.githubusercontent.com/38432671/218706525-9d566c55-47c5-4de4-b0f2-e52ee51979e8.png)\r\n\r\nhello2\r\n![image](https://user-images.githubusercontent.com/38432671/218706761-d98ebe7e-0d32-4d8d-9717-f39caf376c40.png)\r\n\r\nDependencies I use: \r\n\r\n    implementation 'io.quarkus:quarkus-resteasy-reactive'\r\n    implementation 'io.quarkus:quarkus-arc'\r\n    implementation 'io.quarkus:quarkus-amazon-lambda-rest'\r\n\r\n    implementation 'io.quarkiverse.amazonservices:quarkus-amazon-s3:1.6.1'\r\n    implementation 'software.amazon.awssdk:netty-nio-client:2.19.22'\r\n\r\n    testImplementation 'io.quarkus:quarkus-junit5'\r\n    testImplementation 'io.rest-assured:rest-assured'\r\n    testImplementation 'io.quarkus:quarkus-junit5'\r\n    implementation 'com.google.code.gson:gson:2.9.1'\r\n\r\n\n\n### Expected behavior\n\nAfter I changed dependency from \r\n\r\n implementation 'io.quarkus:quarkus-resteasy-reactive'\r\n\r\nto \r\n\r\n implementation 'io.quarkus:quarkus-resteasy'\r\n\r\nalso using 2.16.2 Final release version, without any changes in code, context data is filled correctly \r\n\r\nLogs from lambda AWS:\r\nhello1\r\n\r\n![image](https://user-images.githubusercontent.com/38432671/218715211-baf4dd6d-4fdc-489b-95ac-aa6080ba7e95.png)\r\n\r\n\r\nhello2\r\n\r\n![image](https://user-images.githubusercontent.com/38432671/218713114-a89086fd-b4e3-4c18-8d14-c8087a0e3e5e.png)\r\n\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux 5.10.16.3-microsoft-standard-WSL2 #1 SMP Fri Apr 2 22:23:49 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.17\" 2022-10-18 OpenJDK Runtime Environment (build 11.0.17+8-post-Ubuntu-1ubuntu220.04) OpenJDK 64-Bit Server VM (build 11.0.17+8-post-Ubuntu-1ubuntu220.04, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.5.1 ------------------------------------------------------------  Build time:   2022-08-05 21:17:56 UTC Revision:     d1daa0cbf1a0103000b71484e1dbfe096e095918  Kotlin:       1.6.21 Groovy:       3.0.10 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          11.0.18 (Azul Systems, Inc. 11.0.18+10-LTS) OS:           Windows 10 10.0 amd64\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31147/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31147/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

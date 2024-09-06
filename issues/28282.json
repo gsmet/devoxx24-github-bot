@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28282",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28282/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28282/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28282/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28282",
+  "id": 1390549491,
+  "node_id": "I_kwDOCFbutM5S4hnz",
+  "number": 28282,
+  "title": "Make stubbing and asserting easier when testing command mode application",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-09-29T09:25:22Z",
+  "updated_at": "2022-09-29T12:43:51Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\n**Context**\r\nI have a fairly simple batch which is written in kotlin and uses quarkus command mode app (a class annotated with `@QuarkusMain` and a run method). Simply put the batch :\r\n\r\n1. fetch some items from a dynamodb database\r\n2. send them to an external webservice\r\n3. updates the item in dynamodb.\r\n\r\n**What i want to do**\r\nI want to test the batch with wiremock for stubbing the external webservice and a local dynamodb, well for mocking dynamodb :)\r\n\r\n**How i which it would work**\r\nThe same way i test a webapp, i would like to be able to :\r\n\r\n1. Start wiremock and dynamodb in a test resource\r\n2. in my test function, before starting the batch, inject test data in dynamo and set up a stub in wiremock\r\n3. Execute my batch\r\n4. Assert that data have been correctly modified in my database and the stub has been called (still in my test function)\r\n5. Cleanup\r\n6. Jump to 2) and run another test function\r\n\r\n**Current limitations**\r\n- Test resources are started when calling the `io.quarkus.test.junit.main.QuarkusMainLauncher#launch` method, right before executing the main class, which means that i can't insert test data in my test function : the dynamodb database is not started yet.\r\n- Test resources are stopped right after the batch exit, which means that i can't assert that data are valid in my test function : the dyanmodb database is already stopped\r\n\r\n**Workaround**\r\nTo be able to insert data and make assertions i have to add 3 test resources :\r\n\r\n1. A test resource with a higher order than the one setting up dynamodb and wiremock that will insert test data and setup stubs (in the start function)\r\n2. A second one with a lower order, which will do the assertions (but won't throw anything) (in the stop function)\r\n3. A last one with the highest order, which will throw the assertion errors that happened in 2) This is needed to allow dynamodb and wiremock to stop properly (in the stop function)\r\n\r\nThis work, but it is difficult to maintain and to understand. \r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28282/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28282/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

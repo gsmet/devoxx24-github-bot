@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29177",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29177/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29177/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29177/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29177",
+  "id": 1443867682,
+  "node_id": "I_kwDOCFbutM5WD6wi",
+  "number": 29177,
+  "title": "Breaking change in 2.14.0 for Quartz extension with jdbc",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-11-10T13:00:27Z",
+  "updated_at": "2022-11-16T06:53:34Z",
+  "closed_at": "2022-11-15T15:54:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using \r\n```properties\r\nquarkus.quartz.clustered=true\r\nquarkus.quartz.store-type=jdbc-tx\r\n```\r\nQuartz store job class name in `JOB_DETAILS.JOB_CLASS_NAME`. \r\nIn 2.14.0 `io.quarkus.quartz.runtime.QuartzScheduler$InvokerJob` has been moved to ` io.quarkus.quartz.runtime.QuartzSchedulerImpl$InvokerJob`, so startup crash with\r\n```\r\nio.quarkus.runtime.Application Failed to start application (with profile prod): java.lang.ClassNotFoundException: io.quarkus.quartz.runtime.QuartzScheduler$InvokerJob\r\n\tat java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)\r\n\tat java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:521)\r\n\tat io.quarkus.bootstrap.runner.RunnerClassLoader.loadClass(RunnerClassLoader.java:115)\r\n\tat io.quarkus.bootstrap.runner.RunnerClassLoader.loadClass(RunnerClassLoader.java:65)\r\n\tat org.quartz.simpl.InitThreadContextClassLoadHelper.loadClass(InitThreadContextClassLoadHelper.java:72)\r\n\tat org.quartz.simpl.InitThreadContextClassLoadHelper.loadClass(InitThreadContextClassLoadHelper.java:78)\r\n\tat org.quartz.impl.jdbcjobstore.StdJDBCDelegate.selectJobForTrigger(StdJDBCDelegate.java:1662)\r\n\tat org.quartz.impl.jdbcjobstore.StdJDBCDelegate.selectJobForTrigger(StdJDBCDelegate.java:1628)\r\n\tat org.quartz.impl.jdbcjobstore.JobStoreSupport.replaceTrigger(JobStoreSupport.java:1489)\r\n\tat org.quartz.impl.jdbcjobstore.JobStoreSupport$11.execute(JobStoreSupport.java:1478)\r\n\tat org.quartz.impl.jdbcjobstore.JobStoreSupport.executeInNonManagedTXLock(JobStoreSupport.java:3864)\r\n\tat org.quartz.impl.jdbcjobstore.JobStoreTX.executeInLock(JobStoreTX.java:93)\r\n\tat org.quartz.impl.jdbcjobstore.JobStoreSupport.replaceTrigger(JobStoreSupport.java:1474)\r\n\tat org.quartz.core.QuartzScheduler.rescheduleJob(QuartzScheduler.java:1121)\r\n\tat org.quartz.impl.StdScheduler.rescheduleJob(StdScheduler.java:321)\r\n\tat io.quarkus.quartz.runtime.QuartzSchedulerImpl.<init>(QuartzSchedulerImpl.java:294)\r\n\tat io.quarkus.quartz.runtime.QuartzSchedulerImpl_Bean.create(Unknown Source)\r\n\tat io.quarkus.quartz.runtime.QuartzSchedulerImpl_Bean.create(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:113)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:37)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:34)\r\n\tat io.quarkus.arc.impl.LazyValue.get(LazyValue.java:26)\r\n\tat io.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:69)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:34)\r\n\tat io.quarkus.quartz.runtime.QuartzSchedulerImpl_Observer_start_0f88b9afbe74c75c0e6959d7e0bd795b6582f6d3.notify(Unknown Source)\r\n\tat io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:326)\r\n\tat io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:308)\r\n\tat io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:76)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:131)\r\n        ...\r\n```\r\n\r\nI haven't seen any way this could be mitigated in code, so I think the only way to handle this is to add it to the 2.14.0 migration document.\r\n\r\nRunning \r\n```sql\r\nUPDATE JOB_DETAILS set JOB_CLASS_NAME = 'io.quarkus.quartz.runtime.QuartzSchedulerImpl$InvokerJob' WHERE JOB_CLASS_NAME = 'io.quarkus.quartz.runtime.QuartzScheduler$InvokerJob';\r\n```\r\nsolves the problem. \r\n\r\n### Expected behavior\r\n\r\nApplication starts as normal.\r\n\r\n### Actual behavior\r\n\r\nApplication crash with `java.lang.ClassNotFoundException: io.quarkus.quartz.runtime.QuartzScheduler$InvokerJob`\r\n\r\n### How to Reproduce?\r\n\r\n* Create application using Quarkus 2.13.4 clustered Quartz with jdbc.\r\n* Create a job\r\n* Start application\r\n* Upgrade to 2.14.0 and restart\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29177/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29177/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

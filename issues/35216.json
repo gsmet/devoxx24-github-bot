@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35216",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35216/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35216/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35216/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35216",
+  "id": 1837321246,
+  "node_id": "I_kwDOCFbutM5tg0we",
+  "number": 35216,
+  "title": "\"HR000069: Detected use of the reactive Session from a different Thread\" caused by missing equals/hashcode",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-08-04T20:48:36Z",
+  "updated_at": "2023-08-14T20:07:11Z",
+  "closed_at": "2023-08-14T20:07:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThere have been a few previous issues related to the HR000069 error under load, some of which are claimed to have been fixed prior to Quarkus 3.1, or closed due to lack of repro. \r\n\r\nI'm posting this one because while it is not reproducible using Quarkus 3.2, it has very straightforward repro on Quarkus 3.1.2. I've not been able to find an issue closed for 3.2 that would explain why this is no longer reproducible, so this may be of interest to the team.\r\n\r\nA repo containing an example app that demonstrates the problem can be found at https://github.com/allertonm/hibernate-query-bug/tree/quarkus-3.1\r\n\r\nThe `main` branch uses Quarkus 3.2, and the `quarkus-3.1` branch uses 3.1 and can be used to demonstrate the bug.\r\n\r\nThe reproduction requires the following...\r\n1. A persisted entity (BarEntity in this example) with a field whose value is an instance of a class (Foo2, here) that does not implement equals/hashcode\r\n2. An endpoint that queries for that entity twice in succession within the same session\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nSecond query for the entity completes as expected.\r\n\r\n### Actual behavior\r\n\r\nSecond query for the entity throws HR000069 if two requests are executed concurrently.\r\n\r\n### How to Reproduce?\r\n\r\nTo reproduce the problem, checkout the `quarkus-3.1` branch and run the application using `./gradlew quarkusDev` (requires a Postgres server with a DB \"bug_test\" on localhost:5432)\r\n\r\nIn a shell session, create the entity...\r\n```\r\n% curl http://localhost:8083/create2 \r\nCreated 01f9f686-f47a-44e0-9727-d58cb3c54216%\r\n```\r\n\r\nCopy the UUID written to stdout and then...\r\n\r\n```\r\nseq 1 100 | xargs -P2 -Iname curl http://localhost:8083/read/<paste UUID here>\r\n```\r\n\r\nYou should hit HR000069 almost immediately, usually on the first two requests.\r\n\r\nYou will not hit this error if, instead of using `create2`, you use `create1` or `create3`, which set the value of `BarEntity.foo` to be either a Kotlin data class instance or an instance of a class with `equals` and `hashCode` implemented.\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin M-L10KJGH6 22.5.0 Darwin Kernel Version 22.5.0: Mon Apr 24 20:51:50 PDT 2023; root:xnu-8796.121.2~5/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.16\" 2022-07-19 LTS OpenJDK Runtime Environment Corretto-11.0.16.8.1 (build 11.0.16+8-LTS) OpenJDK 64-Bit Server VM Corretto-11.0.16.8.1 (build 11.0.16+8-LTS, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n------------------------------------------------------------ Gradle 8.1.1 ------------------------------------------------------------  Build time:   2023-04-21 12:31:26 UTC Revision:     1cf537a851c635c364a4214885f8b9798051175b  Kotlin:       1.8.10 Groovy:       3.0.15 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          11.0.16 (Amazon.com Inc. 11.0.16+8-LTS) OS:           Mac OS X 13.4 x86_64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35216/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35216/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

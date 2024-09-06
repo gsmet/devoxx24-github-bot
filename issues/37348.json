@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37348",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37348/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37348/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37348/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37348",
+  "id": 2013888624,
+  "node_id": "I_kwDOCFbutM54CYBw",
+  "number": 37348,
+  "title": "Redis cluster doesn't reconnect when node returns online",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-11-28T08:16:13Z",
+  "updated_at": "2024-02-22T08:44:49Z",
+  "closed_at": "2024-02-22T08:44:49Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nCreating issue per https://github.com/quarkusio/quarkus/issues/37041#issuecomment-1827473014\r\n\r\nThere is an issue with reconnects - take the starter code from Issue [37041](https://github.com/quarkusio/quarkus/issues/37041). If you shutdown the redis cluster, issue a request that connects to redis which fails, then restart the cluster, subsequent requests don't reconnect to redis. \r\nVert.x redis client purposely doesn't implement client reconnects - quarkus should probably do that. \r\n\r\nReproduction steps:\r\n1. Credit: @bartm-dvb  Clone repo: https://github.com/bartm-dvb/quarkus-redis-bug \r\n- Start Redis in cluster mode with docker-compose up\r\n- Start quarkus.  ./mvnw quarkus:dev \r\n- Access http://localhost:8080/cat-fact\r\n2. Stop redis (docker compose down)\r\n3. access cat-fact again -> see the following error in the quarkus log: \r\n`2023-11-17 22:27:36,551 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-1) HTTP Request to /cat-fact failed, error id: 736e1d37-7d84-43fb-8e37-2d4d34f4eda6-11: io.vertx.core.impl.NoStackTraceThrowable: Cannot connect to any of the provided endpoints\"` \r\n4. Start redis. Access cat-fact - see above error repeat over and over until quarkus is restarted. Note - when you stop redis, don't attempt to reconnect, restart redis, then the the error never occurs.\r\n\r\n\r\n\r\n### Implementation ideas\r\n\r\nSolution:\r\nQuarkus should automatically handle reconnecting to redis if the redis cluster has become unavailable during some requests.  At a minimum, in this application, quarkus should (in the absence of cache) retrieve the cat fact by going out to the external service when the cache fails.\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37348/reactions",
+    "total_count": 3,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 3,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37348/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22805",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22805/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22805/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22805/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22805",
+  "id": 1099147262,
+  "node_id": "I_kwDOCFbutM5Bg6f-",
+  "number": 22805,
+  "title": "Startup-Error: IllegalStateException: GlobalOpenTelemetry.set has already been called. ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2022-01-11T13:23:51Z",
+  "updated_at": "2023-05-23T11:06:19Z",
+  "closed_at": "2022-06-20T18:37:17Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nSometimes (5 % of Pipelines) we build Docker-Images that fail to start due to an initialization-error in OpenTelemetry:\r\n\r\n```\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n\t... 15 more\r\nCaused by: java.lang.IllegalStateException: GlobalOpenTelemetry.set has already been called. GlobalOpenTelemetry.set must be called only once before any calls to GlobalOpenTelemetry.get. If you are using the OpenTelemetrySdk, use OpenTelemetrySdkBuilder.buildAndRegisterGlobal instead. Previous invocation set to cause of this exception.\r\n\tat io.opentelemetry.api.GlobalOpenTelemetry.set(GlobalOpenTelemetry.java:84)\r\n\tat io.opentelemetry.sdk.OpenTelemetrySdkBuilder.buildAndRegisterGlobal(OpenTelemetrySdkBuilder.java:63)\r\n\tat io.quarkus.opentelemetry.runtime.OpenTelemetryRecorder.createOpenTelemetry(OpenTelemetryRecorder.java:33)\r\n\tat io.quarkus.deployment.steps.OpenTelemetryProcessor$createOpenTelemetry1944204174.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.OpenTelemetryProcessor$createOpenTelemetry1944204174.deploy(Unknown Source)\r\n\t... 16 more\r\nCaused by: java.lang.Throwable\r\n\tat io.opentelemetry.api.GlobalOpenTelemetry.set(GlobalOpenTelemetry.java:92)\r\n\tat io.opentelemetry.api.GlobalOpenTelemetry.get(GlobalOpenTelemetry.java:62)\r\n\tat io.opentelemetry.api.GlobalOpenTelemetry.getTracer(GlobalOpenTelemetry.java:111)\r\n\tat io.quarkus.opentelemetry.runtime.tracing.TracerProducer.getTracer(TracerProducer.java:2\r\n```\r\n\r\nWe build a jar-file using `gradle jar quarkusBuild` and then add this to a Docker-image. If the error occours, it occours every time the image is used (on developer machine, in the cloud, ... doesn´t matter). If we re-run the pipeline with nearly no code-change (we added a commit with an extra `space` in a readme) chances are that the error disappears.\r\n\r\nWhat might be application-specific is a Tracing-Interceptor we use. That gets the `Tracer` injected:\r\n\r\n```kotlin\r\n@Provider\r\n@Priority(Interceptor.Priority.APPLICATION)\r\nclass TracingInterceptor : ContainerResponseFilter {\r\n\r\n    override fun filter(ctx: ContainerRequestContext, responseContext: ContainerResponseContext) {\r\n        val spanName = ctx.method + \" \" + ctx.uriInfo.path\r\n        val span = Span.current() ?: return\r\n        span.updateName(spanName)\r\n        val traceId = span.spanContext?.traceId\r\n        MDC.put(\"traceId\", traceId)\r\n        responseContext.headers.putSingle(\"TRACE-ID\", traceId ?: \"no tracing\")\r\n    }\r\n}\r\n\r\n@Interceptor\r\n@Tracing\r\n@Suppress(\"TooGenericExceptionCaught\")\r\n@Priority(Interceptor.Priority.APPLICATION)\r\nclass TracingMethodInterceptor {\r\n\r\n    @Inject\r\n    lateinit var tracer: Tracer\r\n\r\n    @Inject\r\n    lateinit var request: RequestAttributes\r\n\r\n    @ConfigProperty(name = \"tracing.logParameters\")\r\n    var logParameters: Boolean = true\r\n\r\n    @AroundInvoke\r\n    @Throws(Exception::class)\r\n    fun trace(ctx: InvocationContext): Any? {\r\n        val parentSpan = Span.current()\r\n        request.attributes[\"traceId\"] = parentSpan.spanContext.traceId\r\n\r\n        val methodDisplay = \"${ctx.method.name} ${ctx.method.declaringClass.simpleName}\"\r\n        val fullMethodName = ctx.method.toGenericString()\r\n        val span = tracer.spanBuilder(methodDisplay)\r\n            .setParent(Context.current().with(parentSpan))\r\n            .startSpan()\r\n\r\n        span.makeCurrent().use {\r\n            span.setAttribute(\"method\", fullMethodName)\r\n\r\n            if (logParameters) {\r\n                val parameterDisplay = ctx.parameters.filterNotNull().joinToString { \"$it\" }\r\n                span.setAttribute(\"parameters\", parameterDisplay)\r\n            }\r\n\r\n            try {\r\n                return ctx.proceed()\r\n            } catch (e: Exception) {\r\n                e.logToTracer()\r\n                throw e\r\n            } finally {\r\n                span.end()\r\n            }\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nBy now we consider this to be a build-problem, since the error is tight to a specific artifact and not to the code or the runtime-environment.\r\n\r\nWhat might be of interest:\r\n- we use kotlin\r\n- we use gradle\r\n- we do not use graalvm\r\n\r\n\r\n### Expected behavior\r\n\r\nEvery build of the same codebase should deliver reproduceable results.\r\n\r\n### Actual behavior\r\n\r\nOn a random basis the error described above occours. We do not have any hint why this happens.\r\n\r\n### How to Reproduce?\r\n\r\nUnfortunately we do not understand the error enough to provide a reproduction-instruction. Maybe you have an idea what might be the problem from the information we provided or you have a hint where we could dig deeper.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux runner-t9jgdck6-project-9010693-concurrent-0 5.11.0-1026-gcp #29~20.04.1-Ubuntu SMP Fri Jan 7 12:24:31 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.13\" 2021-10-19   \r\nOpenJDK Runtime Environment Temurin-11.0.13+8 (build 11.0.13+8)  \r\nOpenJDK 64-Bit Server VM Temurin-11.0.13+8 (build 11.0.13+8, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\nio.quarkus:quarkus-bom:2.6.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n```\r\n------------------------------------------------------------\r\nGradle 7.3.3\r\n------------------------------------------------------------\r\nBuild time:   2021-12-22 12:37:54 UTC\r\nRevision:     6f556c80f945dc54b50e0be633da6c62dbe8dc71\r\nKotlin:       1.5.31\r\nGroovy:       3.0.9\r\nAnt:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021\r\nJVM:          11.0.13 (Eclipse Adoptium 11.0.13+8)\r\nOS:           Linux 5.11.0-1026-gcp amd64\r\n```\r\n\r\n### Additional information\r\n\r\nThe Environment-Infos describe the Build-Environment.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22805/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22805/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

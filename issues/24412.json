@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24412",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24412/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24412/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24412/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24412",
+  "id": 1173714019,
+  "node_id": "I_kwDOCFbutM5F9XRj",
+  "number": 24412,
+  "title": "REST clients are documented in Open API and clients with the same path as controllers cause incorrect Open API documentation for the controllers",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2022-03-18T15:23:03Z",
+  "updated_at": "2022-03-21T09:42:29Z",
+  "closed_at": "2022-03-21T09:42:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a controller as follows:\r\n\r\n```\r\n@ApplicationScoped\r\n@Path(\"/api/v1/foos\")\r\n@AllArgsConstructor\r\npublic class FooController {\r\n  private final FooClient fooClient;\r\n\r\n  @GET\r\n  @Produces(MediaType.APPLICATION_JSON)\r\n  @APIResponses(\r\n      value = {\r\n        @APIResponse(\r\n            responseCode = \"200\",\r\n            description = \"Foos\",\r\n            content = @Content(schema = @Schema(implementation = FoosResponse.class))),\r\n        @APIResponse(responseCode = \"500\", description = \"Unexpected error\"),\r\n      })\r\n  public FoosResponse getFoos(\r\n      @QueryParam(\"page\") @DefaultValue(\"0\") int page,\r\n      @QueryParam(\"limit\") @DefaultValue(\"50\") int limit) {\r\n    return foosClient.getFoos(page, limit);\r\n  }\r\n}\r\n```\r\n\r\nwhere `FooClient` is:\r\n\r\n```\r\npublic interface FooClient {\r\n  FoosResponse getFoos(int page, int limit);\r\n}\r\n```\r\n\r\nThe Open API documentation is correctly displayed in Swagger UI.\r\n\r\n![1-only-controller](https://user-images.githubusercontent.com/2513147/159031359-7668ac1c-f8ee-4c99-9df2-c30fb25c1995.png)\r\n\r\nIf I add the JAX RS annotations to `FooClient` as follows:\r\n\r\n```\r\n@Path(\"/api/v1\")\r\n@RegisterRestClient(configKey = \"foo\")\r\npublic interface FooClient {\r\n  @GET\r\n  @Path(\"/foos\")\r\n  @Produces(MediaType.APPLICATION_JSON)\r\n  FoosResponse getFoos(int page, int limit);\r\n}\r\n```\r\n\r\nThen it replaces the Open API documentation from my controller and adds a body (of type $int32) to the GET request which makes the Swagger UI unusable (actually it seems to be merging them? the query parameter defaults are only defined on the controller).\r\n\r\n![2-rest-client-controller-same-paths](https://user-images.githubusercontent.com/2513147/159031279-289737f9-dfbb-4f2d-b168-1f6e37cfef97.png)\r\n\r\nI've noticed if I change the path on the rest client to be `/bars` so it is not the same as the controller then the API documentation for my controller is correct, but the rest client is shown in the API documentation under a `default` heading.\r\n\r\n![3-rest-client-controller-different-paths](https://user-images.githubusercontent.com/2513147/159031312-7b5c0959-fd67-4464-8767-44be4dcd626f.png)\r\n\r\n(NB: screenshots are from 2.7.4.Final but I tested with 2.7.5.Final as well and got the same results)\r\n\r\n### Expected behavior\r\n\r\nREST clients are not documented in the Open API documentation. They are not a public interface.\r\n\r\nIf a REST client and a controller have the same path, the API documentation for the controller should not be affected.\r\n\r\n### Actual behavior\r\n\r\nREST clients are documented in the Open API documentation.\r\n\r\nIf a REST client and a controller have the same path, the API documentation for the controller is affected.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Josephs-MacBook-Pro.local 20.6.0 Darwin Kernel Version 20.6.0: Tue Oct 12 18:33:42 PDT 2021; root:xnu-7195.141.8~1/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.2\" 2022-01-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.5.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.1\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24412/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24412/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

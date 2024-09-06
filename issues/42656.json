@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42656",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42656/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42656/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42656/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42656",
+  "id": 2475925855,
+  "node_id": "I_kwDOCFbutM6Tk6Ff",
+  "number": 42656,
+  "title": "io.fabric8:kubernetes-client in main is not binary compatible with the one in Quarkus 3.13",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2024-08-20T15:21:35Z",
+  "updated_at": "2024-08-21T14:26:46Z",
+  "closed_at": "2024-08-21T14:26:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nUsing the client compiled with Quarkus 3.13 and main built from main after https://github.com/quarkusio/quarkus/pull/42450 produces `NoSuchMethod` exceptions in runtime, e.g.\r\n```\r\njava.lang.NoSuchMethodError: 'io.fabric8.kubernetes.client.ConfigFluent io.fabric8.openshift.client.OpenShiftConfigBuilder.withNamespace(java.lang.String)'\r\n\tat io.quarkus.test.bootstrap.inject.OpenShiftClient.<init>(OpenShiftClient.java:119)\r\n\tat io.quarkus.test.bootstrap.inject.OpenShiftClient.create(OpenShiftClient.java:137)\r\n\tat io.quarkus.test.bootstrap.OpenShiftExtensionBootstrap.beforeAll(OpenShiftExtensionBootstrap.java:45)\r\n\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.lambda$beforeAll$0(QuarkusScenarioBootstrap.java:61)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.beforeAll(QuarkusScenarioBootstrap.java:61)\r\n\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.beforeAll(QuarkusScenarioBootstrap.java:50)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tSuppressed: java.lang.NullPointerException: Cannot invoke \"io.quarkus.test.bootstrap.inject.OpenShiftClient.deleteProject()\" because \"this.client\" is null\r\n\t\tat io.quarkus.test.bootstrap.OpenShiftExtensionBootstrap.afterAll(OpenShiftExtensionBootstrap.java:52)\r\n\t\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.lambda$afterAll$2(QuarkusScenarioBootstrap.java:88)\r\n\t\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\t\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.afterAll(QuarkusScenarioBootstrap.java:88)\r\n\t\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.afterAll(QuarkusScenarioBootstrap.java:78)\r\n\t\t... 1 more\r\n```\r\nThe other way is broken too - compiling with Quarkus built from main and running with Quarkus 3.13 produces similar exception, albeit with different package signature:\r\n```\r\njava.lang.NoSuchMethodError: 'io.fabric8.kubernetes.client.SundrioConfigFluent io.fabric8.openshift.client.OpenShiftConfigBuilder.withNamespace(java.lang.String)'\r\n\tat io.quarkus.test.bootstrap.inject.OpenShiftClient.<init>(OpenShiftClient.java:119)\r\n\tat io.quarkus.test.bootstrap.inject.OpenShiftClient.create(OpenShiftClient.java:137)\r\n\tat io.quarkus.test.bootstrap.OpenShiftExtensionBootstrap.beforeAll(OpenShiftExtensionBootstrap.java:45)\r\n\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.lambda$beforeAll$0(QuarkusScenarioBootstrap.java:61)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.beforeAll(QuarkusScenarioBootstrap.java:61)\r\n\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.beforeAll(QuarkusScenarioBootstrap.java:50)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tSuppressed: java.lang.NullPointerException: Cannot invoke \"io.quarkus.test.bootstrap.inject.OpenShiftClient.deleteProject()\" because \"this.client\" is null\r\n\t\tat io.quarkus.test.bootstrap.OpenShiftExtensionBootstrap.afterAll(OpenShiftExtensionBootstrap.java:52)\r\n\t\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.lambda$afterAll$2(QuarkusScenarioBootstrap.java:88)\r\n\t\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\t\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.afterAll(QuarkusScenarioBootstrap.java:88)\r\n\t\tat io.quarkus.test.bootstrap.QuarkusScenarioBootstrap.afterAll(QuarkusScenarioBootstrap.java:78)\r\n\t\t... 1 more\r\n```\n\n### Expected behavior\n\nThe client is binary compatible and no runtime exceptions are produced\n\n### Actual behavior\n\nRuntime exceptions are produced\n\n### How to Reproduce?\n\n1. login to OpenShift cluster\r\n2. build Quarkus from main\r\n3.\r\n```\r\ngit clone git@github.com:quarkus-qe/quarkus-test-framework.git\r\ncd quarkus-test-framework\r\n\r\n# Build the lib with Quarkus 3.13, run with Quarkus main\r\nmvn clean install -Pframework && mvn clean verify -Popenshift,examples -pl examples/https/ -Dquarkus.platform.version=999-SNAPSHOT\r\n\r\n# Build the lib with Quarkus main, run with 3.13\r\nmvn clean install -Pframework -Dquarkus.platform.version=999-SNAPSHOT && mvn clean verify -Popenshift,examples -pl examples/https/ -Dquarkus.platform.version=3.13.2\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux tigris 6.10.5-200.fc40.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Aug 14 15:49:44 UTC 2024 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.12\" 2024-07-16\n\n### Quarkus version or git rev\n\nSince https://github.com/quarkusio/quarkus/pull/42450\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.9 (8e8579a9e76f7d015ee5ec7bfcdc97d260186937)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42656/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42656/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

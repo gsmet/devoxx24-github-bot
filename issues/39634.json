@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39634",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39634/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39634/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39634/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39634",
+  "id": 2202180062,
+  "node_id": "I_kwDOCFbutM6DQpne",
+  "number": 39634,
+  "title": "[JDK 23+15] org.apache.kafka.common.security.oauthbearer.internals.OAuthBearerSaslClientCallbackHandler.handleCallback fails with UnsupportedOperationException",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 20,
+  "created_at": "2024-03-22T10:27:20Z",
+  "updated_at": "2024-08-22T14:21:23Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn our Mandrel native integration tests we see new failures since the JDK `23+15` ea build in `quarkus-integration-test-kafka-oauth-keycloak-999-SNAPSHOT-runner` tests:\r\n\r\n```\r\n2024-03-22 02:18:58,664 WARN  [org.apa.kaf.com.net.Selector] (kafka-producer-network-thread | kafka-producer-out) [Producer clientId=kafka-producer-out] Unexpected error from localhost/127.0.0.1 (channelId=-1); closing connection: java.lang.UnsupportedOperationException: getSubject is supported only if a security manager is allowed\r\n\tat java.base@23-beta/javax.security.auth.Subject.getSubject(Subject.java:347)\r\n\tat org.apache.kafka.common.security.oauthbearer.internals.OAuthBearerSaslClientCallbackHandler.handleCallback(OAuthBearerSaslClientCallbackHandler.java:99)\r\n\tat org.apache.kafka.common.security.oauthbearer.internals.OAuthBearerSaslClientCallbackHandler.handle(OAuthBearerSaslClientCallbackHandler.java:83)\r\n\tat org.apache.kafka.common.security.oauthbearer.internals.OAuthBearerSaslClient.evaluateChallenge(OAuthBearerSaslClient.java:92)\r\n\tat org.apache.kafka.common.security.authenticator.SaslClientAuthenticator.lambda$createSaslToken$1(SaslClientAuthenticator.java:535)\r\n\tat java.base@23-beta/jdk.internal.vm.ScopedValueContainer.callWithoutScope(ScopedValueContainer.java:162)\r\n\tat java.base@23-beta/jdk.internal.vm.ScopedValueContainer.call(ScopedValueContainer.java:147)\r\n\tat java.base@23-beta/java.lang.ScopedValue$Carrier.runWith(ScopedValue.java:74)\r\n\tat java.base@23-beta/java.lang.ScopedValue$Carrier.call(ScopedValue.java:419)\r\n\tat java.base@23-beta/java.lang.ScopedValue.callWhere(ScopedValue.java:588)\r\n\tat java.base@23-beta/javax.security.auth.Subject.callAs(Subject.java:439)\r\n\tat java.base@23-beta/javax.security.auth.Subject.doAs(Subject.java:614)\r\n\tat org.apache.kafka.common.security.authenticator.SaslClientAuthenticator.createSaslToken(SaslClientAuthenticator.java:535)\r\n\tat org.apache.kafka.common.security.authenticator.SaslClientAuthenticator.sendSaslClientToken(SaslClientAuthenticator.java:434)\r\n\tat org.apache.kafka.common.security.authenticator.SaslClientAuthenticator.sendInitialToken(SaslClientAuthenticator.java:333)\r\n\tat org.apache.kafka.common.security.authenticator.SaslClientAuthenticator.authenticate(SaslClientAuthenticator.java:274)\r\n\tat org.apache.kafka.common.network.KafkaChannel.prepare(KafkaChannel.java:181)\r\n\tat org.apache.kafka.common.network.Selector.pollSelectionKeys(Selector.java:543)\r\n\tat org.apache.kafka.common.network.Selector.poll(Selector.java:481)\r\n\tat org.apache.kafka.clients.NetworkClient.poll(NetworkClient.java:585)\r\n\tat org.apache.kafka.clients.producer.internals.Sender.runOnce(Sender.java:349)\r\n\tat org.apache.kafka.clients.producer.internals.Sender.run(Sender.java:252)\r\n\tat java.base@23-beta/java.lang.Thread.runWith(Thread.java:1588)\r\n\tat java.base@23-beta/java.lang.Thread.run(Thread.java:1575)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.thread.PlatformThreads.threadStartRoutine(PlatformThreads.java:836)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.thread.PlatformThreads.threadStartRoutine(PlatformThreads.java:812)\r\n```\r\n\r\nSee: https://github.com/graalvm/mandrel/actions/runs/8384081617/job/22961614228#step:12:968\r\n\r\nI'm pretty sure, though, this isn't a native-only issue but can happen in JVM mode on `JDK 23+15` as well.\r\n\r\n### Expected behavior\r\n\r\nNo `java.lang.UnsupportedOperationException: getSubject is supported only if a security manager is allowed` is being thrown.\r\n\r\n### Actual behavior\r\n\r\n`java.lang.UnsupportedOperationException` is being thrown.\r\n\r\n### How to Reproduce?\r\n\r\nBuild `Integration Tests - Kafka OAUTH with Keycloak` native test and run test with a `23-beta+15-ea, vendor version: Mandrel-24.1.0-dev13054560` mandrel build. For example from [here](https://github.com/graalvm/mandrel/actions/runs/8384081617/artifacts/1348828245).\r\n\r\n### Additional information\r\n\r\nThis seems to be caused by https://bugs.openjdk.org/browse/JDK-8296244 freshly part of `JDK 23+15`. See the CSR on how to possibly fix it: https://bugs.openjdk.org/browse/JDK-8327134",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39634/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39634/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

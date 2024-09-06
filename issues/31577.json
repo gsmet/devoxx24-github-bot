@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31577",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31577/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31577/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31577/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31577",
+  "id": 1608317908,
+  "node_id": "I_kwDOCFbutM5f3PvU",
+  "number": 31577,
+  "title": "Pure Quarkus vertx app is missing \"io.vertx.ext.web.Router\"",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-03-03T09:58:18Z",
+  "updated_at": "2023-03-03T10:43:04Z",
+  "closed_at": "2023-03-03T10:37:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nFollowing this post `https://quarkus.io/blog/magic-control/` , I am trying to develop a Quarkus app without magic through Vertx, basically, my dependencies are just \r\n\r\n```\r\nimplementation 'io.quarkus:quarkus-vertx'\r\n```\r\n\r\nAnd my application code is:\r\n\r\n```\r\nimport io.quarkus.runtime.Quarkus;\r\nimport io.quarkus.runtime.QuarkusApplication;\r\nimport io.quarkus.runtime.annotations.QuarkusMain;\r\nimport io.vertx.core.Vertx;\r\nimport io.vertx.core.http.HttpServer;\r\nimport io.vertx.ext.web.Router;\r\nimport org.eclipse.microprofile.config.ConfigProvider;\r\n\r\n@QuarkusMain\r\npublic class Main implements QuarkusApplication {\r\n\r\n    public static void main(String... args) {\r\n        Quarkus.run(Main.class, args);\r\n    }\r\n\r\n    @Override\r\n    public int run(String... args) {\r\n        Vertx vertx = Vertx.vertx();\r\n        Router router = Router.router(vertx);\r\n\r\n        String message = ConfigProvider.getConfig().getValue(\"message\", String.class);\r\n\r\n        router.get(\"/\").handler(rc -> rc.response().end(message));\r\n        router.get(\"/bye\").handler(rc -> {\r\n            rc.response().end(\"bye\");\r\n            Quarkus.asyncExit();\r\n        });\r\n\r\n        HttpServer server = vertx.createHttpServer()\r\n                .requestHandler(router)\r\n                .listen(8080);\r\n\r\n        Quarkus.waitForExit();\r\n\r\n        server.close();\r\n        return 0;\r\n    }\r\n}\r\n```\r\n\r\nBut the import `import io.vertx.ext.web.Router` is not found.  In my opinion, the extension `io.quarkus:quarkus-vertx` should include all Vertx required dependencies in order to run a basic pure vertx microservice. \r\n\r\nWorkaround: Add as a dependency the extension `io.quarkus:quarkus-smallrye-openapi`\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31577/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31577/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

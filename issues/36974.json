@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36974",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36974/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36974/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36974/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36974",
+  "id": 1985557573,
+  "node_id": "I_kwDOCFbutM52WTRF",
+  "number": 36974,
+  "title": "Quarkus 3.5.x breaks Apache Tika",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-11-09T12:50:32Z",
+  "updated_at": "2023-11-10T14:22:44Z",
+  "closed_at": "2023-11-10T14:22:43Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe are using Apache Tika 2.9.1 in a Quarkus project. Since 3.5.0 one of our tests is broken. We rolled back to 3.4.3. \r\n\r\n```shell\r\nTest FileParserTest#Reading content from pdf file works() failed \r\n: java.lang.NoSuchMethodError: 'org.apache.fontbox.ttf.TrueTypeFont org.apache.fontbox.ttf.TTFParser.parse(java.io.InputStream)'\r\n        at org.apache.pdfbox.pdmodel.font.FontMapperImpl.<init>(FontMapperImpl.java:130)\r\n        at org.apache.pdfbox.pdmodel.font.FontMappers$DefaultFontMapper.<clinit>(FontMappers.java:36)\r\n        at org.apache.pdfbox.pdmodel.font.FontMappers.instance(FontMappers.java:46)\r\n        at org.apache.pdfbox.pdmodel.font.PDTrueTypeFont.<init>(PDTrueTypeFont.java:218)\r\n        at org.apache.pdfbox.pdmodel.font.PDFontFactory.createFont(PDFontFactory.java:89)\r\n        at org.apache.pdfbox.pdmodel.PDResources.getFont(PDResources.java:171)\r\n        at org.apache.pdfbox.contentstream.operator.text.SetFontAndSize.process(SetFontAndSize.java:66)\r\n        at org.apache.pdfbox.contentstream.PDFStreamEngine.processOperator(PDFStreamEngine.java:980)\r\n        at org.apache.pdfbox.contentstream.PDFStreamEngine.processStreamOperators(PDFStreamEngine.java:555)\r\n        at org.apache.pdfbox.contentstream.PDFStreamEngine.processStream(PDFStreamEngine.java:530)\r\n        at org.apache.pdfbox.contentstream.PDFStreamEngine.processPage(PDFStreamEngine.java:155)\r\n        at org.apache.pdfbox.text.LegacyPDFStreamEngine.processPage(LegacyPDFStreamEngine.java:155)\r\n        at org.apache.pdfbox.text.PDFTextStripper.processPage(PDFTextStripper.java:363)\r\n        at org.apache.tika.parser.pdf.PDF2XHTML.processPage(PDF2XHTML.java:137)\r\n        at org.apache.tika.parser.pdf.AbstractPDF2XHTML.processPages(AbstractPDF2XHTML.java:1369)\r\n        at org.apache.pdfbox.text.PDFTextStripper.writeText(PDFTextStripper.java:238)\r\n        at org.apache.tika.parser.pdf.PDF2XHTML.process(PDF2XHTML.java:108)\r\n        at org.apache.tika.parser.pdf.PDFParser.parse(PDFParser.java:219)\r\n        at org.apache.tika.parser.CompositeParser.parse(CompositeParser.java:298)\r\n        at org.apache.tika.parser.CompositeParser.parse(CompositeParser.java:298)\r\n        at org.apache.tika.parser.AutoDetectParser.parse(AutoDetectParser.java:203)\r\n```\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nUse Quarkus 3.5.x, add Tika\r\n\r\n```kotlin\r\n    implementation(\"org.apache.tika:tika-core:2.9.1\")\r\n    implementation(\"org.apache.tika:tika-langdetect-optimaize:2.9.1\")\r\n    implementation(\"org.apache.tika:tika-parsers-standard-package:2.9.1\")\r\n    implementation(\"org.apache.tika:tika-serialization:2.9.1\")\r\n```\r\n\r\nand run something like this...\r\n\r\n```kotlin\r\nfun parseFile(file: File): FileParserResult {\r\n\r\n        val config = TesseractOCRConfig()\r\n        config.isSkipOcr = true\r\n        val context = ParseContext()\r\n        context.set(TesseractOCRConfig::class.java, config)\r\n\r\n        val stream = FileInputStream(file)\r\n        val parser = AutoDetectParser()\r\n        val handler = BodyContentHandler(-1)\r\n        val metadata = Metadata()\r\n\r\n        parser.parse(stream, handler, metadata, context)\r\n```\r\n\r\nI can build a reproducer, if unclear...\r\n\r\nThanks!\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36974/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36974/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

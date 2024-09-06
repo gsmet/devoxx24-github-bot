@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25417",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25417/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25417/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25417/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25417",
+  "id": 1227769702,
+  "node_id": "I_kwDOCFbutM5JLkdm",
+  "number": 25417,
+  "title": "OpenTelemetry: Respect provided TracingPolicy in VertxTracer implementations",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 985346624,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjQ=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/good%20first%20issue",
+      "name": "good first issue",
+      "color": "7057ff",
+      "default": true,
+      "description": "Good for newcomers"
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-05-06T11:55:14Z",
+  "updated_at": "2023-09-05T09:07:10Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nWhen using the `quarkus-opentelemetry` extension, there currently seems to be no direct way to switch off certain kinds of instrumentation. For example, the Vert.x event bus instrumentation might produce traces that are not needed in certain applications and just produce noise there.\r\n\r\nReading the [Vert.x OpenTelemetry documentation](https://vertx.io/docs/vertx-opentelemetry/java/), the assumption would be, that the solution here is to just set the `TracingPolicy.IGNORE` policy on the Vert.x event bus `DeliveryOptions`.\r\n\r\nBut this doesn't work with the Quarkus `VertxTracer` implementations. There, the `TracingPolicy` parameter is getting ignored (in contrast to the Vert.x [OpenTelemetryTracer](https://github.com/eclipse-vertx/vertx-tracing/blob/e79d0886927abe6f82ec0039e6f06b2c723d3159/vertx-opentelemetry/src/main/java/io/vertx/tracing/opentelemetry/OpenTelemetryTracer.java#L54-L56) implementation).\r\n\r\nAnother example would be HTTP server/client instrumention, where also the `TracingPolicy` can be set in the client/server options. Being able to use `TracingPolicy.IGNORE` there would for example make it easier to migrate applications already having a (manual) HTTP request instrumentation. (Letting the `HttpInstrumenterVertxTracer` traces be discarded by means of a custom `Sampler` implementation looks like an inferior workaround.)\n\n### Implementation ideas\n\nSkip request processing in the Quarkus `VertxTracer` implementations for requests with `TracingPolicy.IGNORE` (as done in the Vert.x [OpenTelemetryTracer](https://github.com/eclipse-vertx/vertx-tracing/blob/e79d0886927abe6f82ec0039e6f06b2c723d3159/vertx-opentelemetry/src/main/java/io/vertx/tracing/opentelemetry/OpenTelemetryTracer.java#L54-L56)).",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25417/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25417/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24501",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24501/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24501/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24501/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24501",
+  "id": 1177978318,
+  "node_id": "I_kwDOCFbutM5GNoXO",
+  "number": 24501,
+  "title": "Reactive Oracle client fails session propagation test",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-03-23T11:20:22Z",
+  "updated_at": "2022-06-30T13:49:49Z",
+  "closed_at": "2022-06-30T13:49:49Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn our test suite, we run a test:\r\n```\r\n    @Test\r\n    @Order(4)\r\n    public void ensureSessionIsPropagatedOnReactiveTransactions() {\r\n        getApp().given()\r\n                .contentType(ContentType.JSON)\r\n                .post(\"hibernate/books/pablo/suntzu\")\r\n                .then()\r\n                .body(is(\"\"))\r\n                .statusCode(HttpStatus.SC_CREATED);\r\n    }\r\n```\r\n(https://github.com/jsmrcka/quarkus-test-suite/blob/6a659826bd8fd4c7dfdc21d398d063fdb32527f3/sql-db/hibernate-reactive/src/test/java/io/quarkus/ts/reactive/AbstractReactiveDatabaseIT.java#L66)\r\n\r\nwhich calls an endpoint:\r\n```\r\n@Path(\"/hibernate\")\r\n@Produces(MediaType.APPLICATION_JSON)\r\n@Consumes(MediaType.APPLICATION_JSON)\r\npublic class GroundedEndpoint {\r\n\r\n    Mutiny.SessionFactory factory;\r\n\r\n    ...\r\n\r\n    @POST\r\n    @Path(\"books/{authorName}/{name}\")\r\n    public Uni<Response> createBook(String authorName, String name) {\r\n        return factory.withTransaction((session, transaction) -> {\r\n            Author author = new Author();\r\n            author.setName(authorName);\r\n            return session.persist(author)\r\n                    .map(nothing -> session.getReference(author).getId())\r\n                    .map(authorId -> {\r\n                        Book book = new Book();\r\n                        book.setAuthor(authorId);\r\n                        book.setTitle(name);\r\n                        return book;\r\n                    })\r\n                    .flatMap(session::persist);\r\n        })\r\n                .map(nothing -> Response.status(Response.Status.CREATED))\r\n                .onFailure().recoverWithItem(error -> Response.status(Response.Status.BAD_REQUEST).entity(error.getMessage()))\r\n                .map(Response.ResponseBuilder::build);\r\n    }\r\n}\r\n```\r\n(https://github.com/jsmrcka/quarkus-test-suite/blob/6a659826bd8fd4c7dfdc21d398d063fdb32527f3/sql-db/hibernate-reactive/src/main/java/io/quarkus/ts/reactive/http/GroundedEndpoint.java#L83)\r\n\r\nThe module (see reproducer) is configured to run against various DBs using reactive clients (`quarkus-reactive-oracle-client`, `quarkus-reactive-pg-client`, ...) and Hibernate Reactive (`quarkus-hibernate-reactive`, `quarkus-hibernate-reactive-panache`).\r\n\r\nIt fails on aforementioned test using Oracle, while it passes for other DBs.\r\n\r\n\r\nThere is some sort of isolation issue, because the failure only occurs in the specific setup shown in the reproducer branch. **The test must be run in combination with other tests in the scenario and in a specific order.** When executed in isolation, the test passes.\r\n\r\nI tried several `2.7.*` versions, the reproducer fails with all of them: `2.7.5.Final`, `2.7.3.Final`, `2.7.0.Final`. \r\n\r\n### Expected behavior\r\n\r\nTest should pass like in case of other DBs.\r\n\r\n### Actual behavior\r\n\r\nTest fails using Oracle DB with following error:\r\n```\r\n[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 78.008 s <<< FAILURE! - in io.quarkus.ts.reactive.OracleDatabaseIT\r\n[ERROR] ensureSessionIsPropagatedOnReactiveTransactions  Time elapsed: 1.107 s  <<< FAILURE!\r\njava.lang.AssertionError: \r\n1 expectation failed.\r\nResponse body doesn't match expectation.\r\nExpected: is \"\"\r\n  Actual: Multiple exceptions caught:\r\n\t[Exception 0] io.vertx.core.VertxException: Error : 1453, Position : 0, Sql = SET TRANSACTION ISOLATION LEVEL READ COMMITTED, OriginalSql = SET TRANSACTION ISOLATION LEVEL READ COMMITTED, Error Msg = ORA-01453: SET TRANSACTION must be first statement of transaction\r\n\r\n\t[Exception 1] java.lang.NullPointerException\r\n\r\n\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)\r\n\tat java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n\tat java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:490)\r\n\tat org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:72)\r\n\tat org.codehaus.groovy.reflection.CachedConstructor.doConstructorInvoke(CachedConstructor.java:59)\r\n\tat org.codehaus.groovy.runtime.callsite.ConstructorSite$ConstructorSiteNoUnwrap.callConstructor(ConstructorSite.java:84)\r\n\tat org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallConstructor(CallSiteArray.java:59)\r\n\tat org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:263)\r\n\tat org.codehaus.groovy.runtime.callsite.AbstractCallSite.callConstructor(AbstractCallSite.java:277)\r\n\tat io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure.validate(ResponseSpecificationImpl.groovy:493)\r\n\tat io.restassured.internal.ResponseSpecificationImpl$HamcrestAssertionClosure$validate$1.call(Unknown Source)\r\n\tat io.restassured.internal.ResponseSpecificationImpl.validateResponseIfRequired(ResponseSpecificationImpl.groovy:674)\r\n        ...\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n```\r\ngit clone git@github.com:jsmrcka/quarkus-test-suite.git\r\ncd ./quarkus-test-suite\r\ngit checkout QUARKUS-1407-hibernate-reactive\r\n```\r\nFailure on Oracle:\r\n```\r\nmvn clean verify -pl sql-db/hibernate-reactive -Dinclude.tests=OracleDatabaseIT\r\n```\r\nPass on another DB\r\n```\r\nmvn clean verify -pl sql-db/hibernate-reactive -Dinclude.tests=Postgresql13DatabaseIT\r\n```\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux 5.15.6-200.fc35.x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.14\" 2022-01-18 OpenJDK Runtime Environment Temurin-11.0.14+9 (build 11.0.14+9) OpenJDK 64-Bit Server VM Temurin-11.0.14+9 (build 11.0.14+9, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.5.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24501/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24501/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

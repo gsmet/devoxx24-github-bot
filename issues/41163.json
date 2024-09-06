@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41163",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41163/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41163/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41163/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41163",
+  "id": 2348831271,
+  "node_id": "I_kwDOCFbutM6MAFIn",
+  "number": 41163,
+  "title": "Flyway dev UI should allow me to create a migration script",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1309686558,
+      "node_id": "MDU6TGFiZWwxMzA5Njg2NTU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/user-experience",
+      "name": "area/user-experience",
+      "color": "0eb784",
+      "default": false,
+      "description": "Will make us lose users"
+    },
+    {
+      "id": 1897325810,
+      "node_id": "MDU6TGFiZWwxODk3MzI1ODEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/flyway",
+      "name": "area/flyway",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2715669984,
+      "node_id": "MDU6TGFiZWwyNzE1NjY5OTg0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/dev-ui",
+      "name": "area/dev-ui",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-06-12T13:49:03Z",
+  "updated_at": "2024-06-12T13:49:08Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nSo, I create my app, ready for a first release, I go and hit the \"create initial migration file\" and first bug: for some reason it does not add the required configuration for prod anymore:\r\n\r\n```properties\r\n%prod.quarkus.flyway.migrate-at-start=true\r\n%prod.quarkus.flyway.baseline-on-migrate=true\r\n```\r\n\r\nAlso, adding this breaks dev mode, so I need to add this (which before adding flyway was implicit):\r\n```properties\r\n%dev.quarkus.hibernate-orm.database.generation=drop-and-create\r\n```\r\n\r\nNow, I do my release, and it runs in prod, so inevitable, someone asks for a new feature, and I need to add columns to my model. At which point I deploy my release, and although Quarkus starts with this optimistic message:\r\n\r\n```\r\n2024-06-12 15:19:33,565 INFO  [org.fly.cor.int.lic.VersionPrinter] (main) Flyway Community Edition 9.22.3 by Redgate\r\n2024-06-12 15:19:33,567 INFO  [org.fly.cor.int.lic.VersionPrinter] (main) See release notes here: https://rd.gt/416ObMi\r\n2024-06-12 15:19:33,567 INFO  [org.fly.cor.int.lic.VersionPrinter] (main) \r\n2024-06-12 15:19:33,573 INFO  [org.fly.cor.FlywayExecutor] (main) Database: jdbc:postgresql://localhost:5433/rivieradev_quarkus (PostgreSQL 14.12)\r\n2024-06-12 15:19:33,595 INFO  [org.fly.cor.int.com.DbValidate] (main) Successfully validated 2 migrations (execution time 00:00.012s)\r\n2024-06-12 15:19:33,648 INFO  [org.fly.cor.int.com.DbMigrate] (main) Current version of schema \"public\": 1\r\n2024-06-12 15:19:33,650 INFO  [org.fly.cor.int.com.DbMigrate] (main) Schema \"public\" is up to date. No migration necessary.\r\n```\r\n\r\nIt will actually fail when users start using my app:\r\n\r\n```\r\n2024-06-12 15:25:38,049 WARN  [org.hib.eng.jdb.spi.SqlExceptionHelper] (executor-thread-1) SQL Error: 0, SQLState: 42703\r\n2024-06-12 15:25:38,049 ERROR [org.hib.eng.jdb.spi.SqlExceptionHelper] (executor-thread-1) ERROR: column s1_0.lastupdated does not exist\r\n  Position: 81\r\n2024-06-12 15:25:38,050 INFO  [org.hib.eve.int.DefaultLoadEventListener] (executor-thread-1) HHH000327: Error performing load command: org.hibernate.exception.SQLGrammarException: JDBC exception executing SQL [select s1_0.id,s1_0.about,s1_0.aboutEN,s1_0.company,s1_0.companyURL,s1_0.height,s1_0.lastUpdated,s1_0.level,s1_0.linkedInAccount,s1_0.logo,s1_0.otherURL,s1_0.twitterAccount,s1_0.width from Sponsor s1_0 where s1_0.id=?] [ERROR: column s1_0.lastupdated does not exist\r\n  Position: 81] [n/a]\r\n```\r\n\r\nWell, sure, I forgot to add a migration file. Because it's too complicated.\r\n\r\nThe docs don't even mention how to do this: https://quarkus.io/guides/flyway\r\n\r\nFrankly, I don't know how, but here's my attempt:\r\n\r\n- Go to DEV UI for Flyway, find nothing\r\n- Enable Flyway for dev mode (which is not really what I want, since I want ORM to handle schema changes during DEV)\r\n- Go back to DEV UI for Flyway, it says that it's already migrated (same lie as for prod)\r\n- Remove my initial migration `rm src/main/resources/db/migration/V1.0.0__website.sql`\r\n- Go back DEV UI for Flyway, hit \"create initial migration\"\r\n- Do a diff: `git diff src/main/resources/db/migration/V1.0.0__website.sql`\r\n- Paste the diff into my migration file: `src/main/resources/db/migration/V2.0.0__website.sql` (I suppose)\r\n- Edit the diff into valid SQL for migration\r\n- Revert the changes to the initial migration: `git checkout src/main/resources/db/migration/V1.0.0__website.sql`\r\n\r\nThis is WAY too complicated.\r\n\r\nWe should add a button in the DEV UI (and/or a CLI command to do the same) that generates a n+1 sql migration file based on the previous migrations and the current schema. I'm pretty sure ORM has a tool for generating best-effort update scripts based on an initial DB schema.\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41163/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41163/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

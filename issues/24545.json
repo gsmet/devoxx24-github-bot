@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24545",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24545/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24545/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24545/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24545",
+  "id": 1180104237,
+  "node_id": "I_kwDOCFbutM5GVvYt",
+  "number": 24545,
+  "title": "Quarkus Lambda Native Image Memory Leakage",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2022-03-24T22:08:26Z",
+  "updated_at": "2022-10-19T10:01:21Z",
+  "closed_at": "2022-10-19T10:00:53Z",
+  "active_lock_reason": null,
+  "body": "### Discussed in https://github.com/quarkusio/quarkus/discussions/24516\r\n\r\n<div type='discussions-op-text'>\r\n\r\n<sup>Originally posted by **apurvar1010** March 24, 2022</sup>\r\nI have created an amazon lambda using Quarkus framework and packaged it using GraalVM native-image. The functionalities is quite simple with basic validations, however I am creating Dynamo DB client and SQS clients. I have instantiated those clients outside of Quarkus Request Handler and using Http Client Connection while building the clients as mentioned in this guide: https://quarkus.io/guides/amazon-lambda#aws-sdk-v2\r\n\r\nIn the AWS console, I have set the max memory as 256 mb (This is the requirement). The first invocation takes about 1000ms and uses 74 mb. However for each consecutive invocation of lambda, the memory consumption keeps on increasing and it instantiates all the clients (Dynamo DB and SQS) again and again. Is there a way to keep the memory consumed lower and instantiating these clients once in a while as and when required?\r\n\r\nThe Lambda handler code is as follows: \r\n\r\n```\r\npublic class TestLambda implements RequestHandler<KinesisEvent, OutputObject> {\r\n\r\n    public static final Logger LOGGER = LoggerFactory.getLogger(TestLambda.class);\r\n    private final GetRecords getRecordsObj = new GetRecords();\r\n    private final DynamoDBService dynamoDB = new DynamoDBService();\r\n    private final TableConfiguration tableConfiguration = dynamoDB.getDynamoDBItem();\r\n    private final AssumeRole assumeRole = new AssumeRole(this.tableConfiguration);\r\n    private StsAssumeRoleCredentialsProvider credentialsProvider = assumeRole.getCredentialsProvider();\r\n    private SendMessage sendMessage = new SendMessage(tableConfiguration, credentialsProvider);\r\n\r\n    @Override\r\n    public OutputObject handleRequest(KinesisEvent kinesisEvent, Context context) {\r\n        LOGGER.info(\"Handler started\");\r\n\r\n        List<String> collectionPayload = getRecordsObj.records(kinesisEvent);\r\n        String payload = collectionPayload.toString();\r\n\r\n        if (payload != null) {\r\n            sendMessage.SendMessageToSqs(payload);\r\n        }\r\n        OutputObject obj = new OutputObject();\r\n        obj.setResult(payload);\r\n        return obj;\r\n    }\r\n}\r\n```\r\n\r\nOne of the example of initiating the client is this:\r\n```\r\nDynamoDbClient dynamoDB = DynamoDbClient.builder()\r\n                .region(Region.AP_SOUTHEAST_2)\r\n                .httpClient(UrlConnectionHttpClient.builder().build())\r\n                .build();\r\n```\r\nFor each of the lambda invocation, the clients are getting initiated and I was wondering if there is a way to limit it to one in let's say 100 requests.\r\nIf not, is there any other way to overcome memory leakage.</div>",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24545/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24545/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

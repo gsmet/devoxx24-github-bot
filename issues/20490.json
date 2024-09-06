@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20490",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20490/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20490/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20490/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20490",
+  "id": 1012873381,
+  "node_id": "I_kwDOCFbutM48Xzil",
+  "number": 20490,
+  "title": "Vert.x QuarkusJacksonJsonCodec cannot serialize JSON from records in Native due to Jackson error",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2021-10-01T04:25:08Z",
+  "updated_at": "2021-11-08T10:23:03Z",
+  "closed_at": "2021-11-08T10:22:57Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using Vert.x Web in native mode, `QuarkusJacksonJsonCodec` fails to serialize `record` objects to JSON. This seems to work OK when running in regular JRE. \r\n\r\nThe error itself stems from Jackson `JDK14Util`. Here is where the error stems from in Jackson https://github.com/FasterXML/jackson-databind/blob/2.13/src/main/java/com/fasterxml/jackson/databind/jdk14/JDK14Util.java#L123\r\n\r\n\r\n### Expected behavior\r\n\r\n`record` objects are serialized to JSON when using Quarkus native.\r\n\r\n### Actual behavior\r\n\r\nStack trace\r\n\r\n```\r\n2021-10-01 04:13:20,921 ERROR [io.ver.ext.web.RoutingContext] (vert.x-eventloop-thread-1) Unhandled exception in router: io.vertx.core.json.EncodeException: Failed to encode as JSON: Failed to access RecordComponents of type `org.acme.Pet` (through reference chain: java.util.ArrayList[0])\r\n        at io.quarkus.vertx.runtime.jackson.QuarkusJacksonJsonCodec.toString(QuarkusJacksonJsonCodec.java:147)\r\n        at io.vertx.core.json.JsonArray.encode(JsonArray.java:536)\r\n        at org.acme.PetStoreRouter.listPets(PetStoreRouter.java:51)\r\n        at io.vertx.mutiny.ext.web.openapi.Operation$1.handle(Operation.java:78)\r\n        at io.vertx.mutiny.ext.web.openapi.Operation$1.handle(Operation.java:76)\r\n        at io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1127)\r\n        at io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:114)\r\n        at io.vertx.ext.web.impl.RoutingContextWrapper.next(RoutingContextWrapper.java:201)\r\n        at io.vertx.ext.web.validation.impl.ValidationHandlerImpl.lambda$handle$5(ValidationHandlerImpl.java:168)\r\n        at io.vertx.core.impl.future.SucceededFuture.onComplete(SucceededFuture.java:81)\r\n        at io.vertx.ext.web.validation.impl.ValidationHandlerImpl.handle(ValidationHandlerImpl.java:159)\r\n        at io.vertx.ext.web.validation.impl.ValidationHandlerImpl.handle(ValidationHandlerImpl.java:18)\r\n        at io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1127)\r\n        at io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:114)\r\n        at io.vertx.ext.web.impl.RoutingContextWrapper.next(RoutingContextWrapper.java:201)\r\n        at io.vertx.ext.web.handler.impl.ResponseContentTypeHandlerImpl.handle(ResponseContentTypeHandlerImpl.java:54)\r\n        at io.vertx.ext.web.handler.impl.ResponseContentTypeHandlerImpl.handle(ResponseContentTypeHandlerImpl.java:28)\r\n        at io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1127)\r\n        at io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:151)\r\n        at io.vertx.ext.web.impl.RoutingContextWrapper.next(RoutingContextWrapper.java:201)\r\n        at io.vertx.ext.web.handler.impl.BodyHandlerImpl.handle(BodyHandlerImpl.java:94)\r\n        at io.vertx.ext.web.handler.impl.BodyHandlerImpl.handle(BodyHandlerImpl.java:44)\r\n        at io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1127)\r\n        at io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:151)\r\n        at io.vertx.ext.web.impl.RoutingContextWrapper.next(RoutingContextWrapper.java:201)\r\n        at io.vertx.ext.web.impl.RouterImpl.handleContext(RouterImpl.java:236)\r\n        at io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1127)\r\n        at io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:151)\r\n        at io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:133)\r\n        at io.vertx.ext.web.handler.impl.BodyHandlerImpl$BHandler.doEnd(BodyHandlerImpl.java:313)\r\n        at io.vertx.ext.web.handler.impl.BodyHandlerImpl$BHandler.end(BodyHandlerImpl.java:290)\r\n        at io.vertx.ext.web.handler.impl.BodyHandlerImpl.lambda$handle$0(BodyHandlerImpl.java:86)\r\n        at io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n        at io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n        at io.vertx.core.http.impl.HttpEventHandler.handleEnd(HttpEventHandler.java:76)\r\n        at io.vertx.core.http.impl.Http1xServerRequest.onEnd(Http1xServerRequest.java:565)\r\n        at io.vertx.core.http.impl.Http1xServerRequest.lambda$pendingQueue$1(Http1xServerRequest.java:127)\r\n        at io.vertx.core.streams.impl.InboundBuffer.handleEvent(InboundBuffer.java:240)\r\n        at io.vertx.core.streams.impl.InboundBuffer.write(InboundBuffer.java:130)\r\n        at io.vertx.core.http.impl.Http1xServerRequest.handleEnd(Http1xServerRequest.java:546)\r\n        at io.vertx.core.impl.EventLoopContext.execute(EventLoopContext.java:71)\r\n        at io.vertx.core.impl.DuplicatedContext.execute(DuplicatedContext.java:163)\r\n        at io.vertx.core.http.impl.Http1xServerConnection.onEnd(Http1xServerConnection.java:189)\r\n        at io.vertx.core.http.impl.Http1xServerConnection.handleMessage(Http1xServerConnection.java:145)\r\n        at io.vertx.core.net.impl.ConnectionBase.read(ConnectionBase.java:155)\r\n        at io.vertx.core.net.impl.VertxHandler.channelRead(VertxHandler.java:154)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n        at io.netty.channel.ChannelInboundHandlerAdapter.channelRead(ChannelInboundHandlerAdapter.java:93)\r\n        at io.netty.handler.codec.http.websocketx.extensions.WebSocketServerExtensionHandler.channelRead(WebSocketServerExtensionHandler.java:99)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n        at io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:286)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:324)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:296)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n        at io.vertx.core.http.impl.Http1xOrH2CHandler.end(Http1xOrH2CHandler.java:61)\r\n        at io.vertx.core.http.impl.Http1xOrH2CHandler.channelRead(Http1xOrH2CHandler.java:38)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n        at io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:286)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n        at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1410)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n        at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:919)\r\n        at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:719)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:655)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:581)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:493)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.lang.Thread.run(Thread.java:831)\r\n        at com.oracle.svm.core.thread.JavaThreads.threadStartRoutine(JavaThreads.java:567)\r\n        at com.oracle.svm.core.posix.thread.PosixJavaThreads.pthreadStartRoutine(PosixJavaThreads.java:192)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nCheck out this branch: https://github.com/murphye/vertx-web-openapi-quarkus-petstore/tree/QuarkusJacksonJsonCodec-RecordComponents-Native\r\n\r\n```\r\n./mvnw clean package -Pnative -Dquarkus.native.container-build=true -Dquarkus.container-image.build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-native-image:21.2.0-java16\r\n```\r\n\r\n```\r\ndocker run -p 8080:8080 eric/petstore:1.0.0-SNAPSHOT\r\n```\r\n\r\n```\r\ncurl localhost:8080/pets\r\n```\r\n\r\nCheck the logs and you will see the stack trace.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin erics-mbp-2.lan 20.6.0 Darwin Kernel Version 20.6.0: Wed Jun 23 00:26:31 PDT 2021; root:xnu-7195.141.2~5/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nUsing quay.io/quarkus/ubi-quarkus-native-image:21.2.0-java16\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20490/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20490/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

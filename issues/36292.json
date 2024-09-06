@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36292",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36292/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36292/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36292/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36292",
+  "id": 1926390210,
+  "node_id": "I_kwDOCFbutM5y0mHC",
+  "number": 36292,
+  "title": "Liquibase not playing nice with `H2` on version `3.4.1`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1956491735,
+      "node_id": "MDU6TGFiZWwxOTU2NDkxNzM1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/liquibase",
+      "name": "area/liquibase",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-10-04T14:49:45Z",
+  "updated_at": "2023-10-06T13:53:30Z",
+  "closed_at": "2023-10-06T13:53:30Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm trying to upgrade a small project I have that's currently using `Quarkus` version `3.3.3`. Everything works fine with that version, but as soon as I upgrade to `3.4.1`, I'm unable to run the `SQL` scripts as before because `Liquibase` states that table `databasechangelog` already exists 😑\n\n### Expected behavior\n\nApplication should start and `Liquibase` should run successfully — because nothing changed (application-wise) between upgrades.\n\n### Actual behavior\n\nApplication fail the `Liquibase` step(s) with:\r\n\r\n```shell\r\n2023-10-04 14:32:41,645 |- ERROR in io.quarkus.runtime.Application:197 [Quarkus Main Thread] - Failed to start application (with profile [dev]): java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:113)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.IllegalStateException: Error starting Liquibase\r\n\tat io.quarkus.liquibase.runtime.LiquibaseRecorder.doStartActions(LiquibaseRecorder.java:88)\r\n\tat io.quarkus.deployment.steps.LiquibaseProcessor$startLiquibase1744275855.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.LiquibaseProcessor$startLiquibase1744275855.deploy(Unknown Source)\r\n\t... 13 more\r\nCaused by: liquibase.exception.CommandExecutionException: liquibase.exception.DatabaseException: liquibase.exception.DatabaseException: Table \"databasechangelog\" already exists; SQL statement:\r\nCREATE TABLE PUBLIC.DATABASECHANGELOG (ID VARCHAR(255) NOT NULL, AUTHOR VARCHAR(255) NOT NULL, FILENAME VARCHAR(255) NOT NULL, DATEEXECUTED TIMESTAMP NOT NULL, ORDEREXECUTED INT NOT NULL, EXECTYPE VARCHAR(10) NOT NULL, MD5SUM VARCHAR(35), DESCRIPTION VARCHAR(255), COMMENTS VARCHAR(255), TAG VARCHAR(255), LIQUIBASE VARCHAR(20), CONTEXTS VARCHAR(255), LABELS VARCHAR(255), DEPLOYMENT_ID VARCHAR(10)) [42101-220] [Failed SQL: (42101) CREATE TABLE PUBLIC.DATABASECHANGELOG (ID VARCHAR(255) NOT NULL, AUTHOR VARCHAR(255) NOT NULL, FILENAME VARCHAR(255) NOT NULL, DATEEXECUTED TIMESTAMP NOT NULL, ORDEREXECUTED INT NOT NULL, EXECTYPE VARCHAR(10) NOT NULL, MD5SUM VARCHAR(35), DESCRIPTION VARCHAR(255), COMMENTS VARCHAR(255), TAG VARCHAR(255), LIQUIBASE VARCHAR(20), CONTEXTS VARCHAR(255), LABELS VARCHAR(255), DEPLOYMENT_ID VARCHAR(10))]\r\n\tat liquibase.command.CommandScope.execute(CommandScope.java:236)\r\n\tat liquibase.Liquibase.lambda$update$0(Liquibase.java:223)\r\n\tat liquibase.Scope.lambda$child$0(Scope.java:197)\r\n\tat liquibase.Scope.child(Scope.java:206)\r\n\tat liquibase.Scope.child(Scope.java:196)\r\n\tat liquibase.Scope.child(Scope.java:175)\r\n\tat liquibase.Liquibase.runInScope(Liquibase.java:1361)\r\n\tat liquibase.Liquibase.update(Liquibase.java:215)\r\n\tat liquibase.Liquibase.update(Liquibase.java:197)\r\n\tat io.quarkus.liquibase.runtime.LiquibaseRecorder.doStartActions(LiquibaseRecorder.java:77)\r\n\t... 15 more\r\n```\n\n### How to Reproduce?\n\n1. Setup a `Quarkus` application with `H2` and `Liquibase`\r\n2. Place a `SQL` script for `Liquibase` to run at startup\r\n\r\nThis is the configuration I'm currently using:\r\n\r\n```yaml\r\nquarkus:\r\n  datasource:\r\n    db-kind: h2\r\n    jdbc:\r\n      url: jdbc:h2:mem:${quarkus.application.name};DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DEFAULT_NULL_ORDERING=HIGH;MODE=PostgreSQL\r\n    username: sa\r\n  liquibase:\r\n    change-log: database/migrations/changelog.xml\r\n    clean-at-start: false\r\n    default-schema-name: public\r\n    migrate-at-start: true\r\n    validate-on-migrate: true\r\n```\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux uplink 6.1.55-1-lts #1 SMP PREEMPT_DYNAMIC Sat, 23 Sep 2023 16:57:15 +0000 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Temurin-17.0.8.1+1 (build 17.0.8.1+1)\n\n### GraalVM version (if different from Java)\n\nN/A\n\n### Quarkus version or git rev\n\n3.4.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.3\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36292/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36292/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

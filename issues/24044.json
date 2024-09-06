@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24044",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24044/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24044/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24044/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24044",
+  "id": 1155843685,
+  "node_id": "I_kwDOCFbutM5E5MZl",
+  "number": 24044,
+  "title": "Gradle Plugin - quarkusDev - Plugin dependenies are used to initialize logging",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1283428650,
+      "node_id": "MDU6TGFiZWwxMjgzNDI4NjUw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/logging",
+      "name": "area/logging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-03-01T21:37:28Z",
+  "updated_at": "2022-04-10T22:18:49Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nFor logging config, we are using vanilla slf4j/log4j2 ie we use slf4j at compile time and log4j2 at runtime with a dedicated log4j2 config file (log4j2.xml) which exists in application classpath. This setup has been working fine until we upgrade Quarkus from 2.5.1 to 2.7.2.\r\n\r\nIn Quarkus 2.7.2, we found `slf4j-jboss-logmanager` is used to initialize logging, as opposed to using log4j2. Given `slf4j-jboss-logmanager` is explicitly excluded in the application classpath (via Gradle's dependenency exclude), we look into how `slf4j-jboss-logmanager` is loaded and we found unfamilar jar files are showing in the underlying `JarLoader`:\r\n\r\nRun Quarkus app in debut mode: \r\n\r\n// org.slf4j.LoggerFactory from org.slf4j:slf4j-api:1.7.36\r\n```java\r\n    static Set<URL> findPossibleStaticLoggerBinderPathSet() {\r\n        // use Set instead of list in order to deal with bug #138\r\n        // LinkedHashSet appropriate here because it preserves insertion order\r\n        // during iteration\r\n        Set<URL> staticLoggerBinderPathSet = new LinkedHashSet<URL>();\r\n        try {\r\n            ClassLoader loggerFactoryClassLoader = LoggerFactory.class.getClassLoader();\r\n            Enumeration<URL> paths;\r\n            if (loggerFactoryClassLoader == null) {\r\n                paths = ClassLoader.getSystemResources(STATIC_LOGGER_BINDER_PATH);\r\n            } else {\r\n                paths = loggerFactoryClassLoader.getResources(STATIC_LOGGER_BINDER_PATH);\r\n            }\r\n            while (paths.hasMoreElements()) {\r\n                URL path = paths.nextElement();\r\n                staticLoggerBinderPathSet.add(path);  // Put a breakpoint here\r\n            }\r\n        } catch (IOException ioe) {\r\n            Util.report(\"Error getting resources from path\", ioe);\r\n        }\r\n        return staticLoggerBinderPathSet;\r\n    }\r\n```\r\n\r\nWhen the app process pause at the breakpoint, in Intellij, we execute this expression:\r\n\r\n```java\r\nfor (var loader : ((URLClassPath)((AppClassLoader)loggerFactoryClassLoader).ucp).loaders) {\r\n    System.out.println(((JarLoader)loader).csu.file);\r\n}\r\n```\r\n\r\nOur application dependencies are not showing up in the output.\r\n\r\n\r\n### Expected behavior\r\n\r\nlog4j2 lib/config is loaded successfully.\r\n\r\n### Actual behavior\r\n\r\n `slf4j-jboss-logmanager` lib is loaded\r\n\r\n### How to Reproduce?\r\n\r\n1) Gradle config\r\n\r\n```\r\nconfigurations.all {\r\n    // We use Log4j2 as logging implementation so we don't bridge slf4j to JBoss Logging\r\n    exclude group: 'org.jboss.slf4j', module: 'slf4j-jboss-logmanager'\r\n}\r\n\r\nquarkusDev {\r\n    jvmArgs = [ \"-Dorg.jboss.logging.provider=slf4j\" ]\r\n}\r\n\r\ndependencies {\r\n    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.1'\r\n    runtimeOnly files(rootProject.file(\"path/to/dir/where/log4j2/config/file/is/located\"))\r\n}\r\n\r\n```\r\n\r\n2) Put a debug point to SLF4J class: org.slf4j.LoggerFactory\r\n\r\n// org.slf4j.LoggerFactory from org.slf4j:slf4j-api:1.7.36\r\n```java\r\n    static Set<URL> findPossibleStaticLoggerBinderPathSet() {\r\n        // use Set instead of list in order to deal with bug #138\r\n        // LinkedHashSet appropriate here because it preserves insertion order\r\n        // during iteration\r\n        Set<URL> staticLoggerBinderPathSet = new LinkedHashSet<URL>();\r\n        try {\r\n            ClassLoader loggerFactoryClassLoader = LoggerFactory.class.getClassLoader();\r\n            Enumeration<URL> paths;\r\n            if (loggerFactoryClassLoader == null) {\r\n                paths = ClassLoader.getSystemResources(STATIC_LOGGER_BINDER_PATH);\r\n            } else {\r\n                paths = loggerFactoryClassLoader.getResources(STATIC_LOGGER_BINDER_PATH);\r\n            }\r\n            while (paths.hasMoreElements()) {\r\n                URL path = paths.nextElement();\r\n                staticLoggerBinderPathSet.add(path);  // Put a breakpoint here\r\n            }\r\n        } catch (IOException ioe) {\r\n            Util.report(\"Error getting resources from path\", ioe);\r\n        }\r\n        return staticLoggerBinderPathSet;\r\n    }\r\n```\r\n\r\n3) Start Quarkus in debug mode, the process pause as part of logging initialization triggered by:\r\n\r\n// io.quarkus:quarkus-core-deployment:2.7.2.Final\r\n```java\r\npackage io.quarkus.deployment.dev;\r\n...\r\npublic class DevModeMain implements Closeable {\r\n\r\n    public static final String DEV_MODE_CONTEXT = \"META-INF/dev-mode-context.dat\";\r\n    private static final Logger log = Logger.getLogger(DevModeMain.class);  // this line\r\n```\r\n\r\n4) The local variable `path` would have value:\r\n\r\nQuasrkus v2.51: \r\n> path = {URL@865} \"jar:file:/C:/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j-impl/2.17.1/84692d456bcce689355d33d68167875e486954dd/log4j-slf4j-impl-2.17.1.jar!/org/slf4j/impl/StaticLoggerBinder.class\"\r\n\r\nQuarkus v2.7.2: \r\n> path = {URL@868} \"jar:file:/C:/.gradle/caches/modules-2/files-2.1/org.jboss.slf4j/slf4j-jboss-logmanager/1.1.0.Final/5f1c0e3f5082c21f6b4964b97fe5b1d5f8c42f53/slf4j-jboss-logmanager-1.1.0.Final.jar!/org/slf4j/impl/StaticLoggerBinder.class\"\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n11.0.10+8-LTS-162\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24044/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24044/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30241",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30241/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30241/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30241/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30241",
+  "id": 1523478532,
+  "node_id": "I_kwDOCFbutM5aznAE",
+  "number": 30241,
+  "title": "SRCFG00011: Could not expand value platform.quarkus.native.builder-image in property quarkus.native.builder-image ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-01-07T05:03:39Z",
+  "updated_at": "2023-02-02T13:14:01Z",
+  "closed_at": "2023-02-02T13:14:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMy usecase: I want to generate OpenAPI spec JSON/YAML file from Spring Controller Code at **build time** without starting server. I am fine if it is available under /target/generated-sources. Please let me know if this is possible.\r\n\r\nI am incorporating ````quarkus-maven-plugin```` to generate OpenAPI spec Yaml/JSON at build time in a Spring Boot Application. I am running ````mvn clean install````.\r\n\r\n### Expected behavior\r\n\r\nBuild should be successful and OpenAPI spec should be generated from Spring Controller code\r\n\r\n### Actual behavior\r\n\r\nI am getting error ````Failed to build quarkus application\u001b[m: SRCFG00011: Could not expand value platform.quarkus.native.builder-image in property quarkus.native.builder-image -> \u001b[1m[Help 1]\u001b[m````\r\n\r\n### How to Reproduce?\r\n\r\n1. Create a simple HelloWorld SpringBoot application\r\n2. Add ````quarkus-bom```` in pom.xml under dependencies section\r\n3. Add ````quarkus-maven-plugin```` in pom.xml under plugins section\r\n4. Run ````mvn clean install````\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin XXX-MacBook-Pro.local 22.1.0 Darwin Kernel Version 22.1.0: Sun Oct  9 20:15:52 PDT 2022; root:xnu-8792.41.9~2/RELEASE_ARM64_T8112 arm64\r\n\r\n### Output of `java -version`\r\n\r\njava version \"19.0.1\" 2022-10-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.15.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn version - 3.8.6\r\n\r\n### Additional information\r\n\r\npom.xml\r\n\r\n````\r\n\r\n\t<parent>\r\n\t\t<groupId>org.springframework.boot</groupId>\r\n\t\t<artifactId>spring-boot-starter-parent</artifactId>\r\n\t\t<version>2.7.6</version>\r\n\t\t<relativePath/> \r\n\t</parent>\r\n\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-bom</artifactId>\r\n            <version>2.15.2.Final</version>\r\n            <type>pom</type>\r\n            <scope>import</scope>\r\n        </dependency>\r\n\r\n\r\n        <plugin>\r\n          <groupId>io.quarkus</groupId>\r\n          <artifactId>quarkus-maven-plugin</artifactId>\r\n          <extensions>true</extensions>\r\n          <executions>\r\n            <execution>\r\n              <goals>\r\n                <goal>build</goal>\r\n                <goal>generate-code</goal>\r\n                <goal>generate-code-tests</goal>\r\n              </goals>\r\n            </execution>\r\n          </executions>\r\n        </plugin>\r\n\r\n````\r\n\r\nJava Controller:\r\n\r\n````\r\npackage com.example.demo3;\r\n\r\nimport java.util.concurrent.atomic.AtomicLong;\r\n\r\nimport org.springframework.web.bind.annotation.GetMapping;\r\nimport org.springframework.web.bind.annotation.RequestParam;\r\nimport org.springframework.web.bind.annotation.RestController;\r\n\r\n@RestController\r\npublic class GreetingController {\r\n\r\n\tprivate static final String template = \"Hello, %s!\";\r\n\tprivate final AtomicLong counter = new AtomicLong();\r\n\r\n\t@GetMapping(\"/greeting\")\r\n\tpublic Greeting greeting(@RequestParam(value = \"name\", defaultValue = \"World\") String name) {\r\n\t\treturn new Greeting(counter.incrementAndGet(), String.format(template, name));\r\n\t}\r\n}\r\n````",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30241/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30241/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

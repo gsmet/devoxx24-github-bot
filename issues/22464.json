@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22464",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22464/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22464/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22464/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22464",
+  "id": 1086582247,
+  "node_id": "I_kwDOCFbutM5Aw-3n",
+  "number": 22464,
+  "title": "Quarkus fails generating Avro sources when there are references between Avro documents",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2021-12-22T08:33:33Z",
+  "updated_at": "2022-11-18T18:17:57Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAvro supports referencing types from another documents, e.g.:\r\n\r\nid.avsc\r\n```\r\n{\r\n  \"namespace\": \"com.codependent.avro\",\r\n  \"type\": \"record\",\r\n  \"name\": \"Id\",\r\n  \"fields\": [\r\n    {\r\n      \"name\": \"id\",\r\n      \"type\": \"string\"\r\n    },\r\n    {\r\n      \"name\": \"projectId\",\r\n      \"type\": \"string\"\r\n    }\r\n  ]\r\n}\r\n```\r\n\r\nevent-received.avsc\r\n```\r\n{\r\n  \"namespace\": \"com.codependent.avro\",\r\n  \"type\": \"record\",\r\n  \"name\": \"EventReceived\",\r\n  \"fields\": [\r\n    {\r\n      \"name\": \"id\",\r\n      \"type\": \"com.codependent.avro.Id\"\r\n    },\r\n    {\r\n      \"name\": \"name\",\r\n      \"type\": \"string\"\r\n    }\r\n  ]\r\n}\r\n\r\n```\r\n\r\nWhen building the Quarkus application I'm finding this error:\r\n\r\n```\r\nCaused by: org.apache.avro.SchemaParseException: \"com.codependent.avro.Id\" is not a defined name. The type of the \"id\" field must be a defined name or a {\"type\": ...} expression.\r\n        at org.apache.avro.Schema.parse(Schema.java:1676)\r\n        at org.apache.avro.Schema$Parser.parse(Schema.java:1433)\r\n        at org.apache.avro.Schema$Parser.parse(Schema.java:1396)\r\n        at io.quarkus.avro.deployment.AvroSchemaCodeGenProvider.compileSingleFile(AvroSchemaCodeGenProvider.java:50)\r\n        at io.quarkus.avro.deployment.AvroCodeGenProviderBase.trigger(AvroCodeGenProviderBase.java:65)\r\n        at io.quarkus.deployment.CodeGenerator.lambda$trigger$1(CodeGenerator.java:102)\r\n        at io.quarkus.deployment.CodeGenerator.callWithClassloader(CodeGenerator.java:70)\r\n        at io.quarkus.deployment.CodeGenerator.trigger(CodeGenerator.java:91)\r\n        at io.quarkus.deployment.CodeGenerator.initAndRun(CodeGenerator.java:34)\r\n        ... 122 more\r\n\r\n```\r\n\r\n### Expected behavior\r\n\r\nThe Quarkus build shoud correctly generate two Avro types Id.java and EventReceived.java\r\n\r\n### Actual behavior\r\n\r\nThe build fails with: \r\n\r\n```\r\nCaused by: org.apache.avro.SchemaParseException: \"com.codependent.avro.Id\" is not a defined name. The type of the \"id\" field must be a defined name or a {\"type\": ...} expression.\r\n        at org.apache.avro.Schema.parse(Schema.java:1676)\r\n        at org.apache.avro.Schema$Parser.parse(Schema.java:1433)\r\n        at org.apache.avro.Schema$Parser.parse(Schema.java:1396)\r\n        at io.quarkus.avro.deployment.AvroSchemaCodeGenProvider.compileSingleFile(AvroSchemaCodeGenProvider.java:50)\r\n        at io.quarkus.avro.deployment.AvroCodeGenProviderBase.trigger(AvroCodeGenProviderBase.java:65)\r\n        at io.quarkus.deployment.CodeGenerator.lambda$trigger$1(CodeGenerator.java:102)\r\n        at io.quarkus.deployment.CodeGenerator.callWithClassloader(CodeGenerator.java:70)\r\n        at io.quarkus.deployment.CodeGenerator.trigger(CodeGenerator.java:91)\r\n        at io.quarkus.deployment.CodeGenerator.initAndRun(CodeGenerator.java:34)\r\n        ... 122 more\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nI'm attaching a sample project. To reproduce the issue just run `./gradlew build --stacktrace`\r\n\r\n[quark-avro.zip](https://github.com/quarkusio/quarkus/files/7761169/quark-avro.zip)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin MacBook-Pro-de-Adminprfl-2.local 21.1.0 Darwin Kernel Version 21.1.0: Wed Oct 13 17:33:23 PDT 2021; root:xnu-8019.41.5~1/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.10\" 2021-01-19 OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.10+9) OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.10+9, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.5.4.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22464/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22464/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

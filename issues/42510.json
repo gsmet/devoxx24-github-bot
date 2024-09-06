@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42510",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42510/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42510/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42510/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42510",
+  "id": 2463234259,
+  "node_id": "I_kwDOCFbutM6S0fjT",
+  "number": 42510,
+  "title": "Regression testing & defense against classloader leaks",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 985346623,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjM=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/help%20wanted",
+      "name": "help wanted",
+      "color": "008672",
+      "default": true,
+      "description": "Extra attention is needed"
+    },
+    {
+      "id": 2770225781,
+      "node_id": "MDU6TGFiZWwyNzcwMjI1Nzgx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/qe?",
+      "name": "triage/qe?",
+      "color": "f9d0c4",
+      "default": false,
+      "description": "Issue could use a quality focused review to further harden it"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-08-13T12:29:13Z",
+  "updated_at": "2024-08-13T12:29:29Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\n# Goal: reduce future regressions in the area of memory leaks, with a special focus on classloader leaks\r\n\r\nIn its very nature of reloading the whole app, including many 3rd party dependencies of which we might not know the design in great detail, we've found that maintaining extensions, especially for dev-mode, to not leak their classloaders is challenging.\r\nMany leaks have been resolved recently, but we need a way to ensure we keep improving over potentially regressing again when people lower their guard on this topic.\r\n\r\n# How\r\nMemory leaks are actually testable; such a test is not even tricky but it requires a commitment from our side: I'm wondering if we can proof the approach on a tactical selection of extensions - immediately getting some benefits already - but eventually to make it zero-impact for any extension maintainers; this is described in more detail below.\r\n\r\nOriginally I prototyped the general idea of regression tests against classloader leaks in the Hibernate ORM project, about a year ago; I've left it there to mature for some time as I wasn't sure the timeout-approach wouldn't be potentially too fragile, and flaky CI is unacceptable to me; but it seems actually very robust and reliable: we've had no problems with it and it's been a long time now.\r\n\r\nMy Hibernate ORM utilities can be found here, and needless to say I'm granting permission to copy them into Quarkus and adapt as necessary, including adapt the license to ASL2.\r\n\r\nExample usage:\r\n - https://github.com/hibernate/hibernate-orm/blob/4c3666babc3828bfc190eddcfd74c554668fbbc2/hibernate-core/src/test/java/org/hibernate/orm/test/bootstrap/registry/classloading/HibernateClassLoaderLeaksTest.java\r\n\r\nTesting the test utility to make sure it actually works, but also to see how it's supposed to be used:\r\n - https://github.com/hibernate/hibernate-orm/blob/5c0058e6bdb04e44805e9f830a8960c4a3211ff3/hibernate-core/src/test/java/org/hibernate/orm/test/bootstrap/registry/classloading/LeakUtilitySelfTest.java\r\n - https://github.com/hibernate/hibernate-orm/blob/5c0058e6bdb04e44805e9f830a8960c4a3211ff3/hibernate-core/src/test/java/org/hibernate/orm/test/bootstrap/registry/classloading/ClassLoaderLeaksUtilityTest.java#L13\r\n- https://github.com/hibernate/hibernate-orm/blob/5c0058e6bdb04e44805e9f830a8960c4a3211ff3/hibernate-core/src/test/java/org/hibernate/orm/test/bootstrap/registry/classloading/NotLeakingTestAction.java#L10\r\n\r\nCore logic to test for leaks of just any type (can spot a leak of any object, not just classloaders):\r\n - https://github.com/hibernate/hibernate-orm/blob/5c0058e6bdb04e44805e9f830a8960c4a3211ff3/hibernate-core/src/test/java/org/hibernate/orm/test/bootstrap/registry/classloading/PhantomReferenceLeakDetector.java#L24\r\n\r\nMaking it nicer to use specifically for ClassLoader leaks, as it's a bit of a tricky special case:\r\n - https://github.com/hibernate/hibernate-orm/blob/5c0058e6bdb04e44805e9f830a8960c4a3211ff3/hibernate-core/src/test/java/org/hibernate/orm/test/bootstrap/registry/classloading/ClassLoaderLeakDetector.java#L21\r\n## Enforce it globally?\r\n\r\nI'm assuming it needs adapting to be integrated within Quarkus; wondering if there's a smart way to integrate it in such a way that all extensions are inherently tested this way? Perhaps it could be integrated in the testing framework, and call into these helpers to ensure that after any testsuite is run, a classloader leak would be spotted?\r\n\r\nPerhaps I'm dreaming, as I'm not too familiar with our testing frameworks - but I think it would be really great if somebody could think of such an integration.\r\n\r\n## Rollout Suggestions\r\n\r\nI'm confident that many extensions still have classloader leaks we're not aware of.\r\n\r\nEnforcing such a global check on all extensions would make it much harder to introduce such a check, so I'd suggest initially needing an opt-in, so that various extension owners can be encouraged to fix whatever they need fixing at their own pace, and eventually switch to opt-out.  This would allow us to benefit from the regression tests in short time, and roll it out gradually.\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42510/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42510/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

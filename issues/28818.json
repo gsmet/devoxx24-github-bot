@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28818",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28818/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28818/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28818/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28818",
+  "id": 1422450351,
+  "node_id": "I_kwDOCFbutM5UyN6v",
+  "number": 28818,
+  "title": "Incoming HTTP request not being fully read or closed when a constraint validator rejects the request",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 19,
+  "created_at": "2022-10-25T13:16:42Z",
+  "updated_at": "2022-12-05T09:07:24Z",
+  "closed_at": "2022-11-08T12:36:39Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMachine: Apple M1 Pro\r\nJVM: openjdk 11.0.2\r\nQuarkus: 2.7.4.Final, 2.13.3.Final\r\n\r\nThere seems to be a race condition between reading a request from a TCP socket and constraint validators.\r\n\r\nWhen a request gets rejected by a constraint validator (such as `@Consume`) before Quarkus had a chance to fully ACK the incoming request, Quarkus answers back with the appropriate status code and stops reading the request from the TCP socket but doesn't close the connection.\r\n\r\nThis behavior, keeping the connection open but not reading data from the socket, leaves clients in a hanging state after they fully filled the TCP transmission window, waiting for it to be ACK'ed.\r\n\r\nThe client hang may not be observed if the requests are smaller in size, given that in those cases it's likely that the request has been completely received and ACK'ed by Quarkus before the constraint validator had the chance to fire. In these cases, no hanging is observed.\r\n\r\n### Expected behavior\r\n\r\nQuarkus should either read the incoming request fully or close the connection, so as to signal to the client that the request transmission should be over.\r\n\r\n### Actual behavior\r\n\r\nDescribed in the previous section. Follow the steps below to reproduce.\r\n\r\n### How to Reproduce?\r\n\r\n1. Create a sample Quarkus application using `quarkus create && cd code-with-quarkus`\r\n2. Add the following endpoint:\r\n\r\n```java\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n    @POST\r\n    @Consumes({\"image/jpeg\", \"image/png\"})\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello(byte[] imageFile) {\r\n        throw new NotAuthorizedException(\"\");\r\n    }\r\n}\r\n```\r\n3. Make a request with a large payload (3MB is enough on my machine, Apple M1 Pro) which breaks the `@Consumes` filter by sending a different `Content-Type` header. For your convenience, here's a python snippet that'll do it:\r\n\r\n```python\r\nimport requests\r\nimport os\r\n\r\nurl = \"http://localhost:8080/hello\"\r\n\r\npayload=b\"\\x00\"+os.urandom(1024 * 1024 * 3)+b\"\\x00\"\r\nheaders = {\r\n  'Content-Type': 'image/gif'\r\n}\r\n\r\nresponse = requests.request(\"POST\", url, headers=headers, data=payload)\r\n\r\nprint(response.text)\r\n```\r\n\r\nAt this point, the Python code should hang because the request stream is neither being fully read nor closed by Quarkus.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n(macOS M1 Pro) Darwin <REDACTED>.local 21.6.0 Darwin Kernel Version 21.6.0: Mon Aug 22 20:19:52 PDT 2022; root:xnu-8020.140.49~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.2\" 2019-01-15 OpenJDK Runtime Environment 18.9 (build 11.0.2+9) OpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\nReproduced in 2.7.4.Final and 2.13.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 Maven home: /Users/<REDACTED>/.m2/wrapper/dists/apache-maven-3.8.6-bin/67568434/apache-maven-3.8.6 Java version: 11.0.2, vendor: Oracle Corporation, runtime: /Library/Java/JavaVirtualMachines/jdk-11.0.2.jdk/Contents/Home Default locale: en_PT, platform encoding: UTF-8 OS name: \"mac os x\", version: \"10.16\", arch: \"x86_64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28818/reactions",
+    "total_count": 5,
+    "+1": 3,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 2,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28818/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

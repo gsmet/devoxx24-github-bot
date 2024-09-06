@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28466",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28466/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28466/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28466/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28466",
+  "id": 1402830664,
+  "node_id": "I_kwDOCFbutM5TnX9I",
+  "number": 28466,
+  "title": "Unable to serialize java.util.Collections$SingletonSet in native mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3554570642,
+      "node_id": "LA_kwDOCFbutM7T3nGS",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/graalvm-java17",
+      "name": "env/graalvm-java17",
+      "color": "228FE2",
+      "default": false,
+      "description": "Relating to using GraalVM native generation Java 11"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-10-10T09:01:58Z",
+  "updated_at": "2022-10-13T06:57:01Z",
+  "closed_at": "2022-10-12T03:35:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI am enabling `java.util.Collections$SingletonSet` for serialization fro an extension with:\r\n```\r\n    @BuildStep\r\n    void reflection(BuildProducer<ReflectiveClassBuildItem> reflection) {\r\n        log.info(\"configuring reflection\");\r\n        reflection.produce(new ReflectiveClassBuildItem(true, false, false, false, AbstractSet.class.getName()));\r\n        reflection.produce(new ReflectiveClassBuildItem(true, false, false, true, \"java.util.Collections$SingletonSet\"));\r\n    }\r\n```\n\n### Expected behavior\n\nSerialization of `SingletonSet` should work.\n\n### Actual behavior\n\nIt fails with:\r\n```\r\ncom.oracle.svm.core.jdk.UnsupportedFeatureError: SerializationConstructorAccessor class not found for declaringClass: java.util.Collections$SingletonSet (targetConstructorClass: java.util.AbstractSet). Usually adding java.util.Collections$SingletonSet to serialization-config.json fixes the problem.\r\n```\n\n### How to Reproduce?\n\ncreate a new extension: `quarkus create extension myext`\r\nIn the processor, implement:\r\n```\r\n    @BuildStep\r\n    void reflection(BuildProducer<ReflectiveClassBuildItem> reflection) {\r\n        log.info(\"configuring reflection\");\r\n        reflection.produce(new ReflectiveClassBuildItem(true, false, false, false, AbstractSet.class.getName()));\r\n        reflection.produce(new ReflectiveClassBuildItem(true, false, false, true, \"java.util.Collections$SingletonSet\"));\r\n    }\r\n```\r\n\r\nReplace `MyExtResource` with:\r\n```\r\n@Path(\"/myext\")\r\n@ApplicationScoped\r\npublic class MyextResource {\r\n\r\n    private static final Logger log = LoggerFactory.getLogger(MyextResource.class);\r\n\r\n    @GET\r\n    public String hello() {\r\n\r\n        Set<String> set = Collections.singleton(\"coucou\");\r\n        try {\r\n            try (\r\n                    ByteArrayOutputStream baos = new ByteArrayOutputStream();\r\n                    ObjectOutputStream oos = new ObjectOutputStream(baos)) {\r\n\r\n                oos.writeObject(set);\r\n                oos.flush();\r\n\r\n                try (\r\n                        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());\r\n                        ObjectInputStream ois = new ObjectInputStream(bais)) {\r\n\r\n                    Object result = ois.readObject();\r\n                    return result.toString();\r\n                }\r\n            }\r\n        } catch (Exception e) {\r\n            log.error(\"serialization test error\", e);\r\n            return \"KO: \" + e.getMessage();\r\n        }\r\n\r\n    }\r\n}\r\n```\r\nExecute: `mvn install -Pnative -Dquarkus.native.container-build=true -Dquarkus.container-image.build=true`\r\n\r\nYou see the exception: \r\n```\r\n[INFO] Running io.quarkiverse.myext.it.MyextResourceIT\r\nExecuting \"/export/soft/appl/tmpdir/quarkus-myext/integration-tests/target/quarkus-myext-integration-tests-999-SNAPSHOT-runner -Dquarkus.http.port=8081 -Dquarkus.http.ssl-port=8444 -Dtest.url=http://localhost:8081 -Dquarkus.log.file.path=/export/soft/appl/tmpdir/quarkus-myext/integration-tests/target/quarkus.log -Dquarkus.log.file.enable=true\"\r\n__  ____  __  _____   ___  __ ____  ______\r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2022-10-10 10:57:25,821 INFO  [io.quarkus] (main) quarkus-myext-integration-tests 999-SNAPSHOT native (powered by Quarkus 2.13.1.Final) started in 0.034s. Listening on: http://0.0.0.0:8081\r\n2022-10-10 10:57:25,823 INFO  [io.quarkus] (main) Profile prod activated.\r\n2022-10-10 10:57:25,823 INFO  [io.quarkus] (main) Installed features: [cdi, myext, resteasy, smallrye-context-propagation, vertx]\r\n2022-10-10 10:57:27,419 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-0) HTTP Request to /myext failed, error id: f501bb0c-478c-460f-b6e0-069762f9c01f-1: org.jboss.resteasy.spi.UnhandledException: com.oracle.svm.core.jdk.UnsupportedFeatureError: SerializationConstructorAccessor class not found for declaringClass: java.util.Collections$SingletonSet (targetConstructorClass: java.util.AbstractSet). Usually adding java.util.Collections$SingletonSet to serialization-config.json fixes the problem.\r\n        at org.jboss.resteasy.core.ExceptionHandler.handleApplicationException(ExceptionHandler.java:105)\r\n        at org.jboss.resteasy.core.ExceptionHandler.handleException(ExceptionHandler.java:359)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.writeException(SynchronousDispatcher.java:218)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:519)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:261)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:161)\r\n        at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:364)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:164)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:247)\r\n        at io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:73)\r\n        at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:151)\r\n        at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:91)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:564)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.lang.Thread.run(Thread.java:833)\r\n        at com.oracle.svm.core.thread.PlatformThreads.threadStartRoutine(PlatformThreads.java:705)\r\n        at com.oracle.svm.core.posix.thread.PosixPlatformThreads.pthreadStartRoutine(PosixPlatformThreads.java:202)\r\nCaused by: com.oracle.svm.core.jdk.UnsupportedFeatureError: SerializationConstructorAccessor class not found for declaringClass: java.util.Collections$SingletonSet (targetConstructorClass: java.util.AbstractSet). Usually adding java.util.Collections$SingletonSet to serialization-config.json fixes the problem.\r\n        at com.oracle.svm.core.util.VMError.unsupportedFeature(VMError.java:89)\r\n        at com.oracle.svm.reflect.serialize.SerializationSupport.getSerializationConstructorAccessor(SerializationSupport.java:143)\r\n        at jdk.internal.reflect.MethodAccessorGenerator.generateSerializationConstructor(MethodAccessorGenerator.java:48)\r\n        at jdk.internal.reflect.ReflectionFactory.generateConstructor(ReflectionFactory.java:463)\r\n        at jdk.internal.reflect.ReflectionFactory.newConstructorForSerialization(ReflectionFactory.java:455)\r\n        at java.io.ObjectStreamClass.getSerializableConstructor(ObjectStreamClass.java:1443)\r\n        at java.io.ObjectStreamClass$2.run(ObjectStreamClass.java:412)\r\n        at java.io.ObjectStreamClass$2.run(ObjectStreamClass.java:384)\r\n        at java.security.AccessController.executePrivileged(AccessController.java:169)\r\n        at java.security.AccessController.doPrivileged(AccessController.java:318)\r\n        at java.io.ObjectStreamClass.<init>(ObjectStreamClass.java:384)\r\n        at java.io.ObjectStreamClass$Caches$1.computeValue(ObjectStreamClass.java:110)\r\n        at java.io.ObjectStreamClass$Caches$1.computeValue(ObjectStreamClass.java:107)\r\n        at java.io.ClassCache$1.computeValue(ClassCache.java:73)\r\n        at java.io.ClassCache$1.computeValue(ClassCache.java:70)\r\n        at java.lang.ClassValue.get(JavaLangSubstitutions.java:588)\r\n        at java.io.ClassCache.get(ClassCache.java:84)\r\n        at java.io.ObjectStreamClass.lookup(ObjectStreamClass.java:363)\r\n        at java.io.ObjectOutputStream.writeObject0(ObjectOutputStream.java:1137)\r\n        at java.io.ObjectOutputStream.writeObject(ObjectOutputStream.java:350)\r\n        at io.quarkiverse.myext.it.MyextResource.hello(MyextResource.java:48)\r\n        at io.quarkiverse.myext.it.MyextResource_ClientProxy.hello(Unknown Source)\r\n        at java.lang.reflect.Method.invoke(Method.java:568)\r\n        at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:170)\r\n        at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:130)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.internalInvokeOnTarget(ResourceMethodInvoker.java:660)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTargetAfterFilter(ResourceMethodInvoker.java:524)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.lambda$invokeOnTarget$2(ResourceMethodInvoker.java:474)\r\n        at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:364)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:476)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:434)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:408)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:69)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:492)\r\n        ... 17 more\r\n\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux graalvmdev.dev.biz.lodh.com 3.10.0-1160.76.1.el7.x86_64 #1 SMP Tue Jul 26 14:15:37 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\n17\n\n### GraalVM version (if different from Java)\n\n22.2\n\n### Quarkus version or git rev\n\n2.13.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.8.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28466/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28466/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

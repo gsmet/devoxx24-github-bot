@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22510",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22510/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22510/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22510/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22510",
+  "id": 1087990181,
+  "node_id": "I_kwDOCFbutM5A2Wml",
+  "number": 22510,
+  "title": "Classloader set by QuarkusTest breaks subsequent non-quarkus unit tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2021-12-23T21:02:42Z",
+  "updated_at": "2022-01-28T23:18:01Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a mix of \\@QuarkusTest-annotated tests and plain old junit tests in my project. The @QuarkusTest seems to set its thread context class loader on the ForkJoinPool.commonPool() and not clear it, so that subsequent non-Quarkus unit tests still see this class loader and are impacted by it.\r\n\r\nIt causes different kinds of\r\n`java.util.concurrent.CompletionException: java.util.ServiceConfigurationError: BLAH-BLAH-BLAH not a subtype` \r\n\r\nI've prepared a minimal reproducer: https://github.com/vladykin/quarkus-test-classloader-issue\r\n\r\nIf the QTest runs before PlainOldTest, then PlainOldTest fails with\r\n```\r\nThread = ForkJoinPool.commonPool-worker-29, context classloader = QuarkusClassLoader:Quarkus Runtime ClassLoader: TEST restart no:0@65ef48f2\r\n\r\njava.util.concurrent.CompletionException: java.util.ServiceConfigurationError: io.smallrye.mutiny.infrastructure.CallbackDecorator: io.smallrye.mutiny.context.DefaultContextPropagationInterceptor not a subtype\r\n\tat java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:314)\r\n\tat java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:319)\r\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1803)\r\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1792)\r\n\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:295)\r\n\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1016)\r\n\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1665)\r\n\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1598)\r\n\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:183)\r\nCaused by: java.util.ServiceConfigurationError: io.smallrye.mutiny.infrastructure.CallbackDecorator: io.smallrye.mutiny.context.DefaultContextPropagationInterceptor not a subtype\r\n\tat java.base/java.util.ServiceLoader.fail(ServiceLoader.java:589)\r\n\tat java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNextService(ServiceLoader.java:1236)\r\n\tat java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNext(ServiceLoader.java:1264)\r\n\tat java.base/java.util.ServiceLoader$2.hasNext(ServiceLoader.java:1299)\r\n\tat java.base/java.util.ServiceLoader$3.hasNext(ServiceLoader.java:1383)\r\n\tat java.base/java.lang.Iterable.forEach(Iterable.java:74)\r\n\tat io.smallrye.mutiny.infrastructure.Infrastructure.reloadCallbackDecorators(Infrastructure.java:322)\r\n\tat io.smallrye.mutiny.infrastructure.Infrastructure.reload(Infrastructure.java:57)\r\n\tat io.smallrye.mutiny.infrastructure.Infrastructure.<clinit>(Infrastructure.java:37)\r\n\tat io.smallrye.mutiny.groups.UniCreate.item(UniCreate.java:271)\r\n\tat io.smallrye.mutiny.groups.UniCreate.<clinit>(UniCreate.java:33)\r\n\tat io.smallrye.mutiny.Uni.createFrom(Uni.java:64)\r\n\tat com.acme.PlainOldTest.lambda$empty$1(PlainOldTest.java:17)\r\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1800)\r\n\t... 6 more\r\n```\r\n\r\nIf they execute in reverse order, they both pass.\r\n\r\n### Expected behavior\r\n\r\n\\@QuarkusTest should not impact other non-Quarkus tests in the project.\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n1. Use this minimal reproducer project: https://github.com/vladykin/quarkus-test-classloader-issue\r\n2. Import it to IntelliJ and run all unit tests.\r\n3. Or run `mvn clean package` and see the same failure\r\n4. Reverse the order of the test classes by changing the values in the `@Ordered` annotation to make the failure go away\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux 5.14.21-gentoo #9 SMP Wed Dec 15 22:26:07 PST 2021 x86_64 11th Gen Intel(R) Core(TM) i7-11850H @ 2.50GHz GenuineIntel GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"16.0.1\" 2021-04-20 \r\nOpenJDK Runtime Environment Zulu16.30+15-CA (build 16.0.1+9) \r\nOpenJDK 64-Bit Server VM Zulu16.30+15-CA (build 16.0.1+9, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.5.4.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.6.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22510/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22510/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26816",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26816/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26816/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26816/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26816",
+  "id": 1309589958,
+  "node_id": "I_kwDOCFbutM5ODsHG",
+  "number": 26816,
+  "title": "The quarkus-amazon-lambda extension doesn't respect JSON log output for unhandled exceptions",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-07-19T14:15:24Z",
+  "updated_at": "2023-01-21T11:37:48Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIn a Quarkus project configured with the `quarkus-amazon-lambda` and `quarkus-logging-json` extensions, one would expect all logging (with the exception of the AWS CloudWatch `START`, `END` and `REPORT` lines) would be output as JSON.\r\n\r\nThis is in fact the case when running such a project in the Quarkus Dev server, all log lines, including log lines for unhandled exceptions thrown out of the handler method, are logged as JSON lines. So an unhandled exception produces a single JSON line in the output in the Quarkus Dev server that is logged out on the ERROR level and includes the exception stack trace within the JSON package.\r\n\r\nHowever, when this same lambda is run with the `prod` profile, things change. This seems to result in the standard CloudWatch lines (`START`, `END` and `REPORT`) being output by the lambda when it's invoked but it also has the undesirable side effect that any unhandled exceptions thrown out of the handler method are logged out as plain text instead of being wrapped in a JSON message.\n\n### Expected behavior\n\nUnhandled exceptions thrown out of the Lambda handler method should be logged out as JSON, even when running in `prod` mode.\n\n### Actual behavior\n\nUnhandled exceptions thrown out of the Lambda handler method are logged out in plain text when running in `prod` mode.\r\n\r\nExample:\r\n\r\n```\r\n{\"timestamp\":\"2022-07-19T14:11:16.739Z\",\"sequence\":9,\"loggerClassName\":\"org.slf4j.impl.Slf4jLogger\",\"loggerName\":\"org.acme.lambda.GreetingLambda\",\"level\":\"INFO\",\"message\":\"This line will be logged as JSON\",\"threadName\":\"main\",\"threadId\":1,\"mdc\":{},\"ndc\":\"\",\"hostName\":\"a2c9acd8176a\",\"processName\":\"lambdainternal.AWSLambda\",\"processId\":15}\r\nThis exception will not be logged as JSON: java.lang.RuntimeException\r\njava.lang.RuntimeException: This exception will not be logged as JSON\r\n\tat org.acme.lambda.GreetingLambda.handleRequest(GreetingLambda.java:17)\r\n\tat org.acme.lambda.GreetingLambda.handleRequest(GreetingLambda.java:9)\r\n\tat io.quarkus.amazon.lambda.runtime.AmazonLambdaRecorder.handle(AmazonLambdaRecorder.java:85)\r\n\tat io.quarkus.amazon.lambda.runtime.QuarkusStreamHandler.handleRequest(QuarkusStreamHandler.java:58)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)\r\n\tat java.base/java.lang.reflect.Method.invoke(Unknown Source)\r\n\r\nEND RequestId: 55971e9e-7ca0-4707-86ff-1971accb79e3\r\nREPORT RequestId: 55971e9e-7ca0-4707-86ff-1971accb79e3\tInit Duration: 1.00 ms\tDuration: 1605.74 ms\tBilled Duration: 1606 ms\tMemory Size: 3008 MB\tMax Memory Used: 3008 MB\r\n```\n\n### How to Reproduce?\n\nReproducer project:\r\nhttps://github.com/StFS/lambda-json-logging\r\n\r\nFollow the instructions in the README there to reproduce this.\r\n\r\nThe very short version is:\r\n\r\n1. Check out the project: `git clone git@github.com:StFS/lambda-json-logging.git && cd lambda-json-logging`\r\n2. Run `./mvnw package`\r\n3. Run `docker build -t mytag .`\r\n4. Run `docker run -p 8080:8080 mytag`\r\n5. In a separate CLI, run `curl -XPOST \"http://localhost:8080/2015-03-31/functions/function/invocations\" -d '{\"name\":\"error\"}'`\r\n\r\nThis will result in an exception being thrown in the Lambda handler method and the exception being logged out in plain text.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"11.0.14.1\" 2022-02-08 LTS OpenJDK Runtime Environment Corretto-11.0.14.10.1 (build 11.0.14.1+10-LTS) OpenJDK 64-Bit Server VM Corretto-11.0.14.10.1 (build 11.0.14.1+10-LTS, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\nN/A\n\n### Quarkus version or git rev\n\n2.10.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Maven home: /Users/stefan.freyr.stefansson/.m2/wrapper/dists/apache-maven-3.8.4-bin/52ccbt68d252mdldqsfsn03jlf/apache-maven-3.8.4 Java version: 17.0.3.1, vendor: Oracle Corporation, runtime: /Library/Java/JavaVirtualMachines/jdk-17.0.3.1.jdk/Contents/Home Default locale: en_IS, platform encoding: UTF-8 OS name: \"mac os x\", version: \"12.4\", arch: \"x86_64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26816/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26816/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

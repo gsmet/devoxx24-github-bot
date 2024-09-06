@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42507",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42507/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42507/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42507/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42507",
+  "id": 2463156014,
+  "node_id": "I_kwDOCFbutM6S0Mcu",
+  "number": 42507,
+  "title": "Podman guide needs some discussion of Ryuk",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1218486975,
+      "node_id": "MDU6TGFiZWwxMjE4NDg2OTc1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/documentation",
+      "name": "area/documentation",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5456027948,
+      "node_id": "LA_kwDOCFbutM8AAAABRTRhLA",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/podman",
+      "name": "env/podman",
+      "color": "edea47",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-08-13T11:51:00Z",
+  "updated_at": "2024-08-13T11:58:07Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "This is a complicated area, and easy to get wrong, so raising an issue to get it all written down. \r\n\r\nBefore Quarkus 2.13 (or therabouts), to successfully run a simple app like the todo app with Podman, you needed to have \r\n\r\n```\r\nryuk.container.privileged=true\r\n```\r\n\r\nin your `testcontainers.properties`. To reproduce this, edit `~/.testcontainers.properties` to make sure `ryuk.container.privileged=true` isn't in there, and then run:\r\n\r\n```\r\ngit clone git@github.com:cescoffier/quarkus-todo-app.git\r\nquarkus-todo-app\r\ngit checkout 9c690c766790f650a53bf872de474364ef9db14a\r\ncd quarkus-todo\r\nmvn install\r\n```\r\n\r\nThe build will fail with an error about not being able to contact ryuk. If you add back `ryuk.container.privileged=true` and run `mvn install`, the build will pass and you'll see a ryuk container appear, and then disappear, in podman desktop. \r\n\r\n<img width=\"991\" alt=\"image\" src=\"https://github.com/user-attachments/assets/81ad0c34-c3c2-46e6-a77f-7ab99aab70f0\">\r\n\r\nThe other way to make the build pass used to be to set `TESTCONTAINERS_RYUK_DISABLED=\"true\"` as an environment variable, but the testcontainers team really prefer that people don't do that. \r\n\r\nSince then, two things definitely changed:\r\n\r\n- @geoand did a [nice fix](https://github.com/quarkusio/quarkus/pull/28702) in response to #25852; he'd spotted that (a) even checking the docker environment was enough to trigger testcontainers to start ryuk, which is silly and (b) setting reuse to true 'temporarily' disables ryuk ... so we now make sure that reuse is set to true when checking docker \r\n- the reuse configuration for datasource dev services changed, although I haven't traced down the PR or why we did it, so that we don't have `quarkus.datasource.*.devservices.reuse` configuration anymore \r\n\r\nSo it used to be Ryuk would always start, but now, in more recent Quarkus versions, we *usually* don't start Ryuk, because most of the dev services have reuse set to true, and we fixed the problem where just figuring out if we had docker caused Ryuk to start. \r\n\r\nBut there are still paths where we get Ryuk-related failures. If you delete `~/.testcontainers.properties` entirely, and then run the todo app, the 'local' reuse settings can't take effect, because 'global' reuse is off: \r\n\r\n```\r\nrm ~/.testcontainers.properties\r\ngit clone git@github.com:cescoffier/quarkus-todo-app.git\r\ncd quarkus-todo-app\r\ncd quarkus-todo\r\nmvn install\r\n```\r\n\r\nYou can also achieve something similar by editing the settings to disable global re-use, `testcontainers.reuse.enable=false`, and then running `mvn install`, but that's a bit more artificial:\r\n\r\n```\r\n2024-08-13 11:44:14,110 WARN  [tc.doc.io/postgres:14] (build-36) Reuse was requested but the environment does not support the reuse of containers\r\nTo enable reuse of containers, you must set 'testcontainers.reuse.enable=true' in a file located at /Users/holly/.testcontainers.properties\r\n```\r\n\r\nThe testcontainers properties file is hard to reason about in a sensible way, because it gets edited during a Quarkus run, and it's hard to work out which of the contents were changed because of Quarkus things, and which were changed by Testcontainers, or if any of them were sensible defaults. See https://github.com/quarkusio/quarkus/issues/34294 for an issue where Ryuk is causing problems and updating the testcontainers properties fixes it, but only temporarily, because something changes it back. \r\n\r\nI also wondered if we'd have Ryuk-related problems with devservices that do not enable reuse by default, but there's not so many of those. Infinispan doesn't enable re-use, so I tried the infinispan codestart with Quarkus. Everything works, but I noticed that Infinispan comes with it's *own* Ryuk image (maybe with different privilege requirements?):\r\n\r\n<img width=\"974\" alt=\"image\" src=\"https://github.com/user-attachments/assets/ebb1ba34-005f-4714-bbe4-5136e01beaf0\">\r\n\r\nGiven that:\r\n- Removing `~/.testcontainers.properties` causes Ryuk-related failures even for trivial apps\r\n- We don't know what the behaviour is on a clean machine \r\n- We don't know for sure that all of our dev services either set reuse to true or ship with their own Ryuk\r\n\r\n... I think we have to reinstate some of the discussion of Ryuk back into our Podman guide that was removed by https://github.com/quarkusio/quarkus/pull/39692. Otherwise people will have to look elsewhere for debug information if they hit Ryuk failures, which will be frustrating for them. We could move it to a troubleshooting section, since people may not *have* to do it, but it would be nice to test on a clean machine to confirm that. \r\n\r\nI think the consequences of running Ryuk privileged are low - the Testcontainers docs say it [has to be run as a privileged container](https://java.testcontainers.org/features/configuration/#disabling-ryuk), but if there are arguments against it we should also get them written down in this issue (or another one).\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42507/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42507/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

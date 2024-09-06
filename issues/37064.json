@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37064",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37064/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37064/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37064/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37064",
+  "id": 1992224039,
+  "node_id": "I_kwDOCFbutM52vu0n",
+  "number": 37064,
+  "title": "com.jcraft.jsch.jzlib.Compression not included in native compilation",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-11-14T08:24:23Z",
+  "updated_at": "2023-11-14T09:02:55Z",
+  "closed_at": "2023-11-14T08:34:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello,\r\n\r\nThe class `com.jcraft.jsch.jzlib.Compression` is missing from the Quarkus JSch when compiling to native.\r\n\r\nIt is used by reflection JSch session when initializing an [inflater](https://github.com/mwiede/jsch/blob/2dd6dc2628370c21dd34349eacb5be64d7bd949b/src/main/java/com/jcraft/jsch/Session.java#L2526) or a [deflater](https://github.com/mwiede/jsch/blob/2dd6dc2628370c21dd34349eacb5be64d7bd949b/src/main/java/com/jcraft/jsch/Session.java#L2493C52).\r\nThe class corresponds to the use of zlib compression as defined in the [JSch config map](https://github.com/mwiede/jsch/blob/2dd6dc2628370c21dd34349eacb5be64d7bd949b/src/main/java/com/jcraft/jsch/JSch.java#L189-L190)\r\n\r\nI think it should be added to the [JSchProcessor](https://github.com/quarkiverse/quarkus-jsch/blob/229dbf8074d351eeb0d4eac2ee89cb17aaebc7ee/deployment/src/main/java/io/quarkus/jsch/deployment/JSchProcessor.java#L30) of quarkus-jsch extension.\r\n\r\nThanks\r\n\n\n### Expected behavior\n\nThe class to be included in the native executable.\r\n\r\nSo far I'm using as a workaround an explicit registration for reflection.\r\n```\r\n@RegisterForReflection(targets = {com.jcraft.jsch.jzlib.Compression.class})\r\npublic class JSchCompressionReflectionConfiguration {\r\n}\r\n```\n\n### Actual behavior\n\nThe class is not included and without workaround the following exception is raised in native only.\r\n```\r\nCaused by: java.lang.ClassNotFoundException: com.jcraft.jsch.jzlib.Compression\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.hub.ClassForNameSupport.forName(ClassForNameSupport.java:123)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.hub.ClassForNameSupport.forName(ClassForNameSupport.java:87)\r\n\tat java.base@17.0.9/java.lang.Class.forName(DynamicHub.java:1322)\r\n\tat java.base@17.0.9/java.lang.Class.forName(DynamicHub.java:1285)\r\n\tat java.base@17.0.9/java.lang.Class.forName(DynamicHub.java:1278)\r\n\tat com.jcraft.jsch.Session.initDeflater(Session.java:2493)\r\n\t... 21 more\r\n```\n\n### How to Reproduce?\n\nI'm using a Quarkus Camel route with SFTP component and compression level at 9.\r\n\r\nI'm using Quarkus version 3.4.3, I'm sure it hits other version too. The class was renamed in Aug 2021 which is probably when the Quarkus JSch extension stopped included it.\r\nhttps://github.com/mwiede/jsch/commit/4a9152cf5a7d3d0b4a1b02e3e71a9f369bf555bd#diff-a7096f419f397fd75a0bfc29ad53cb793e3245bb394b6beeb20f9eb7c485abcb\r\nhttps://github.com/mwiede/jsch/commit/4a9152cf5a7d3d0b4a1b02e3e71a9f369bf555bd#diff-386872d0e566ffedfe882af926962125b51f440abeb4b7a81013511f748f17ba\n\n### Output of `uname -a` or `ver`\n\nLinux lh1v-devci02 5.10.0-25-amd64 #1 SMP Debian 5.10.191-1 (2023-08-16) x86_64 GNU/Linux\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10)\n\n### Mandrel or GraalVM version (if different from Java)\n\nOpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10)\n\n### Quarkus version or git rev\n\n3.4.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.3 (21122926829f1ead511c958d89bd2f672198ae9f)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37064/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37064/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

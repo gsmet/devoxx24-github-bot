@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33669",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33669/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33669/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33669/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33669",
+  "id": 1730624548,
+  "node_id": "I_kwDOCFbutM5nJzwk",
+  "number": 33669,
+  "title": "NPE at io.quarkus.opentelemetry.runtime.tracing.intrumentation.vertx.OpenTelemetryVertxTracingFactory$Delegator.sendRequest(OpenTelemetryVertxTracingFactory.java:71)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-05-29T11:50:41Z",
+  "updated_at": "2023-05-29T13:02:27Z",
+  "closed_at": "2023-05-29T13:02:11Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n**Getting NPE at OpenTelemetryVertxTracingFactory when running tests !**\r\n\r\nMy project setup:\r\n<quarkus.version>3.0.3.Final</quarkus.version>\r\n<jdk.version>14</jdk.version>\r\n\r\npom.xml\r\n```\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-resteasy-reactive-jackson</artifactId>\r\n</dependency>\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-micrometer-registry-prometheus</artifactId>\r\n</dependency>\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-hibernate-validator</artifactId>\r\n</dependency>\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-opentelemetry</artifactId>\r\n</dependency>\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-elytron-security</artifactId>\r\n</dependency>\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-elytron-security-properties-file</artifactId>\r\n</dependency>\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-oidc</artifactId>\r\n</dependency>\r\n```\r\n\r\napplication.properties\r\n\r\n```\r\n# I don't have any configs for OpenTelemetry (none), but I have these\r\n\r\n%test.quarkus.otel.exporter.otlp.traces.endpoint=http://localhost:4317\r\n%test.otel.sdk.disabled=true\r\n```\r\n\r\nWhen I run tests (as part of build or, just `mvn test`) I am getting NPE (not every time by the way). Here is an example of such run - I am using Testcontainers so here is logs with a bit of ocntext:\r\n\r\n```\r\n29-May-2023 13:19:59\t[INFO] -------------------------------------------------------\r\n29-May-2023 13:19:59\t[INFO]  T E S T S\r\n29-May-2023 13:19:59\t[INFO] -------------------------------------------------------\r\n29-May-2023 13:20:00\t[INFO] Running foo.bar.DocumentResourceIT\r\n29-May-2023 13:20:02\tMay 29, 2023 1:20:02 PM io.quarkus.elytron.security.properties.deployment.ElytronPropertiesProcessor configureMPRealmConfig\r\n29-May-2023 13:20:02\tINFO: Configuring from MPRealmConfig\r\n29-May-2023 13:20:02\t2023-05-29 13:20:02,777 INFO  [org.tes.doc.DockerClientProviderStrategy] (build-68) Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first\r\n29-May-2023 13:20:03\t2023-05-29 13:20:03,419 INFO  [org.tes.doc.DockerClientProviderStrategy] (build-68) Found Docker environment with local Unix socket (unix:///var/run/docker.sock)\r\n29-May-2023 13:20:03\t2023-05-29 13:20:03,439 INFO  [org.tes.DockerClientFactory] (build-68) Docker host IP address is 172.18.0.1\r\n29-May-2023 13:20:03\t2023-05-29 13:20:03,454 INFO  [org.tes.DockerClientFactory] (build-68) Connected to docker: \r\n29-May-2023 13:20:03\t  Server Version: 23.0.6\r\n29-May-2023 13:20:03\t  API Version: 1.42\r\n29-May-2023 13:20:03\t  Operating System: Ubuntu 20.04.6 LTS (containerized)\r\n29-May-2023 13:20:03\t  Total Memory: 24104 MB\r\n29-May-2023 13:20:03\t2023-05-29 13:20:03,470 INFO  [org.tes.uti.ImageNameSubstitutor] (build-68) Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')\r\n29-May-2023 13:20:03\t2023-05-29 13:20:03,473 INFO  [org.tes.DockerClientFactory] (build-68) Checking the system...\r\n29-May-2023 13:20:03\t2023-05-29 13:20:03,474 INFO  [org.tes.DockerClientFactory] (build-68) ?? Docker server version should be at least 1.6.0\r\n29-May-2023 13:20:03\tMay 29, 2023 1:20:03 PM io.quarkus.oidc.deployment.devservices.keycloak.KeycloakDevServicesProcessor$QuarkusOidcContainer configure\r\n29-May-2023 13:20:03\tINFO: Using Quarkus powered Keycloak distribution\r\n29-May-2023 13:20:03\t2023-05-29 13:20:03,736 INFO  [? .io/.0.2]] (build-68) Creating container for image: quay.io/keycloak/keycloak:21.0.2\r\n29-May-2023 13:20:03\t2023-05-29 13:20:03,755 INFO  [? .3.4]] (build-68) Creating container for image: testcontainers/ryuk:0.3.4\r\n29-May-2023 13:20:04\t2023-05-29 13:20:04,063 INFO  [? .3.4]] (build-68) Container testcontainers/ryuk:0.3.4 is starting: 7b8ccbe65680625c5ccefa8562fcaf189935ece43a72598d5c5c0e42a6701b2e\r\n29-May-2023 13:20:04\t2023-05-29 13:20:04,661 INFO  [? .3.4]] (build-68) Container testcontainers/ryuk:0.3.4 started in PT0.906354S\r\n29-May-2023 13:20:04\t2023-05-29 13:20:04,732 INFO  [? .io/.0.2]] (build-68) Container quay.io/keycloak/keycloak:21.0.2 is starting: fb1cb459dfd167361cdce3c9eeaec0936ad4373839b7449bc38cc0e3a3adb960\r\n29-May-2023 13:20:15\t2023-05-29 13:20:15,787 INFO  [? .io/.0.2]] (build-68) Container quay.io/keycloak/keycloak:21.0.2 started in PT12.186134S\r\n29-May-2023 13:20:17\tMay 29, 2023 1:20:17 PM io.quarkus.oidc.deployment.devservices.keycloak.KeycloakDevServicesProcessor startKeycloakContainer\r\n29-May-2023 13:20:17\tINFO: Dev Services for Keycloak started.\r\n29-May-2023 13:20:18\tMay 29, 2023 1:20:17 PM org.hibernate.validator.internal.util.Version <clinit>\r\n29-May-2023 13:20:18\tINFO: HV000001: Hibernate Validator 8.0.0.Final\r\n29-May-2023 13:20:18\tMay 29, 2023 1:20:18 PM io.quarkus.vertx.core.runtime.VertxCoreRecorder$7 handle\r\n29-May-2023 13:20:18\tERROR: Uncaught exception received by Vert.x\r\n29-May-2023 13:20:18\tjava.lang.NullPointerException\r\n29-May-2023 13:20:18\t        at io.quarkus.opentelemetry.runtime.tracing.intrumentation.vertx.OpenTelemetryVertxTracingFactory$Delegator.sendRequest(OpenTelemetryVertxTracingFactory.java:71)\r\n29-May-2023 13:20:18\t        at io.vertx.core.http.impl.Http1xClientConnection.beginRequest(Http1xClientConnection.java:273)\r\n29-May-2023 13:20:18\t        at io.vertx.core.http.impl.Http1xClientConnection.access$600(Http1xClientConnection.java:108)\r\n29-May-2023 13:20:18\t        at io.vertx.core.http.impl.Http1xClientConnection$StreamImpl.writeHead(Http1xClientConnection.java:556)\r\n29-May-2023 13:20:18\t        at io.vertx.core.http.impl.Http1xClientConnection$StreamImpl.writeHead(Http1xClientConnection.java:549)\r\n29-May-2023 13:20:18\t        at io.vertx.core.http.impl.HttpClientRequestImpl.doWrite(HttpClientRequestImpl.java:501)\r\n29-May-2023 13:20:18\t        at io.vertx.core.http.impl.HttpClientRequestImpl.write(HttpClientRequestImpl.java:471)\r\n29-May-2023 13:20:18\t        at io.vertx.core.http.impl.HttpClientRequestImpl.end(HttpClientRequestImpl.java:417)\r\n29-May-2023 13:20:18\t        at io.vertx.core.http.impl.HttpClientRequestImpl.end(HttpClientRequestImpl.java:411)\r\n29-May-2023 13:20:18\t        at io.vertx.ext.web.client.impl.HttpContext.lambda$handleCreateRequest$5(HttpContext.java:485)\r\n29-May-2023 13:20:18\t        at io.vertx.core.impl.future.FutureImpl$1.onSuccess(FutureImpl.java:91)\r\n29-May-2023 13:20:18\t        at io.vertx.core.impl.future.FutureBase.emitSuccess(FutureBase.java:60)\r\n29-May-2023 13:20:18\t        at io.vertx.core.impl.future.FutureImpl.tryComplete(FutureImpl.java:211)\r\n29-May-2023 13:20:18\t        at io.vertx.core.impl.future.PromiseImpl.tryComplete(PromiseImpl.java:23)\r\n```\r\n\r\nThis is the error \r\n```\r\njava.lang.NullPointerException at io.quarkus.opentelemetry.runtime.tracing.intrumentation.vertx.OpenTelemetryVertxTracingFactory$Delegator.sendRequest(OpenTelemetryVertxTracingFactory.java:71)\r\n``` \r\nAnd after that the process simply got stuck.\r\n\r\nAnd sometimes I get a successful build and tests are ok but next time NPE again.\r\n\r\nCould you please help me with this ?\n\n### Expected behavior\n\nNPE usually means some bug in the code - so at least no NPE\n\n### Actual behavior\n\n```\r\njava.lang.NullPointerException at io.quarkus.opentelemetry.runtime.tracing.intrumentation.vertx.OpenTelemetryVertxTracingFactory$Delegator.sendRequest(OpenTelemetryVertxTracingFactory.java:71)\r\n``` \n\n### How to Reproduce?\n\nQuarkus 3.0.3 app with OpenTelemetry, RESTEasy reactive (perhaps something else)\r\nSome @QuarkusTest\r\nAnd simply run it\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"14\" 2020-03-17 OpenJDK Runtime Environment (build 14+36-1461) \n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33669/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33669/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

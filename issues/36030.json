@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36030",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36030/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36030/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36030/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36030",
+  "id": 1904616584,
+  "node_id": "I_kwDOCFbutM5xhiSI",
+  "number": 36030,
+  "title": "Fail to start a container image build using buildpacks on MacOS ARM",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 4147701997,
+      "node_id": "LA_kwDOCFbutM73OOjt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/m1",
+      "name": "env/m1",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Apple M1 machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-09-20T09:49:14Z",
+  "updated_at": "2023-09-20T10:32:45Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n## Issue\r\n\r\nWhen we launch on MacOS ARM an image build using the following parameters:\r\n```\r\n./mvnw install -Dquarkus.container-image.build=true \\\r\n   -Dquarkus.buildpack.jvm-builder-image=paketobuildpacks/builder-jammy-tiny:0.0.176 \\\r\n   -Dquarkus.container-image.image=\"quay.io/ch007m/quarkus-hello:1.0\" \\\r\n   -Dquarkus.buildpack.builder-env.BP_NATIVE_IMAGE=\"false\" \\\r\n   -Dquarkus.buildpack.builder-env.BP_MAVEN_BUILT_ARTIFACT=\"target/quarkus-app/lib/ target/quarkus-app/*.jar target/quarkus-app/app/ target/quarkus-app/quarkus/\" \\\r\n   -Dquarkus.buildpack.builder-env.BP_MAVEN_BUILD_ARGUMENTS=\"package -DskipTests=true -Dmaven.javadoc.skip=true -Dquarkus.package.type=fast-jar\"\r\n```\r\nthen we got this error \r\n```\r\ndocker run -it --rm -p 8080:8080 quay.io/ch007m/quarkus-hello:1.0\r\nWARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\r\nERROR: failed to launch: path lookup: exec: \"java\": executable file not found in $PATH\r\n```\n\n### Expected behavior\n\nThe quarkus java app should be started\n\n### Actual behavior\n\nQuarkus app is not started\n\n### How to Reproduce?\n\n```\r\n## TODO on macos ARM machine ;-)\r\n\r\ncd ~/temp; rm -rf quarkus-hello\r\n\r\nmvn io.quarkus.platform:quarkus-maven-plugin:3.3.2:create \\\r\n-DprojectGroupId=me.snowdrop \\\r\n-DprojectArtifactId=quarkus-hello \\\r\n-DprojectVersion=1.0 \\\r\n-Dextensions='resteasy-reactive,kubernetes,buildpack'\r\n\r\ncd quarkus-hello\r\n\r\n./mvnw install -Dquarkus.container-image.build=true \\\r\n   -Dquarkus.buildpack.jvm-builder-image=paketobuildpacks/builder-jammy-tiny:0.0.176 \\\r\n   -Dquarkus.container-image.image=\"quay.io/ch007m/quarkus-hello:1.0\" \\\r\n   -Dquarkus.buildpack.builder-env.BP_NATIVE_IMAGE=\"false\" \\\r\n   -Dquarkus.buildpack.builder-env.BP_MAVEN_BUILT_ARTIFACT=\"target/quarkus-app/lib/ target/quarkus-app/*.jar target/quarkus-app/app/ target/quarkus-app/quarkus/\" \\\r\n   -Dquarkus.buildpack.builder-env.BP_MAVEN_BUILD_ARGUMENTS=\"package -DskipTests=true -Dmaven.javadoc.skip=true -Dquarkus.package.type=fast-jar\"\r\n   \r\ndocker run -it --rm -p 8080:8080 quay.io/ch007m/quarkus-hello:1.0\r\n```\r\n   \n\n### Output of `uname -a` or `ver`\n\nDarwin cmoullias-MacBook-Pro.local 22.6.0 Darwin Kernel Version 22.6.0: Wed Jul  5 22:21:53 PDT 2023; root:xnu-8796.141.3~6/RELEASE_ARM64_T6020 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.8\" 2023-07-18 OpenJDK Runtime Environment Temurin-17.0.8+7 (build 17.0.8+7) OpenJDK 64-Bit Server VM Temurin-17.0.8+7 (build 17.0.8+7, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.3.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven: 3.9.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36030/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36030/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

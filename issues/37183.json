@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37183",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37183/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37183/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37183/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37183",
+  "id": 1999658826,
+  "node_id": "I_kwDOCFbutM53MF9K",
+  "number": 37183,
+  "title": "Quarkus + Jackson + inline reified = quarkus live reload broken with \"Cannot inline bytecode built with JVM target 17\"",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2023-11-17T17:58:29Z",
+  "updated_at": "2023-11-20T16:26:49Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello,\r\n\r\nIt seems that changing code using Quarkus + Kotlin + Jackson breaks compilation in quarkus live reload.\r\n\r\nI have created a repo with a README.md containing the 4 the steps to reproduce\r\n\r\nhttps://github.com/olivierbeltrandocintoo/quarkus-kotlin-bug-reload\r\n\r\nThis repo is \r\n* made from the `quarkus create app org.acme:rest-kotlin-quickstart2 --extension='kotlin,resteasy-reactive-jackson'` command \r\n* has 1 additional file `src/main/kotlin/org/acme/JsonModule.kt` that contains an `inline reified` method (`fromJson`) using jackson\r\n* has 1 changed file `src/main/kotlin/org/acme/GreetingResource.kt` that is altered to use the method `fromJson`\r\n\r\n### Expected behavior\r\n\r\nEditing code should not break the live reload compilation\r\n\r\n### Actual behavior\r\n\r\nThe live reload shows the following stack trace `Reason: Cannot inline bytecode built with JVM target 17 into bytecode that is being built with JVM target 1.8. Please specify proper '-jvm-target' option`\r\n\r\nFull stack trace below.\r\n\r\n```\r\nError restarting Quarkus\r\nio.vertx.core.impl.NoStackTraceException:\r\n\r\nThe stacktrace below has been reversed to show the root cause first. [Click Here](http://localhost:8080/user) to see the original stacktrace\r\n\r\njava.lang.RuntimeException: Compilation failed.         val user : User = json.fromJson()\r\n/home/olivier/dev/3p/rest-kotlin-quickstart2/src/main/kotlin/org/acme/GreetingResource.kt:19:32\r\nReason: Cannot inline bytecode built with JVM target 17 into bytecode that is being built with JVM target 1.8. Please specify proper '-jvm-target' option\r\n\tat io.quarkus.kotlin.deployment.KotlinCompilationProvider.compile(KotlinCompilationProvider.java:101)\r\n\tat io.quarkus.deployment.dev.QuarkusCompiler.compile(QuarkusCompiler.java:228)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.checkForChangedClasses(RuntimeUpdatesProcessor.java:725)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:461)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:441)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$5.call(VertxHttpHotReplacementSetup.java:150)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$5.call(VertxHttpHotReplacementSetup.java:137)\r\n\tat io.vertx.core.impl.ContextBase.lambda$executeBlocking$0(ContextBase.java:167)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:277)\r\n\tat io.vertx.core.impl.ContextBase.lambda$internalExecuteBlocking$2(ContextBase.java:199)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nResulted in: io.vertx.core.impl.NoStackTraceException\r\n```\r\n\r\nI don't know why it is obsessed with JVM 1.8 as no properties in the project use JVM 1.8.\r\n\r\nPlease note that changing the dependency from \r\n```xml\r\n    <dependency>\r\n      <groupId>org.jetbrains.kotlin</groupId>\r\n      <artifactId>kotlin-stdlib-jdk8</artifactId>\r\n    </dependency>\r\n```\r\n(which is embedded in default kotlin project generated by quarkus)\r\n    to\r\n```xml\r\n     <dependency>\r\n      <groupId>org.jetbrains.kotlin</groupId>\r\n      <artifactId>kotlin-stdlib</artifactId>\r\n    </dependency>\r\n```\r\n\r\nmakes no difference\r\n    \r\n\r\n### How to Reproduce?\r\n\r\nGo there: https://github.com/olivierbeltrandocintoo/quarkus-kotlin-bug-reload and git clone it\r\n\r\n1. start the app with `mvn clean quarkus:dev`\r\n2. visit `http://localhost:8080/user` with your browser, it should work :blush:\r\n\r\n![screen1](https://github.com/quarkusio/quarkus/assets/119603054/1d352ef7-9192-463a-9222-521766656d37)\r\n\r\n3. edit the code by commenting something harmless (like the `println`) in the `GreetingResource.kt`\r\n\r\n![screen2](https://github.com/quarkusio/quarkus/assets/119603054/f03a59ad-433a-4b4a-b915-818481b14d4d)\r\n\r\n4. visit `http://localhost:8080/user` again with your browser, it should crash :confused:\r\n\r\n![screen3](https://github.com/quarkusio/quarkus/assets/119603054/ac9d5d56-f6b1-45c4-bfe4-147126999969)\r\n\r\n5. Edit the `JsonModule.kt` with something harmless (like adding a new line), it should work again :open_mouth:\r\n\r\n![screen4](https://github.com/quarkusio/quarkus/assets/119603054/d9e8bb35-5d5d-49c2-9451-da727140fa32)\r\n\r\n![screen1](https://github.com/quarkusio/quarkus/assets/119603054/1ec1d6d3-c57c-453b-b0cb-30524897e52f)\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux PARIS 5.10.102.1-microsoft-standard-WSL2 #1 SMP Wed Mar 2 00:30:59 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17 2021-09-14\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3 \r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37183/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37183/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

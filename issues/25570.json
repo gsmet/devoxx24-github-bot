@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25570",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25570/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25570/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25570/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25570",
+  "id": 1235562911,
+  "node_id": "I_kwDOCFbutM5JpTGf",
+  "number": 25570,
+  "title": "ClassLoader cannot load non-static resource",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-05-13T18:34:46Z",
+  "updated_at": "2022-05-25T16:03:54Z",
+  "closed_at": "2022-05-25T16:02:44Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n1. Just create a normal Quarkus project with grade\r\n2. Using grade to create a properties file by adding below codes into build.gradle\r\n```\r\ntask createMyProps(type: WriteProperties) {\r\n    outputFile = file(\"${buildDir}/resources/main/dynamic.properties\")\r\n    encoding = \"UTF-8\"\r\n    \r\n    property(\"dynamic_key\", \"dynamic value\")\r\n}\r\n\r\nprocessResources {\r\n  dependsOn createMyProps\r\n}\r\n```\r\n3. Add a file resources/main/static.properties with content \"static_key=static value\"\r\n4. Try to access the files\r\n```\r\n  @GET\r\n  @Path(\"/static\")\r\n  @Produces(MediaType.TEXT_PLAIN)\r\n  public String readStatic() throws IOException {\r\n    InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(\"/static.properties\");\r\n    Properties props = new Properties();\r\n    props.load(is);\r\n    return props.toString();\r\n  }\r\n\r\n  @GET\r\n  @Path(\"/dynamic\")\r\n  @Produces(MediaType.TEXT_PLAIN)\r\n  public String readDynamic() throws IOException {\r\n    InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(\"/dynamic.properties\");\r\n    Properties props = new Properties();\r\n    props.load(is);\r\n    return props.toString();\r\n  }\r\n```\r\n5. run the project `Quarkus dev`\r\n\r\nExpected: both /static and /dynamic should work correctly\r\nResult: /static works correctly. /dynamic failed because is is null.\r\n\r\nI checked the generated .jar file. Both static.properties and dynamic.properties are in the correct position.\r\n\r\nBTW, if I add `quarkus.native.resources.includes=dynamic.properties` into application.properties, /dynamic works.\r\n\r\nMy questions is, since both static.properties and dynamic.properties are in the correct position in the jar file (it should be treated as the classes), `quarkus dev` should pick up it correctly.\r\n\r\n\r\n\n\n### Expected behavior\n\nboth /static and /dynamic should work correctly\n\n### Actual behavior\n\n /static works correctly. /dynamic failed because is is null.\n\n### How to Reproduce?\n\nJust follow the upper description\n\n### Output of `uname -a` or `ver`\n\nDarwin sd-lmc-1a8902 21.4.0 Darwin Kernel Version 21.4.0: Fri Mar 18 00:47:26 PDT 2022; root:xnu-8020.101.4~15/RELEASE_ARM64_T8101 arm64\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment (build 18+36-2087)\n\n### GraalVM version (if different from Java)\n\nn/a\n\n### Quarkus version or git rev\n\n2.8.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.4.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25570/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25570/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

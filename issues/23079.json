@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23079",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23079/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23079/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23079/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23079",
+  "id": 1109993349,
+  "node_id": "I_kwDOCFbutM5CKSeF",
+  "number": 23079,
+  "title": "FileUpload is null when uploading file with Resteasy Reactive",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-01-21T02:53:07Z",
+  "updated_at": "2022-01-21T07:01:55Z",
+  "closed_at": "2022-01-21T07:01:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a Resteasy client (JSF app running on WildFly) from wich i upload file to quarkus resteasy classic app and  it's work well. \r\nWhen i use the same client with a resteasy reactive app the 'FileUpload' part of the multipart-form is always null.\r\n\r\n**Pojo enclosing Multipart body on my client side (JSF app)** \r\n\r\n\r\n```\r\n@JsonIgnoreProperties(ignoreUnknown = true)\r\npublic class MultipartBody implements Serializable {\r\n\r\n    @FormParam(\"document\")\r\n    @PartType(MediaType.APPLICATION_OCTET_STREAM)\r\n    public InputStream document;\r\n\r\n    @FormParam(\"fileName\")\r\n    @PartType(MediaType.TEXT_PLAIN)\r\n    public String fileName;\r\n\r\n    @FormParam(\"contentType\")\r\n    @PartType(MediaType.TEXT_PLAIN)\r\n    public String contentType;\r\n\r\n    @FormParam(\"size\")\r\n    @PartType(MediaType.TEXT_PLAIN)\r\n    public Long size;\r\n\r\n    @FormParam(\"entityType\")\r\n    @PartType(MediaType.TEXT_PLAIN)\r\n    public String entityType;\r\n\r\n    @FormParam(\"entityId\")\r\n    @PartType(MediaType.TEXT_PLAIN)\r\n    public String entityId;\r\n    ...\r\n```\r\n\r\n**Endpoint on quarkus resteasy classic**\r\n\r\n```\r\n@Path(\"/v1/datastore\")\r\npublic class ExampleResource {\r\n\r\n    @POST\r\n    @Path(\"/upload\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    @Consumes(MediaType.MULTIPART_FORM_DATA)\r\n    public Response uploadFile(@MultipartForm MultipartBody data) {\r\n        System.out.println(\"[MultiPart] \"+data);\r\n        return Response.ok().build();\r\n    }\r\n}\r\n```\r\n_**the MultipartBody pojo is the same im using  on my client side**_\r\n\r\n**Console output when uploading file**\r\n```\r\n\r\n\r\n2022-01-21 02:14:19,846 INFO  [io.quarkus] (Quarkus Main Thread) multipart 1.0-SNAPSHOT on JVM (powered by Quarkus 2.6.3.Final) started in 1.871s. Listening on: http://localhost:9092\r\n2022-01-21 02:14:19,849 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2022-01-21 02:14:19,849 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, resteasy, resteasy-jackson, resteasy-multipart, smallrye-context-propagation, vertx]\r\n[MultiPart] MultipartBody(document=C:\\Users\\ZOULAK~1\\AppData\\Local\\Temp\\pfx14102355135171294723sfx, fileName=avatar.png, contentType=image/png, size=268398, entityType=orga-attachment, entityId=ent1)\r\n```\r\nAll parts of the multipart-form are present.\r\n\r\n**Endpoint on quarkus resteasy reactive**\r\n_**it's the same as the classic one but changing all dependencies in pom to resteasy reactive**_\r\n```\r\n@Path(\"/v1/datastore\")\r\npublic class ExampleResource {\r\n    @POST\r\n    @Path(\"/upload\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    @Consumes(MediaType.MULTIPART_FORM_DATA)\r\n    public Response uploadFile(@MultipartForm MultipartBody data) {\r\n        System.out.println(\"[MultiPart] \"+data);\r\n        return Response.ok().build();\r\n    }\r\n}\r\n```\r\n**MultipartBody pojo  on quarkus resteasy reactive** \r\n\r\n```\r\n@JsonIgnoreProperties(ignoreUnknown = true)\r\npublic class MultipartBody {\r\n\r\n    @RestForm\r\n    @PartType(MediaType.APPLICATION_OCTET_STREAM)\r\n    public FileUpload document;\r\n\r\n    @RestForm\r\n    @PartType(MediaType.TEXT_PLAIN)\r\n    public String fileName;\r\n\r\n    @RestForm\r\n    @PartType(MediaType.TEXT_PLAIN)\r\n    public String contentType;\r\n\r\n    @RestForm\r\n    @PartType(MediaType.TEXT_PLAIN)\r\n    public Long size;\r\n\r\n    @RestForm\r\n    @PartType(MediaType.TEXT_PLAIN)\r\n    public String entityType;\r\n\r\n    @RestForm\r\n    @PartType(MediaType.TEXT_PLAIN)\r\n    public String entityId;\r\n    ...\r\n```\r\n\r\nConsole output when uploading file\r\n\r\n```\r\n2022-01-21 02:23:07,483 INFO  [io.quarkus] (Quarkus Main Thread) multipart-reactive 1.0-SNAPSHOT on JVM (powered by Quarkus 2.6.3.Final) started in 1.774s. Listening on: http://localhost:9092\r\n2022-01-21 02:23:07,495 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2022-01-21 02:23:07,495 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, resteasy-reactive, resteasy-reactive-jackson, smallrye-context-propagation, vertx]\r\n[MultiPart] MultipartBody(document=null, fileName=avatar.png, contentType=image/png, size=268398, entityType=orga-attachment, entityId=ent1)\r\n```\r\nThe 'document' part corresponding to FileUpload property of MultipartBody  is always null , the others properties are correctly set.\r\n\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n11\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.6.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23079/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23079/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

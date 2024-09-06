@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42188",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42188/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42188/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42188/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42188",
+  "id": 2434062037,
+  "node_id": "I_kwDOCFbutM6RFNbV",
+  "number": 42188,
+  "title": "[Extension] setForcedDependencies not present inside ApplicationArchivesBuildItem",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-07-28T18:42:39Z",
+  "updated_at": "2024-07-29T09:21:04Z",
+  "closed_at": "2024-07-29T09:19:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI would like to check the presence of  a dependency using the ApplicationArchivesBuildItem.\r\n\r\nHowever, the dependency is not found.\r\n\r\n\r\n### Expected behavior\r\n\r\nThe dependency should be found and validation should fail.\r\n\r\n### Actual behavior\r\n\r\nThe test fail in an unexpected manner and I expect it to catch a validation error..\r\n\r\nFailing this way \r\n\r\n```\r\norg.opentest4j.AssertionFailedError: The build was expected to fail\r\n```\r\n\r\n\r\n### How to Reproduce?\r\n\r\nThe processor definition\r\n\r\n```java\r\nclass BannedDependenciesProcessor {\r\n\r\n    @BuildStep\r\n    void banDependencies(final ApplicationArchivesBuildItem applicationArchivesBuildItem,\r\n                         final BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validationErrorBuildItemProducer) {\r\n        applicationArchivesBuildItem.getApplicationArchives().stream()\r\n                .map(ApplicationArchive::getKey)\r\n                .filter(new IsBannedDependency())\r\n                .forEach(bannedDependency ->\r\n                        validationErrorBuildItemProducer.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(\r\n                                new IllegalStateException(String.format(\"Dependency '%s' '%s' is banned and so cannot be used\", bannedDependency.getGroupId(), bannedDependency.getArtifactId()))\r\n                        ))\r\n                );\r\n    }\r\n\r\n    private record IsBannedDependency() implements Predicate<ArtifactKey> {\r\n        private final static List<ArtifactKey> BANNED_ARTIFACTS = List.of(\r\n                ArtifactKey.ga(\"io.quarkus\", \"quarkus-config-yaml\"));\r\n\r\n        @Override\r\n        public boolean test(final ArtifactKey artifactKey) {\r\n            return BANNED_ARTIFACTS.contains(artifactKey);\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nThe test definition\r\n```java\r\npublic class ShouldFailWhenABannedDependencyIsUsedTest {\r\n\r\n    @RegisterExtension\r\n    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()\r\n            .withEmptyApplication()\r\n            .setForcedDependencies(\r\n                    List.of(\r\n                            Dependency.of(\"io.quarkus\", \"quarkus-config-yaml\", Version.getVersion())))\r\n            .assertException(throwable -> assertThat(throwable)\r\n                    .hasNoSuppressedExceptions()\r\n                    .rootCause()\r\n                    .hasMessage(\"TODO\")\r\n                    .hasNoSuppressedExceptions());\r\n\r\n    @Test\r\n    public void test() {\r\n        Assertions.fail(\"Startup should have failed\");\r\n    }\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux 2a02-8428-dff8-c601-234b-8c10-a3c4-2308.rev.sfr.net 6.9.6-200.fc40.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Jun 21 15:48:21 UTC 2024 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.3\" 2024-04-16\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nMaybe I am using the wrong build item ?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42188/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42188/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

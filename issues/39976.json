@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39976",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39976/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39976/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39976/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39976",
+  "id": 2234200523,
+  "node_id": "I_kwDOCFbutM6FKzHL",
+  "number": 39976,
+  "title": "Programmatically building logger only works with log4j2-jboss-logmanager:1.0.0",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283428650,
+      "node_id": "MDU6TGFiZWwxMjgzNDI4NjUw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/logging",
+      "name": "area/logging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-04-09T19:56:17Z",
+  "updated_at": "2024-04-10T19:44:38Z",
+  "closed_at": "2024-04-10T19:44:38Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn my project, I programmatically build loggers using `log4j-core` to write specific messages to different log files. When I use `org.jboss.logmanager:log4j2-jboss-logmanager:1.0.0.Final` it all works great (I've been forcing this version for some time due to this). If I try to use any later version, I get the error: `ClassCastException: class org.jboss.logmanager.log4j.JBossLoggerContext cannot be cast to class org.apache.logging.log4j.core.LoggerContext`.\r\n\r\nIs there a way to set the logger context to be the one from `log4j-core`, as opposed to JBOSS?\r\n\r\nI am open to migrating to a new solution if this is no longer possible, I just can't seem to figure out how to do it.\r\n\r\n### Expected behavior\r\n\r\nSuccessful build\r\n\r\n### Actual behavior\r\n\r\n```\r\nClassCastException: class org.jboss.logmanager.log4j.JBossLoggerContext cannot be cast to class org.apache.logging.log4j.core.LoggerContext (org.jboss.logmanager.log4j.JBossLoggerContext and org.apache.logging.log4j.core.LoggerContext are in unnamed module of loader 'app')\r\n\tat my.project.ProgrammaticLoggerFactory.createLoggerConfig(ProgrammaticLoggerFactory.java:56)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n```java\r\npackage my.project;\r\n\r\nimport java.nio.file.Path;\r\nimport java.util.Collections;\r\nimport java.util.Map;\r\n\r\nimport jakarta.enterprise.context.ApplicationScoped;\r\nimport jakarta.inject.Inject;\r\n\r\nimport org.apache.logging.log4j.Level;\r\nimport org.apache.logging.log4j.LogManager;\r\nimport org.apache.logging.log4j.Logger;\r\nimport org.apache.logging.log4j.core.LoggerContext;\r\nimport org.apache.logging.log4j.core.appender.RollingRandomAccessFileAppender;\r\nimport org.apache.logging.log4j.core.appender.rolling.DefaultRolloverStrategy;\r\nimport org.apache.logging.log4j.core.appender.rolling.DefaultRolloverStrategy.Builder;\r\nimport org.apache.logging.log4j.core.appender.rolling.SizeBasedTriggeringPolicy;\r\nimport org.apache.logging.log4j.core.appender.rolling.TriggeringPolicy;\r\nimport org.apache.logging.log4j.core.config.AppenderRef;\r\nimport org.apache.logging.log4j.core.config.Configuration;\r\nimport org.apache.logging.log4j.core.config.LoggerConfig;\r\nimport org.apache.logging.log4j.core.layout.PatternLayout;\r\nimport org.eclipse.microprofile.config.inject.ConfigProperty;\r\n\r\nimport com.lmco.compass.commons.collections.LruMap;\r\n\r\n@ApplicationScoped\r\nclass ArchiveLogger {\r\n    static final Map<String, Logger> LOGGERS = Collections.synchronizedMap(new LruMap<>(64));\r\n\r\n    private boolean compressArchives;\r\n    private String fileSizeTrigger;\r\n    private String maxFilesKept;\r\n    private String logDir;\r\n\r\n    @Inject\r\n    public ArchiveLogger(\r\n            @ConfigProperty(name = \"app.log.compressing-enabled\", defaultValue = \"true\") final boolean compressArchives,\r\n            @ConfigProperty(name = \"app.log.max-files-kept\", defaultValue = \"10\") final String maxFilesKept,\r\n            @ConfigProperty(name = \"app.log.rollover-trigger-file-size\",\r\n                    defaultValue = \"10 MB\") final String fileSizeTrigger,\r\n            @ConfigProperty(name = \"app.log.directory\", defaultValue = \"/etc/data/logs\") final String logDirectory) {\r\n        this.compressArchives = compressArchives;\r\n        this.maxFilesKept = maxFilesKept;\r\n        this.fileSizeTrigger = fileSizeTrigger;\r\n        this.logDir = logDirectory;\r\n    }\r\n\r\n    public Logger getLogger(final String name) {\r\n        return LOGGERS.computeIfAbsent(name, key -> createLoggerConfig(logDir, name));\r\n    }\r\n\r\n    private Logger createLoggerConfig(final String archiveDir, final String name) {\r\n        final LoggerContext ctx = (LoggerContext) LogManager.getContext(true);\r\n        final Configuration config = ctx.getConfiguration();\r\n\r\n        final Path filePath = Path.of(archiveDir, name);\r\n        final Path fileName = filePath.resolve(\"archive.log\");\r\n        final String fileExt = compressArchives ? \".log.gz\" : \".log\";\r\n        final Path filePattern = filePath.resolve(\"archive-%i\" + fileExt);\r\n\r\n        final TriggeringPolicy tp = SizeBasedTriggeringPolicy.createPolicy(fileSizeTrigger);\r\n        final Builder rsb = DefaultRolloverStrategy.newBuilder().withMax(maxFilesKept).withFileIndex(\"min\");\r\n        if (compressArchives) {\r\n            rsb.withCompressionLevelStr(\"9\");\r\n        }\r\n\r\n        final RollingRandomAccessFileAppender appender = RollingRandomAccessFileAppender.newBuilder()\r\n                .setName(name).withFileName(fileName.toString()).withFilePattern(filePattern.toString())\r\n                .setLayout(PatternLayout.newBuilder().withPattern(\"%d{ISO8601}~%logger~%m%n\").build()).withPolicy(tp)\r\n                .withStrategy(rsb.build()).build();\r\n        appender.start();\r\n        config.addAppender(appender);\r\n\r\n        final AppenderRef ref = AppenderRef.createAppenderRef(name, null, null);\r\n        final LoggerConfig loggerConfig = LoggerConfig.createLogger(false, Level.INFO, name, \"true\",\r\n                new AppenderRef[] { ref }, null, config, null);\r\n        loggerConfig.addAppender(appender, null, null);\r\n        config.addLogger(name, loggerConfig);\r\n\r\n        return LogManager.getLogger(name);\r\n    }\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.4.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39976/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39976/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

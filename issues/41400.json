@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41400",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41400/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41400/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41400/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41400",
+  "id": 2371060460,
+  "node_id": "I_kwDOCFbutM6NU4Ls",
+  "number": 41400,
+  "title": "mongodb with multiple (named) connections not working + random container image in test (using testcontainers)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-06-24T20:44:56Z",
+  "updated_at": "2024-06-24T20:49:14Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAs per documentation, there is possible to use multiple mongodb clients quarkus.mongodb.[optional name.][mongo connection property] ex.:\r\nquarkus.mongodb.users.connection-string = mongodb://mongo2:27017/userdb\r\n\r\nThen to inject the named client such as:\r\n@Inject\r\n@MongoClientName(\"users\")\r\nMongoClient mongoClient1;\r\n\r\nI try to use the @MongoEntity with multiple connection, as I see it has a field clientName.\r\nbut when I try to run, it throws an exception.\r\n\r\n\r\n### Expected behavior\r\n\r\nPossibility to use multiple MongoDB connections (clients).\r\n\r\n### Actual behavior\r\n\r\nusing multiple mongodb connection is not working, only default (single) one.\r\n\r\n### How to Reproduce?\r\n\r\n1. BacklogEntity class\r\n```java\r\n@MongoEntity(clientName = \"inventory\", collection = \"backlog\")\r\n@EqualsAndHashCode(callSuper = false)\r\n@Data\r\n@Builder\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\npublic class BacklogEntity extends PanacheMongoEntityBase {\r\n\r\n    @BsonId\r\n    String id;\r\n\r\n    public static PanacheQuery<BacklogEntity> findByIds(final List<String> list) {\r\n        return find(\"_id in ?1\", list);\r\n    }\r\n}\r\n```\r\n\r\n3. application.properties\r\nquarkus.mongodb.inventory.connection-string = mongodb://localhost:27017\r\nquarkus.mongodb.inventory.database = inventory\r\n\r\n4. MongoDBLifecycleManager class\r\n```java\r\npublic class MongoDBLifecycleManager implements QuarkusTestResourceLifecycleManager {\r\n\r\n    private static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse(\"mongo:7\"));\r\n\r\n    @Override\r\n    public Map<String, String> start() {\r\n        mongoDBContainer.waitingFor(new HostPortWaitStrategy()).start();\r\n\r\n        return Map.of(\"quarkus.mongodb.inventory.connection-string\", mongoDBContainer.getConnectionString());\r\n    }\r\n\r\n    @Override\r\n    public void stop() {\r\n        mongoDBContainer.stop();\r\n    }\r\n}\r\n```\r\n6. BacklogEntityTest test class\r\n```java\r\n@QuarkusTest\r\n@QuarkusTestResource(MongoDBLifecycleManager.class)\r\n@Slf4j\r\nclass BacklogEntityTest {\r\n\r\n    @Inject\r\n    @MongoClientName(\"inventory\")\r\n    MongoClient mongoClient;\r\n\r\n    @AfterEach\r\n    public void afterEach() {\r\n        mongoClient.getDatabase(\"inventory\").drop();\r\n    }\r\n\r\n    @Test\r\n    void testPersist() {\r\n        BacklogEntity.builder().id(\"Record 1\").build().persist();\r\n        Assertions.assertEquals(1, BacklogEntity.count());\r\n\r\n        BacklogEntity backlogEntity = BacklogEntity.findById(\"Record 1\");\r\n        backlogEntity.update();\r\n        assertEquals(1, BacklogEntity.count());\r\n    }\r\n\r\n    @Test\r\n    void testFindByIds() {\r\n        BacklogEntity.builder().id(\"Record 1\").build().persist();\r\n        BacklogEntity.builder().id(\"Record 2\").build().persist();\r\n        BacklogEntity.builder().id(\"Record 3\").build().persist();\r\n        Assertions.assertEquals(3, BacklogEntity.count());\r\n\r\n        final List<String> list = List.of(\"Record 1\", \"Record 3\");\r\n        final PanacheQuery<BacklogEntity> panacheQuery = BacklogEntity.findByIds(list);\r\n        assertEquals(2, panacheQuery.count());\r\n        panacheQuery.list().forEach(entity -> {\r\n            assertTrue(list.contains(entity.getId()));\r\n            log.info(\"Validated Entity {}\", entity);\r\n        });\r\n    }\r\n}\r\n```\r\n\r\nWhen I run I get:\r\njava.lang.IllegalStateException: Unable to find MongoClient bean for entity @io.quarkus.mongodb.panache.common.MongoEntity(readPreference=\"\", database=\"inventory\", collection=\"backlog\", clientName=\"inventory\")\r\n\tat io.quarkus.mongodb.panache.common.runtime.BeanUtils.clientFromArc(BeanUtils.java:58)\r\n\tat io.quarkus.mongodb.panache.common.runtime.MongoOperations.mongoDatabase(MongoOperations.java:399)\r\n\tat io.quarkus.mongodb.panache.common.runtime.MongoOperations.mongoCollection(MongoOperations.java:193)\r\n\tat io.quarkus.mongodb.panache.common.runtime.MongoOperations.mongoCollection(MongoOperations.java:395)\r\n\tat io.quarkus.mongodb.panache.common.runtime.MongoOperations.persist(MongoOperations.java:73)\r\n\tat io.quarkus.mongodb.panache.PanacheMongoEntityBase.persist(PanacheMongoEntityBase.java:36)\r\n\tat com.asml.asml.vcp.datacontinuity.export.BacklogEntityTest.testPersist(BacklogEntityTest.java:40)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.runExtensionMethod(QuarkusTestExtension.java:1017)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.interceptTestMethod(QuarkusTestExtension.java:831)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1596)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1596)\r\n\r\nAnd in the logs I get both\r\nCreating container for image: docker.io/mongo:4.4\r\nCreating container for image: mongo:7\r\n\r\nWhere did the \"docker.io/mongo:4.4\" come from ? In my MongoDBLifecycleManager  I only specify the mongo:7 image to be used. I understand this is some default, but I am not interested in using this, that's why I specify a different version. This is also a bug !\r\n\r\nIf I try to use BacklogEntity defined with only @MongoEntity(database = \"inventory\", collection = \"backlog\"), of course it uses the default connection (no name) and therefore is decoupled from the named connection (inventory), and fails next test.\r\n\r\nThere is the need to run with named connection, as this is only one connection test, but I want to run with multiple ones, so just bypassing and use the default, no name connection is not an option.\r\n\r\nFrom @interface MongoEntity I see \r\n    /**\r\n     * The name of the MongoDB client (if not set the default client will be used).\r\n     */\r\n    String clientName() default \"\";\r\n\r\nSo it should work when setting the client name... therefore is a bug.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nwindows\r\n\r\n### Output of `java -version`\r\n\r\n21\r\n\r\n### Quarkus version or git rev\r\n\r\n3.11.3, 3.12\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn 3.9.7\r\n\r\n### Additional information\r\n\r\nPlease don't be ignorant with these bugs.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41400/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41400/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

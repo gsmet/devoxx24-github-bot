@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32991",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32991/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32991/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32991/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32991",
+  "id": 1688594505,
+  "node_id": "I_kwDOCFbutM5kpehJ",
+  "number": 32991,
+  "title": "com.mongodb.MongoConfigurationException: Failed looking up SRV record",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-04-28T13:48:17Z",
+  "updated_at": "2023-05-09T12:00:47Z",
+  "closed_at": "2023-05-09T12:00:44Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n### Error Details\r\nWhen trying to connect to Mongo Atlas using Quarkus, this error is produced\r\n\r\n```\r\n2023-04-28 08:33:52,405 INFO  [org.mon.dri.cluster] (cluster-ClusterId{value='644bcb3b740a8601c425ed16', description='null'}-srv-cluster-1.dzkfd.mongodb.net) Exception while resolving SRV records: com.mongodb.MongoConfigurationException: Failed looking up SRV record for '_mongodb._tcp.cluster-1.dzkfd.mongodb.net'.\r\n        at com.mongodb.internal.dns.DefaultDnsResolver.resolveHostFromSrvRecords(DefaultDnsResolver.java:92)\r\n        at com.mongodb.internal.connection.DefaultDnsSrvRecordMonitor$DnsSrvRecordMonitorRunnable.run(DefaultDnsSrvRecordMonitor.java:80)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: com.mongodb.MongoConfigurationException: Unable to look up SRV record for host _mongodb._tcp.cluster-1.dzkfd.mongodb.net\r\n        at io.quarkus.mongodb.runtime.dns.MongoDnsClient.resolveSrvRequest(MongoDnsClient.java:152)\r\n        at io.quarkus.mongodb.runtime.dns.MongoDnsClient.getResourceRecordData(MongoDnsClient.java:104)\r\n        at com.mongodb.internal.dns.DefaultDnsResolver.resolveHostFromSrvRecords(DefaultDnsResolver.java:74)\r\n        ... 2 more\r\nCaused by: io.smallrye.mutiny.TimeoutException\r\n        at io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:64)\r\n        at io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n        at io.quarkus.mongodb.runtime.dns.MongoDnsClient.resolveSrvRequest(MongoDnsClient.java:138)\r\n        ... 4 more\r\n\r\n\r\n2023-04-28 08:33:52,407 INFO  [org.mon.dri.cluster] (vert.x-eventloop-thread-2) No server chosen by com.mongodb.client.internal.MongoClientDelegate$1@5bfcac08 from cluster description ClusterDescription{type=REPLICA_SET, srvResolutionException=com.mongodb.MongoConfigurationException: Failed looking up SRV record for '_mongodb._tcp.cluster-1.dzkfd.mongodb.net'., connectionMode=MULTIPLE, serverDescriptions=[]}. Waiting for 30000 ms before timing out\r\n```\r\n\r\nThis was working successfully on `2.11.3.Final` but breaks on `2.12.3.Final` and `3.0.1.Final` - I have not tested other versions > `2.12.3.Final`\r\n\r\n### Expected behavior\r\n\r\nQuarkus should connect to Mongo Atlas without this SRV lookup error\r\n\r\n### Actual behavior\r\n\r\nQuarkus is able to lookup the SRV record for the Mongodb cluster, and then connect to the appropriate nodes\r\n\r\n### How to Reproduce?\r\n\r\nReproduce:\r\nUsing the free tier mongo atlas account, use the above mentioned quarkus versions and specify the mongo atlas cluster url in `application.properties`. Then, write a simple rest service that when invoked connects to mongo to retrieve records. \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin chester.local 22.4.0 Darwin Kernel Version 22.4.0: Mon Mar  6 20:59:28 PST 2023; root:xnu-8796.101.5~3/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nDarwin chester.local 22.4.0 Darwin Kernel Version 22.4.0: Mon Mar  6 20:59:28 PST 2023; root:xnu-8796.101.5~3/RELEASE_ARM64_T6000 arm64\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.11.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\r\n\r\n### Additional information\r\n\r\nOn the version that does not work\r\n```\r\n2023-04-28 08:41:58,801 WARN  [io.net.res.dns.DnsServerAddressStreamProviders] (build-54) Can not find io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider in the classpath, fallback to system defaults. This may result in incorrect DNS resolutions on MacOS.\r\n```\r\nHowever on the versions that do work\r\n```\r\n2023-04-28 08:50:12,609 WARN  [io.net.res.dns.DnsServerAddressStreamProviders] (build-34) Can not find {} in the classpath, fallback to system defaults. This may result in incorrect DNS resolutions on MacOS.\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32991/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32991/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

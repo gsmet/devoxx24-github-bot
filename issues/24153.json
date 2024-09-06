@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24153",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24153/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24153/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24153/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24153",
+  "id": 1161932964,
+  "node_id": "I_kwDOCFbutM5FQbCk",
+  "number": 24153,
+  "title": "ReactiveClientHeadersFactory does not work with internal Uni",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-03-07T21:15:51Z",
+  "updated_at": "2022-08-30T14:15:24Z",
+  "closed_at": "2022-08-30T14:15:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi,\r\n\r\nI've already made some comments in the original pull request, which introduced the `ReactiveClientHeadersFactory` https://github.com/quarkusio/quarkus/pull/21807/files and @Sgitario asked me to open a bug for this issue, which also contains a reproducer.\r\n\r\nThe issue is that the following code for a ReactiveClientHeadersFactory works using the `Uni.createFrom().item()` method...\r\n\r\n```\r\nclass AuthRequestHeaderFactory : ReactiveClientHeadersFactory() {\r\n\r\n    override fun getHeaders(incomingHeaders: MultivaluedMap<String, String>?): Uni<MultivaluedMap<String, String>> {\r\n        return Uni.createFrom().item(\r\n            MultivaluedHashMap<String, String>().apply {\r\n                add(\"Cache-Control\", \"no-cache\")\r\n                add(\"Accept-Encoding\", \"identity\")\r\n                add(\"Authorization\", \"Basic secret\")\r\n            }\r\n        )\r\n    }\r\n}\r\n```\r\n\r\n... while this does not:\r\n\r\n```\r\nclass BeverageRequestHeaderFactory(\r\n    @RestClient private val authRestClient: AuthRestClient,\r\n) : ReactiveClientHeadersFactory() {\r\n\r\n    override fun getHeaders(incomingHeaders: MultivaluedMap<String, String>?): Uni<MultivaluedMap<String, String>> {\r\n        return authRestClient.fetchClientToken().onItem().transform {\r\n            MultivaluedHashMap<String, String>().apply {\r\n                add(HttpHeaders.CACHE_CONTROL, \"no-cache\")\r\n                add(HttpHeaders.AUTHORIZATION, \"${it.tokenType} ${it.accessToken}\")\r\n            }\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nActually the latter tries to use the auth token, which is received by the rest client, which uses the `ReactiveClientHeadersFactory` from the first snippet. \r\n\r\nThe code, which reproduces the issue can be found here:\r\n\r\nhttps://github.com/SimonScholz/ReactiveClientHeadersFactory/blob/b1a7a07c13afa9168b8897653fa27ce0f4cf3be3/src/test/kotlin/io/github/simonscholz/ReactiveResourceTest.kt#L82\r\n\r\nThe test case shows that the auth rest client can be called in a proper manner by using the `AuthRequestHeaderFactory` from above, while `BeverageRequestHeaderFactory` does not work.\r\n\r\nWhen printing all requests, which reached out towards Wiremock, which is used for testing, we can see that also for the `BeverageRestClient` the values from the `AuthRequestHeaderFactory` is being used, which is wrong.\r\nIt should've been using the BeverageRequestHeaderFactory, which is specified via `@RegisterClientHeaders(BeverageRequestHeaderFactory::class)` in the `BeverageRestClient` class.\r\n\r\nPlease let me know if something is still unclear or if you have questions...\r\n\r\nThanks a lot in advance for your support. :-)\n\n### Expected behavior\n\nThe expected behavior would be that the `BeverageRequestHeaderFactory` properly sets the header values for the `BeverageRestClient` in the reproducer example.\r\n\n\n### Actual behavior\n\nUnfortunately it seems that the values from the `AuthRequestHeaderFactory` are being used for the `BeverageRestClient` as well, even though it should pick up the header value from the `BeverageRequestHeaderFactory`.\r\n\r\nThe weird thing also is that if I make the `fetchClientToken` call blocking it works....\n\n### How to Reproduce?\n\nI've created this sample code in order to reproduce the issue we're facing:\r\n\r\nhttps://github.com/SimonScholz/ReactiveClientHeadersFactory/blob/b1a7a07c13afa9168b8897653fa27ce0f4cf3be3/src/test/kotlin/io/github/simonscholz/ReactiveResourceTest.kt#L82\r\n\r\nIn this test case in line 82 I print all requests, which were made towards Wiremock.\r\nWith that in place I was able to see that the wrong header values are being used for the `BeverageRestClient`.\r\n\r\nFeel free to clone the Github repository, I've created, and run the test.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nJava 17.0.1 Temurin\n\n### GraalVM version (if different from Java)\n\nOpenJDK Runtime Environment GraalVM CE 21.3.0\n\n### Quarkus version or git rev\n\n2.7.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.3.3\n\n### Additional information\n\nI've already made some comments in the original PR, which introduced the ReactiveClientHeadersFactory.\r\nAlso see https://github.com/quarkusio/quarkus/pull/21807/files",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24153/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24153/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

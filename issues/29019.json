@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29019",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29019/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29019/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29019/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29019",
+  "id": 1433853538,
+  "node_id": "I_kwDOCFbutM5Vdt5i",
+  "number": 29019,
+  "title": "Kafka messages on multiple consumers for the same channel with Hibernate Reactive dont work on Quarkus 2.13",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-11-02T22:09:25Z",
+  "updated_at": "2022-11-21T08:51:46Z",
+  "closed_at": "2022-11-21T08:51:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nSince **2.13.0** version of Quarkus, using the **session.withTransaction** then closing it as per the documentation is not working anymore when using multiple consumers for the same channel. Throwing multiple exceptions:\r\n\r\n```\r\njava.util.concurrent.CompletionException: java.lang.IllegalStateException: HR000061: Session is currently connecting to database\r\n...\r\nCaused by: java.lang.IllegalStateException: Session/EntityManager is closed\r\n```\r\n\r\nThe migration guide indicates:\r\n\r\n_Prior to Quarkus 2.13, the Reactive Messaging consuming methods were called with an active CDI request context, inadvertently propagated, and were never terminated. Quarkus corrects this behaviour and makes sure the request context is not activated unnecessarily on message consuming methods. Code relying on the presence of the RequestScoped beans might need to start a request scope explicitly; for example, using @ActivateRequestContext annotation on the message consuming method._\r\n\r\nAdding @ActivateRequestContext does not seem to fix the issue.\r\n\r\n### Expected behavior\r\n\r\nInjecting and using Mutiny.Session as per the documentation (https://quarkus.io/guides/kafka#persisting-kafka-messages-with-hibernate-reactive) should work: \r\n\r\n```\r\nsession.withTransaction(t -> {  \r\n            // Database work here\r\n        }).onTermination().call(() -> session.close()); \r\n```\r\n\r\n### Actual behavior\r\n\r\nMultiple exceptions are thrown:\r\n\r\n```\r\njava.util.concurrent.CompletionException: java.lang.IllegalStateException: HR000061: Session is currently connecting to database\r\n...\r\nCaused by: java.lang.IllegalStateException: Session/EntityManager is closed\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nConfigure a bean for incoming kafka messages having at least two consumers on the same channel, then try to save an entity to a database.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux summit127 5.15.0-52-generic #58-Ubuntu SMP Thu Oct 13 08:03:55 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.4\" 2022-07-19\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nThis was working prior to 2.13",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29019/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29019/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

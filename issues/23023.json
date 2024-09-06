@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23023",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23023/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23023/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23023/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23023",
+  "id": 1108347759,
+  "node_id": "I_kwDOCFbutM5CEAtv",
+  "number": 23023,
+  "title": "Can not mock K8S api /version",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-01-19T17:06:00Z",
+  "updated_at": "2022-01-21T04:56:51Z",
+  "closed_at": "2022-01-20T06:26:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nCannot mock the `/version` api. I followed the guide https://quarkus.io/guides/kubernetes-client#testing. \r\n\r\n\r\n\r\nMocking `/version` works on `2.4.2.Final`, but fails on `2.5.4.Final` and `2.6.2.Final`.\r\n\r\nThe following code should throw an exception when the version path is accessed, but it does not thrown an error for v2.5.4 or higher: \r\n```java\r\nimport io.fabric8.kubernetes.client.KubernetesClientException;\r\nimport io.fabric8.kubernetes.client.NamespacedKubernetesClient;\r\nimport io.fabric8.kubernetes.client.VersionInfo;\r\nimport io.fabric8.kubernetes.client.server.mock.KubernetesServer;\r\nimport io.quarkus.test.junit.QuarkusTest;\r\nimport io.quarkus.test.kubernetes.client.KubernetesTestServer;\r\nimport io.quarkus.test.kubernetes.client.WithKubernetesTestServer;\r\nimport org.junit.jupiter.api.Assertions;\r\nimport org.junit.jupiter.api.Test;\r\n\r\nimport java.net.HttpURLConnection;\r\n\r\n\r\n@QuarkusTest\r\n@WithKubernetesTestServer(crud = false)\r\nclass K8sTest {\r\n\r\n    @KubernetesTestServer\r\n    KubernetesServer server;\r\n\r\n\r\n    @Test\r\n    public void fail() {\r\n        server.expect().get().withPath(\"/version\")\r\n                .andReturn(HttpURLConnection.HTTP_INTERNAL_ERROR, \"error\")\r\n                .always();\r\n\r\n        System.out.println(\"http://\" + server.getKubernetesMockServer().getHostName() + \":\" + server.getKubernetesMockServer().getPort());\r\n\r\n        NamespacedKubernetesClient client = server.getClient();\r\n        Assertions.assertThrows(KubernetesClientException.class, () -> {\r\n\r\n            VersionInfo response = client.getKubernetesVersion();\r\n            System.out.println(response);\r\n        });\r\n    }\r\n}\r\n```\r\n\r\nHowever the following code works as expected with Quarkus 2.4.2 (note there are some api changes).\r\n\r\n```java\r\nimport io.fabric8.kubernetes.client.KubernetesClientException;\r\nimport io.fabric8.kubernetes.client.NamespacedKubernetesClient;\r\nimport io.fabric8.kubernetes.client.VersionInfo;\r\nimport io.fabric8.kubernetes.client.server.mock.KubernetesServer;\r\nimport io.quarkus.test.junit.QuarkusTest;\r\nimport io.quarkus.test.kubernetes.client.KubernetesTestServer;\r\nimport io.quarkus.test.kubernetes.client.WithKubernetesTestServer;\r\nimport org.junit.jupiter.api.Assertions;\r\nimport org.junit.jupiter.api.Test;\r\n\r\nimport java.net.HttpURLConnection;\r\n\r\n\r\n@QuarkusTest\r\n@WithKubernetesTestServer(crud = false)\r\nclass K8sTest {\r\n\r\n    @KubernetesTestServer\r\n    KubernetesServer server;\r\n\r\n\r\n    @Test\r\n    public void fail() {\r\n        server.expect().get().withPath(\"/version\")\r\n                .andReturn(HttpURLConnection.HTTP_INTERNAL_ERROR, \"error\")\r\n                .always();\r\n\r\n        System.out.println(\"http://\" + server.getMockServer().getHostName() + \":\" + server.getMockServer().getPort());\r\n\r\n        NamespacedKubernetesClient client = server.getClient();\r\n        Assertions.assertThrows(KubernetesClientException.class, () -> {\r\n\r\n            VersionInfo response = client.getVersion();\r\n            System.out.println(response);\r\n        });\r\n    }\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\nShould allow to mock /version api. \r\n\r\n### Actual behavior\r\n\r\nMock of /version does not have any impact. \r\n\r\n### How to Reproduce?\r\n\r\nSee code above. \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin 21.2.0 Darwin Kernel Version 21.2.0: Sun Nov 28 20:28:41 PST 2021; root:xnu-8019.61.5~1/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.1\" 2021-10-19\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nnot relevant\r\n\r\n### Quarkus version or git rev\r\n\r\n2.6.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23023/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23023/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

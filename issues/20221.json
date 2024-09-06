@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20221",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20221/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20221/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20221/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20221",
+  "id": 998751599,
+  "node_id": "I_kwDOCFbutM47h71v",
+  "number": 20221,
+  "title": "Kotlin live reloading fails when having PicoContainer as dependency",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2021-09-16T23:06:17Z",
+  "updated_at": "2021-09-17T19:11:36Z",
+  "closed_at": "2021-09-17T19:11:30Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen having org.picocontainer:picocontainer:2.15 as dependency (probably rare, but for example [JaVers](https://javers.org/) depends on it), Kotlin live reloading fails.\r\n\r\nThe cause is a conflict with an old version of PicoContainer in the IntelliJ codebase (involved regardless of the IDE, see stacktrace below):\r\nhttps://github.com/JetBrains/intellij-community/blob/master/platform/extensions/src/org/picocontainer/MutablePicoContainer.java\r\n\r\nI guess it's a problem with ClassLoader separation. Adding `quarkus.class-loading.reloadable-artifacts=org.picocontainer:picocontainer` to `application.properties` is a workaround.\r\n\r\n### Expected behavior\r\n\r\nLive reloading should work.\r\n\r\n### Actual behavior\r\n\r\nLive reloading fails with the following stacktrace:\r\n```\r\njava.lang.RuntimeException: Unable to invoke Kotlin compiler. java.lang.NoSuchMethodError: 'org.picocontainer.ComponentAdapter org.picocontainer.MutablePicoContainer.registerComponentImplementation(java.lang.Object, java.lang.Class)'\r\n\tat com.intellij.mock.MockApplication.doGetService(MockApplication.java:66)\r\n\tat com.intellij.mock.MockApplication.getService(MockApplication.java:53)\r\n\tat com.intellij.psi.LanguageSubstitutors.getInstance(LanguageSubstitutors.java:41)\r\n\tat com.intellij.psi.LanguageSubstitutors.<clinit>(LanguageSubstitutors.java:33)\r\n\tat com.intellij.lang.LanguageUtil.getLanguageForPsi(LanguageUtil.java:35)\r\n\tat com.intellij.psi.impl.file.impl.FileManagerImpl.createFileViewProvider(FileManagerImpl.java:247)\r\n\tat com.intellij.psi.impl.file.impl.FileManagerImpl.findViewProvider(FileManagerImpl.java:193)\r\n\tat com.intellij.psi.impl.file.impl.FileManagerImpl.findFile(FileManagerImpl.java:357)\r\n\tat com.intellij.psi.impl.PsiManagerImpl.findFile(PsiManagerImpl.java:153)\r\n\tat org.jetbrains.kotlin.cli.jvm.compiler.CoreEnvironmentUtilsKt.createSourceFilesFromSourceRoots(coreEnvironmentUtils.kt:70)\r\n\tat org.jetbrains.kotlin.cli.jvm.compiler.CoreEnvironmentUtilsKt.createSourceFilesFromSourceRoots$default(coreEnvironmentUtils.kt:30)\r\n\tat org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment.createKtFiles(KotlinCoreEnvironment.kt:413)\r\n\tat org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment.<init>(KotlinCoreEnvironment.kt:187)\r\n\tat org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment.<init>(KotlinCoreEnvironment.kt)\r\n\tat org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment$Companion.createForProduction(KotlinCoreEnvironment.kt:431)\r\n\tat org.jetbrains.kotlin.cli.jvm.K2JVMCompiler.createCoreEnvironment(K2JVMCompiler.kt:226)\r\n\tat org.jetbrains.kotlin.cli.jvm.K2JVMCompiler.doExecute(K2JVMCompiler.kt:152)\r\n\tat org.jetbrains.kotlin.cli.jvm.K2JVMCompiler.doExecute(K2JVMCompiler.kt:52)\r\n\tat org.jetbrains.kotlin.cli.common.CLICompiler.execImpl(CLICompiler.kt:90)\r\n\tat org.jetbrains.kotlin.cli.common.CLICompiler.execImpl(CLICompiler.kt:44)\r\n\tat org.jetbrains.kotlin.cli.common.CLITool.exec(CLITool.kt:98)\r\n\tat io.quarkus.kotlin.deployment.KotlinCompilationProvider.compile(KotlinCompilationProvider.java:82)\r\n\tat io.quarkus.deployment.dev.QuarkusCompiler.compile(QuarkusCompiler.java:191)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.checkForChangedClasses(RuntimeUpdatesProcessor.java:675)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:420)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:399)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:151)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:139)\r\n\tat io.vertx.core.impl.ContextImpl.lambda$null$0(ContextImpl.java:159)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.ContextImpl.lambda$executeBlocking$1(ContextImpl.java:157)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n\r\n\tat io.quarkus.kotlin.deployment.KotlinCompilationProvider.compile(KotlinCompilationProvider.java:88)\r\n\tat io.quarkus.deployment.dev.QuarkusCompiler.compile(QuarkusCompiler.java:191)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.checkForChangedClasses(RuntimeUpdatesProcessor.java:675)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:420)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:399)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:151)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:139)\r\n\tat io.vertx.core.impl.ContextImpl.lambda$null$0(ContextImpl.java:159)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.ContextImpl.lambda$executeBlocking$1(ContextImpl.java:157)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nCreate a project with Gradle and Kotlin, add \"org.picocontainer:picocontainer:2.15\" as dependency, and trigger a live reload.\r\n\r\nExample project: [foo.zip](https://github.com/quarkusio/quarkus/files/7181385/foo.zip)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux ***** 5.14.3-arch1-1 #1 SMP PREEMPT Sun, 12 Sep 2021 20:51:34 +0000 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08) OpenJDK 64-Bit Server VM GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.2\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20221/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20221/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29539",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29539/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29539/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29539/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29539",
+  "id": 1466715142,
+  "node_id": "I_kwDOCFbutM5XbEwG",
+  "number": 29539,
+  "title": "Tracing: SSE is overwriting \"spans\" on `opentracing` + `resteasy-reactive`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-11-28T16:29:31Z",
+  "updated_at": "2022-11-28T18:44:33Z",
+  "closed_at": "2022-11-28T18:44:33Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nQuarkus: Upstream\r\nExtensions: `quarkus-resteasy-reactive`, `quarkus-smallrye-opentracing`, `quarkus-rest-client-reactive`\r\n\r\nIf I request some (server-sent events) data from a `Service A` that use a `Service B`, I would expect one trace with two Spans (one per service)., however I am getting a trace with a single span (the latest one). \r\n\r\nNote: used to work with `quarkus-resteasy-mutiny`\r\n\r\nTrace:\r\n```\r\n{\r\n  \"data\": [\r\n    {\r\n      \"traceID\": \"f3623e0a8ba26c4f\",\r\n      \"spans\": [\r\n        {\r\n          \"traceID\": \"f3623e0a8ba26c4f\",\r\n          \"spanID\": \"1589802d29578d45\",\r\n          \"flags\": 1,\r\n          \"operationName\": \"GET\",\r\n          \"references\": [\r\n            {\r\n              \"refType\": \"CHILD_OF\",\r\n              \"traceID\": \"f3623e0a8ba26c4f\",\r\n              \"spanID\": \"f3623e0a8ba26c4f\"\r\n            }\r\n          ],\r\n          \"startTime\": 1669651777429194,\r\n          \"duration\": 45119,\r\n          \"tags\": [\r\n            {\r\n              \"key\": \"http.status_code\",\r\n              \"type\": \"int64\",\r\n              \"value\": 200\r\n            },\r\n            {\r\n              \"key\": \"component\",\r\n              \"type\": \"string\",\r\n              \"value\": \"jaxrs\"\r\n            },\r\n            {\r\n              \"key\": \"span.kind\",\r\n              \"type\": \"string\",\r\n              \"value\": \"client\"\r\n            },\r\n            {\r\n              \"key\": \"http.url\",\r\n              \"type\": \"string\",\r\n              \"value\": \"http://localhost:1101/server-sent-events-pong\"\r\n            },\r\n            {\r\n              \"key\": \"peer.hostname\",\r\n              \"type\": \"string\",\r\n              \"value\": \"localhost\"\r\n            },\r\n            {\r\n              \"key\": \"peer.port\",\r\n              \"type\": \"int64\",\r\n              \"value\": 1101\r\n            },\r\n            {\r\n              \"key\": \"http.method\",\r\n              \"type\": \"string\",\r\n              \"value\": \"GET\"\r\n            },\r\n            {\r\n              \"key\": \"internal.span.format\",\r\n              \"type\": \"string\",\r\n              \"value\": \"jaeger\"\r\n            }\r\n          ],\r\n          \"logs\": [],\r\n          \"processID\": \"p1\",\r\n          \"warnings\": [\r\n            \"invalid parent span IDs=f3623e0a8ba26c4f; skipping clock skew adjustment\"\r\n          ]\r\n        }\r\n      ],\r\n      \"processes\": {\r\n        \"p1\": {\r\n          \"serviceName\": \"pingpong\",\r\n          \"tags\": [\r\n            {\r\n              \"key\": \"hostname\",\r\n              \"type\": \"string\",\r\n              \"value\": \"fedora\"\r\n            },\r\n            {\r\n              \"key\": \"ip\",\r\n              \"type\": \"string\",\r\n              \"value\": \"192.168.68.106\"\r\n            },\r\n            {\r\n              \"key\": \"jaeger.version\",\r\n              \"type\": \"string\",\r\n              \"value\": \"Java-1.8.1\"\r\n            }\r\n          ]\r\n        }\r\n      },\r\n      \"warnings\": null\r\n    }\r\n  ],\r\n  \"total\": 0,\r\n  \"limit\": 0,\r\n  \"offset\": 0,\r\n  \"errors\": null\r\n}\r\n```\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nOne trace with two Spans, one per HTTP service that is involved in the transaction. \r\n\r\n### Actual behavior\r\n\r\nLooks like the second API overwrites the first span. \r\n\r\n### How to Reproduce?\r\n\r\n`git clone --branch  QUARKUS-2303 git@github.com:pjgg/quarkus-test-suite.git`\r\n\r\nMove on to module `monitoring/opentracing-reactive-grpc`\r\n\r\n`mvn clean verify -Dit.test=ServerSentEventsTraceOpentracingIT`\r\n\r\nClasses that are involved on this scenario:\r\n`io.quarkus.ts.monitoring.opentracing.reactive.grpc.ping.ServerSentEventsPingResource`    --> Service A\r\n`io.quarkus.ts.monitoring.opentracing.reactive.grpc.ping.clients.ServerSentEventsPongClient`  --> http Client of serviceB\r\n`io.quarkus.ts.monitoring.opentracing.reactive.grpc.pong.ServerSentEventsPongResource`   --> Service B\r\n\r\nServiceA --> HttpClient --> Service B\r\n\r\n\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux fedora 6.0.9-200.fc36.x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.5 2022-10-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29539/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29539/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

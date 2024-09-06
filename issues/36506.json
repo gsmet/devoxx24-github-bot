@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36506",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36506/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36506/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36506/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36506",
+  "id": 1945638886,
+  "node_id": "I_kwDOCFbutM5z-Bfm",
+  "number": 36506,
+  "title": "Gradle multimodule cannot find Kotlin classes in dev mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-10-16T16:25:53Z",
+  "updated_at": "2024-06-17T02:03:39Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am trying to build a multimodule gradle project with several quarkus aplications and a shared module to be used by all applications, all using kotlin and gradle kotlin DSL.\r\n\r\nThe problem is that the quarkus application cannot find the kotlin classes from the shared module in dev mode, but only in dev mode because it compiles and runs fine not in dev mode.\r\n\r\nLaunch quarkus in dev mode:\r\n`java.lang.ClassNotFoundException: org.acme.SharedKotlinExample\r\n\tat java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)\r\n\tat java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:516)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:466)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:516)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:466)\r\n\tat org.acme.GreetingResource.hello(GreetingResource.kt:16)\r\n\tat org.acme.GreetingResource$quarkusrestinvoker$hello_e747664148511e1e5212d3e0f4b40d45c56ab8a1.invoke(Unknown Source)\r\n\tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:141)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:582)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nResulted in: java.lang.NoClassDefFoundError: org/acme/SharedKotlinExample\r\n\t... 12 more`\r\n\r\nImport the class and trigger a live reload:\r\n`java.lang.RuntimeException: Compilation failed.         val sharedKotlinExample = SharedKotlinExample()\r\n/Users/danielmarmelo/Downloads/quarkus-kotlin-shared-library-bug/quarkus-app/src/main/kotlin/org/acme/GreetingResource.kt:16:35\r\nReason: Unresolved reference: SharedKotlinExample\r\n\tat io.quarkus.kotlin.deployment.KotlinCompilationProvider.compile(KotlinCompilationProvider.java:101)\r\n\tat io.quarkus.deployment.dev.QuarkusCompiler.compile(QuarkusCompiler.java:226)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.checkForChangedClasses(RuntimeUpdatesProcessor.java:725)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:461)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:441)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:152)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:139)\r\n\tat io.vertx.core.impl.ContextBase.lambda$executeBlocking$1(ContextBase.java:180)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:277)\r\n\tat io.vertx.core.impl.ContextBase.lambda$internalExecuteBlocking$2(ContextBase.java:199)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)`\r\n\r\nThis issue only happens with kotlin classes, java works fine.\r\nI checked the jar the is procuced from the shared module and both classes are there, but quarkus in dev mode can only see the java ones.\r\n\r\nThe previous errors occurr when I include the dependency as a project, like this: `implementation(project(\":common\"))`\r\nIf I include the jar directly it works as expected, even in dev mode, like this: `implementation(files(\"/Users/danielmarmelo/Downloads/quarkus-kotlin-shared-library-bug/shared/build/libs/shared-1.0.0-SNAPSHOT.jar\"))`\r\n\r\n\r\n### Expected behavior\r\n\r\nBe able to use all classes from the shared module, kotlin or java.\r\n\r\n### Actual behavior\r\n\r\nCan only use java classes from the shared module.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: [quarkus-kotlin-shared-library-bug.zip](https://github.com/quarkusio/quarkus/files/12919187/quarkus-kotlin-shared-library-bug.zip)\r\n\r\nSteps\r\n- ./gradlew :quarkus-app:quarkusDev\r\n- Invoke the '/hello' endpoint\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin MacBook-Pro-de-Daniel.local 23.0.0 Darwin Kernel Version 23.0.0: Fri Sep 15 14:41:43 PDT 2023; root:xnu-10002.1.13~1/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\njava version \"17.0.8\" 2023-07-18 LTS Java(TM) SE Runtime Environment (build 17.0.8+9-LTS-211) Java HotSpot(TM) 64-Bit Server VM (build 17.0.8+9-LTS-211, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.4.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n------------------------------------------------------------ Gradle 8.2 ------------------------------------------------------------  Build time:   2023-06-30 18:02:30 UTC Revision:     5f4a070a62a31a17438ac998c2b849f4f6892877  Kotlin:       1.8.20 Groovy:       3.0.17 Ant:          Apache Ant(TM) version 1.10.13 compiled on January 4 2023 JVM:          17.0.8 (Oracle Corporation 17.0.8+9-LTS-211) OS:           Mac OS X 14.0 aarch64\r\n\r\n### Additional information\r\n\r\nIt seems like the kotlin classes are not being included in the classpath when in dev mode, because when it compiles out of dev mode it works fine.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36506/reactions",
+    "total_count": 3,
+    "+1": 3,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36506/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

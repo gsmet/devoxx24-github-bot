@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40003",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40003/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40003/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40003/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40003",
+  "id": 2236953497,
+  "node_id": "I_kwDOCFbutM6FVTOZ",
+  "number": 40003,
+  "title": "Access token is verified also if not needed and using the wrong JWKS",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-04-11T05:43:26Z",
+  "updated_at": "2024-04-12T10:10:46Z",
+  "closed_at": "2024-04-11T05:53:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nSince Quarkus 3.9.0, with the enforced access token verification, my applications no longer work with PingFederate IdP.\r\n\r\nI have:\r\n```properties\r\nquarkus.oidc.application-type=WEB_APP\r\nquarkus.oidc.discovery-enabled=true\r\n```\r\n\r\nAfter a successful login on my IdP, it returns access, id and refresh tokens. However, with the above configuration, Quarkus fails to verify the access token:\r\n```\r\n2024-04-11 07:15:54,001 DEBUG [io.qua.oid.run.OidcProvider] (vert.x-eventloop-thread-3) Verification of the token issued to client myclient has failed: Unable to process JOSE object (cause: org.jose4j.lang.UnresolvableKeyException: JWK with kid 'mykid' is not available): JsonWebSignature{\"alg\":\"RS256\",\"kid\":\"mykid\"}->....\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\nQuarkus does not verify the access token, since I'm not actually using it in the application code (is it used by OIDC beans?).\r\n\r\nOR\r\n\r\nQuarkus verifies the token using the correct JWKS (which differs between access and ID tokens, see below).\r\n\r\n### Actual behavior\r\n\r\nIf I specify\r\n```properties\r\nquarkus.oidc.discovery-enabled=true\r\n```\r\nwithout `quarkus.oidc.jwks-path`, then Quarkus fails to validate the access token:\r\n```\r\n2024-04-11 07:27:12,076 DEBUG [io.qua.oid.run.OidcProvider] (vert.x-eventloop-thread-2) Verification of\r\nthe token issued to client my_client_id has failed: Unable to process JOSE object (cause:\r\norg.jose4j.lang.UnresolvableKeyException: JWK with kid 'my_access_token_kid' is not available):\r\nJsonWebSignature{\"alg\":\"RS256\",\"kid\":\"my_access_token_kid\",\"pi.atm\":\"2w9k\"}->...\r\n```\r\n\r\nIf I also add the jwks path:\r\n```properties\r\nquarkus.oidc.discovery-enabled=true\r\nquarkus.oidc.jwks-path=/ext/oauth/jwks/my_app\r\n```\r\nthen Quarkus fails to validate the **ID** token:\r\n```\r\n2024-04-11 07:27:12,076 DEBUG [io.qua.oid.run.OidcProvider] (vert.x-eventloop-thread-2) Verification of\r\nthe token issued to client my_client_id has failed: Unable to process JOSE object (cause:\r\norg.jose4j.lang.UnresolvableKeyException: JWK with kid 'my_id_token_kid' is not available):\r\nJsonWebSignature{\"alg\":\"RS256\",\"kid\":\"my_id_token_kid\",\"pi.atm\":\"2w9k\"}->...\r\n```\r\n\r\nThis also contradicts what the documentation says about [`quarkus.oidc.jwks-path`](https://quarkus.io/guides/security-oidc-configuration-properties-reference#quarkus-oidc_quarkus-oidc-jwks-path):\r\n> Relative path or absolute URL of the OIDC JSON Web Key Set (JWKS) endpoint which returns a JSON Web Key Verification Set. This property should be set if OIDC discovery is disabled and the local JWT verification is required. **This property is ignored if the discovery is enabled.**\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n21\r\n\r\n### Quarkus version or git rev\r\n\r\n3.9.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvnw\r\n\r\n### Additional information\r\n\r\nPingFederate provides JWKs on different endpoints for ID and access token:\r\n* For ID tokens they are all provided through the discovery endpoint (`.well-known/openid-configuration`/`jwks_uri`).\r\n* For access tokens, the key is instead exposed on an endpoint specific for the given OAuth client.\r\n\r\n(This may make sense, since the discovery endpoint is part of OIDC, not OAuth 2.0.)",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40003/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40003/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

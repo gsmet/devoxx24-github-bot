@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21722",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21722/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21722/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21722/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21722",
+  "id": 1064151628,
+  "node_id": "I_kwDOCFbutM4_bapM",
+  "number": 21722,
+  "title": "Opentelemetry with smallrye",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-11-26T06:45:35Z",
+  "updated_at": "2022-01-25T07:45:31Z",
+  "closed_at": "2022-01-25T07:45:30Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen i try to use opentelemetry with a method that has both Incoming and Outgoing annotation, i pass the tracing metadata like mentioned in the guide but the trace does not contain all spans:\r\n\r\n\r\n```java\r\n@Incoming(\"demo-kafka-tracing-uppercase-in\")\r\n  @Outgoing(\"demo-kafka-tracing-uppercase-out\")\r\n  public Message<String> toUpperCase(ConsumerRecord<String, String> message) {\r\n    return Message.of(message.value().toUpperCase(Locale.ROOT))\r\n        .addMetadata(Metadata.of(TracingMetadata.withPrevious(Context.current())));\r\n  }\r\n\r\n```\r\nFirst thing come from \r\n```java\r\nMetadata.of(TracingMetadata.withPrevious(Context.current())\r\n```\r\nIn KafkaSink the extraction of TracingMetadata will return empty.\r\n```java\r\nOptional<TracingMetadata> tracingMetadata = TracingMetadata.fromMessage(message);\r\n```\r\n\r\nSo i changed the code to :\r\n\r\n```java\r\n@Incoming(\"demo-kafka-tracing-uppercase-in\")\r\n  @Outgoing(\"demo-kafka-tracing-uppercase-out\")\r\n  public Message<String> toUpperCase(ConsumerRecord<String, String> message) {\r\n    return Message.of(message.value().toUpperCase(Locale.ROOT))\r\n        .addMetadata(TracingMetadata.withPrevious(Context.current()));\r\n  }\r\n```\r\n\r\nBut in KafkaSink, it uses the current context as parent context:\r\n```java\r\n final Context parentSpanContext = tracingMetadata.get().getCurrentContext();\r\n                if (parentSpanContext != null) {\r\n                    spanBuilder.setParent(parentSpanContext);\r\n                } else {\r\n                    spanBuilder.setNoParent();\r\n                }\r\n```\r\nSo my last change was to use set the current context in the metadata:\r\n```java\r\n@Incoming(\"demo-kafka-tracing-uppercase-in\")\r\n  @Outgoing(\"demo-kafka-tracing-uppercase-out\")\r\n  public Message<String> toUpperCase(ConsumerRecord<String, String> message) {\r\n    return Message.of(message.value().toUpperCase(Locale.ROOT))\r\n        .addMetadata(TracingMetadata.withCurrent(Context.current()));\r\n  }\r\n```\r\n\r\nAnd now it is working.\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21722/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21722/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

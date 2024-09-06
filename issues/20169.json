@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20169",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20169/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20169/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20169/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20169",
+  "id": 997057733,
+  "node_id": "I_kwDOCFbutM47beTF",
+  "number": 20169,
+  "title": "ConstrainValidator is wrongly cached ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1305687763,
+      "node_id": "MDU6TGFiZWwxMzA1Njg3NzYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-validator",
+      "name": "area/hibernate-validator",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Validator"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2021-09-15T13:01:04Z",
+  "updated_at": "2022-01-07T17:37:25Z",
+  "closed_at": "2022-01-07T17:19:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using a ConstraintValidator in Quarkus, its \"initialize\" method is called as often as the Validator is applied in the project, but on the same cached instance.\r\n\r\nIn our case we want to use a Validator for a date-interval and the rules applied by the validator need to be different for certain cases (e.g. in one case the interval is allowed to be open, so a null value in the second field, but in another case/field it is not)\r\n\r\nThe problem is, that Quarkus only ever creates one instance of the validator, but initiliazes it twice (or more, depending on how many usages of the annotation occurs). The following is a example to ilustrate.\r\n\r\n```\r\n@Entity\r\npublic class MyEntityA {\r\n  \r\n  @Embedded\r\n  @MyConstraint(allowed = true) \r\n  @AttributeOverride....\r\n  private EmbeddableType fu\r\n}\r\n\r\n@Entity\r\npublic class MyEntityB {\r\n  \r\n  @Embedded\r\n  @MyConstraint(allowed = false) \r\n  @AttributeOverride....\r\n  private EmbeddableType  bar\r\n}\r\n\r\n@Target({FIELD})\r\n@Retention(RUNTIME)\r\n@Constraint(validatedBy = {MyValidator.class})\r\npublic @interface MyConstraint {\r\n  boolean allowed() default false;\r\n\r\n  String message() default \"DISBALED BY VALIDATOR\";\r\n  Class<?>[] groups() default {};\r\n  Class<? extends Payload>[] payload() default {};\r\n}\r\n\r\npublic class MyValidator implements ConstraintValidator<MyConstraint, EmbeddableType> {\r\n\r\n  private boolean isAllowed;\r\n\r\n  @Override\r\n  public void initialize(MyConstraint constraintAnnotation) {\r\n    // this is called on the same instance as often as the annotation is applied in the project\r\n\t// but with a different constraintAnnotation-instance\r\n\tthis.isAllowed = constraintAnnotation.allowed();\r\n  }\r\n\r\n  @Override\r\n  public boolean isValid(EmbeddableType value, ConstraintValidatorContext constraintValidatorContext) {\r\n    if (value == null) {\r\n      return true;\r\n    }\r\n\r\n    constraintValidatorContext.disableDefaultConstraintViolation();\r\n\r\n    boolean result = true;\r\n    if (!isAllowed && value.getSome() == null) {\r\n      constraintValidatorContext\r\n          .buildConstraintViolationWithTemplate(\"Try again\")\r\n          .addConstraintViolation();\r\n      result = false;\r\n    }\r\n\r\n    return result;\r\n  }\r\n}\r\n```\r\n\r\nDepending on `@MyConstraint(allowed = true/false)` the validation behaviour changes. Since Quarkus is using the same instance and initializes it twice before calling `isValid` the validators state is overwritten and only once validation is correct. This depends on the bytecode, which field is processed first. Sometime fu, sometimes bar.\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nA validator instance is cached per field and reused among concurrent requests but not one instance for all.\r\nTeh behaviour should be identical to `@Size(min=2)` where each occurence might be configured different\r\n\r\n### Actual behavior\r\n\r\nWhen debugging the initialize method, it is clear that the MyValidator instance is always the same, but for each usage of MyConstraint the configured instanced is passed, thus overwriting the configured state in the validator.\r\n\r\nRemoving MyConstraint  from MyEntityB hides this problem, but ist is still there. \r\nThe same multiple initialization happens on other validators as well, but it did not produce flaky behaviour because no state was involved which could be overriden.\r\n\r\nAccording to BeanVal 2.0 Spec\r\n\r\n> The lifecycle of a constraint validation implementation instance is undefined. Jakarta Bean Validation providers are allowed to cache ConstraintValidator instances retrieved from the ConstraintValidatorFactory.\r\n\r\nBut the documentation states that only `isValid `must be thread-safe and `initialize` is called before. It doesnt make any sense to call initialize multiple times on the same instance, hence I assume that the spec refers to caching per field-application so that not each request creates a new instance.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n11\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn 3.8.1\r\n\r\n### Additional information\r\n\r\nIt could still be a progamming mistake, but as far as I understood the BeanVal spec our use-case should be ok. Feeld free to correct.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20169/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20169/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

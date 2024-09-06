@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22686",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22686/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22686/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22686/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22686",
+  "id": 1095307285,
+  "node_id": "I_kwDOCFbutM5BSRAV",
+  "number": 22686,
+  "title": "Kafka reactive messaging with multiple @Incoming stops consuming after migration to 2.5.1",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-01-06T13:10:29Z",
+  "updated_at": "2022-02-02T14:07:25Z",
+  "closed_at": "2022-02-02T10:43:33Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe migrate one of our application from Quarkus 2.4.1 to Quarkus 2.5.1.\r\n\r\nThe applications have a method that consumes from two channels and procudes to one. This methods stops working and we see the following message in the log file:\r\n\r\n```\r\nProcessingMethod{method:'com.decathlon.vct.vcstream.extractor.Extractor#processPoslog', incoming:'poslog_eu-in,poslog_as-in', outgoing:'poslog-out'} does not have all its requested upstreams: [IncomingConnector{channel:'poslog_as-in', attribute:'mp.messaging.incoming.poslog_as-in'}]\r\n```\r\n\r\nThe method signature is:\r\n\r\n```\r\n@Incoming(\"poslog_eu-in\")\r\n    @Incoming(\"poslog_as-in\")\r\n    @Outgoing(\"out\")\r\n    public Message<Record<String, String>> processPoslog(KafkaRecord<String, GenericRecord> record) throws IOException {\r\n        //\r\n    }\r\n```\r\n\r\nEach incoming channel consumes from a different topic on a different broker.\r\n\r\nThe channel definitions are:\r\n```\r\nmp.messaging.incoming.poslog_eu-in.connector=smallrye-kafka\r\nmp.messaging.incoming.poslog_eu-in.pattern=true\r\nmp.messaging.incoming.poslog_eu-in.bootstrap.servers=${dkt.ibuy.eu.bootstrap.servers}\r\nmp.messaging.incoming.poslog_eu-in.topic=${MOCK_POSLOG_EU_IN_TOPIC:ret_poslog_v1_(?!eu_xx).*$}\r\nmp.messaging.incoming.poslog_eu-in.value.deserializer=io.confluent.kafka.serializers.KafkaAvroDeserializer\r\nmp.messaging.incoming.poslog_eu-in.group.id=${POSLOG_EU_IN_CONSUMER_GROUP:AOAA_CONSUMER_GROUP}\r\nmp.messaging.incoming.poslog_eu-in.schema.registry.url=${dkt.ibuy.eu.schema.registry.url}\r\nmp.messaging.incoming.poslog_eu-in.basic.auth.user.info=${dkt.ibuy.eu.basic.auth.user.info}\r\nmp.messaging.incoming.poslog_eu-in.basic.auth.credentials.source=USER_INFO\r\nmp.messaging.incoming.poslog_eu-in.security.protocol=${dkt.ibuy.eu.security.protocol}\r\nmp.messaging.incoming.poslog_eu-in.ssl.truststore.location=${dkt.ibuy.eu.ssl.truststore.location}\r\nmp.messaging.incoming.poslog_eu-in.ssl.truststore.password=${dkt.ibuy.eu.ssl.truststore.password}\r\nmp.messaging.incoming.poslog_eu-in.ssl.keystore.type=PKCS12\r\nmp.messaging.incoming.poslog_eu-in.ssl.keystore.location=${dkt.ibuy.eu.ssl.keystore.location}\r\nmp.messaging.incoming.poslog_eu-in.ssl.keystore.password=${dkt.ibuy.eu.ssl.keystore.password}\r\nmp.messaging.incoming.poslog_eu-in.ssl.key.password=${dkt.ibuy.eu.ssl.key.password}\r\nmp.messaging.incoming.poslog_eu-in.max.partition.fetch.bytes=10485760\r\nmp.messaging.incoming.poslog_eu-in.commit-strategy=throttled\r\nmp.messaging.incoming.poslog_eu-in.client.id=${env.HOSTNAME:${quarkus.uuid}}\r\nmp.messaging.incoming.poslog_eu-in.auto.offset.reset=latest\r\n\r\nmp.messaging.incoming.poslog_as-in.connector=smallrye-kafka\r\nmp.messaging.incoming.poslog_as-in.pattern=true\r\nmp.messaging.incoming.poslog_as-in.bootstrap.servers=${dkt.ibuy.as.bootstrap.servers}\r\nmp.messaging.incoming.poslog_as-in.topic=${MOCK_POSLOG_AS_IN_TOPIC:ret_poslog_v1_(?!as_xx).*$}\r\nmp.messaging.incoming.poslog_as-in.value.deserializer=io.confluent.kafka.serializers.KafkaAvroDeserializer\r\nmp.messaging.incoming.poslog_as-in.value-deserialization-failure-handler=deserialization-failure-handler\r\nmp.messaging.incoming.poslog_as-in.group.id=${POSLOG_AS_IN_CONSUMER_GROUP:AOAA_CONSUMER_GROUP}\r\nmp.messaging.incoming.poslog_as-in.schema.registry.url=${dkt.ibuy.as.schema.registry.url}\r\nmp.messaging.incoming.poslog_as-in.basic.auth.user.info=${dkt.ibuy.as.basic.auth.user.info}\r\nmp.messaging.incoming.poslog_as-in.basic.auth.credentials.source=USER_INFO\r\nmp.messaging.incoming.poslog_as-in.security.protocol=${dkt.ibuy.as.security.protocol}\r\nmp.messaging.incoming.poslog_as-in.ssl.truststore.location=${dkt.ibuy.as.ssl.truststore.location}\r\nmp.messaging.incoming.poslog_as-in.ssl.truststore.password=${dkt.ibuy.as.ssl.truststore.password}\r\nmp.messaging.incoming.poslog_as-in.ssl.keystore.type=PKCS12\r\nmp.messaging.incoming.poslog_as-in.ssl.keystore.location=${dkt.ibuy.as.ssl.keystore.location}\r\nmp.messaging.incoming.poslog_as-in.ssl.keystore.password=${dkt.ibuy.as.ssl.keystore.password}\r\nmp.messaging.incoming.poslog_as-in.ssl.key.password=${dkt.ibuy.as.ssl.key.password}\r\nmp.messaging.incoming.poslog_as-in.sasl.mechanism=SCRAM-SHA-512\r\nmp.messaging.incoming.poslog_as-in.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username=\"${dkt.ibuy.as.sasl.username}\" password=\"${dkt.ibuy.as.sasl.password}\";\r\nmp.messaging.incoming.poslog_as-in.max.partition.fetch.bytes=10485760\r\nmp.messaging.incoming.poslog_as-in.commit-strategy=throttled\r\nmp.messaging.incoming.poslog_as-in.client.id=${env.HOSTNAME:${quarkus.uuid}}\r\nmp.messaging.incoming.poslog_as-in.auto.offset.reset=latest\r\n\r\nmp.messaging.outgoing.poslog-out.connector=smallrye-kafka\r\nmp.messaging.outgoing.poslog-out.bootstrap.servers=${dkt.vcstream.bootstrap.servers}\r\nmp.messaging.outgoing.poslog-out.topic=private_aoaa_in_retail_poslog_json_v1\r\nmp.messaging.outgoing.poslog-out.value.serializer=org.apache.kafka.common.serialization.StringSerializer\r\nmp.messaging.outgoing.poslog-out.security.protocol=${dkt.vcstream.security.protocol}\r\nmp.messaging.outgoing.poslog-out.ssl.truststore.location=${dkt.vcstream.ssl.truststore.location}\r\nmp.messaging.outgoing.poslog-out.ssl.truststore.password=${dkt.vcstream.ssl.truststore.password}\r\nmp.messaging.outgoing.poslog-out.ssl.keystore.type=PKCS12\r\nmp.messaging.outgoing.poslog-out.ssl.keystore.location=${dkt.vcstream.ssl.keystore.location}\r\nmp.messaging.outgoing.poslog-out.ssl.keystore.password=${dkt.vcstream.ssl.keystore.password}\r\nmp.messaging.outgoing.poslog-out.ssl.key.password=${dkt.vcstream.ssl.key.password}\r\nmp.messaging.outgoing.poslog-out.acks=all\r\nmp.messaging.outgoing.poslog-out.compression.type=snappy\r\nmp.messaging.outgoing.poslog-out.max.request.size=10485760\r\nmp.messaging.outgoing.poslog-out.buffer.memory=10485760\r\nmp.messaging.outgoing.poslog-out.enable.idempotence=true\r\n\r\n```\r\n\r\nMore info on this Zulip thread: https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/Kafka.20consumer.20didn't.20consume\n\n### Expected behavior\n\nIt should works as it works in 2.4.1.\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17\" 2021-09-14\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.5.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22686/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22686/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

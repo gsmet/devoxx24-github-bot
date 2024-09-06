@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35591",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35591/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35591/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35591/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35591",
+  "id": 1869408861,
+  "node_id": "I_kwDOCFbutM5vbOpd",
+  "number": 35591,
+  "title": "@QuarkusComponentTest seems to not start a new CDI container for each test method",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2023-08-28T09:47:34Z",
+  "updated_at": "2023-09-13T07:21:16Z",
+  "closed_at": "2023-09-13T07:20:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n# Bug?\r\n\r\nI am testing  a stateful @ApplicationScoped bean with a @QuarkusComponentTest. The 2nd test fails because the ApplicationScoped bean state was changed in the first test. I would assume QuarkusComponentTest would allow each test to be independent.\r\n\r\n```\r\nApplicationScoped\r\npublic class InMemoryItemRepo {\r\n\r\n  private final static String NOT_FOUND_TMPL = \"Item with name %s not found\";\r\n  private final static String ALREADY_EXISTS_TMPL =\r\n      \"Item with name %s already exists\";\r\n\r\n  private final ConcurrentHashMap<String, Item> store = new ConcurrentHashMap<>();\r\n\r\n\r\n  public Item findByName(String name) {\r\n    Item item = (name == null ? null : store.get(name));\r\n    if (item == null) {\r\n      final String msg = String.format(NOT_FOUND_TMPL, name);\r\n      throw new IllegalArgumentException(msg);\r\n    }\r\n    return item;\r\n  }\r\n\r\n  public void save(final Item item) {\r\n    Objects.requireNonNull(item);\r\n    if (store.containsKey(item.getName())) {\r\n      final String msg = String.format(ALREADY_EXISTS_TMPL, item.getName());\r\n      throw new IllegalArgumentException(msg);\r\n    }\r\n\r\n    store.put(item.getName(), item);\r\n  }\r\n\r\n}\r\n```\r\n\r\n\r\n### Tests\r\n\r\n```\r\n@QuarkusComponentTest\r\n@org.junit.jupiter.api.TestInstance(TestInstance.Lifecycle.PER_METHOD)\r\npublic class InMemoryItemRepoTest {\r\n\r\n  @Inject\r\n  InMemoryItemRepo repo;\r\n\r\n\r\n  @Test\r\n  void saveShouldPersist() {\r\n    // INITIALIZE : Create a big item and check it does not yet exist in the repo\r\n    final String bigItemName = \"big\";\r\n    final String bigItemDescription = \"big item\";\r\n    final Item bigItem = Item.builder().name(bigItemName).description(bigItemDescription).build();\r\n    assertThrows(IllegalArgumentException.class, () -> repo.findByName(bigItemName));\r\n\r\n    // EXECUTE : Persist the big item in the repo\r\n    repo.save(bigItem);\r\n\r\n    // VALIDATE : find big item back in repo\r\n    final Item retrievedItem = repo.findByName(bigItemName);\r\n    assertThat(retrievedItem, is(bigItem));\r\n  }\r\n\r\n  @Test\r\n  void persistExistingNameShouldFail() {\r\n    // INITIALIZE : Create 2 big items and persist one in the repo\r\n    final String bigItemName = \"big\";\r\n    final Item bigItem1 = Item.builder().name(bigItemName).description(\"First big item\").build();\r\n    final Item bigItem2 = Item.builder().name(bigItemName).description(\"Second big item\").build();\r\n    repo.save(bigItem1);\r\n\r\n    // EXECUTE : Also attempt to persist the second big item in he repo\r\n    Exception exception = assertThrows(IllegalArgumentException.class, () -> repo.save(bigItem2));\r\n\r\n    // VALIDATE : Expect second attempt failed.\r\n    assertThat(exception.getMessage(), is(\"Item with name big already exists\"));\r\n  }\r\n}\r\n\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\nI expect that individual tests in a class annotated with @QuarkusComponentTest to be independent, and not share the same instance of the application scoped bean under test (@Inject-ed). \r\n\r\n\r\n### Actual behavior\r\n\r\nThe 2nd test fails on  repo.save(bigItem1) because an item with the same name was persisted in the first test. This can be avoided by using different item names in the second test,  still I wonder if component tests should not provide the possibility to have a clean sheet for each method, e.g. restart the container between each method.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:  https://github.com/arnovh/component-test-restart-issue\r\n\r\nSteps to reproduce:  mvn test\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n6.2.0-26-generic #26~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Jul 13 16:27:29 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\n17 (Temurin-17+35)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.3.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3\r\n\r\n### Additional information\r\n\r\n# Inconsistent documentation?\r\n\r\nhttps://quarkus.io/guides/getting-started-testing#testing-components seems to say 2 conflicting things:\r\n\r\n- \"So what exactly does the QuarkusComponentTest do? It starts the CDI container and registers a dedicated [configuration object](https://quarkus.io/guides/config-reference) during the before all test phase. The container is stopped and the config is released during the after all test phase.\"\r\n\r\nAnd later behind the info icon:\r\n\r\n- \"By default, a new test instance is created for each test method. Therefore, a new CDI container is started for each test method.\"\r\n\r\n\r\nI am looking for the latter behavior, but the actual behavior seems to be the one in the first desciption.\r\n\r\nIf the behavior that I experienced is considered correct, I think it would be useful to add a (configuration) option to also allow cdi restarts for each test (method).\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35591/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35591/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

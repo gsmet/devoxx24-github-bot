@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38743",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38743/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38743/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38743/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38743",
+  "id": 2131176886,
+  "node_id": "I_kwDOCFbutM5_By22",
+  "number": 38743,
+  "title": "quarkus-mongodb-rest-data-panache: DBRefCodec does not support decoding",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2024-02-12T23:35:44Z",
+  "updated_at": "2024-02-15T16:47:28Z",
+  "closed_at": "2024-02-13T18:11:08Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nUsing Quarkus 3.7.1 with the `quarkus-mongodb-rest-data-panache` extension, I'm persisting data into a MongoDB database. I have the following `Document`:\r\n\r\n    @MongoEntity(database = \"mdb\", collection=\"OrderItems\")\r\n    public class OrderItem\r\n    {\r\n      @BsonId\r\n      private Long id;\r\n      private DBRef product;\r\n      private BigDecimal price;\r\n      private int amount;\r\n      ....\r\n    }\r\n\r\nThe associated repository looks as follows:\r\n\r\n    @ApplicationScoped\r\n    public class OrderItemRepository implements PanacheMongoRepositoryBase<OrderItem, Long> {}\r\n\r\nand I'm generating the REST resource using the `quarkus-mongodb-rest-data-panache` extension:\r\n\r\n    public interface OrderItemResource extends PanacheMongoRepositoryResource<OrderItemRepository, OrderItem, Long> {}\r\n\r\nAfter having inserted the `Document` shown in the attached screen copy of Mongo Express, I'm tryin to query it, in an integration test:\r\n\r\n    ...\r\n    given()\r\n      .header(\"Content-type\", \"application/json\")\r\n      .when().get(\"/order-item\")\r\n      .then()\r\n      .statusCode(HttpStatus.SC_OK);\r\n    ....\r\n\r\nThen I'm getting th exception below:\r\n\r\n    ...\r\n    Caused by: java.lang.UnsupportedOperationException: DBRefCodec does not support decoding\r\n        at com.mongodb.DBRefCodec.decode(DBRefCodec.java:66)\r\n        at com.mongodb.DBRefCodec.decode(DBRefCodec.java:33)\r\n        at org.bson.codecs.pojo.LazyPropertyModelCodec.decode(LazyPropertyModelCodec.java:52)\r\n        at org.bson.codecs.DecoderContext.decodeWithChildContext(DecoderContext.java:96)\r\n        at org.bson.codecs.pojo.PojoCodecImpl.lambda$decodePropertyModel$2(PojoCodecImpl.java:212)\r\n        at org.bson.codecs.pojo.PojoCodecImpl.setPropertyValue(PojoCodecImpl.java:234)\r\n        at org.bson.codecs.pojo.PojoCodecImpl.decodePropertyModel(PojoCodecImpl.java:202)\r\n\r\nNot sure whether it has anything to do with the DBRef serializers/deserializers:\r\n\r\n    public class JacksonDBRefDeserializer extends StdDeserializer<DBRef>\r\n    {\r\n      public JacksonDBRefDeserializer()\r\n      {\r\n        this(null);\r\n      }\r\n\r\n      public JacksonDBRefDeserializer(Class<DBRef> dbrefClass)\r\n      {\r\n        super(dbrefClass);\r\n      }\r\n\r\n      @Override\r\n      public DBRef deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException\r\n      {\r\n        JsonNode node = jsonParser.getCodec().readTree(jsonParser);\r\n        return new DBRef(node.findValue(\"databaseName\").asText(), node.findValue(\"collectionName\").asText(), node.findValue(\"id\").asText());\r\n      }\r\n    }\r\n\r\n    public class JaksonDBRefSerializer extends StdSerializer<DBRef>\r\n    {\r\n      public JaksonDBRefSerializer()\r\n      {\r\n        this(null);\r\n      }\r\n\r\n      protected JaksonDBRefSerializer(Class<DBRef> dbrefClass)\r\n      {\r\n        super(dbrefClass);\r\n      }\r\n\r\n      @Override\r\n      public void serialize(DBRef dbRef, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException\r\n      {\r\n        if (dbRef != null)\r\n        {\r\n          jsonGenerator.writeStartObject();\r\n          jsonGenerator.writeStringField(\"id\", (String)dbRef.getId());\r\n          jsonGenerator.writeStringField(\"collectionName\", dbRef.getCollectionName());\r\n          jsonGenerator.writeStringField(\"databaseName\", dbRef.getDatabaseName());\r\n          jsonGenerator.writeEndObject();\r\n        }\r\n      }\r\n    }\n\n### Expected behavior\n\nGetting the `Document`.\n\n### Actual behavior\n\nThe mentioned exception is raised.\n\n### How to Reproduce?\n\nDon't have a reproducer.\n\n### Output of `uname -a` or `ver`\n\nLinux P15s-Gen-2i 5.15.0-94-generic #104-Ubuntu SMP Tue Jan 9 15:25:40 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\njava version \"17.0.8\" 2023-07-18 LTS Java(TM) SE Runtime Environment (build 17.0.8+9-LTS-211) Java HotSpot(TM) 64-Bit Server VM (build 17.0.8+9-LTS-211, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.7.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\npache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /usr/share/apache-maven-3.9.6 Java version: 17.0.8, vendor: Oracle Corporation, runtime: /usr/lib/jvm/jdk-17-oracle-x64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.0-94-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\nAttaching a screen copy showing a fragment of the Mongo Express display.\r\n![Screenshot_20240213_003429](https://github.com/quarkusio/quarkus/assets/1037978/858d79ad-c696-418e-a45e-cf4917f9c08f)\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38743/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38743/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

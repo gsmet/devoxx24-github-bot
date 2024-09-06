@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26614",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26614/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26614/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26614/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26614",
+  "id": 1298069454,
+  "node_id": "I_kwDOCFbutM5NXvfO",
+  "number": 26614,
+  "title": "Clarify usage of OIDC between web_app and service + limitations of Providers such as Microsoft when using Service (Using Microsoft to protect a Service Application)",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-07-07T20:39:40Z",
+  "updated_at": "2022-07-08T12:26:11Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nThe current OIDC docs explain there are predefined providers such as Microsoft, twitter, GitHub, etc.  But they are for web_app usage (this is written in the docs, but VERY easy to miss).  Furthermore there are significant configs needed to make these providers work when you have  `quarkus.oidc.application-type=service`.\r\n\r\nTo make it all work with the Dev UI Swagger UI, there are even more configs (often overlapping) required.\r\n\r\nI have figured out what is needed for the Microsoft Provider (after days of banding the head against the wall).\r\n\r\nThis was a helpful article that made sense of much of the inconsistencies in the OIDC compliance of the Azure AD: https://xsreality.medium.com/making-azure-ad-oidc-compliant-5734b70c43ff\r\n\r\n# Result:\r\n\r\n\r\n```properties\r\nquarkus.oidc.application-type=service\r\n\r\n# note: Have seen some issues where using common endpoint for web_app does not run the logout redirect\r\n#quarkus.oidc.auth-server-url=https://login.microsoftonline.com/common/v2.0/\r\nquarkus.oidc.auth-server-url=https://login.microsoftonline.com/MY_TENANT_ID/v2.0\r\n#!! Ensure to be using V2.0 of the endpoints by setting the accessTokenAcceptedVersion:\r\n# ensure that your accessTokenAcceptedVersion is set to 2: AzureAd>Your App>Manifest>\"accessTokenAcceptedVersion\": 2\r\n# If using the /common endpoint then you need to set quarkus.oidc.token.issuer=any as the ISS will be sts.windows\r\n#quarkus.oidc.token.issuer=any\r\n\r\nquarkus.oidc.client-id=MY_CLIENT_ID\r\n\r\n# Secret is optional as MS does not provide any Introspection service so the secret is not needed for JWT validation\r\n#quarkus.oidc.credentials.secret=MY_CLIENT_SECRET\r\n\r\n# Mapping of the roles in the JWT:\r\n# To assign custom roles to a user, your organization needs Azure AD Premium P1 or P2.\r\n# The roles would be defined as App Roles, and then applied to your user's in the AD.\r\n#quarkus.oidc.roles.role-claim-path=roles\r\n\r\n# user-info endpoint (triggered by the user-info-require=true config) cannot be accessed with the JWT that microsoft provides:\r\n# Get UserInfo on: https://graph.microsoft.com/oidc/userinfo\r\n# 401, error message: {\"error\":{\"code\":\"InvalidAuthenticationToken\",\"message\":\"Access token validation failure. Invalid audience.\r\n# This fails because the graph api and login.micorosoft.com have different audience values\r\n# see https://docs.microsoft.com/en-us/azure/active-directory/develop/userinfo#notes-and-caveats-on-the-userinfo-endpoint as the limits of endpoint make it less useful / not worth it\r\n#quarkus.oidc.authentication.user-info-required=true\r\n```\r\n\r\n**See https://github.com/quarkusio/quarkus/issues/26615 for further configs on how to make swagger ui function**\r\n\r\nbased on discussions with @sberyozkin , it was suggested to look at updating the docs to explain how these providers can be used for Service App protection.\r\n\r\nI would also recommend a clarification on the docs around the OIDC configs to explain which configs are designed for web_app usage.  Many of the OIDC configs say things like \"List of Scopes\", but miss the critical detail that it is a \"web_app\" config.\r\n\r\n### Implementation ideas\r\n\r\n1. Clarify docs for web_app vs service for the oidc configs\r\n2. Add example of microsoft provider config for Service App protection\r\n\r\nWhy i chose the Microsoft provider is they provide a Github login.  So it provides a OIDC login that we can login with Github during testing.  \r\n\r\nIt would be great if the docs were clear on usage so others do not need to spent many days++ trying to figure out the crazy nuances and we can get to building OIDC supported apps! ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26614/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26614/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

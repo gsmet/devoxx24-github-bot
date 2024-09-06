@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31113",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31113/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31113/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31113/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31113",
+  "id": 1582012301,
+  "node_id": "I_kwDOCFbutM5eS5eN",
+  "number": 31113,
+  "title": "bouncycastle-jsse native integration test fails with lastest JDK 17.0.7+1 ea",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-02-13T09:55:12Z",
+  "updated_at": "2023-02-13T10:07:54Z",
+  "closed_at": "2023-02-13T10:07:53Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nNative image generation of the `bouncycastle-jsse` integration test fails on Graal master tree and JDK `17.0.7+1` with:\r\n\r\n```\r\nError: Detected a FileDescriptor in the image heap. File descriptors opened during image generation are no longer open at image runtime, and the files might not even be present anymore at image runtime.  To see how this object got instantiated use --trace-object-instantiation=java.io.FileDescriptor. The object was probably created by a class initializer and is reachable from a static field. You can request class initialization at image runtime by using the option --initialize-at-run-time=<class-name>. Or you can write your own initialization methods and call them explicitly from your main entry point.\r\nDetailed message:\r\nTrace: Object was reached by\r\n  reading field java.io.FileInputStream.fd of constant \r\n    java.io.FileInputStream@2cc3602d: java.io.FileInputStream@2cc3602d\r\n  reading field java.io.FilterInputStream.in of constant \r\n    java.io.BufferedInputStream@b20978f: java.io.BufferedInputStream@b20978f\r\n  reading field org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider.seedStream of constant \r\n    org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider@2f0c286e: org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider@2f0c28...\r\n  reading field org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider$3.this$0 of constant \r\n    org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider$3@296fbe7f: org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider$3@296f...\r\n  reading field org.bouncycastle.jcajce.provider.drbg.DRBG$HybridEntropySource$SignallingEntropySource$EntropyGatherer.baseRandom of constant \r\n    org.bouncycastle.jcajce.provider.drbg.DRBG$HybridEntropySource$SignallingEntropySource$EntropyGatherer@d9a41e8: org.bouncycastle.jcajce.provider.drbg.DRBG$HybridEntropySource$SignallingEntropy...\r\n  reading field java.util.concurrent.ConcurrentLinkedDeque$Node.item of constant \r\n    java.util.concurrent.ConcurrentLinkedDeque$Node@6be5f814: java.util.concurrent.ConcurrentLinkedDeque$Node@6be5f814\r\n  reading field java.util.concurrent.ConcurrentLinkedDeque.tail of constant \r\n    java.util.concurrent.ConcurrentLinkedDeque@3a9f2580: []\r\n  reading field org.bouncycastle.jcajce.provider.drbg.DRBG$EntropyDaemon.tasks of constant \r\n    org.bouncycastle.jcajce.provider.drbg.DRBG$EntropyDaemon@511da44f: org.bouncycastle.jcajce.provider.drbg.DRBG$EntropyDaemon@511da44f\r\n  reading static field org.bouncycastle.jcajce.provider.drbg.DRBG.entropyDaemon\r\n    at org.bouncycastle.jcajce.provider.drbg.DRBG.createBaseRandom(Unknown Source)\r\n  parsing method org.bouncycastle.jcajce.provider.drbg.DRBG.createBaseRandom(Unknown Source) reachable via the parsing context\r\n    at org.bouncycastle.jcajce.provider.drbg.DRBG$Default.<clinit>(Unknown Source)\r\n    at static root method.(Unknown Source)\r\n\r\n\r\ncom.oracle.svm.core.util.UserError$UserException: Detected a FileDescriptor in the image heap. File descriptors opened during image generation are no longer open at image runtime, and the files might not even be present anymore at image runtime.  To see how this object got instantiated use --trace-object-instantiation=java.io.FileDescriptor. The object was probably created by a class initializer and is reachable from a static field. You can request class initialization at image runtime by using the option --initialize-at-run-time=<class-name>. Or you can write your own initialization methods and call them explicitly from your main entry point.\r\nDetailed message:\r\nTrace: Object was reached by\r\n  reading field java.io.FileInputStream.fd of constant \r\n    java.io.FileInputStream@2cc3602d: java.io.FileInputStream@2cc3602d\r\n  reading field java.io.FilterInputStream.in of constant \r\n    java.io.BufferedInputStream@b20978f: java.io.BufferedInputStream@b20978f\r\n  reading field org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider.seedStream of constant \r\n    org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider@2f0c286e: org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider@2f0c28...\r\n  reading field org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider$3.this$0 of constant \r\n    org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider$3@296fbe7f: org.bouncycastle.jcajce.provider.drbg.DRBG$URLSeededEntropySourceProvider$3@296f...\r\n  reading field org.bouncycastle.jcajce.provider.drbg.DRBG$HybridEntropySource$SignallingEntropySource$EntropyGatherer.baseRandom of constant \r\n    org.bouncycastle.jcajce.provider.drbg.DRBG$HybridEntropySource$SignallingEntropySource$EntropyGatherer@d9a41e8: org.bouncycastle.jcajce.provider.drbg.DRBG$HybridEntropySource$SignallingEntropy...\r\n  reading field java.util.concurrent.ConcurrentLinkedDeque$Node.item of constant \r\n    java.util.concurrent.ConcurrentLinkedDeque$Node@6be5f814: java.util.concurrent.ConcurrentLinkedDeque$Node@6be5f814\r\n  reading field java.util.concurrent.ConcurrentLinkedDeque.tail of constant \r\n    java.util.concurrent.ConcurrentLinkedDeque@3a9f2580: []\r\n  reading field org.bouncycastle.jcajce.provider.drbg.DRBG$EntropyDaemon.tasks of constant \r\n    org.bouncycastle.jcajce.provider.drbg.DRBG$EntropyDaemon@511da44f: org.bouncycastle.jcajce.provider.drbg.DRBG$EntropyDaemon@511da44f\r\n  reading static field org.bouncycastle.jcajce.provider.drbg.DRBG.entropyDaemon\r\n    at org.bouncycastle.jcajce.provider.drbg.DRBG.createBaseRandom(Unknown Source)\r\n  parsing method org.bouncycastle.jcajce.provider.drbg.DRBG.createBaseRandom(Unknown Source) reachable via the parsing context\r\n    at org.bouncycastle.jcajce.provider.drbg.DRBG$Default.<clinit>(Unknown Source)\r\n    at static root method.(Unknown Source)\r\n\r\n\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:85)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.FallbackFeature.reportAsFallback(FallbackFeature.java:248)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.runPointsToAnalysis(NativeImageGenerator.java:819)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:607)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:564)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:408)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:616)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.start(NativeImageGeneratorRunner.java:134)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:94)\r\n```\r\n\r\nIt looks like with `17.0.7+1` and later a FileDescriptor is being reached which wasn't before. It seems a new failure since `17.0.7+1` (I haven't checked `17.0.6` just yet).\r\n\n\n### Expected behavior\n\nnative image generation passes and test works.\n\n### Actual behavior\n\nNative image generation fails.\n\n### How to Reproduce?\n\nRun the native integration test `bouncycastle-jsse` with a Graal/mandrel build with JDK 17.0.7+1 ea. For example from here: https://github.com/graalvm/mandrel/suites/10925352838/artifacts/552436030\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17.0.7+1\n\n### GraalVM version (if different from Java)\n\nGraalVM master\n\n### Quarkus version or git rev\n\nmain\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31113/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31113/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

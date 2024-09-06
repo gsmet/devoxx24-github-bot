@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28634",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28634/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28634/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28634/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28634",
+  "id": 1411294000,
+  "node_id": "I_kwDOCFbutM5UHqMw",
+  "number": 28634,
+  "title": "RESTEasy Reactive: Allow using `RestResponse` for endpoints producing `multipart/form-data`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2022-10-17T10:07:27Z",
+  "updated_at": "2023-03-20T14:52:19Z",
+  "closed_at": "2023-03-20T14:52:18Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nA `MessageBodyWriter` cannot overwrite the content type (using `CurrentRequestManager.get().setResponseContentType()`) if the endpoint uses `RestResponse` as its return type. This works properly when the endpoint's return type is the corresponding POJO type (without the `RestResponse` wrapper).\n\n### Expected behavior\n\nA `MessageBodyWriter` should be able to update the content type (using `CurrentRequestManager.get().setResponseContentType()`) as e.g. `MultipartMessageBodyWriter` does it, independently of whether the endpoint returns a `RestResponse` in its signature or not.\n\n### Actual behavior\n\nWhen an endpoint returns a `RestResponse` the `Content-Type` is given by the endpoint and the context is updated with a `LazyResponse.Existing` instance, which returns `true` for `isCreated()`: https://github.com/quarkusio/quarkus/blob/5df6480bca82b3d9d61e9398ba93144e6a0d17a0/independent-projects/resteasy-reactive/server/runtime/src/main/java/org/jboss/resteasy/reactive/server/handlers/ResponseHandler.java#L127-L136\r\n\r\nLater, after the `MessageBodyWriter` has done its work, when the `io.vertx.ext.web.impl.RoutingContextImpl#headersEndHandlers` are processed, the response content type is not read again, because `isCreated()` returns `true`: https://github.com/quarkusio/quarkus/blob/5df6480bca82b3d9d61e9398ba93144e6a0d17a0/independent-projects/resteasy-reactive/server/runtime/src/main/java/org/jboss/resteasy/reactive/server/core/ServerSerialisers.java#L477-L493\r\n\r\nAs a consequence a custom `MessageBodyWriter` such as the built-in `MultipartMessageBodyWriter` effectively cannot overwrite the content type anymore. This works properly when the endpoint doesn't return a `RestResponse`, because then the `isCreated()` method returns `false` (even though the `MessageBodyWriter` has in fact already been processed).\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.13.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28634/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28634/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24365",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24365/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24365/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24365/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24365",
+  "id": 1172059013,
+  "node_id": "I_kwDOCFbutM5F3DOF",
+  "number": 24365,
+  "title": "reactive rest client throws IllegalAccessError for package private rest interfaces in external module",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-03-17T08:11:52Z",
+  "updated_at": "2023-01-27T08:38:20Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMy app includes an company internal dependency, which uses quarkus-rest-client-resteasy as rest client internally.\r\nThis dependency has a rest api defined as:\r\n```\r\n@Path(\"rest-api\")\r\ninterface RestAPI {\r\n    @GET\r\n    @Path(\"search\")\r\n    Response search();\r\n}\r\n```\r\n\r\nThis client interface is package private and has no `RegisterRestClient` annotation, since the dependency includes a wrapper for the rest client (basicly just some fancy auth + fault-tolerance).\r\n\r\nWhen I now want to use the provided client, I get the exception from below.\r\nAfter changing the interface from package private to public, it works.\r\n\r\nAlso, package private rest interfaces work if they are NOT in an external dependency.\n\n### Expected behavior\n\nEither this case works, or an actionable error message is provided.\n\n### Actual behavior\n\n```\r\n2022-03-17 08:02:37,284 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (main) Failed to start quarkus: java.lang.RuntimeException: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.dev.appstate.ApplicationStateNotification.waitForApplicationStart(ApplicationStateNotification.java:51)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl.runMainClass(StartupActionImpl.java:122)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.firstStart(IsolatedDevModeMain.java:144)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:455)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:66)\r\n        at io.quarkus.bootstrap.app.CuratedApplication.runInCl(CuratedApplication.java:140)\r\n        at io.quarkus.bootstrap.app.CuratedApplication.runInAugmentClassLoader(CuratedApplication.java:96)\r\n        at io.quarkus.deployment.dev.DevModeMain.start(DevModeMain.java:132)\r\n        at io.quarkus.deployment.dev.DevModeMain.main(DevModeMain.java:62)\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:103)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:103)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.IllegalAccessError: class com.acme.RestAPI$$QuarkusRestClientInterface cannot access its superinterface com.acme.RestAPI (com.acme.RestAPI$$QuarkusRestClientInterface is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @5b681\r\n3df; com.acme.RestAPI is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @77be656f)\r\n        at java.base/java.lang.ClassLoader.defineClass1(Native Method)\r\n        at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1012)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:454)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:414)\r\n        at com.acme.RestAPI$$QuarkusRestClientInterfaceCreator.apply(Unknown Source)\r\n        at org.jboss.resteasy.reactive.client.impl.ClientProxies.get(ClientProxies.java:36)\r\n        at org.jboss.resteasy.reactive.client.impl.WebTargetImpl.proxy(WebTargetImpl.java:390)\r\n        at io.quarkus.rest.client.reactive.runtime.RestClientBuilderImpl.build(RestClientBuilderImpl.java:328)\r\n        at com.acme.RestClient.search(RestClient.java:13)\r\n        at com.acme.RestClient_Subclass.search$$superforward1(Unknown Source)\r\n        at com.acme.RestClient_Subclass$$function$$1.apply(Unknown Source)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n        at com.acme.RestClient_Subclass.search(Unknown Source)\r\n        at com.acme.RestClient_ClientProxy.search(Unknown Source)\r\n        at com.acme.rest.SearchInvoker.init(SearchInvoker.java:18)\r\n        at com.acme.rest.SearchInvoker_Bean.create(Unknown Source)\r\n        at com.acme.rest.SearchInvoker_Bean.create(Unknown Source)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:101)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:29)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:26)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:26)\r\n        at io.quarkus.arc.impl.ClientProxies.getApplicationScopedDelegate(ClientProxies.java:18)\r\n        at com.acme.rest.SearchInvoker_ClientProxy.arc$delegate(Unknown Source)\r\n        at com.acme.rest.SearchInvoker_ClientProxy.arc_contextualInstance(Unknown Source)\r\n        at com.acme.rest.SearchInvoker_Observer_Synthetic_d70cd75bf32ab6598217b9a64a8473d65e248c05.notify(Unknown Source)\r\n        at io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:320)\r\n        at io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:302)\r\n        at io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:73)\r\n        at io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:128)\r\n        at io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:97)\r\n        at io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy(Unknown Source)\r\n        ... 13 more\r\n```\n\n### How to Reproduce?\n\nDownload the reproducer: \r\n[removed-bean-classloading.zip](https://github.com/quarkusio/quarkus/files/8282554/removed-bean-classloading.zip)\r\n\r\n\r\n1. cd removed-bean-classloading-service\r\n2. mvn clean install\r\n3. cd ../removed-bean-classloading-web\r\n4. mvn quarkus:dev\r\n5. Exception from above happens\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [Version 10.0.19044.1586]\n\n### Output of `java -version`\n\nopenjdk version \"17.0.2\" 2022-01-18 OpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8) OpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Maven home: C:\\eclipse\\tools\\java\\maven Java version: 17.0.2, vendor: Eclipse Adoptium, runtime: C:\\eclipse\\tools\\java\\17 Default locale: de_DE, platform encoding: Cp1252 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24365/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24365/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

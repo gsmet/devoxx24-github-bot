@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38170",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38170/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38170/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38170/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38170",
+  "id": 2079907610,
+  "node_id": "I_kwDOCFbutM57-N8a",
+  "number": 38170,
+  "title": "OIDC extension - Add redirect URL in 499 HTTP Response",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-01-13T00:06:21Z",
+  "updated_at": "2024-01-17T13:26:13Z",
+  "closed_at": "2024-01-17T13:26:12Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nI built an Angular frontend application for my compagny, with a Quarkus backend API.\r\n\r\nIf the user is not authenticated, when my Angular application tries to call my backend API, the backend tries to start the OIDC auth code flow.\r\nBut, in Javascript, we cannot intercept the HTTP 302 redirect.\r\n\r\nThanks to the documentation (see: [quarkus.oidc.authentication.java-script-auto-redirect](https://quarkus.io/guides/all-config#quarkus-oidc_quarkus.oidc.authentication.java-script-auto - redirect)), I configured the following property:\r\n\r\n```\r\nquarkus.oidc.authentication.java-script-auto-redirect=false\r\n```\r\n\r\nNow, backend API send HTTP 499 with following response header:\r\n\r\n```\r\nWWW-Authenticate: OIDC\r\n```\r\nI can intercept HTTP status code 499 and force browser to redirect to OP (OpenID Connect Identity Provider).\r\n\r\nHowever, I'm stuck: I have no information, on the JavaScript side (in the browser), about the URL to redirect the browser to.\r\nThis information is known only by backend.\r\n\r\nIs it possible to add this information in the response headers so that my Angular application knows which URL to redirect the user to?\r\n\r\nAs described in [RFC5849](https://www.rfc-editor.org/rfc/rfc5849.html#section-3.5.1) for OAuth, we can take inspiration from it to add for example the following response header:\r\n\r\n```\r\nWWW-Authenticate: OIDC realm=\"https://identityprovider.acme.com/auth/realms/ACME/protocol/openid-connect/auth?response_type=code&client_id=dummy&scope=openid&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fapi%2Fuser&state=78a26307-3b7f-4a91-a121-e1a1f7ea35e6&nonce=269c7959-459d-4358-b8d7-ad5bbdf8d009\"\r\n```\r\n\r\n### Implementation ideas\r\n\r\n```patch\r\nIndex: extensions/oidc/runtime/src/main/java/io/quarkus/oidc/runtime/CodeAuthenticationMechanism.java\r\n<+>UTF-8\r\n===================================================================\r\ndiff --git a/extensions/oidc/runtime/src/main/java/io/quarkus/oidc/runtime/CodeAuthenticationMechanism.java b/extensions/oidc/runtime/src/main/java/io/quarkus/oidc/runtime/CodeAuthenticationMechanism.java\r\n--- a/extensions/oidc/runtime/src/main/java/io/quarkus/oidc/runtime/CodeAuthenticationMechanism.java\t(revision 2aa3fb1954b0e553f7cfc031ee33f2fb7497228d)\r\n+++ b/extensions/oidc/runtime/src/main/java/io/quarkus/oidc/runtime/CodeAuthenticationMechanism.java\t(date 1705106139214)\r\n@@ -62,6 +62,11 @@\r\n public class CodeAuthenticationMechanism extends AbstractOidcAuthenticationMechanism {\r\n \r\n     public static final String SESSION_MAX_AGE_PARAM = \"session-max-age\";\r\n+\r\n+    private static final String WWW_AUTHENTICATE = \"WWW-Authenticate\";\r\n+    private static final String WWW_AUTHENTICATE_OIDC_PREFIX_VALUE = \"OIDC realm=\";\r\n+    private static final String DQUOTE = \"\\\"\";\r\n+    private static final String DQUOTE_ESCAPED = \"%22\";\r\n     static final String AMP = \"&\";\r\n     static final String EQ = \"=\";\r\n     static final String COMMA = \",\";\r\n@@ -569,20 +574,6 @@\r\n \r\n                     @Override\r\n                     public Uni<ChallengeData> apply(Void t) {\r\n-\r\n-                        if (context.get(NO_OIDC_COOKIES_AVAILABLE) != null\r\n-                                && isRedirectFromProvider(context, configContext)) {\r\n-                            LOG.warn(\r\n-                                    \"The state cookie is missing after the redirect from OpenId Connect Provider, authentication has failed\");\r\n-                            return Uni.createFrom().item(new ChallengeData(401, \"WWW-Authenticate\", \"OIDC\"));\r\n-                        }\r\n-\r\n-                        if (!shouldAutoRedirect(configContext, context)) {\r\n-                            // If the client (usually an SPA) wants to handle the redirect manually, then\r\n-                            // return status code 499 and WWW-Authenticate header with the 'OIDC' value.\r\n-                            return Uni.createFrom().item(new ChallengeData(499, \"WWW-Authenticate\", \"OIDC\"));\r\n-                        }\r\n-\r\n                         StringBuilder codeFlowParams = new StringBuilder(168); // experimentally determined to be a good size for preventing resizing and not wasting space\r\n \r\n                         // response_type\r\n@@ -671,6 +662,19 @@\r\n                         String authorizationURL = configContext.provider.getMetadata().getAuthorizationUri() + \"?\"\r\n                                 + codeFlowParams.toString();\r\n \r\n+                        if (context.get(NO_OIDC_COOKIES_AVAILABLE) != null\r\n+                                && isRedirectFromProvider(context, configContext)) {\r\n+                            LOG.warn(\r\n+                                    \"The state cookie is missing after the redirect from OpenId Connect Provider, authentication has failed\");\r\n+                            return Uni.createFrom().item(new ChallengeData(401, WWW_AUTHENTICATE, WWW_AUTHENTICATE_OIDC_PREFIX_VALUE + DQUOTE + escapeRealm(authorizationURL) + DQUOTE));\r\n+                        }\r\n+\r\n+                        if (!shouldAutoRedirect(configContext, context)) {\r\n+                            // If the client (usually an SPA) wants to handle the redirect manually, then\r\n+                            // return status code 499 and WWW-Authenticate header with the 'OIDC' value followed by realm with OpenID Connect Provider URL\r\n+                            return Uni.createFrom().item(new ChallengeData(499, WWW_AUTHENTICATE, WWW_AUTHENTICATE_OIDC_PREFIX_VALUE + DQUOTE + escapeRealm(authorizationURL) + DQUOTE));\r\n+                        }\r\n+\r\n                         LOG.debugf(\"Code flow redirect to: %s\", authorizationURL);\r\n \r\n                         return Uni.createFrom().item(new ChallengeData(HttpResponseStatus.FOUND.code(), HttpHeaders.LOCATION,\r\n@@ -680,6 +684,18 @@\r\n                 });\r\n     }\r\n \r\n+    /**\r\n+     * Escape realm value as describe in <a href=\"https://www.rfc-editor.org/rfc/rfc2617#section-1.2\">RFC2617</a>\r\n+     * <p>\r\n+     * See also <a href=\"https://www.rfc-editor.org/rfc/rfc2822#section-3.2.5\">RFC-2822 - section 3.2.5. Quoted strings</a>.\r\n+     *\r\n+     * @param realm String to escape\r\n+     * @return String escaped to be included in realm value\r\n+     */\r\n+    private static String escapeRealm(String realm) {\r\n+        return realm.replace(DQUOTE, DQUOTE_ESCAPED);\r\n+    }\r\n+\r\n     private boolean isRedirectFromProvider(RoutingContext context, TenantConfigContext configContext) {\r\n         // The referrer check is the best effort at attempting to avoid the redirect loop after\r\n         // the user has authenticated at the OpenId Connect Provider page but the state cookie has been lost\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38170/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38170/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

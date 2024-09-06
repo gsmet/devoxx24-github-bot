@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25230",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25230/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25230/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25230/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25230",
+  "id": 1218783557,
+  "node_id": "I_kwDOCFbutM5IpSlF",
+  "number": 25230,
+  "title": "quarkus-integration-test-container-image-invoker tests do not pass on M1 mac/with a docker equivalent (podman, minikube, etc)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2022-04-28T14:05:58Z",
+  "updated_at": "2023-01-06T19:30:31Z",
+  "closed_at": "2023-01-06T19:30:31Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe quarkus-integration-test-container-image-invoker fail in various ways when run with a docker subsitute on mac, or on M1 hardware. \r\nI don't have a full matrix of behaviour, but we've observed:\r\n\r\n- Mac M1, podman default: 15 failures, 1 error, 0 passed\r\n  - Mac M1, podman patched to support multi-arch (see below): 9 failed, 7 passed\r\n  - Mac M1, podman patched + ryuk disabled: 5-7 failed, 9-11 passed\r\n  - Mac M1, podman patched + ryuk privileged (see below): 3 failed\r\n- Mac M1, docker: Frozen at `Building container-build-jib-with-mssql 0.1-SNAPSHOT`, further failures after workaround\r\n- Mac x86, podman: Failed in `container-build-jib-with-db2`\r\n- Mac x86, minikube: 12 failures, 4 passed\r\n- Mac x86, docker : clean\r\n\r\nThis is the invocation:\r\n./mvnw -Dquickly  -DskipTests=false -Dstart-containers=true -f integration-tests/container-image/maven-invoker-way\r\n\r\n(There was originally a guard which (on some maven versions) only ran the tests on linux. The guard was removed as part of [#25231](https://github.com/quarkusio/quarkus/issues/25231) since it had some issues).\r\n\r\nIdeally, the tests will pass on mac, and ideally without a hard requirement on docker as the container runtime. If we can't get them to pass, we should reintroduce a guard, but make the guard as focussed as possible, perhaps just on the tests which are failing, and for the exact conditions which aren't supported.\r\n\r\n#### Causes of failures \r\n\r\nI suspect there are several different issues. \r\n\r\n##### Issues I was able to work around: \r\n\r\n- **x86 arch on images**. Docker can cope with this, and podman can't. I was able to update podman to cope by following the instructions on https://edofic.com/posts/2021-09-12-podman-m1-amd64/ (installing qemu inside the podman vm)\r\n- **docker socket**. Working through https://xphyr.net/post/podman_on_osx/ resolved this. \r\n- **missing docker binary**. `IsDockerWorking` looks for a docker binary or `DOCKER_HOST`. I didn't need a `DOCKER_HOST` because of the podman helper, so duplicated the `podman` executable and called it `docker` and put ti on my path. I don't think setting `quarkus.docker.executable-name` would be enough because the groovy scripts in this project do a straight exec of `docker` so need the script on the path \r\n\r\n##### Issues I haven't worked around/investigated \r\n- **expectations of localhost** AFAIK Docker Desktop forwards from localhost to the VM, whereas using Minikube or similar exposes container ports on the VM. If tests assume everything is on localhost instead of allowing for containers being on another host and ask TestContainers what the address was it can cause issues\r\n- ....?\r\n\r\n### Expected behavior\r\n\r\nThe tests should run cleanly.\r\n\r\n### Actual behavior\r\n\r\nHere are some example failures, from the platforms above. \r\n\r\n#### M1, with patched podman\r\n`TESTCONTAINERS_RYUK_DISABLED=\"true\" ./mvnw -Dquickly  -DskipTests=false -Dstart-containers=true -f integration-tests/container-image/maven-invoker-way`\r\n\r\n\r\n```\r\n[INFO] -------------------------------------------------\r\n[INFO] Build Summary:\r\n[INFO]   Passed: 7, Failed: 9, Errors: 0, Skipped: 0\r\n[INFO] -------------------------------------------------\r\n[ERROR] The following builds failed:\r\n[ERROR] *  container-build-docker/pom.xml\r\n[ERROR] *  container-build-jib-with-mysql/pom.xml\r\n[ERROR] *  container-build-jib-with-db2/pom.xml\r\n[ERROR] *  container-build-jib-with-mongo/pom.xml\r\n[ERROR] *  container-build-multiple-tags-jib/pom.xml\r\n[ERROR] *  container-build-jib-with-mssql/pom.xml\r\n[ERROR] *  container-build-multiple-tags-docker/pom.xml\r\n[ERROR] *  container-build-jib-appcds/pom.xml\r\n[ERROR] *  container-image-push/pom.xml\r\n[INFO] -------------------------------------------------\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  11:21 min\r\n[INFO] Finished at: 2022-04-27T17:45:09+01:00\r\n[INFO] ------------------------------------------------------------------------\r\n```\r\n\r\nThis one looks like a podman compatibility issue but podman should support the java API?!\r\n\r\n```\r\n[INFO] Caused by: org.testcontainers.containers.ContainerFetchException: Can't get Docker image: RemoteDockerImage(imageName=docker.io/ibmcom/db2:11.5.7.0a, imagePullPolicy=DefaultPullPolicy(), imageNameSubstitutor=org.testcontainers.utility.ImageNameSubstitutor$LogWrappedImageNameSubstitutor@7b8f4190)\r\n[INFO] Caused by: java.lang.NullPointerException: Cannot invoke \"String.matches(String)\" because the return value of \"com.github.dockerjava.api.model.PullResponseItem.getStatus()\" is null\r\n```\r\n\r\nUnsure of this one \r\n\r\n```\r\n[INFO] [ERROR] Caused by: java.util.concurrent.ExecutionException: java.io.IOException: 'docker load' command failed with error: Error: unable to load image: payload does not match any of the supported image formats:\r\n[INFO] [ERROR]  * oci: initializing source oci:/var/tmp/libpod-images-load.tar3361710228:: open /var/tmp/libpod-images-load.tar3361710228/index.json: not a directory\r\n[INFO] [ERROR]  * oci-archive: creating temp directory: untarring file \"/var/tmp/oci2061944008\": unexpected EOF\r\n[INFO] [ERROR]  * docker-archive: loading tar component manifest.json: unexpected EOF\r\n[INFO] [ERROR]  * dir: open /var/tmp/libpod-images-load.tar3361710228/manifest.json: not a directory\r\n[INFO] [ERROR] \r\n[INFO] [ERROR] \tat com.google.common.util.concurrent.AbstractFuture.getDoneValue(AbstractFuture.java:588)\r\n```\r\n\r\n#### x86  mac with minikube\r\n\r\n```\r\n[INFO] -------------------------------------------------\r\n[INFO] Build Summary:\r\n[INFO]   Passed: 4, Failed: 12, Errors: 0, Skipped: 0\r\n[INFO] -------------------------------------------------\r\n[ERROR] The following builds failed:\r\n[ERROR] *  container-build-with-keycloak/pom.xml\r\n[ERROR] *  container-build-jib-with-mysql/pom.xml\r\n[ERROR] *  container-build-jib-with-db2/pom.xml\r\n[ERROR] *  container-build-jib-with-kafka/pom.xml\r\n[ERROR] *  container-build-with-keycloak-default-realm/pom.xml\r\n[ERROR] *  container-build-jib-with-mongo/pom.xml\r\n[ERROR] *  container-build-jib-with-postgresql/pom.xml\r\n[ERROR] *  container-build-jib-with-mssql/pom.xml\r\n[ERROR] *  container-build-jib-with-mariadb/pom.xml\r\n[ERROR] *  container-build-jib-appcds/pom.xml\r\n[ERROR] *  container-image-jib-with-redis/pom.xml\r\n[ERROR] *  container-image-push/pom.xml\r\n[INFO] -------------------------------------------------\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  17:29 min\r\n[INFO] Finished at: 2022-04-27T18:57:24+02:00\r\n[INFO] ------------------------------------------------------------------------\r\n```\r\n\r\n#### M1 mac with Docker\r\n\r\n```\r\n[INFO] Caused by: org.rnorth.ducttape.RetryCountExceededException: Retry limit hit with exception\r\n[INFO]  at org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:88)\r\n[INFO]  at org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:338)\r\n[INFO]  ... 15 more\r\n[INFO] Caused by: org.testcontainers.containers.ContainerLaunchException: Could not create/start container\r\n[INFO]  at org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:537)\r\n[INFO]  at org.testcontainers.containers.GenericContainer.lambda$doStart$0(GenericContainer.java:340)\r\n[INFO]  at org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:81)\r\n[INFO]  ... 16 more\r\n[INFO] Caused by: java.lang.IllegalStateException: Container exited with code 1\r\n[INFO]  at org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:509)\r\n[INFO]  ... 18 more\r\n```\r\n\r\nAnd some Caused by: java.net.ConnectException: Connection refused too\r\n\r\nFrozen at `Building container-build-jib-with-mssql 0.1-SNAPSHOT` but `-Dmssql.image=mcr.microsoft.com/azure-sql-edge` seemed to work around that.\r\n\r\n### How to Reproduce?\r\n\r\n1. `./mvnw -Dquickly  -DskipTests=false -Dstart-containers=true -f integration-tests/container-image/maven-invoker-way`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWe're seeing a range of issues on various mac systems.\r\n\r\n### Output of `java -version`\r\n\r\nA range of levels.\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\nHEAD\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nRange of levels.\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25230/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25230/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

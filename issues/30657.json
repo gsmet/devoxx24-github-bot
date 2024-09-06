@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30657",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30657/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30657/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30657/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30657",
+  "id": 1559693829,
+  "node_id": "I_kwDOCFbutM5c9woF",
+  "number": 30657,
+  "title": "Error in config mapping and environment variables",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-01-27T12:32:55Z",
+  "updated_at": "2023-10-06T11:14:46Z",
+  "closed_at": "2023-01-27T15:42:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI defined a Map<String, String> field in a ConfigMapping interface like: \r\n```\r\n@ConfigMapping(prefix=\"parameters\")\r\npublic interface ConfigExample {\r\n\r\n    ParametersExample parametersExample();\r\n\r\n    interface ParametersExample {\r\n        Map<String, String> mapExample();\r\n    }\r\n\r\n}\r\n```\r\n\r\nWhen I run my quarkus app in a docker context like: \r\n`docker run -ti -e parameters.parameters-example.map-example.TEST=env1 reproducer-image`\r\n\r\nQuarkus does not start at all saying me: \r\n\r\n```\r\nERROR: Failed to start application (with profile [oc])\r\njava.util.NoSuchElementException: SRCFG00014: The config property parameters.parameters-example.map-example.test is required but it could not be found in any config source\r\n        at io.smallrye.config.SmallRyeConfig.convertValue(SmallRyeConfig.java:298)\r\n        at io.smallrye.config.SmallRyeConfig.getValue(SmallRyeConfig.java:242)\r\n        at io.smallrye.config.ConfigMappingProvider.lambda$processLazyMapValue$0(ConfigMappingProvider.java:507)\r\n        at io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:977)\r\n        at io.smallrye.config.ConfigMappingProvider.lambda$mapConfiguration$3(ConfigMappingProvider.java:941)\r\n        at io.smallrye.config.SecretKeys.lambda$doUnlocked$0(SecretKeys.java:20)\r\n        at io.smallrye.config.SecretKeys.doUnlocked(SecretKeys.java:29)\r\n        at io.smallrye.config.SecretKeys.doUnlocked(SecretKeys.java:19)\r\n        at io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:941)\r\n        at io.smallrye.config.SmallRyeConfigBuilder.build(SmallRyeConfigBuilder.java:533)\r\n        at io.quarkus.runtime.generated.Config.readConfig(Unknown Source)\r\n        at io.quarkus.deployment.steps.RuntimeConfigSetup.deploy(Unknown Source)\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:108)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at org.acme.Main.main(Main.java:14)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:61)\r\n        at io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:32)\r\n```\r\n**This error message is really weird.**\r\n\r\nIf I run `docker run -ti -e parameters.parameters-example.map-example.test=env1 reproducer-image`\r\n\r\nMy app does start but obviously the Map is not populated with the key 'TEST'. \r\n\r\n**So the only workaround I found is to run:**\r\n`docker run -ti -e parameters.parameters-example.map-example.test=env1 -e parameters.parameters-example.map-example.TEST=env1 reproducer-image`\r\n\r\nI have tried to convert the property key in ABC_DEF format like the doc says:\r\n\r\nIf I run `docker run -ti -e parameters_parameters_example_map_example_TEST=env1 reproducer-image`\r\nthe application starts but the property env1 is not in the Map.\r\n\r\n**Last but not least:** If I predefine this variable `parameters.parameters-example.map-example.PREDEFINED=value1` in my `application.properties` and I run `docker run -ti -e parameters_parameters_example_map_example_PREDEFINED=env1 reproducer-image` this works and the variables has been overridden with env1. \r\n\r\nI am really confused about that, especially with the first error message expecting the key with lower case.\r\n\r\nIs this a bug or did I misunderstand something ?\n\n### Expected behavior\n\nThe app starts properly and the value passed by the environment variable populates the Map\n\n### Actual behavior\n\nDepending on case, the app does not start or the app starts without populating the Map\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nIf needed, I can provide you a small reproducer ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30657/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30657/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

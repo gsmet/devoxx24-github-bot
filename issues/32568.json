@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32568",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32568/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32568/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32568/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32568",
+  "id": 1664246087,
+  "node_id": "I_kwDOCFbutM5jMmFH",
+  "number": 32568,
+  "title": "Smalllrye openapi (swagger?) does not take registered Jackson ObjectMapperCustomizer into account",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1688349292,
+      "node_id": "MDU6TGFiZWwxNjg4MzQ5Mjky",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/swagger-ui",
+      "name": "area/swagger-ui",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-04-12T10:00:19Z",
+  "updated_at": "2023-04-13T11:02:04Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe smallrye openapi (Swagger?) UI shows fields that aren't part of the RestEasy output. It seems like the Jackson ObjectMapperCustomizer only applies to RestEasy, not Swagger.\r\n\r\nFor example, OptaPlanner has a HardSoftScore class with 3 fields (initScore, hardScore and softScore) and helper methods like isFeasible() which returns (hardScore >= 0).\r\nThe REST API renders HardSoftScore as a String in Json, but the Swagger API description shows it as an object class with feasible etc:\r\n    \r\n![image](https://user-images.githubusercontent.com/176880/231422200-96a1048c-bb43-4dc8-95b2-d25a90df40b8.png)\r\n\r\n\r\nIt seems like RestEasty takes this into account, but Swagger does not:\r\n    \r\n```\r\n    @BuildStep\r\n    void registerOptaPlannerJacksonModule(BuildProducer<AdditionalBeanBuildItem> additionalBeans) {\r\n        additionalBeans.produce(new AdditionalBeanBuildItem(OptaPlannerObjectMapperCustomizer.class));\r\n    }\r\n```\r\n    \r\n    https://github.com/kiegroup/optaplanner/blob/main/optaplanner-quarkus-integration/optaplanner-quarkus-jackson/deployment/src/main/java/org/optaplanner/quarkus/jackson/deployment/OptaPlannerJacksonProcessor.java\r\n    \r\n    https://github.com/kiegroup/optaplanner/blob/main/optaplanner-quarkus-integration/optaplanner-quarkus-jackson/runtime/src/main/java/org/optaplanner/quarkus/jackson/OptaPlannerObjectMapperCustomizer.java\r\n\r\n### Expected behavior\r\n\r\nREST API:\r\n```\r\nmyClass {\r\n  score : \"0hard/5soft\"\r\n}\r\n```\r\nSwagger API:\r\n```\r\nmyClass {\r\n  score : String\r\n}\r\n```\r\n\r\n### Actual behavior\r\n\r\nREST API:\r\n```\r\nmyClass {\r\n  score : \"0hard/5soft\"\r\n}\r\n```\r\nSwagger API:\r\n```\r\nmyClass {\r\n  score : HardSoftScore\r\n}\r\nHardSoftScore {\r\n initScore: number\r\n hardScore: number\r\n softScore: number\r\n feasible: boolean\r\n ...\r\n}\r\n```\r\n### How to Reproduce?\r\n\r\n1. Add these dependencies:\r\n\r\n    <dependency>\r\n      <groupId>org.optaplanner</groupId>\r\n      <artifactId>optaplanner</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.optaplanner</groupId>\r\n      <artifactId>optaplanner-quarkus-jackson</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-openapi</artifactId>\r\n    </dependency>\r\n    \r\n2. Create a REST method that returns MyClass with a field of type HardSoftScore.\r\nJackson will customize the json marshalling with OptaPlannerObjectMapperCustomizer.\r\n\r\n3. Check the Swagger API screen, notice that there is a HardSoftScore model that includes \"feasible\", so OptaPlannerObjectMapperCustomizer is not active.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32568/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32568/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

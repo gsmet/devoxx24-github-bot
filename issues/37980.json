@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37980",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37980/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37980/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37980/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37980",
+  "id": 2062562862,
+  "node_id": "I_kwDOCFbutM568DYu",
+  "number": 37980,
+  "title": "PATCH with merge-patch+json not working properly with RESTEasy Reactive",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-01-02T15:16:56Z",
+  "updated_at": "2024-01-04T14:49:14Z",
+  "closed_at": "2024-01-03T15:47:57Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nDear Quarkus dev team,\r\n\r\nwhile building my app using quarkus 3.2.2.Final I experienced that merge-patch+json seems not to be working properly with the quarkus-resteasy-reactive-jackson extension.\r\n\r\nSome background:\r\nBefore experiencing this issue I was using quarkus-resteasy-jackson as dependency, where my PATCH would work like a charm.\r\nHowever I switched to quarkus-resteasy-reactive-jackson due to a change of requirements within the project. \r\n\r\nThat's when I experienced, that calling those PATCH routes result in a HTTP 500 Internal Server Error due to org.hibernate.PropertyValueException.\r\nAfter a bit of digging it looks like the respective GET route is not called upon PATCH.\r\n\r\nAs per documentations regarding quarkus-resteasy-jackson the `resteasy.patchfilter.legacy` switch is set to true.\r\n\r\nMy respective resource with both GET and PATCH mappings:\r\n```\r\n@GET\r\n  @Path(\"/{id}\")\r\n  public Foo getFoo(@PathParam(\"id\") long id) {\r\n    return fooService.getFoo(id);\r\n  }\r\n\r\n  @PATCH\r\n  @Path(\"/{id}\")\r\n  @Consumes(\"application/merge-patch+json\")\r\n  @Produces(MediaType.APPLICATION_JSON)\r\n  public Foo patchFoo(@PathParam(\"id\") long id, Foo foo) {\r\n    @SuppressWarnings(\"unchecked\")\r\n    Set<String> patchedFields = (Set<String>) request.getProperty(\"patchedFields\");\r\n    return fooService.update(id, foo, patchedFields);\r\n  }\r\n```\r\n\r\nMy implementation within fooService:\r\ngetFoo:\r\n```\r\npublic Foo getFoo(long id) {\r\n    return fooRepository.findByIdOptional(id).orElseThrow(EntityNotFoundException::new);\r\n  }\r\n```\r\n\r\nupdate:\r\n```\r\n@Transactional\r\n  public Foo update(long fooId, Foo foo, Set<String> patchedFields) throws EntityNotFoundException {\r\n    Foo existingFoo = fooRepository.findByIdOptional(fooId)\r\n        .orElseThrow(EntityNotFoundException::new);\r\n\r\n    if (patchedFields.size() > 0) {\r\n      changeService.recordEntityChanges(existingFoo, foo, existingFoo, 1, patchedFields);\r\n    }\r\n\r\n    foo = fooRepository.getEntityManager().merge(foo);\r\n    fooRepository.persist(foo);\r\n    return foo;\r\n  }\r\n```\r\n\r\nAny help would be highly appreciated.\r\n\r\n### Expected behavior\r\n\r\nUpon calling the PATCH route with application/merge-patch+json the respective GET resource should be called upfront.\r\n\r\n### Actual behavior\r\n\r\nUpon calling the PATCH route with application/merge-patch+json the respective GET resource does not seem to be called upfront, since Exceptions like `not-null property references a null or transient value` are thrown, while the values on the PATCHED object are certainly not null.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17.0.7\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\napache-maven-3.8.8\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37980/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37980/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

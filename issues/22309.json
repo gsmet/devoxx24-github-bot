@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22309",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22309/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22309/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22309/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22309",
+  "id": 1082933612,
+  "node_id": "I_kwDOCFbutM5AjEFs",
+  "number": 22309,
+  "title": "Make QuarkusMainTest doLaunch protected instead of private",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-12-17T06:33:38Z",
+  "updated_at": "2022-01-24T11:25:45Z",
+  "closed_at": "2022-01-24T11:25:40Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nHey there,\r\n\r\nI want to propose making the `QuarkusMainTest`'s `doLaunch` method protected instead of private. This would allow to extend the Quarkus Test Framework and being able to use `QuarkusMainLauncher` in this extended framework the same way as Quarkus is using it, e.g. to run multiple runs in one test via\r\n\r\n```\r\n@MyQuarkusMainExtension\r\npublic class HelloTest {\r\n\r\n    @Test\r\n    public void testManualLaunch(QuarkusMainLauncher launcher) {\r\n        LaunchResult result = launcher.launch(\"Everyone\");\r\n        Assertions.assertEquals(0, result.exitCode());\r\n        Assertions.assertEquals(\"Hello Everyone\", result.getOutput());\r\n\r\n        LaunchResult result2 = launcher.launch(\"Not everyone\");\r\n        Assertions.assertEquals(0, result.exitCode());\r\n        Assertions.assertEquals(\"Hello Not everyone\", result.getOutput());\r\n    }\r\n}\r\n```\r\n\r\nWe're having our extension over [here](https://github.com/keycloak/keycloak/blob/main/quarkus/tests/integration/src/main/java/org/keycloak/it/junit5/extension/CLITestExtension.java) and having access to the doLaunch method would hopefully allow us to e.g. simplify [this test](https://github.com/keycloak/keycloak/blob/main/quarkus/tests/integration/src/test/java/org/keycloak/it/cli/dist/BuildAndStartDistTest.java) to be more idiomatic (tests should not rely on a given order) by running one test with 2 \"runs\" inside. \r\n\r\nAlso, this might come in handy when e.g. spinning up a db testcontainer to test against and providing the values of the ephemereal container as launch input, which is not possible to date bc. `@Launch` needs a static context and we can't intercept the cliArgs later on. [Here](https://github.com/DGuhr/keycloak/blob/PoC_TestContainers_DistTest/quarkus/tests/integration/src/main/java/org/keycloak/it/junit5/extension/CLITestExtension.java#L63-L70) you see an implementation of what I mean in our testsuite for the [@DistributionTest](https://github.com/DGuhr/keycloak/blob/PoC_TestContainers_DistTest/quarkus/tests/integration/src/main/java/org/keycloak/it/junit5/extension/DistributionTest.java#L33-L39) annotation together with a PoC [test](https://github.com/DGuhr/keycloak/blob/PoC_TestContainers_DistTest/quarkus/tests/integration/src/test/java/org/keycloak/it/cli/dist/PostgresStartDevDistTest.java), which is a blackbox enhancement for now. Making `doLaunch` protected would instead provide us with the ability to extend it and use whitebox testing, which is preferrable imo.  \r\n\r\nI am not 100 % sure if it would suffice to make doLaunch protected, but I think so from looking at the QuarkusMainTest's code.  \r\n\r\n\r\n\r\n### Implementation ideas\r\n\r\nI'd be happy to contribute this change. But not sure if it's reasonable to have a test in your testsuite for it, and how this test would look like. Any input welcome. ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22309/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22309/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

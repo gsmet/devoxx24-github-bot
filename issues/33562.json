@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33562",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33562/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33562/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33562/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33562",
+  "id": 1722454770,
+  "node_id": "I_kwDOCFbutM5mqpLy",
+  "number": 33562,
+  "title": "Redis Geo - error with args",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-05-23T16:50:11Z",
+  "updated_at": "2023-05-23T16:56:04Z",
+  "closed_at": "2023-05-23T16:55:56Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi,\r\nI am trying to add and get the object from Redis Geo using GeoCommands.Search() but seems there is a problem with all args.\r\n\r\n### Error\r\n\r\njava.util.concurrent.CompletionException: ERR unknown command `geosearch`, with args beginning with: `weather`, `FROMLONLAT`, `13.361389`, `38.115558`, `BYRADIUS`, `5.0`, `km`, `ASC`, \r\n\r\n\tat io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:79)\r\n\tat io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n\tat io.quarkus.redis.runtime.datasource.BlockingGeoCommandsImpl.geosearch(BlockingGeoCommandsImpl.java:155) \r\n\r\n\r\n**Quarkus Version:** 3\r\n**Redis docker:** 6.0-alpine --> not working\r\n**Redis docker** 7.0.1-alpine --> working fine\r\n_I am using Azure Redis, this only allows me to use Redis version 4 or 6._\r\n\r\n### Redis code to add/search data in redis\r\n\r\n@ApplicationScoped\r\npublic class RedisGeo {\r\n\r\n    private final RedisDataSource redisDataSource;\r\n    private final KeyCommands<String> keyCommands;\r\n    private final GeoCommands<String, String> geoCommands;\r\n\r\n    @Inject\r\n    public RedisGeoUtil(final RedisDataSource redisDataSource) {\r\n        this.redisDataSource = redisDataSource;\r\n        keyCommands = redisDataSource.key();\r\n        geoCommands = redisDataSource.geo(String.class, String.class);\r\n    }\r\n\r\n\r\n    public void add(String key, double longitude, double latitude, String text) {\r\n        geoCommands.geoadd(key, longitude, latitude, text);\r\n        keyCommands.expire(key, 60);\r\n\r\n    }\r\n\r\n    public void del(String key) {\r\n        keyCommands.del(key);\r\n    }\r\n\r\n    public Object search(final Double latitude, final Double longitude, final Double radius, final String key) {\r\n\r\n        GeoSearchArgs args = new GeoSearchArgs<>();\r\n        args.fromCoordinate(latitude, longitude);\r\n        args.byRadius(distanceInKm, GeoUnit.KM);\r\n        args.ascending();\r\n        List weather = geoCommands.geosearch(key, args);\r\n        return weather.get(0); // just for tests\r\n    }\r\n\r\n}`\r\n\r\n\r\n\r\n### Class RedisContainer.class\r\npublic class RedisContainer implements QuarkusTestResourceLifecycleManager {\r\n\r\n    static GenericContainer<?> redis =\r\n            new GenericContainer<>(\"redis:6.0-alpine\").withExposedPorts(6379);\r\n\r\n    @Override\r\n    public Map<String, String> start() {\r\n        redis.start();\r\n\r\n        return Map.of(\"quarkus.redis.hosts\", \"redis://\" + redis.getHost() + \":\" + redis.getFirstMappedPort(),\r\n                \"quarkus.redis.password\", \"\");\r\n    }\r\n\r\n    @Override\r\n    public void stop() {\r\n        redis.close();\r\n    }\r\n}\r\n\r\n\r\n\r\n### Integration Test code:\r\n@QuarkusTest\r\n@QuarkusTestResource(RedisContainer.class)\r\npublic class RedisGeoUtilTest {\r\n\r\n    @Inject\r\n    RedisGeoUtil redisGeoUtil;\r\n\r\n\r\n    @Test\r\n    @DisplayName(\"Test adding and getting geo coordinates\")\r\n    void addLocationsToWeatherCache() {\r\n\r\n        String sample = \"Test Geo\";\r\n        redisGeoUtil.add(\"weather\", 13.361389, 38.115556, sample);\r\n\r\n        Object search = redisGeoUtil.search(13.361389, 38.115558, 5.0);\r\n    }\r\n}\r\n\r\n\r\n\r\n\n\n### Expected behavior\n\nThe search method should retrieve the object \"Test Geo\" from the provided example.\r\n\r\nTo see the same solution working just switch the Redis docker image to redis:7.0.11-alpine  in RedisContainer class\n\n### Actual behavior\n\nGetting issues with args with version 6.0-alpine of Redis\r\n\r\nError: java.util.concurrent.CompletionException: ERR unknown command `geosearch`, with args beginning with: `weather`, `FROMLONLAT`, `13.361389`, `38.115558`, `BYRADIUS`, `5.0`, `km`, `ASC`, \r\n![Screenshot 2023-05-23 at 17 42 47](https://github.com/quarkusio/quarkus/assets/13374459/1f03304f-6e9a-43c0-a20e-d47298266f2a)\r\n\n\n### How to Reproduce?\n\n1. Create the class RedisContainer.class with the code provided in the test packages\r\n2. Create class RedisGeo with all code - code provided\r\n3. Create test class RedisGeoTest as Integration Test - code provided\r\n4. Run the Integration test\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6\n\n### Additional information\n\nI have follow almost the same approach from the ticket: https://github.com/quarkusio/quarkus/issues/27831",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33562/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33562/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40062",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40062/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40062/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40062/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40062",
+  "id": 2241884587,
+  "node_id": "I_kwDOCFbutM6FoHGr",
+  "number": 40062,
+  "title": "smallrye-jwt: Incorrect Logic Results in Inability to Properly Configure Signature Algorithm",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-04-14T03:27:07Z",
+  "updated_at": "2024-04-14T12:06:25Z",
+  "closed_at": "2024-04-14T12:00:07Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n## problem\r\n\r\nIncorrect Logic Results in Inability to Properly Configure Signature Algorithm\r\n\r\n## detail\r\n\r\n1. This is my application.yml file\r\n\r\n   ```yml\r\n   smallrye:\r\n     jwt:\r\n       sign:\r\n         key: my-key\r\n       new-token:\r\n         signature-algorithm: ES256\r\n         issuer: NJUPT\r\n   ```\r\n\r\n   You can see that I specified the encryption algorithm as ES256. It seemingly correct, right?\r\n\r\n2. However, when I called the function ``` JwtClaimsBuilder.sign()```, program threw a exception\r\n\r\n   ```text\r\n   Caused by: java.lang.IllegalArgumentException: SRJWT05028: Signing key can not be created from the loaded content\r\n   \tat io.smallrye.jwt.build.impl.JwtSignatureImpl.sign(JwtSignatureImpl.java:101)\r\n   ```\r\n\r\n3. When this function was called in first time, it needed to read my private key by calling a method ``` getSigningKeyFromKeyContent() ```(marked with `here`)in ```JwtSignatureImpl```\r\n\r\n   ```java\r\n   public String sign() throws JwtSignatureException {\r\n           try {\r\n               Key key = configuredPemKey;\r\n               if (key == null) {\r\n                   String keyLocation = JwtBuildUtils.getConfigProperty(JwtBuildUtils.SIGN_KEY_LOCATION_PROPERTY, String.class);\r\n                   if (keyLocation != null) {\r\n                       key = JwtBuildUtils.readPrivateKeyFromKeystore(keyLocation.trim());\r\n                       if (key == null) {\r\n                           InputStream is = ResourceUtils.getResourceStream(keyLocation.trim());\r\n                           if (is != null) {\r\n                               try (InputStream keyStream = is) {\r\n                                   key = getSigningKeyFromKeyContent(new String(ResourceUtils.readBytes(keyStream)));\r\n                               }\r\n                           }\r\n                       }\r\n                   } else {\r\n                       key = JwtBuildUtils.readPrivateKeyFromKeystore(null);\r\n                       if (key == null) {\r\n                           String keyContent = JwtBuildUtils.getConfigProperty(JwtBuildUtils.SIGN_KEY_PROPERTY, String.class);\r\n                           if (keyContent != null) {\r\n                               key = getSigningKeyFromKeyContent(keyContent); //here\r\n                           } else {\r\n                               throw ImplMessages.msg.signKeyNotConfigured();\r\n                           }\r\n                       }\r\n                   }\r\n               }\r\n               if (key == null) {\r\n                   throw ImplMessages.msg.signingKeyCanNotBeCreatedFromContent();\r\n               }\r\n   \r\n               return signInternal(key); //here2\r\n           } catch (JwtSignatureException ex) {\r\n               throw ex;\r\n           } catch (Exception ex) {\r\n               throw ImplMessages.msg.signatureException(ex);\r\n           } finally {\r\n               removeJti();\r\n           }\r\n       }\r\n   ```\r\n\r\n   ```java\r\n   Key getSigningKeyFromKeyContent(String keyContent) {\r\n           String kid = (String) headers.get(\"kid\");\r\n           String algHeader = (String) headers.get(\"alg\"); //why?\r\n   \r\n           // Try PEM format first - default to RS256 if no algorithm header is set\r\n           Key key = KeyUtils.tryAsPemSigningPrivateKey(keyContent,\r\n                   (algHeader == null ? SignatureAlgorithm.RS256 : SignatureAlgorithm.fromAlgorithm(algHeader)));\r\n           if (key == null) {\r\n               if (kid == null) {\r\n                   kid = JwtBuildUtils.getConfigProperty(JwtBuildUtils.SIGN_KEY_ID_PROPERTY, String.class);\r\n                   if (kid != null) {\r\n                       headers.put(\"kid\", kid);\r\n                   }\r\n               }\r\n   \r\n               // Try to load JWK from a single JWK resource or JWK set resource\r\n               JsonWebKey jwk = KeyUtils.getJwkKeyFromJwkSet(kid, keyContent);\r\n               if (jwk != null) {\r\n                   // if the user has already set the algorithm header then JWK `alg` header, if set, must match it\r\n                   key = KeyUtils.getPrivateOrSecretSigningKey(jwk,\r\n                           (algHeader == null ? null : SignatureAlgorithm.fromAlgorithm(algHeader)));\r\n                   if (key != null) {\r\n                       // if the algorithm header is not set then use JWK `alg`\r\n                       if (algHeader == null && jwk.getAlgorithm() != null) {\r\n                           headers.put(\"alg\", jwk.getAlgorithm());\r\n                       }\r\n                       // if 'kid' header is not set then use JWK `kid`\r\n                       if (kid == null && jwk.getKeyId() != null) {\r\n                           headers.put(\"kid\", jwk.getKeyId());\r\n                       }\r\n                   }\r\n               }\r\n           } else {\r\n               configuredPemKey = key;\r\n           }\r\n           return key;\r\n       }\r\n   ```\r\n\r\n   There is a bug here; the value ```algHeader``` obtained from the header has not been initialized.  So who will initialize it? Nobody.\r\n\r\n4. But, there is a method could get signature algorithm.\r\n\r\n   ```java\r\n   private String getSignatureAlgorithm(Key signingKey) {\r\n           String alg = (String) headers.get(\"alg\");\r\n           if (alg == null) {\r\n               try {\r\n                   alg = JwtBuildUtils.getConfigProperty(JwtBuildUtils.NEW_TOKEN_SIGNATURE_ALG_PROPERTY, String.class);\r\n                   if (alg != null) {\r\n                       alg = SignatureAlgorithm.valueOf(alg.toUpperCase()).getAlgorithm();\r\n                   }\r\n               } catch (Exception ex) {\r\n                   throw ImplMessages.msg.unsupportedSignatureAlgorithm(alg);\r\n               }\r\n           }\r\n           if (\"none\".equals(alg)) {\r\n               throw ImplMessages.msg.noneSignatureAlgorithmUnsupported();\r\n           }\r\n           if (signingKey instanceof RSAPrivateKey) {\r\n               if (alg == null) {\r\n                   return SignatureAlgorithm.RS256.name();\r\n               } else if (alg.startsWith(\"RS\") || alg.startsWith(\"PS\")) {\r\n                   return alg;\r\n               }\r\n           } else if (signingKey instanceof ECPrivateKey) {\r\n               if (alg == null) {\r\n                   return SignatureAlgorithm.ES256.name();\r\n               } else if (alg.startsWith(\"ES\")) {\r\n                   return alg;\r\n               }\r\n           } else if (signingKey instanceof SecretKey) {\r\n               if (alg == null) {\r\n                   return SignatureAlgorithm.HS256.name();\r\n               } else if (alg.startsWith(\"HS\")) {\r\n                   return alg;\r\n               }\r\n           } else if (signingKey instanceof PrivateKey) {\r\n               // for example, sun.security.pkcs11.P11Key$P11PrivateKey\r\n               if (isEdECPrivateKey(signingKey)) {\r\n                   if (alg == null || alg.equals(SignatureAlgorithm.EDDSA.getAlgorithm())) {\r\n                       return SignatureAlgorithm.EDDSA.getAlgorithm();\r\n                   }\r\n               }\r\n               if (alg == null) {\r\n                   return SignatureAlgorithm.RS256.name();\r\n               } else if (alg.startsWith(\"RS\") || alg.startsWith(\"PS\") || alg.startsWith(\"ES\")) {\r\n                   return alg;\r\n               }\r\n           }\r\n           throw ImplMessages.msg.unsupportedSignatureAlgorithm(signingKey.getAlgorithm());\r\n       }\r\n   ```\r\n\r\n   So which method calls it? A method called ```signInternal()```(marked with `here2` in the 3rd block),  which is used in function ```sign()```. \r\n\r\n   ```java\r\n   private String signInternal(Key signingKey) {\r\n           if (signingKey == null) {\r\n               throw ImplMessages.msg.signingKeyIsNull();\r\n           }\r\n           JwtBuildUtils.setDefaultJwtClaims(claims, tokenLifespan);\r\n           JsonWebSignature jws = new JsonWebSignature();\r\n           for (Map.Entry<String, Object> entry : headers.entrySet()) {\r\n               jws.setHeader(entry.getKey(), entry.getValue());\r\n           }\r\n           if (!headers.containsKey(\"typ\")) {\r\n               jws.setHeader(\"typ\", \"JWT\");\r\n           }\r\n   \r\n           String algorithm = getSignatureAlgorithm(signingKey);\r\n   \r\n           jws.setAlgorithmHeaderValue(algorithm);\r\n   \r\n           jws.setPayload(claims.toJson());\r\n           jws.setKey(signingKey);\r\n           if (isRelaxKeyValidation()) {\r\n               jws.setDoKeyValidation(false);\r\n           }\r\n           try {\r\n               return jws.getCompactSerialization();\r\n           } catch (Exception ex) {\r\n               throw ImplMessages.msg.signJwtTokenFailed(ex.getMessage(), ex);\r\n           }\r\n       }\r\n   ```\r\n\r\n5. I don't know why we need to get the signature algorithm at the same time as I get the key. It is helpless and makes a exception, and we can get the signature algorithm later in the process.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### Quarkus version or git rev\n\n3.9.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle8.2\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40062/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40062/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

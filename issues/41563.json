@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41563",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41563/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41563/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41563/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41563",
+  "id": 2381876064,
+  "node_id": "I_kwDOCFbutM6N-Itg",
+  "number": 41563,
+  "title": "Can't use other dataformat of Jackson like xml for Jackson Rest Client",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-06-29T17:35:42Z",
+  "updated_at": "2024-07-05T04:12:04Z",
+  "closed_at": "2024-07-02T06:39:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe can't use another data format of Jackson than xml, csv, yaml ... with a Jackson Rest client. We can only deserialize Json format.\r\n\r\nJackson proposes multiple data format to serialize/deserialize. It could be interresting to use them with Quarkus.\r\n\r\nQuarkus proposes to customize `ObjectMapper` using  `@ClientObjectMapper` but we can't create a `XmlMapper` which extends `ObjectMapper` and use for deserializing HTTP response with media type \"application/xml\"\r\n\r\nI try documentation:\r\n\r\n```\r\nWhen the quarkus-rest-client-jackson extension is installed, Quarkus will use the application/json media type by default for most return values, unless the media type is explicitly set via @Produces or @Consumes annotations.\r\n\r\nIf you don’t rely on the JSON default, it is heavily recommended to annotate your endpoints with the @Produces and @Consumes annotations to define precisely the expected content-types. It will allow to narrow down the number of Jakarta REST providers (which can be seen as converters) included in the native executable.\r\n```\r\nBut no effect.\r\n\r\n### Expected behavior\r\n\r\nYou must let Jackson to deserialize HTTP response using the custom ObjectMapper defined with `@ClientObjectMapper`. The Jackson rest client can consumes another media type like \"application/xml\" \"application/csv\" or \"application/yaml\", ...\r\n\r\n### Actual behavior\r\n\r\nWe have an error:\r\n\r\n```\r\nError when we process XML: jakarta.ws.rs.ProcessingException: Response could not be mapped to type class MyXmlObject for response with media type application/xml. Hints: Consider adding the 'quarkus-rest-client-reactive-jaxb' extension\r\n\tat org.jboss.resteasy.reactive.client.impl.ClientReaderInterceptorContextImpl.proceed(ClientReaderInterceptorContextImpl.java:132)\r\n\tat org.jboss.resteasy.reactive.client.impl.ClientSerialisers.invokeClientReader(ClientSerialisers.java:160)\r\n\tat org.jboss.resteasy.reactive.client.impl.RestClientRequestContext.readEntity(RestClientRequestContext.java:209)\r\n\tat org.jboss.resteasy.reactive.client.handlers.ClientResponseCompleteRestHandler.mapToResponse(ClientResponseCompleteRestHandler.java:105)\r\n\tat org.jboss.resteasy.reactive.client.handlers.ClientResponseCompleteRestHandler.handle(ClientResponseCompleteRestHandler.java:35)\r\n\tat org.jboss.resteasy.reactive.client.handlers.ClientResponseCompleteRestHandler.handle(ClientResponseCompleteRestHandler.java:31)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.invokeHandler(AbstractResteasyReactiveContext.java:231)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. `quarkus extension add quarkus-rest-client-jackson`\r\n2. Add to pom : \r\n```xml\r\n        <dependency>\r\n            <groupId>com.fasterxml.jackson.dataformat</groupId>\r\n            <artifactId>jackson-dataformat-xml</artifactId>\r\n        </dependency>\r\n```\r\n\r\n3. Create a rest client\r\n\r\n```java\r\npackage com.client;\r\n\r\nimport com.fasterxml.jackson.databind.ObjectMapper;\r\nimport com.fasterxml.jackson.dataformat.xml.XmlMapper;\r\nimport io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;\r\nimport jakarta.ws.rs.Consumes;\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\nimport org.eclipse.microprofile.rest.client.inject.RegisterRestClient;\r\n\r\nimport static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;\r\n\r\n@Path(\"/api\")\r\n@RegisterRestClient(configKey = \"my-api\")\r\npublic interface CustomRestClient {\r\n\r\n    @ClientObjectMapper\r\n    static ObjectMapper getXmlMapper() {\r\n        return XmlMapper.builder()\r\n                        .configure(FAIL_ON_UNKNOWN_PROPERTIES, false)\r\n                        .build();\r\n    }\r\n\r\n    @GET\r\n    @Consumes(\"application/xml\")\r\n    MyXmlObject get();\r\n}\r\n\r\n```\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux L-5CD3476MQP 5.15.153.1-microsoft-standard-WSL2 #1 SMP Fri Mar 29 23:14:13 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.10\" 2024-01-16 OpenJDK Runtime Environment Temurin-17.0.10+7 (build 17.0.10+7) OpenJDK 64-Bit Server VM Temurin-17.0.10+7 (build 17.0.10+7, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /home/xxx/.m2/wrapper/dists/apache-maven-3.9.6-bin/e68bf935/apache-maven-3.9.6 Java version: 17.0.10, vendor: Eclipse Adoptium, runtime: /home/xxx/.jbang/cache/jdks/17 Default locale: en, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.153.1-microsoft-standard-wsl2\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41563/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41563/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

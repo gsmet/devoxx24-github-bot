@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27061",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27061/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27061/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27061/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27061",
+  "id": 1324456623,
+  "node_id": "I_kwDOCFbutM5O8Zqv",
+  "number": 27061,
+  "title": "Building thin JAR on Windows sometimes leads to file access race",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 29,
+  "created_at": "2022-08-01T13:45:57Z",
+  "updated_at": "2023-11-16T10:31:16Z",
+  "closed_at": "2023-11-16T10:31:16Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe use `QuarkusBootstrap.Builder` to build app artifact manually here https://github.com/quarkus-qe/quarkus-test-framework/blob/main/quarkus-test-core/src/main/java/io/quarkus/test/services/quarkus/ProdQuarkusApplicationManagedResourceBuilder.java#L149 and since `2022/06/29`, our daily CI sometimes fails with the following exception:\r\n\r\n```posh\r\n2022-07-29T23:51:27.0147089Z 23:51:26,971 INFO  Building native image source jar: target\\GreetingResourceIT\\blocking\\blocking-native-image-source-jar\\blocking-runner.jar\r\n...\r\n2022-07-29T23:51:28.5118448Z \t[error]: Build step io.quarkus.deployment.pkg.steps.JarResultBuildStep#buildRunnerJar threw an exception: java.lang.IllegalStateException: java.nio.file.FileSystemException: target\\GreetingResourceIT\\blocking\\blocking-native-image-source-jar\\lib\\io.quarkus.quarkus-resteasy-999-SNAPSHOT.jar: The process cannot access the file because it is being used by another process.\r\n2022-07-29T23:51:28.5126913Z \r\n2022-07-29T23:51:28.5127517Z \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:990)\r\n2022-07-29T23:51:28.5128090Z \tat io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n2022-07-29T23:51:28.5132612Z \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n2022-07-29T23:51:28.5133571Z \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n2022-07-29T23:51:28.5135416Z \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n2022-07-29T23:51:28.5135939Z \tat java.base/java.lang.Thread.run(Thread.java:829)\r\n2022-07-29T23:51:28.5136417Z \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n2022-07-29T23:51:28.5149949Z Caused by: java.nio.file.FileSystemException: target\\GreetingResourceIT\\blocking\\blocking-native-image-source-jar\\lib\\io.quarkus.quarkus-resteasy-999-SNAPSHOT.jar: The process cannot access the file because it is being used by another process.\r\n2022-07-29T23:51:28.5150642Z \r\n2022-07-29T23:51:28.5150998Z \tat java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:92)\r\n2022-07-29T23:51:28.5152363Z \tat java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)\r\n2022-07-29T23:51:28.5163358Z \tat java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)\r\n2022-07-29T23:51:28.5165097Z \tat java.base/sun.nio.fs.WindowsFileSystemProvider.newByteChannel(WindowsFileSystemProvider.java:235)\r\n2022-07-29T23:51:28.5165771Z \tat java.base/java.nio.file.Files.newByteChannel(Files.java:371)\r\n2022-07-29T23:51:28.5166252Z \tat java.base/java.nio.file.Files.newByteChannel(Files.java:422)\r\n2022-07-29T23:51:28.5166873Z \tat java.base/java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:420)\r\n2022-07-29T23:51:28.5220898Z \tat java.base/java.nio.file.Files.newInputStream(Files.java:156)\r\n2022-07-29T23:51:28.5221724Z \tat java.base/java.nio.file.CopyMoveHelper.copyToForeignTarget(CopyMoveHelper.java:125)\r\n2022-07-29T23:51:28.5222265Z \tat java.base/java.nio.file.Files.copy(Files.java:1298)\r\n2022-07-29T23:51:28.5222877Z \tat io.quarkus.deployment.pkg.steps.JarResultBuildStep$8.visitPath(JarResultBuildStep.java:1326)\r\n2022-07-29T23:51:28.5229567Z \tat io.quarkus.paths.PathTreeVisit.walk(PathTreeVisit.java:26)\r\n2022-07-29T23:51:28.5230353Z \tat io.quarkus.paths.DirectoryPathTree.walk(DirectoryPathTree.java:89)\r\n2022-07-29T23:51:28.5231029Z \tat io.quarkus.deployment.pkg.steps.JarResultBuildStep.lambda$copyFiles$13(JarResultBuildStep.java:1299)\r\n2022-07-29T23:51:28.5231939Z \tat io.quarkus.deployment.ApplicationArchiveImpl.accept(ApplicationArchiveImpl.java:103)\r\n2022-07-29T23:51:28.5232707Z \tat io.quarkus.deployment.pkg.steps.JarResultBuildStep.copyFiles(JarResultBuildStep.java:1298)\r\n2022-07-29T23:51:28.5237699Z \tat io.quarkus.deployment.pkg.steps.JarResultBuildStep.buildThinJar(JarResultBuildStep.java:671)\r\n2022-07-29T23:51:28.5238537Z \tat io.quarkus.deployment.pkg.steps.JarResultBuildStep.buildRunnerJar(JarResultBuildStep.java:218)\r\n2022-07-29T23:51:28.5239296Z \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n2022-07-29T23:51:28.5247913Z \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n2022-07-29T23:51:28.5248743Z \tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n2022-07-29T23:51:28.5249421Z \tat java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n2022-07-29T23:51:28.5249979Z \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:981)\r\n2022-07-29T23:51:28.5254533Z \t... 6 more\r\n...\r\n```\r\n\r\nThe first time failed on Jun 29 in 1h 11m 30s. The issue only happens the Windows in the native mode.\r\nThe exception is thrown by the `Files.copy` here https://github.com/quarkusio/quarkus/blob/main/core/deployment/src/main/java/io/quarkus/deployment/pkg/steps/JarResultBuildStep.java#L1326. Previous changes to the file seems unrelated to me.\r\n\r\nThis issue started after Quarkus stopped to force uber-jar on OS WIndows (the PR from 22.6) https://github.com/quarkusio/quarkus/pull/26289 You can see in the logs above `Building native image source jar` that prooves we are building thin jar now. Prior to the PR, `WARN  Uber JAR strategy is used for native image source JAR generation on Windows. This is done for the time being to work around a current GraalVM limitation on Windows concerning the maximum command length (see https://github.com/oracle/graal/issues/2387).` had been logged.\r\n\r\n### Expected behavior\r\n\r\nNo exception is thrown.\r\n\r\n### Actual behavior\r\n\r\nThe exception is sometimes thrown.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\n\r\nSteps to reproduce the behavior:\r\n1.git clone https://github.com/michalvavrik/quarkus-test-framework/tree/quarkus-issue-27061-win-native-bloc-reactive-repro\r\n2. mvn clean install -DskipITs -DskipTests\r\n3. cd examples/blocking-reactive-model/\r\n4. mvn clean verify -Dnative -Dquarkus.platform.version=999-SNAPSHOT\r\n\r\nI absolutely understand that reproducer is insufficient, but maybe you could have a look at our daily CI runs were failure is logged https://github.com/quarkus-qe/quarkus-test-framework/actions/workflows/daily.yaml (see `Daily - Windows - Native build - Latest Version (11, 999-SNAPSHOT, 22.1.0.java11)`).\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows Server 2022\r\n\r\n### Output of `java -version`\r\n\r\nJava Version 11.0.13+7-jvmci-21.3-b05\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nGraalVM 21.3.0\r\n\r\n### Quarkus version or git rev\r\n\r\n999-SNAPSHOT\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27061/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27061/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

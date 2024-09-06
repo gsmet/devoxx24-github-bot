@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25827",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25827/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25827/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25827/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25827",
+  "id": 1250506654,
+  "node_id": "I_kwDOCFbutM5KiTee",
+  "number": 25827,
+  "title": "Support async valueLoader in quarkus-cache",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-05-27T08:46:06Z",
+  "updated_at": "2023-03-21T09:01:38Z",
+  "closed_at": "2023-03-21T09:01:37Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nWhen i use Cache.get() method, if the loader's type is (K)->Uni<V>, it returns Uni<Uni<V>> (e.g. use some reactive client)\r\n\r\njust like \r\n```\r\n    fun foo(key:String): Uni<Uni<Data>> = cache.get(key) {\r\n        someClient.query(key)  // it return Uni<Data>\r\n              // .await().indefinitely()  it will blocking vertx eventloop thread\r\n    }\r\n```\r\n\r\nand i can't await it in loader if using resteasy reactive stack.\r\n\r\n\r\n\r\n\r\n### Implementation ideas\r\n\r\n```\r\n\r\n    fun <K, V> getWithAsyncLoader(key: K, loader: (K) -> Uni<V>): Uni<V> {\r\n        val r = Uni.createFrom().completionStage { getFromCaffeineAsync(key, loader) }\r\n        return cast(r)\r\n    }\r\n\r\n    private fun <K, V> getFromCaffeineWithAsyncLoader(key: K, loader: (K) -> Uni<V>): CompletableFuture<Any?> {\r\n        val newCacheValue = CompletableFuture<Any>()\r\n        val existingCacheValue = cache.asMap().putIfAbsent(key!!, newCacheValue)\r\n        return if (existingCacheValue == null) {\r\n            loader(key).subscribe().with({ v ->\r\n                newCacheValue.complete(v)\r\n            }, { t ->\r\n                cache.asMap().remove(key, newCacheValue)\r\n                newCacheValue.complete(CaffeineComputationThrowable(t))\r\n            })\r\n            unwrapCacheValueOrThrowable(newCacheValue)\r\n        } else {\r\n            unwrapCacheValueOrThrowable(existingCacheValue)\r\n        }\r\n    }\r\n\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25827/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25827/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

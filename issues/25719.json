@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25719",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25719/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25719/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25719/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25719",
+  "id": 1244761924,
+  "node_id": "I_kwDOCFbutM5KMY9E",
+  "number": 25719,
+  "title": "Configurations for Authorization of Web Endpoint doesn't work properly with different profiles",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-05-23T08:19:00Z",
+  "updated_at": "2022-05-24T13:52:27Z",
+  "closed_at": "2022-05-24T13:52:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm trying to configure different policies for different profiles in quarkus and only for these configurations, the ones defined for my prod profile are always being read.\r\n\r\nHere is my configuration file (application.yaml):\r\n\r\n```yaml\r\nquarkus:\r\n  datasource:\r\n    db-kind: postgresql\r\n    jdbc:\r\n      url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_WLY_NAME}\r\n    username: ${DB_USER}\r\n    password: ${DB_PASS}\r\n  http:\r\n    cors: true\r\n    auth:\r\n      policy:\r\n        report-policy:\r\n          roles-allowed: MyApp.Report, MyApp.Developer\r\n        analytics-policy:\r\n          roles-allowed: MyApp.Analytics, MyApp.Developer\r\n      permission:\r\n        report:\r\n          paths: /api/v2/users/report\r\n          policy: report-policy\r\n        analytics:\r\n          paths: /api/v2/analytics/*\r\n          policy: analytics-policy\r\n\"%prod\":\r\n  quarkus:\r\n      auth:\r\n        policy:\r\n          report-policy:\r\n            roles-allowed: MyApp.Report\r\n          analytics-policy:\r\n            roles-allowed: MyApp.Analytics\r\n\r\n\"%dev\":\r\n  quarkus:\r\n    hibernate-orm:\r\n      log:\r\n        sql: true\r\n        format-sql: true\r\n        jdbc-warnings: true\r\n\r\n\"%local\":\r\n  quarkus:\r\n    datasource:\r\n      jdbc:\r\n        url: jdbc:postgresql://${DB_HOST}:5433/${DB_WLY_NAME}\r\n    hibernate-orm:\r\n      log:\r\n        sql: true\r\n        format-sql: true\r\n        jdbc-warnings: true\r\n```\r\nOn my machine, using quarkus plugin on IntelliJ and the different profiles, the configurations work properly, but when I package the code with mvn command **mvn clean package** run it on docker passing the environment \"QUARKUS_PROFILE=dev\" or \"-Dquarkus.profile=dev\" on JAVA_OPTIONS environment variable, The applications will assume the prod profile only for \"quarkus.auth\" properties, the hibernate-orm works fine for example.\r\nBut If I package the code with dev profile **mvn clean package -Dquarkus.profile=dev** the configurations are correct, but I won't do that, I want to build the application just one time and pass different environment variables.\r\n\r\n\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nWhen passed the QUARKUS_PROFILE=dev the application will considers the **MyApp.Report** and **MyApp.Developer** roles\r\n\r\n### Actual behavior\r\n\r\nWhen passed the QUARKUS_PROFILE=dev the application considers the **MyApp.Report** role\r\n\r\n### How to Reproduce?\r\n\r\n1. Use different policies for different quarkus profiles on application.yaml config file\r\n2. Compile the application **mvn clean package**\r\n3. Run the application with **QUARKUS_PROFILE=dev** environment variable\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux myapp-backend-7fbd44bc98-xxxx 5.4.0-1063-azure #66~18.04.1-Ubuntu SMP Thu Oct 21 09:59:28 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.15\" 2022-04-19 LTS OpenJDK Runtime Environment 18.9 (build 11.0.15+10-LTS) OpenJDK 64-Bit Server VM 18.9 (build 11.0.15+10-LTS, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.5.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Maven home: /Users/xxxxxx/.m2/wrapper/dists/apache-maven-3.8.4-bin/52ccbt68d252mdldqsfsn03jlf/apache-maven-3.8.4 Java version: 1.8.0_232, vendor: AdoptOpenJDK, runtime: /Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/jre Default locale: en_PT, platform encoding: UTF-8 OS name: \"mac os x\", version: \"10.16\", arch: \"x86_64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25719/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25719/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

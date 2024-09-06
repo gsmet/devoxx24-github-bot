@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40260",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40260/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40260/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40260/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40260",
+  "id": 2262037926,
+  "node_id": "I_kwDOCFbutM6G0_Wm",
+  "number": 40260,
+  "title": "OidcClientImpl does not support quarkus.oidc.credentials.client-secret.method=query",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-04-24T19:36:31Z",
+  "updated_at": "2024-04-26T10:40:37Z",
+  "closed_at": "2024-04-26T10:39:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI configured the OIDC client to use `quarkus.oidc.credentials.client-secret.method=query`.\r\n\r\nIn my POM I have the following 2 dependencies, which I understand from the helptext from the documentation should be sufficient to make it work:\r\n\r\n```\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-oidc</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-oidc-client</artifactId>\r\n        </dependency>\r\n```\r\n\r\nThe documentation I refer to is [OIDC configuration reference](https://quarkus.io/guides/security-oidc-configuration-properties-reference)\r\n\r\nSee this screenshot for the relevant part I am referring to.\r\n![image](https://github.com/quarkusio/quarkus/assets/10324233/545e630a-c9db-4cc7-a190-e970393e2a66)\r\n\r\nUnfortunately when I set this parameter the `client_id` and `client_secret` are not attached as Query Parameter, so I debugged the code of the `OidcClientImpl` and there seems to be a missing implementation. I checked the implementation beginning from version *3.8* up 'til *main*  which is why I create this bug.\r\n\r\nIf I understand it correctly (and I changed this particular code within my own OidcClientImpl) the handling is just missing for this configuration value. See `io.quarkus.oidc.client.runtime.OidcClientImpl#postRequest` method:\r\n\r\n```\r\nelse if (OidcCommonUtils.isClientSecretPostAuthRequired(oidcConfig.credentials)) {\r\n      body = !refresh ? copyMultiMap(body) : body;\r\n      body.set(OidcConstants.CLIENT_ID, oidcConfig.clientId.get());\r\n      body.set(OidcConstants.CLIENT_SECRET, OidcCommonUtils.clientSecret(oidcConfig.credentials));\r\n}\r\n```\r\n\r\nin this particular `if` condition I think should be added another `if` condition which checks if the values should be added to the `body` of the request or as `query` parameter.\r\n\r\n```\r\nelse if (OidcCommonUtils.isClientSecretPostAuthRequired(oidcConfig.credentials)) {\r\n      body = !refresh ? copyMultiMap(body) : body;\r\n      body.set(OidcConstants.CLIENT_ID, oidcConfig.clientId.get());\r\n      body.set(OidcConstants.CLIENT_SECRET, OidcCommonUtils.clientSecret(oidcConfig.credentials));\r\n}\r\n```\r\n\r\nset them as query parameter into the request:\r\n```\r\nrequest.setQueryParam(OidcConstants.CLIENT_ID, oidcConfig.getClientId().get());\r\nrequest.setQueryParam(OidcConstants.CLIENT_SECRET, OidcCommonUtils.clientSecret(oidcConfig.credentials));\r\n```\n\n### Expected behavior\n\nWhen I configure the property `quarkus.oidc.credentials.client-secret.method=query` with the value query, the `client_id` and `client_secret` are actually used and appended as query parameter to the post request.\n\n### Actual behavior\n\nThe query parameter are not set, even though the values are configured.\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nDarwin XXX.local 23.4.0 Darwin Kernel Version 23.4.0: Fri Mar 15 00:10:42 PDT 2024; root:xnu-10063.101.17~1/RELEASE_ARM64_T6000 arm64 arm Darwin\n\n### Output of `java -version`\n\n17\n\n### Quarkus version or git rev\n\n3.9.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /opt/homebrew/Cellar/maven/3.9.6/libexec Java version: 17.0.3, vendor: Amazon.com Inc., runtime: /Users/daniel/Library/Java/JavaVirtualMachines/corretto-17.0.3/Contents/Home Default locale: en_AT, platform encoding: UTF-8 OS name: \"mac os x\", version: \"14.4.1\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40260/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40260/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

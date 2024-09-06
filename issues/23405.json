@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23405",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23405/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23405/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23405/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23405",
+  "id": 1122904095,
+  "node_id": "I_kwDOCFbutM5C7igf",
+  "number": 23405,
+  "title": "MongoHealthCheck doesn't work",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236032169,
+      "node_id": "MDU6TGFiZWwyMjM2MDMyMTY5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/health",
+      "name": "area/health",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-02-03T10:24:20Z",
+  "updated_at": "2022-02-03T16:21:37Z",
+  "closed_at": "2022-02-03T16:21:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMongoDB connection health check always UP\r\n\r\nQuarkus Version: `2.6.3.Final`\n\n### Expected behavior\n\n`\"status\": \"DOWN\"` when MongoDB is not reachable\n\n### Actual behavior\n\n`\"status\": \"UP\"` when MongoDB is not reachable\n\n### How to Reproduce?\n\n## Sources\r\n\r\npom.xml\r\n```xml\r\n  <dependencies>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-resteasy-reactive-jsonb</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-mongodb-client</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-mongodb-panache</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-resteasy-reactive</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-health</artifactId>\r\n    </dependency>\r\n  </dependencies>\r\n```\r\n\r\n`src/main/java/com/acme/MyLivenessCheck.java`\r\n\r\n```java\r\n@Liveness\r\npublic class MyLivenessCheck implements HealthCheck {\r\n\r\n    @Override\r\n    public HealthCheckResponse call() {\r\n        return HealthCheckResponse.up(\"alive\");\r\n    }\r\n\r\n}\r\n```\r\n\r\n## Build\r\n\r\nNative Build\r\n```shell\r\n./mvnw package -Pnative\r\n\r\n```\r\n\r\nAnd run in a Docker Environment using the `src/main/docker/Dockerfile.native`\r\n\r\n```dockerfile\r\nFROM quay.io/quarkus/quarkus-micro-image:1.0\r\nWORKDIR /work/\r\nRUN chown 1001 /work \\\r\n    && chmod \"g+rwX\" /work \\\r\n    && chown 1001:root /work\r\nCOPY --chown=1001:root target/*-runner /work/application\r\n\r\nEXPOSE 8080\r\nUSER 1001\r\n\r\nCMD [\"./application\", \"-Dquarkus.http.host=0.0.0.0\"]\r\n```\r\n\r\n## Test it\r\n\r\n```shell\r\ncurl -sk http://localhost:8080/q/health |  jq\r\n```\r\n\r\nReturns but Mongo DB is shut down\r\n\r\n```json \r\n{\r\n  \"status\": \"UP\",\r\n  \"checks\": [\r\n    {\r\n      \"name\": \"alive\",\r\n      \"status\": \"UP\"\r\n    },\r\n    {\r\n      \"name\": \"MongoDB connection health check\",\r\n      \"status\": \"UP\"\r\n    }\r\n  ]\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\nquay.io/quarkus/quarkus-micro-image:1.0\n\n### Output of `java -version`\n\nquay.io/quarkus/ubi-quarkus-native-image:21.3.0-java11\n\n### GraalVM version (if different from Java)\n\nquay.io/quarkus/ubi-quarkus-native-image:21.3.0-java11\n\n### Quarkus version or git rev\n\n2.6.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nquay.io/quarkus/ubi-quarkus-native-image:21.3.0-java11\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23405/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23405/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

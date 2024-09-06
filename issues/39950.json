@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39950",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39950/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39950/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39950/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39950",
+  "id": 2231366955,
+  "node_id": "I_kwDOCFbutM6E__Ur",
+  "number": 39950,
+  "title": "File and FileUpload result in different OpenAPI spec, upload button missing",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-04-08T14:25:49Z",
+  "updated_at": "2024-04-12T01:04:30Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe following:\r\n\r\n```kotlin\r\n@POST\r\n@Path(\"/file\")\r\nfun postFile(@RestForm file: File): String {\r\n    // Do nothing\r\n    return \"File\"\r\n}\r\n\r\n@POST\r\n@Path(\"/fileupload\")\r\nfun postFileUpload(@RestForm fileUpload: FileUpload): String {\r\n    // Do nothing\r\n    return \"FileUpload\"\r\n}\r\n```\r\n\r\nResults in different OpenAPI specs for each endpoint, the upload button is missing in the SwaggerUI for the FileUpload endpoint. \r\n\r\nFile endpoint:\r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/1055477/24c587f2-fe20-4664-9ab5-4c2a6fc2acad)\r\n\r\nFileUpload endpoint:\r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/1055477/85e3e633-01c2-4639-8643-63cc4d45346c)\r\n\r\nI am not sure if this is intended behavior?\n\n### Expected behavior\n\nI expected to be able to use File and FileUpload interchangeably (from OpenAPI point of view). \n\n### Actual behavior\n\nFile and FileUpload endpoints have vastly different OpenAPI specs. When using FileUpload there is no upload button in the SwaggerUI. When using File there is a file upload button. \n\n### How to Reproduce?\n\nReproducer: https://github.com/BrianSetz/quarkus-file-fileupload-reproducer (or use the above endpoint definitions in a Quarkus project with Reactive REST and OpenAPI)\r\n\r\nSteps to reproduce the behavior:\r\n1. Run Quarkus app\r\n2. Open Quarkus Dev UI\r\n3. Navigate to Swagger UI\r\n4. Compare endpoints / OpenAPI spec\n\n### Output of `uname -a` or `ver`\n\nLinux p15v 6.5.0-26-generic #26-Ubuntu SMP PREEMPT_DYNAMIC Tue Mar  5 21:19:28 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nJava 17\n\n### Quarkus version or git rev\n\n3.9.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.6\n\n### Additional information\n\nOpenAPI spec:\r\n\r\n```yaml\r\n---\r\nopenapi: 3.0.3\r\ninfo:\r\n  title: demo API\r\n  version: 1.0-SNAPSHOT\r\npaths:\r\n  /hello:\r\n    get:\r\n      tags:\r\n      - Example Resource\r\n      responses:\r\n        \"200\":\r\n          description: OK\r\n          content:\r\n            text/plain:\r\n              schema:\r\n                type: string\r\n  /hello/file:\r\n    post:\r\n      tags:\r\n      - Example Resource\r\n      requestBody:\r\n        content:\r\n          application/x-www-form-urlencoded:\r\n            schema:\r\n              required:\r\n              - file\r\n              type: object\r\n              properties:\r\n                file:\r\n                  format: binary\r\n                  type: string\r\n      responses:\r\n        \"200\":\r\n          description: OK\r\n          content:\r\n            text/plain:\r\n              schema:\r\n                type: string\r\n  /hello/fileupload:\r\n    post:\r\n      tags:\r\n      - Example Resource\r\n      requestBody:\r\n        content:\r\n          application/x-www-form-urlencoded:\r\n            schema:\r\n              type: object\r\n              properties:\r\n                fileUpload:\r\n                  $ref: '#/components/schemas/FileUpload'\r\n      responses:\r\n        \"200\":\r\n          description: OK\r\n          content:\r\n            text/plain:\r\n              schema:\r\n                type: string\r\ncomponents:\r\n  schemas:\r\n    FileUpload:\r\n      type: object\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39950/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39950/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "reopened"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40134",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40134/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40134/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40134/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40134",
+  "id": 2250178037,
+  "node_id": "I_kwDOCFbutM6GHv31",
+  "number": 40134,
+  "title": "Manually managing the grpc client, concurrency error: ContextManagerProvider already set",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 3700813587,
+      "node_id": "LA_kwDOCFbutM7cle8T",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/context-propagation",
+      "name": "area/context-propagation",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-04-18T09:10:43Z",
+  "updated_at": "2024-04-21T10:48:57Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen I manually manage grpc client, errors occur when calling services in a multi-threaded environment\r\n\r\nThere is test code:\r\n\r\n``` java\r\npackage com.example.test;\r\n\r\nimport com.example.test.ClusterDataGrpcClient;\r\nimport com.example.test.ClusterDataProto.NetRequestProto;\r\nimport com.example.test.dto.Int64ResponseProto;\r\nimport io.grpc.ManagedChannel;\r\nimport io.grpc.ManagedChannelBuilder;\r\nimport io.smallrye.mutiny.Uni;\r\nimport java.time.Duration;\r\nimport java.util.Date;\r\nimport java.util.concurrent.ExecutorService;\r\nimport java.util.concurrent.Executors;\r\nimport org.apache.commons.lang3.time.DateUtils;\r\n\r\n\r\npublic class GrpcClientTest {\r\n\r\n  public static void main(String[] args) throws InterruptedException {\r\n    Date to = new Date();\r\n    Date from = DateUtils.addDays(to, -1);\r\n    ExecutorService executorService = Executors.newFixedThreadPool(2);\r\n    // runGrpc(1, from, to);\r\n    for (int i = 0; i < 2; i++) {\r\n      int finalI = i;\r\n\r\n      executorService.execute(() -> {\r\n        ManagedChannel channel = ManagedChannelBuilder.forAddress(\"localhost\",\r\n                Integer.parseInt(\"9000\"))\r\n            // Channels are secure by default (via SSL/TLS). For the example we disable TLS to avoid\r\n            // needing certificates.\r\n            .usePlaintext()\r\n            .build();\r\n        ClusterDataGrpcClient clusterDataGrpcClient = new ClusterDataGrpcClient(\"test\" + finalI,\r\n            channel, (n, mutinyClusterDataGrpcStub) -> mutinyClusterDataGrpcStub);\r\n        System.out.println(Thread.currentThread().getName() + \":\" + new Date());\r\n        // call grpc server\r\n        Uni<Int64ResponseProto> aPublic = clusterDataGrpcClient.getEgress(\r\n            NetRequestProto.newBuilder()\r\n                .build());\r\n        System.out.println(\r\n            Thread.currentThread().getName() + \":\" + \"no:\" + finalI + \">>>\" + aPublic.await()\r\n                .atMost(Duration.ofSeconds(10)).getValue());\r\n        System.out.println(Thread.currentThread().getName() + \":\" + new Date());\r\n      });\r\n    }\r\n    Thread.sleep(1000 * 1000);\r\n  }\r\n\r\n}\r\n\r\n\r\n```\r\n\r\nerror msg:\r\n```\r\npool-1-thread-2:Thu Apr 18 16:57:44 CST 2024\r\npool-1-thread-1:Thu Apr 18 16:57:44 CST 2024\r\nException in thread \"pool-1-thread-2\" java.lang.IllegalStateException: ContextManagerProvider already set\r\n\tat org.eclipse.microprofile.context.spi.ContextManagerProvider.instance(ContextManagerProvider.java:75)\r\n\tat io.smallrye.context.SmallRyeContextManagerProvider.instance(SmallRyeContextManagerProvider.java:101)\r\n\tat io.smallrye.context.SmallRyeContextManagerProvider.getManager(SmallRyeContextManagerProvider.java:97)\r\n\tat io.smallrye.context.SmallRyeThreadContext.getCurrentThreadContextOrDefaultContexts(SmallRyeThreadContext.java:160)\r\n\tat io.smallrye.mutiny.context.DefaultContextPropagationInterceptor.getThreadContext(DefaultContextPropagationInterceptor.java:12)\r\n\tat io.smallrye.mutiny.context.BaseContextPropagationInterceptor.decorate(BaseContextPropagationInterceptor.java:33)\r\n\tat io.smallrye.mutiny.infrastructure.Infrastructure.decorate(Infrastructure.java:152)\r\n\tat io.smallrye.mutiny.groups.UniCreate.emitter(UniCreate.java:420)\r\n\tat io.quarkus.grpc.stubs.ClientCalls.oneToOne(ClientCalls.java:22)\r\n\tat com.example.test.MutinyClusterDataGrpcGrpc$MutinyClusterDataGrpcStub.getEgress(MutinyClusterDataGrpcGrpc.java:112)\r\n\tat com.example.test.ClusterDataGrpcClient.getEgress(ClusterDataGrpcClient.java:65)\r\n\tat com.example.test.GrpcClientTest.lambda$main$1(GrpcClientTest.java:40)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\npool-1-thread-1:no:0>>>0\r\npool-1-thread-1:Thu Apr 18 16:57:47 CST 2024\r\n\r\n```\r\nerror code path：org.eclipse.microprofile.context.spi.ContextManagerProvider#instance (microprofile-context-propagation-api-1.3.jar)\r\n\r\nWhen setting up multithreading, after one thread is successfully set up, the other thread fails to set up.\r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/20607146/2866fa8d-e231-4d9a-b6bc-2403578bd952)\r\n\r\n\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n3.9.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40134/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40134/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

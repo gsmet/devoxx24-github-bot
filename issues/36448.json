@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36448",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36448/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36448/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36448/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36448",
+  "id": 1940131474,
+  "node_id": "I_kwDOCFbutM5zpA6S",
+  "number": 36448,
+  "title": "Context Propagation in combination with RequestContext and PostConstruction",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 3700813587,
+      "node_id": "LA_kwDOCFbutM7cle8T",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/context-propagation",
+      "name": "area/context-propagation",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-10-12T14:31:04Z",
+  "updated_at": "2023-10-13T08:29:23Z",
+  "closed_at": "2023-10-13T08:29:23Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIt seems, that request scoped beans get generated multiple times, if the \"PostConstruct\" hooks needs some time and the beans are called in multiple threads simultaneously. I think I did all \"configuration\" steps correctly, including using a `ManagedExecutor` and propagate the `ThreadContext.CDI` in propagated contexts.\n\n### Expected behavior\n\nBeans annotated via `RequestScoped` should not get generated multiple times, because this may lead to unexpected problems during parallel initialization.\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nI created a small JUnit test for this:\r\n\r\n``` java \r\n@QuarkusTest\r\npublic class Demo\r\n{\r\n  @Inject\r\n  private MyBean bean;\r\n\r\n  @Inject\r\n  @ManagedExecutorConfig(propagated = ThreadContext.CDI)\r\n  private ManagedExecutor exec;\r\n\r\n  @ParameterizedTest\r\n  @ValueSource(ints = {1, 10, 100})\r\n  void shouldInitOnce(int pParallelizationCount)\r\n  {\r\n    // reset inner calls\r\n    MyBean.instances.set(0);\r\n\r\n    // run X calls on our injected bean\r\n    CompletableFuture.allOf(\r\n        IntStream.range(0, pParallelizationCount)\r\n            .mapToObj(pIdx -> CompletableFuture.runAsync(() -> bean.doSomething(), exec))\r\n            .toArray(CompletableFuture[]::new)\r\n    ).join();\r\n\r\n    // check the created instances\r\n    assertEquals(1, MyBean.instances.get());\r\n  }\r\n\r\n  @RequestScoped\r\n  public static class MyBean\r\n  {\r\n    private static final AtomicInteger instances = new AtomicInteger(0);\r\n\r\n    public void doSomething()\r\n    {\r\n    }\r\n\r\n    @SneakyThrows\r\n    @PostConstruct\r\n    public void onConstruct()\r\n    {\r\n      instances.incrementAndGet();\r\n\r\n      // simulate a long running task\r\n      Thread.sleep(50);\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThere you can see, that the `MyBean#onConstruct()` is forced to take at least 50ms. This leads to test failures, if the parallelization count is larger than 1.\n\n### Output of `uname -a` or `ver`\n\nDarwin wglanzer-mb.home.lan 22.5.0 Darwin Kernel Version 22.5.0: Thu Jun  8 22:22:22 PDT 2023; root:xnu-8796.121.3~7/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nGraalVM 17.0.8\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.4.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.4 (dfbb324ad4a7c8fb0bf182e6d91b0ae20e3d2dd9)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36448/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36448/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

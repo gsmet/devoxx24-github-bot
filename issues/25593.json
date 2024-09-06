@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25593",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25593/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25593/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25593/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25593",
+  "id": 1236836566,
+  "node_id": "I_kwDOCFbutM5JuKDW",
+  "number": 25593,
+  "title": "oracle.jdbc.driver.OraclePreparedStatement.setLongInternal throws invalid column index error in Quarkus >=2.6.2",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-05-16T08:56:54Z",
+  "updated_at": "2022-05-31T07:58:59Z",
+  "closed_at": "2022-05-31T07:58:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nFrom Quarkus2.6.2/Hibernate5.6.1 to our current Quarkus2.8.2/Hibernate5.6.8 we are getting an invalid column index error when updating one of our entities.\r\nThe identical code did work without any problems up to (including) Quarkus1.13.7/Hibernate5.4.29.\r\nWe are using\r\n```\r\nquarkus.datasource.db-kind=oracle\r\nquarkus.hibernate-orm.dialect = org.hibernate.dialect.Oracle9iDialect\r\n```\r\n\r\nMy question is, whether this is a problem of:\r\n\r\n 1. The Oracle driver?\r\n 2. Hibernate?\r\n 3. Quarkus?\r\n 4. Something wrong in our code?\r\n\r\nHere is the entity:\r\n```\r\n@Entity\r\n@Table(name = \"USER_PREFERENCES\")\r\n@Data\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@Builder\r\n@SequenceGenerator(name = \"user_preferences_id_sequence\", sequenceName = \"USER_PREFERENCES_SEQ\", allocationSize = 1)\r\npublic class Preferences {\r\n\r\n    @Id\r\n    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = \"user_preferences_id_sequence\")\r\n    @Column(name = \"ID\")\r\n    private Long id;\r\n\r\n    @Column(name = \"TYP\")\r\n    private String typ;\r\n\r\n    @Column(name = \"MODEX\")\r\n    private String modex;\r\n\r\n    @Column(name = \"JSON\")\r\n    private String json;\r\n}\r\n```\r\n\r\nAnd here is the DB-Table as created via Liquibase:\r\n```\r\n<createTable tableName=\"USER_PREFERENCES\">\r\n    <column name=\"ID\" type=\"NUMBER(38,0)\">\r\n        <constraints nullable=\"false\" primaryKey=\"true\" />\r\n    </column>\r\n    <column name=\"MODEX\" type=\"VARCHAR2(12)\"/>\r\n    <column name=\"TYP\" type=\"VARCHAR2(100)\"/>\r\n    <column name=\"JSON\" type=\"CLOB\"/>\r\n</createTable>\r\n\r\nleading to:\r\n\r\nID\tNUMBER(38,0)\r\nMODEX\tVARCHAR2(12 CHAR)\r\nTYP\tVARCHAR2(100 CHAR)\r\nJSON\tCLOB\r\n```\r\n\r\nUpon calling `em.persist(preferences)` Hibernate creates the following output in both, the working and the not-working versions:\r\n```\r\n2022-05-16 08:50:39,914 DEBUG [org.hib.SQL] (executor-thread-1)\r\n    update\r\n        USER_PREFERENCES\r\n    set\r\n        JSON=?,\r\n        MODEX=?,\r\n        TYP=?\r\n    where\r\n        ID=?\r\nHibernate:\r\n    update\r\n        USER_PREFERENCES\r\n    set\r\n        JSON=?,\r\n        MODEX=?,\r\n        TYP=?\r\n    where\r\n        ID=?\r\n2022-05-16 08:50:39,918 TRACE [org.hib.typ.des.sql.BasicBinder] (executor-thread-1) binding parameter [1] as [VARCHAR] - [{\"autoSearch\":true,\"filter\":{\"statusId\":2,\"userId\":55,\"testProp\":\"xxx\"}}]\r\n2022-05-16 08:50:39,919 TRACE [org.hib.typ.des.sql.BasicBinder] (executor-thread-1) binding parameter [2] as [VARCHAR] - [testB985B]\r\n2022-05-16 08:50:39,921 TRACE [org.hib.typ.des.sql.BasicBinder] (executor-thread-1) binding parameter [3] as [VARCHAR] - [search_prefs]\r\n2022-05-16 08:50:39,923 TRACE [org.hib.typ.des.sql.BasicBinder] (executor-thread-1) binding parameter [4] as [BIGINT] - [11]\r\n```\r\n\r\nIn the not-working version, this leads to\r\n```\r\n2022-05-16 09:06:51,292 DEBUG [org.hib.eng.jdb.spi.SqlExceptionHelper] (executor-thread-0) could not update: [de.my.app.preferences.entity.Preferences#11] [update USER_PREFERENCES set JSON=?, MODEX=?, TYP=? where ID=?]: java.sql.SQLException: Ung³ltiger Spaltenindex\r\n        at oracle.jdbc.driver.OraclePreparedStatement.setLongInternal(OraclePreparedStatement.java:5005)\r\n        at oracle.jdbc.driver.OraclePreparedStatement.setLong(OraclePreparedStatement.java:4996)\r\n        at oracle.jdbc.driver.OraclePreparedStatementWrapper.setLong(OraclePreparedStatementWrapper.java:207)\r\n        at io.agroal.pool.wrapper.PreparedStatementWrapper.setLong(PreparedStatementWrapper.java:148)\r\n        at org.hibernate.type.descriptor.sql.BigIntTypeDescriptor$1.doBind(BigIntTypeDescriptor.java:46)\r\n        at org.hibernate.type.descriptor.sql.BasicBinder.bind(BasicBinder.java:73)\r\n        at org.hibernate.type.AbstractStandardBasicType.nullSafeSet(AbstractStandardBasicType.java:276)\r\n        at org.hibernate.type.AbstractStandardBasicType.nullSafeSet(AbstractStandardBasicType.java:271)\r\n        at org.hibernate.persister.entity.AbstractEntityPersister.dehydrateId(AbstractEntityPersister.java:3121)\r\n        at org.hibernate.persister.entity.AbstractEntityPersister.dehydrate(AbstractEntityPersister.java:3093)\r\n        at org.hibernate.persister.entity.AbstractEntityPersister.update(AbstractEntityPersister.java:3527)\r\n        ... 139 more\r\n```\r\n\r\nAs initially stated, I'm not sure whether this is a Quarkus- or Hibernate- or Oracle problem and thus, I asked the same thing [on Stackoverflow](https://stackoverflow.com/questions/72256360/oracle-jdbc-driver-oraclepreparedstatement-setlonginternal-throws-invalid-column)\r\n\r\n### Expected behavior\r\n\r\n`em.persist(preferences)` should not throw an error in versions >=2.6.2 for SQL that did work in <=1.13.7\r\n\r\n### Actual behavior\r\n\r\n`em.persist(preferences)` throws an in invalid column index error in versions >=2.6.2\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nall (win / SLES / RedHat)\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.1\" 2021-10-19 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nnon-native build\r\n\r\n### Quarkus version or git rev\r\n\r\n2.8.2 (non-native)\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25593/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25593/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

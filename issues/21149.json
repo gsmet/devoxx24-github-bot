@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21149",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21149/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21149/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21149/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21149",
+  "id": 1042507666,
+  "node_id": "I_kwDOCFbutM4-I2eS",
+  "number": 21149,
+  "title": "JAX-RS application - (slightly) increased time to first OK request between Quarkus 2.2 and 2.4",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2021-11-02T15:28:00Z",
+  "updated_at": "2021-11-03T09:59:12Z",
+  "closed_at": "2021-11-03T09:54:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe started to see more failed daily GitHubAction CI runs for https://github.com/quarkus-qe/quarkus-startstop\r\nThe reason is that jax-rs-minimal (using RESTEasy Classic) app often doesn't hit the threshold for time to first OK request.\r\n\r\nTogether with @kshpak we did some local runs on MBP 2019 with 6-core Core i7 / SSD drive and Lenovo notebook with i7-8650U (8cores) / SSD drive.\r\n\r\nWe used GraalVM 21.2 Java11 and checked various Quarkus 2.x versions, we see some increase in the results.\r\nThe tests we executed (details in step to reproduce) runs 100 iterations of start/stop cycles and calculates avarage without minimum and maximum values. It's relatively simple approach, but it helps to easily monitor trends in timeToFirstOKRequest times.\r\n\r\nBefore the testing we switched off as many applications and services as possible.\r\nOnly terminal window with power cable attached.\r\n\r\nMBP - MINIMAL App  (AVG timeToFirstOKRequest without min and max values)\r\n 2.4.0.Final + GraalVM 21.2\r\n - 38 ms\r\n - 41 ms\r\n - 37 ms\r\n \r\n2.2.3.Final + GraalVM 21.2\r\n - 36 ms\r\n - 32 ms\r\n \r\nLenovo - MINIMAL App  (AVG timeToFirstOKRequest without min and max values)\r\n2.4.0.Final + GraalVM 21.2 Java11\r\n - 20.1 ms\r\n - 18.5 ms\r\n \r\n2.2.3.Final + GraalVM 21.2 Java11\r\n - 17.7 ms\r\n - 18.1 ms\r\n\r\n(the diff between Lenovo and MBP is probable because Lenovo has more powerfull CPU with more cores, on MBP I have SentinelOne which can't be turned off as I have company notebook with managed macOS)\r\n\r\n### Expected behavior\r\n\r\nSimilar results between Quarkus 2.x versions\r\n\r\n### Actual behavior\r\n\r\nQuarkus 2.4 has higher time for the first OK request than Quarkus 2.2.\r\n\r\n\r\n\r\n### How to Reproduce?\r\n\r\nGet https://github.com/quarkus-qe/quarkus-startstop\r\n\r\nUse GraalVM 21.2 Java11\r\n\r\nRun \r\n - `mvn clean verify -Ptestsuite -Dtest=StartStopTest#jaxRsMinimalNative -Dquarkus.version=2.4.0.Final`\r\n - `mvn clean verify -Ptestsuite -Dtest=StartStopTest#jaxRsMinimalNative -Dquarkus.version=2.2.3.Final`\r\n\r\nCheck `AVG timeToFirstOKRequest without min and max values` line.\r\n\r\nOptionally do more iterations of start/stop cycle\r\n```diff\r\ndiff --git a/testsuite/src/it/java/io/quarkus/ts/startstop/StartStopTest.java b/testsuite/src/it/java/io/quarkus/ts/startstop/StartStopTest.java\r\nindex a27707c..978fcf9 100644\r\n--- a/testsuite/src/it/java/io/quarkus/ts/startstop/StartStopTest.java\r\n+++ b/testsuite/src/it/java/io/quarkus/ts/startstop/StartStopTest.java\r\n@@ -98,7 +98,7 @@ public class StartStopTest {\r\n\r\n             List<Long> rssKbList = new ArrayList<>(10);\r\n             List<Long> timeToFirstOKRequestList = new ArrayList<>(10);\r\n-            for (int i = 0; i < 10; i++) {\r\n+            for (int i = 0; i < 100; i++) {\r\n                 // Run\r\n                 LOGGER.info(\"Running... round \" + i);\r\n                 runLogA = new File(appDir.getAbsolutePath() + File.separator + \"logs\" + File.separator + mvnCmds.name().toLowerCase() + \"-run.log\");\r\n```\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n GraalVM 21.2 Java11\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus 2.x\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21149/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21149/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

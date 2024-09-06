@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41311",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41311/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41311/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41311/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41311",
+  "id": 2362504977,
+  "node_id": "I_kwDOCFbutM6M0PcR",
+  "number": 41311,
+  "title": "Managed executor thread has the AppClassLoader on HttpClient dependent task",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 20,
+  "created_at": "2024-06-19T14:16:45Z",
+  "updated_at": "2024-07-04T10:27:38Z",
+  "closed_at": "2024-07-04T10:27:38Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm passing the `ManagedExecutor` to the Java HttpClient in order for it to run its tasks. However, when I set a \"small\" CPU limit on the docker container (via `docker run` or k8s CPU limit) in dependent tasks the contextual classloader is the JVM `jdk.internal.loader.ClassLoaders$AppClassLoader`. As a consequence, I have `ClassNotFoundException`s.\n\n### Expected behavior\n\nThe classloader on threads running dependent tasks should be the `RunnerClassLoader` from Quarkus.\n\n### Actual behavior\n\nThe classloader on threads running dependent tasks is the JVM `jdk.internal.loader.ClassLoaders$AppClassLoader`.\n\n### How to Reproduce?\n\nClone https://github.com/antoniomacri/quarkus-reproducer-http-client-classloader.git\r\n\r\nThen run\r\n```shell\r\n./build-image.sh && ./run-image.sh\r\n```\r\n\r\nOn another shell run:\r\n```shell\r\ncurl http://localhost:8080/test\r\n```\r\n\r\nThe expected output should be:\r\n```\r\nio.quarkus.bootstrap.runner.RunnerClassLoader\r\n```\r\nbut instead it is:\r\n```\r\njdk.internal.loader.ClassLoaders$AppClassLoader\r\n```\r\n\r\nIf I set `--cpus=2.1` or greater, the classloader is correct.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n3.11.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nRunning MacOS on M2 Pro with 12 cores",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41311/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41311/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

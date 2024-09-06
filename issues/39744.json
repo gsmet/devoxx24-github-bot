@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39744",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39744/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39744/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39744/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39744",
+  "id": 2210963757,
+  "node_id": "I_kwDOCFbutM6DyKEt",
+  "number": 39744,
+  "title": "Quarkus Smallrye-kafka connector custom kafka-configuration not working",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-03-27T14:30:49Z",
+  "updated_at": "2024-03-28T07:52:36Z",
+  "closed_at": "2024-03-28T07:52:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAs per the document https://quarkus.io/guides/kafka#kafka-configuration-resolution, we can provide custom kafka configuration using below property,\r\n`mp.messaging.incoming.my-channel.kafka-configuration=my-configuration`\r\n\r\nHowever, when I tried to use the feature, this is not working.\r\n\r\nSample Code :\r\n\r\n```\r\npackage demo.config;\r\n\r\nimport io.smallrye.common.annotation.Identifier;\r\nimport jakarta.enterprise.context.ApplicationScoped;\r\nimport jakarta.enterprise.inject.Produces;\r\n\r\nimport java.util.Map;\r\n\r\n@ApplicationScoped\r\npublic class KafkaConfig {\r\n\r\n    @Produces\r\n    @Identifier(\"my-configuration`)\r\n    @ApplicationScoped\r\n    Map<String, Object> customKafka() {\r\n        return Map.ofEntries(\r\n                Map.entry(\"bootstrap.servers\", \"http://bootstrap-server1:9092\"),\r\n                Map.entry(\"schema.registry.url\", \"http://schema-registry-1:8091\")\r\n        );\r\n    }\r\n\r\n    @Produces\r\n    @Identifier(\"default-kafka-broker\")\r\n    @ApplicationScoped\r\n    Map<String, Object> defaultKafka() {\r\n        return Map.ofEntries(\r\n                Map.entry(\"bootstrap.servers\", \"http://bootstrap-server2:9092\"),\r\n                Map.entry(\"schema.registry.url\", \"http://schema-registry-2:8091\")\r\n        );\r\n    }\r\n}\r\n```\r\n\r\n```\r\napplication.properties\r\n\r\nms.messaging.outgoing.notification.connector=smallrye-kafka\r\nms.messaging.outgoing.notification.kafka-configuration=my-configuration\r\nms.messaging.outgoing.notification.topic=notification topic\r\n\r\nms.messaging.outgoing.command.connector=smallrye-kafka\r\nms.messaging.outgoing.command.topic=command_topic\r\n```\r\nIn the above application.properties, the default-kafka-broker bean is initialized and the values are used properly. However the custom Kafka configuration bean \"my-configuration\" is never initialized or called. Even the notification topic is initialized with the default configuration.\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nmy-configuration bean should have been initialized and the bootstrap servers and schema registry should have been picked from there into the notification topic producer.\r\n\r\n### Actual behavior\r\n\r\nmy-configuration is ignored and instead the default configuration is used.\r\n\r\n### How to Reproduce?\r\n\r\n1. Create two kafka server instances OR add entry in your etc/host file to create two aliases bootstrap-server-1 and bootstrap-server-2 and schema-registry-1 and schema-registry-2 pointing same local instance\r\n2. Checkout https://github.com/angelfrend/quarkus-kafka-demo\r\n3. Execute the application\r\n4. As per the application.properties configuration, emitter-2 should get initialized with bootstrap-server-2. But it will start with bootstrap-server-1 instead which is default configuration.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nC:\\Users\\rajag>java -version\r\nopenjdk version \"21.0.2\" 2024-01-16 LTS\r\nOpenJDK Runtime Environment (Red_Hat-21.0.2.0+13-2) (build 21.0.2+13-LTS)\r\nOpenJDK 64-Bit Server VM (Red_Hat-21.0.2.0+13-2) (build 21.0.2+13-LTS, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n<quarkus.platform.version>3.9.1</quarkus.platform.version>\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nAt first, I tried using below configuration:\r\n\r\n```\r\nApplication.properties\r\nms.messaging.outgoing.channel-1.connector=smallrye-kafka\r\nms.messaging.outgoing.channel-1.topic=topic-1\r\nms.messaging.outgoing.channel-1.bootstrap.servers=http://bootstrap-server-1:9092\r\nms.messaging.outgoing.channel-1.schema.registry.url=http://schema-registry-1:8091\r\nms.messaging.outgoing.channel-1.value.serializer=io.confluent.kafka.serializers.KafkaAvroSerializer\r\nms.messaging.outgoing.channel-1.key.serializer=org.apache.kafka.common.serialization.StringSerializer\r\nmp.messaging.outgoing.channel-1.max.in.flight.requests.per.connection=1\r\n\r\nms.messaging.outgoing.channel-2.connector=smallrye-kafka\r\nms.messaging.outgoing.channel-2.bootstrap.servers=http://bootstrap-server-2:9092\r\nms.messaging.outgoing.channel-2.schema.registry.url=http://schema-registry-2:8091\r\nms.messaging.outgoing.channel-2.topic=topic-2\r\nms.messaging.outgoing.channel-2.value.serializer=io.confluent.kafka.serializers.KafkaAvroSerializer\r\nms.messaging.outgoing.channel-2.key.serializer=org.apache.kafka.common.serialization.StringSerializer\r\nmp.messaging.outgoing.channel-2.max.in.flight.requests.per.connection=1\r\n\r\n\r\nquarkus.devservices.enabled=false\r\nquarkus.kafka.devservices.enabled=false\r\n\r\nquarkus.log.level=INFO\r\nquarkus.log.min-level=DEBUG\r\n```\r\nBut the app ignored bootstrap-server configurations and configured local host bootstrap server and schema-registry which failed application.\r\n\r\n```\r\n2024-03-28 07:59:31,631 INFO  [io.sma.rea.mes.kafka] (smallrye-kafka-producer-thread-0) SRMSG18258: Kafka producer kafka-producer-channel-1, connected to Kafka brokers 'localhost:9092', is configured to write records to 'channel-1'\r\n2024-03-28 07:59:31,654 INFO  [io.sma.rea.mes.kafka] (Quarkus Main Thread) SRMSG18213: Setting bootstrap.servers to localhost:9092\r\n2024-03-28 07:59:31,655 INFO  [org.apa.kaf.com.tel.int.KafkaMetricsCollector] (smallrye-kafka-producer-thread-1) initializing Kafka metrics collector\r\n2024-03-28 07:59:31,662 INFO  [io.sma.rea.mes.kafka] (smallrye-kafka-producer-thread-1) SRMSG18258: Kafka producer kafka-producer-channel-2, connected to Kafka brokers 'localhost:9092', is configured to write records to 'channel-2'\r\n2024-03-28 07:59:31,685 INFO  [io.quarkus] (Quarkus Main Thread) kafka-demo 1.0-SNAPSHOT on JVM (powered by Quarkus 3.9.1) started in 2.170s. \r\n```\r\nThen I have gone through the documentation and found that the default kafka configuration should be given and also a bean should be initialized if we add second kafka cluster. So I implemented the sample given in repo https://github.com/angelfrend/quarkus-kafka-demo. ( Configuration described in the beginning of topic... ) App picked up only the default configuration.\r\n\r\n```\r\n2024-03-28 08:11:08,964 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, confluent-registry-avro, kafka-client, messaging, messaging-kafka, smallrye-context-propagation, vertx]\r\n2024-03-28 08:11:17,131 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | kafka-producer-channel-2) [Producer clientId=kafka-producer-channel-2] Bootstrap broker bootstrap-server-1:9092 (id: -1 rack: null) disconnected\r\n2024-03-28 08:11:19,120 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | kafka-producer-channel-1) [Producer clientId=kafka-producer-channel-1] Bootstrap broker bootstrap-server-1:9092 (id: -1 rack: null) disconnected\r\n2024-03-28 08:11:33,514 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | kafka-producer-channel-2) [Producer clientId=kafka-producer-channel-2] Bootstrap broker bootstrap-server-1:9092 (id: -1 rack: null) disconnected\r\n[INFO] ------------------------------------------------------------------------\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39744/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39744/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

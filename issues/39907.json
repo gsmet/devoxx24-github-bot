@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39907",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39907/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39907/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39907/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39907",
+  "id": 2227934680,
+  "node_id": "I_kwDOCFbutM6Ey5XY",
+  "number": 39907,
+  "title": "Some Netty features are not enabled by default",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 6795585542,
+      "node_id": "LA_kwDOCFbutM8AAAABlQxoBg",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/netty",
+      "name": "area/netty",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-04-05T12:36:31Z",
+  "updated_at": "2024-04-08T09:04:01Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nCurrently there are (after the introduction of Java modules), few Netty features, which are not enabled because the \"right\" JVM args are not present by default on quarkus applications:\r\n1. allocating direct buffer(s) without `Cleaner`s: this is used on off-heap pooled arena(s) backed NIO `ByteBuffer`s.  It can be enabled adding `-Dio.netty.tryReflectionSetAccessible=true --add-opens=java.base/java.nio=ALL-UNNAMED` to the JVM args. \r\n2. allocating \"big enough\" (>  1024 by default) `byte[]` without zeroing them, using the \"hidden\" feature explained at https://shipilev.net/jvm/anatomy-quarks/7-initialization-costs/#_experiment. It can be enabled via ` -Dio.netty.tryReflectionSetAccessible=true --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED`\r\n\r\nI'm **not** proposing to add both, but I think is important to be aware that these features are not available in the current default configuration.\r\n\r\nThe first problem (related the cleaner option) is pretty important, because:\r\n- without configurations as it is now: it implies that the practical (direct) memory limits are the ones specified by Java by default, which means == the heap size (it means that a container should have **2*max Java heap size** available TOTAL memory: max java heap capacity + direct memory limits). Additionally, the JVM is responsible to expose via its metrics (yeeeee!) these direct allocations, and will take care of issuing `OutOfDirectMemory` (which is not \"yay\", the opposite: see https://github.com/openjdk/jdk/blob/jdk-21%2B35/src/java.base/share/classes/java/nio/Bits.java#L145-L178 how ugly can go!)\r\n- with the proposed configuration: the direct memory limits are still (if nothing is configured, see https://github.com/netty/netty/blob/b0e43847a8c78325ea7dd8bb02934ed6c690cb9c/common/src/main/java/io/netty/util/internal/PlatformDependent.java#L151-L158) the same as the max Java heap **BUT** the JDK NIO direct `ByteBuffer`s allocations are tracked separately by OpenJDK, while the Netty direct allocations would use `Unsafe::allocateMemory`, instead, and its limit are enforced by Netty, instead. This means that the TOTAL memory required (in theory) to a container is: **3*max java heap**(!!!! ie heap + direct NIO memory limit + Netty direct memory limit). Additionally, there won't be any JVM metrics (maybe just native memory tracking AFAIK), which can report the total number of allocated direct memory (including the one from Netty, via Unsafe). Thanks to @alesj we can still use the Netty memory metrics, anyway, for this purpose.\r\n\r\nSo, why this second option could be appealing?\r\n1. the allocated NIO `ByteBuffer`s won't contain any `Cleaner` saving some memory\r\n2. the default heuristic for the platform, while going OOM, is not great (see https://github.com/openjdk/jdk/blob/jdk-21%2B35/src/java.base/share/classes/java/nio/Bits.java#L145-L178) and can cause an application to become unresponsive \r\n\r\n### Implementation ideas\r\n\r\nConfigured the proposed option by default",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39907/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39907/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

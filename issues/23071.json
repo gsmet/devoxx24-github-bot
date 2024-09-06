@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23071",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23071/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23071/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23071/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23071",
+  "id": 1109561527,
+  "node_id": "I_kwDOCFbutM5CIpC3",
+  "number": 23071,
+  "title": "App crash on first message when using  rabbitmq (Smallrye reactive messaging) with Kogito",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1424123054,
+      "node_id": "MDU6TGFiZWwxNDI0MTIzMDU0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kogito",
+      "name": "area/kogito",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-01-20T17:14:00Z",
+  "updated_at": "2022-01-24T14:22:08Z",
+  "closed_at": "2022-01-24T14:21:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have created a small application to test the public api of Kogito, in this application I also use rabbitmq (Smallrye reactive messaging extension).\r\n\r\nWhen my application consumes the first message (rabbitmq), the application restarts, the following messages do not pose any problem.\r\n\r\nAfter several searches when I remove the dependencies of Kogito, the application works well, as soon as I add the dependencies of Kogito I have again the bug (even if there are no kogito resources like bpmn drl .... in my project) the simple fact of putting the dependencies in my pom creates this bug.\r\n\r\n**Bean consuming message ** \r\n\r\n`@ApplicationScoped\r\npublic class MessageService {\r\n\r\n    @Incoming(\"organisation\")\r\n    public CompletionStage<Void> process(Message<String> message) {\r\n\r\n        System.out.println(\"Message received \"+message.getPayload());\r\n        return message.ack();\r\n    }\r\n}`\r\n\r\n**application.properties**\r\n\r\n```\r\n%dev.kogito.generate.rest.processes=false\r\n%dev.kogito.generate.rest = false\r\n\r\n%dev.quarkus.log.level=DEBUG\r\n%dev.quarkus.log.category.\"org.kie.kogito\".min-level=DEBUG\r\n%dev.quarkus.log.category.\"org.kie.kogito\".level=DEBUG\r\n\r\n%dev.rabbitmq-host=**********************\r\n%dev.rabbitmq-port=5672\r\n%dev.rabbitmq-username=***********\r\n%dev.rabbitmq-password=*****************\r\n%dev.rabbitmq-virtual-host=******************\r\n\r\n%dev.mp.messaging.incoming.organisation.connector=smallrye-rabbitmq\r\n%dev.mp.messaging.incoming.organisation.queue.name=organisation-filems\r\n%dev.mp.messaging.incoming.organisation.auto-acknowledgement=true\r\n%dev.mp.messaging.incoming.organisation.exchange.name=organisation\r\n%dev.mp.messaging.incoming.organisation.exchange.type=fanout\r\n%dev.mp.messaging.incoming.organisation.routing-keys=creation  \r\n```\r\n**Pom.xml** \r\n\r\n ```\r\n<dependencies>\r\n        <dependency>\r\n            <groupId>org.kie.kogito</groupId>\r\n            <artifactId>kogito-quarkus</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.kie.kogito</groupId>\r\n            <artifactId>kogito-addons-quarkus-messaging</artifactId>\r\n            <version>1.15.0.Final</version>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-resteasy-reactive</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-resteasy-reactive-jackson</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-reactive-messaging-rabbitmq</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-reactive-messaging</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-undertow</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-arc</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-openapi</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-junit5</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.rest-assured</groupId>\r\n            <artifactId>rest-assured</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n```\r\n\r\nStacktrace when receiving the first message \r\n\r\n```\r\n2022-01-20 17:01:21,074 DEBUG [io.net.buf.AbstractByteBuf] (pool-11-thread-4) -Dio.netty.buffer.checkAccessible: true\r\n2022-01-20 17:01:21,074 DEBUG [io.net.buf.AbstractByteBuf] (pool-11-thread-4) -Dio.netty.buffer.checkBounds: true\r\n2022-01-20 17:01:21,075 DEBUG [io.net.uti.ResourceLeakDetectorFactory] (pool-11-thread-4) Loaded default ResourceLeakDetector: io.netty.util.ResourceLeakDetector@48625fbf\r\n2022-01-20 17:01:21,106 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (pool-1-thread-1) Restarting quarkus due to changes in HotReloadSupportClass.class.\r\n2022-01-20 17:01:21,124 INFO  [io.ver.rab.imp.RabbitMQClientImpl] (Quarkus Main Thread) Stopping rabbitmq client\r\n2022-01-20 17:01:21,124 DEBUG [io.ver.rab.imp.RabbitMQClientImpl] (vert.x-worker-thread-0) Disconnecting from rabbitmq...\r\n2022-01-20 17:01:21,218 DEBUG [io.ver.rab.imp.QueueConsumerHandler] (pool-11-thread-5) consumer has been shutdown unexpectedly: amq.ctag-SecTD0iKyNsN_3K5MlviaQ\r\n2022-01-20 17:01:21,219 DEBUG [io.ver.rab.imp.RabbitMQClientImpl] (vert.x-worker-thread-0) Disconnected from rabbitmq !\r\n2022-01-20 17:01:21,219 DEBUG [io.ver.rab.imp.RabbitMQClientImpl] (pool-11-thread-5) Start to reconnect...\r\n2022-01-20 17:01:21,220 INFO  [io.ver.rab.imp.RabbitMQClientImpl] (pool-11-thread-5) Stopping rabbitmq client\r\n2022-01-20 17:01:21,220 DEBUG [io.ver.rab.imp.RabbitMQClientImpl] (vert.x-worker-thread-0) Disconnecting from rabbitmq...\r\n2022-01-20 17:01:21,220 DEBUG [io.ver.rab.imp.RabbitMQClientImpl] (vert.x-worker-thread-0) Disconnected from rabbitmq !\r\n2022-01-20 17:01:21,221 INFO  [io.ver.rab.imp.RabbitMQClientImpl] (vert.x-eventloop-thread-0) Starting rabbitmq client\r\n2022-01-20 17:01:21,221 DEBUG [io.ver.rab.imp.RabbitMQClientImpl] (vert.x-worker-thread-0) Connecting to rabbitmq...\r\n2022-01-20 17:01:21,222 DEBUG [io.qua.arc.impl] (Quarkus Main Thread) ArC DI container shut down\r\n2022-01-20 17:01:21,222 INFO  [io.quarkus] (Quarkus Main Thread) demo stopped in 0.115s\r\n```\r\nIf i remove this 2 depencies form POM everything works fine \r\n\r\n```\r\n <dependency>\r\n            <groupId>org.kie.kogito</groupId>\r\n            <artifactId>kogito-quarkus</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.kie.kogito</groupId>\r\n            <artifactId>kogito-addons-quarkus-messaging</artifactId>\r\n            <version>1.15.0.Final</version>\r\n        </dependency>\r\n```\r\nIts seem like when i receive the first message , hot reload mechanism is proccing\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nYou can find a reproducer at https://github.com/zakhdar/demo.git  (dont forget to change RabbitMQ settings in application.properties or use RabbitMQ dev service)\n\n### Output of `uname -a` or `ver`\n\nWindows 11\n\n### Output of `java -version`\n\n11\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.6.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23071/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23071/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

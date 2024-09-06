@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26450",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26450/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26450/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26450/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26450",
+  "id": 1289062988,
+  "node_id": "I_kwDOCFbutM5M1YpM",
+  "number": 26450,
+  "title": "Agroal doesn't seem to propagate \"user\" and \"name\" despite ConnectionFactory credential providers",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2955097332,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3MzMy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/agroal",
+      "name": "area/agroal",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-06-29T17:42:54Z",
+  "updated_at": "2022-06-29T17:50:39Z",
+  "closed_at": "2022-06-29T17:50:39Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe following works for a standard `Connection`-based JDBC query:\r\n\r\n```kt\r\nval SNOWFLAKE_URL = \"jdbc:snowflake://xxxxxx.snowflakecomputing.com\"\r\nval SNOWFLAKE_PROPS = Properties().apply {\r\n    setProperty(\"user\", \"xxxx\")\r\n    setProperty(\"password\", \"xxxx\")\r\n    setProperty(\"warehouse\", \"COMPUTE_WH\")\r\n    setProperty(\"db\", \"SNOWFLAKE_SAMPLE_DATA\")\r\n}\r\n```\r\n\r\nHowever, if I try to create an Agroal `DataSource` from this, like below, the driver errors because it doesn't receive the `user` property:\r\n\r\n```kt\r\nfun mkAgroalDataSourceConfigurationSupplier(\r\n    jdbcUrl: String,\r\n    properties: Map<String, String>\r\n) = AgroalDataSourceConfigurationSupplier()\r\n    .connectionPoolConfiguration { cp ->\r\n        cp.connectionFactoryConfiguration { cf ->\r\n                cf.jdbcUrl(jdbcUrl)\r\n                if (properties.containsKey(\"user\") || properties.containsKey(\"password\")) {\r\n                    cf.principal(NamePrincipal(properties[\"user\"]))\r\n                    cf.credential(SimplePassword(properties[\"password\"]))\r\n                    properties.filterKeys { it != \"user\" && it != \"password\" }.forEach {\r\n                        cf.jdbcProperty(it.key, it.value)\r\n                    }\r\n                } else {\r\n                    properties.forEach {\r\n                        cf.jdbcProperty(it.key, it.value)\r\n                    }\r\n                }\r\n                cf\r\n            }\r\n    }\r\n```\r\n\r\n```java\r\nnet.snowflake.client.jdbc.SnowflakeSQLLoggedException: Missing user name.\r\n\tat app//net.snowflake.client.jdbc.DefaultSFConnectionHandler.initialize(DefaultSFConnectionHandler.java:109)\r\n\tat app//net.snowflake.client.jdbc.DefaultSFConnectionHandler.initializeConnection(DefaultSFConnectionHandler.java:79)\r\n\tat app//net.snowflake.client.jdbc.SnowflakeConnectionV1.initConnectionWithImpl(SnowflakeConnectionV1.java:116)\r\n\tat app//net.snowflake.client.jdbc.SnowflakeConnectionV1.<init>(SnowflakeConnectionV1.java:96)\r\n\tat app//net.snowflake.client.jdbc.SnowflakeDriver.connect(SnowflakeDriver.java:176)\r\n\tat app//io.agroal.pool.ConnectionFactory.createConnection(ConnectionFactory.java:226)\r\n```\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26450/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26450/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

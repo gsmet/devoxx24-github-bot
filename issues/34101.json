@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34101",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34101/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34101/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34101/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34101",
+  "id": 1760762317,
+  "node_id": "I_kwDOCFbutM5o8xnN",
+  "number": 34101,
+  "title": "Allow `@WithTransaction` to work with kotlin coroutines",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 23,
+  "created_at": "2023-06-16T14:32:18Z",
+  "updated_at": "2024-06-24T11:19:37Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nI'm using the `quarkus-hibernate-reactive-panache-kotlin` extension in my work project. I can't migrate to quarkus 3 because I'm using a lot of coroutine/mutiny interoperability so that I don't drown in Uni chaining. Unfortunately, `@Transactional` doesn't work anymore (as explained in the docs), and should be replaced with `@WithTransaction`.\r\n\r\nI tried to do the basic example below:\r\n\r\n```kotlin\r\n@ApplicationScoped\r\nclass RepService {\r\n\r\n    //supported :-)\r\n    @WithTransaction\r\n    fun testUni(): Uni<ReproducerEntity> {\r\n        return ReproducerEntity().apply { name = \"asdf\" }.persist()\r\n    }\r\n\r\n    //not supported :-(\r\n    @WithTransaction\r\n    suspend fun testSus(): ReproducerEntity {\r\n        return ReproducerEntity().apply { name = \"asdf\" }.persist<ReproducerEntity>().awaitSuspending()\r\n    }\r\n}\r\n\r\n```\r\n\r\nWhen I tried to call the suspending endpoint I got `java.lang.IllegalStateException: A method annotated with @WithTransaction must return io.smallrye.mutiny.Uni: java.lang.Object testSus(kotlin.coroutines.Continuation<? super io.smallrye.mutiny.Uni<com.example.ReproducerEntity>> $completion) declared on com.example.RepService`\r\n\r\nNow, I'm not going to make this issue as a bug, because I've searched a lot and nothing in the docs leads me to believe that this feature exists at all, and the only other issue mentioning this is this one https://github.com/quarkusio/quarkus/issues/25563 but it is referring to a deprecated annotation.\r\n\r\nI'm not sure if this is planned to happen any time soon, but until then, is there any other way to side-step this besides using `Uni`s all over the place?\r\n\r\n\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34101/reactions",
+    "total_count": 8,
+    "+1": 8,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34101/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

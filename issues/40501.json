@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40501",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40501/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40501/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40501/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40501",
+  "id": 2283777145,
+  "node_id": "I_kwDOCFbutM6IH6x5",
+  "number": 40501,
+  "title": "Remote development mode: SmallRyeOpenApiProcessor throws AccessDeniedException: /target",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-05-07T16:28:47Z",
+  "updated_at": "2024-05-08T05:06:05Z",
+  "closed_at": "2024-05-08T05:06:05Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen starting an application for remote dev, and using extension openapi, the application fails to start, and displays:\r\n```\r\n2024-05-07 18:13:42,570 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (main) {} Failed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor#build threw an exception: java.lang.IllegalStateException: java.nio.file.AccessDeniedException: /target\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:858)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:483)\r\nCaused by: java.nio.file.AccessDeniedException: /target\r\n\tat java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:90)\r\n\tat java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:106)\r\n\tat java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)\r\n\tat java.base/sun.nio.fs.UnixFileSystemProvider.createDirectory(UnixFileSystemProvider.java:438)\r\n\tat java.base/java.nio.file.Files.createDirectory(Files.java:699)\r\n\tat java.base/java.nio.file.Files.createAndCheckIsDirectory(Files.java:807)\r\n\tat java.base/java.nio.file.Files.createDirectories(Files.java:793)\r\n\tat io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.storeGeneratedSchema(SmallRyeOpenApiProcessor.java:950)\r\n\tat io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.storeDocument(SmallRyeOpenApiProcessor.java:1225)\r\n\tat io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.storeDocument(SmallRyeOpenApiProcessor.java:1183)\r\n\tat io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.build(SmallRyeOpenApiProcessor.java:904)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n\t... 7 more\r\n```\r\n\r\nMy application is built inside a jvm container.\r\n\r\nA workaround consists in adding this property to the application:\r\n```\r\nquarkus:\r\n smallrye-openapi:\r\n   store-schema-directory: /tmp\r\n```\n\n### Expected behavior\n\nThe application should start, using a folder that makes sense in the context of a remote dev application packaged as a container and deployed into a K8s cluster.\n\n### Actual behavior\n\nThe application fails to start. \n\n### How to Reproduce?\n\nThe test application has: Installed features: [cache, cdi, config-yaml, confluent-registry-avro, hibernate-validator, ironjacamar, kafka-client, messaging, messaging-kafka, micrometer, narayana-jta, opentelemetry, rest, rest-client, rest-client-jackson, rest-jackson, scheduler, security, smallrye-context-propagation, smallrye-fault-tolerance, smallrye-health, smallrye-openapi, swagger-ui, vault, vertx]\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n89b732bdc82 (future 3.11)\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40501/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40501/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

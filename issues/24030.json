@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24030",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24030/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24030/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24030/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24030",
+  "id": 1155136744,
+  "node_id": "I_kwDOCFbutM5E2fzo",
+  "number": 24030,
+  "title": "Error while persisting list of entities - Hibernate reactive  Vert.x EventLoop thread",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-03-01T10:07:59Z",
+  "updated_at": "2022-03-16T12:34:54Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello, \r\nI'm using Hibernate Reactive Panache with RabbitMQ queues. \r\nThe error occurs while trying to persist huge amount of entities.\r\nI add several entities that contain an id and a string in a queue from a REST API. \r\n\r\n```\r\n@Channel(\"token-out\")\r\n@OnOverflow(OnOverflow.Strategy.UNBOUNDED_BUFFER)\r\nEmitter<RawLogEntity> emitter;\r\n\r\n@POST\r\n@Consumes(MediaType.APPLICATION_JSON)\r\n@Produces(MediaType.APPLICATION_JSON)\r\npublic Uni<Response> insertLog(List<RawLogEntity> inputs) {\r\n  return Panache.withTransaction(\r\n                  () -> RawLogEntity.persist(inputs)\r\n                          .onItemOrFailure().transform((success, error) -> {\r\n                              if(error != null) {\r\n                                  logger.severe(\"Error while inserting: \" + error);\r\n                                  return withServerError.get();\r\n                              } else {\r\n                                  logger.info(\"Inserted: \" + inputs);\r\n                                  inputs.forEach(emitter::send);\r\n                                  return withCreated.apply(asLongStream.apply(inputs));\r\n                              }\r\n                          })\r\n          );\r\n```\r\n\r\nThe queue is consuming to parse the string and create a new entity \"log\" that contain a list of \"token\".\r\nI made a batch that sends a multi of a List of LogEntity each second.\r\n\r\n```\r\n@Incoming(value = \"token-in\")\r\n    @Outgoing(value = \"batch-processor\")\r\n    public Multi<List<LogEntity>> processTokenization(Multi<JsonObject> incoming){\r\n        return incoming.map(rawLog -> rawLog.mapTo(RawLogEntity.class))\r\n                .map(rawLogEntity -> tokenization.tokenizeLog(rawLogEntity.id, rawLogEntity.log))\r\n                .group()\r\n                .intoLists()\r\n                .every(Duration.ofMillis(1000));\r\n    }\r\n\r\n    @Merge\r\n    @Incoming(value = \"batch-processor\")\r\n    public Uni<Void> processBatch(List<LogEntity> logs) {\r\n        return Panache.withTransaction(() -> LogEntity.persist(logs))\r\n                .onFailure()\r\n                .invoke(error -> {\r\n                    LOGGER.log(Level.SEVERE, \"Error while inserting log id in database\");\r\n                })\r\n                .replaceWithVoid();\r\n    }\r\n```\r\nThis implementation is working but once I have inserted ~ 9K items, I get this error :\r\n\r\n`ERROR [io.qua.mut.run.MutinyInfrastructure] (executor-thread-1) Mutiny had to drop the following exception: java.lang.IllegalStateException: HR000068: This method should exclusively be invoked from a Vert.x EventLoop thread; currently running on thread 'executor-thread-1'\r\n\tat org.hibernate.reactive.common.InternalStateAssertions.assertUseOnEventLoop(InternalStateAssertions.java:40)\r\n\tat org.hibernate.reactive.session.impl.ReactiveSessionImpl.getReactiveConnection(ReactiveSessionImpl.java:1478)\r\n\tat org.hibernate.reactive.mutiny.impl.MutinySessionImpl$Transaction.rollback(MutinySessionImpl.java:459)\r\n\tat org.hibernate.reactive.mutiny.impl.MutinySessionImpl$Transaction.lambda$execute$4(MutinySessionImpl.java:442)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnCancellationCall$UniOnCancellationCallProcessor.execute(UniOnCancellationCall.java:84)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnCancellationCall$UniOnCancellationCallProcessor.cancel(UniOnCancellationCall.java:67)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.cancel(UniOperatorProcessor.java:64)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.cancel(UniOnItemTransformToUni.java:89)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.cancel(UniOperatorProcessor.java:64)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.cancel(UniOnItemTransformToUni.java:89)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.cancel(UniOperatorProcessor.java:64)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.cancel(UniOnItemTransformToUni.java:87)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.cancel(UniOperatorProcessor.java:64)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.cancel(UniOperatorProcessor.java:64)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.cancel(UniOperatorProcessor.java:64)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemOrFailureFlatMap$UniOnItemOrFailureFlatMapProcessor.cancel(UniOnItemOrFailureFlatMap.java:79)\r\n\tat io.smallrye.mutiny.converters.uni.UniToMultiPublisher$UniToMultiSubscription.cancel(UniToMultiPublisher.java:63)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapInner.cancel(MultiFlatMapOp.java:643)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapMainSubscriber.onFailure(MultiFlatMapOp.java:208)\r\n\tat io.smallrye.mutiny.operators.multi.MultiOperatorProcessor.onFailure(MultiOperatorProcessor.java:89)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapMainSubscriber.innerError(MultiFlatMapOp.java:530)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapInner.onFailure(MultiFlatMapOp.java:614)\r\n\tat io.smallrye.mutiny.operators.multi.MultiOperatorProcessor.onFailure(MultiOperatorProcessor.java:89)\r\n\tat io.smallrye.mutiny.subscription.MultiSubscriber.onError(MultiSubscriber.java:73)\r\n\tat io.smallrye.mutiny.subscription.SafeSubscriber.onError(SafeSubscriber.java:148)\r\n\tat io.smallrye.mutiny.helpers.HalfSerializer.onError(HalfSerializer.java:56)\r\n\tat io.smallrye.mutiny.helpers.StrictMultiSubscriber.onFailure(StrictMultiSubscriber.java:91)\r\n\tat io.smallrye.mutiny.subscription.MultiSubscriber.onError(MultiSubscriber.java:73)\r\n\tat io.smallrye.mutiny.subscription.SerializedSubscriber.onFailure(SerializedSubscriber.java:102)\r\n\tat io.smallrye.mutiny.operators.multi.MultiBufferWithTimeoutOp$MultiBufferWithTimeoutProcessor.flushCallback(MultiBufferWithTimeoutOp.java:162)\r\n\tat io.smallrye.mutiny.operators.multi.MultiBufferWithTimeoutOp$MultiBufferWithTimeoutProcessor.lambda$new$0(MultiBufferWithTimeoutOp.java:104)`\r\n\r\nThe current batch greatly increases, messages per seconds rates.\r\nI didn't see any implementation of batch in quarkus and I tried different implementation :\r\n \r\n```\r\n@Merge\r\n@Incoming(value = \"batch-processor\")\r\n@ReactiveTransactional\r\npublic Uni<?> processBatch(List<LogEntity> logs) {\r\n    return Uni.createFrom().item(logs.stream().map(log -> log.persist()).toList());\r\n}\r\n\r\n```\r\nThis implementation does not insert anything, as well a using a Muti.SessionFactory.\r\nIs persist a list or collection possible with hibernate reactive ?\r\n\r\n\r\n### Expected behavior\r\n\r\nThe expected behavior is to insert a collection of entities the most efficient way.\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n Linux Thinkpad 5.13.0-30-generic #33~20.04.1-Ubuntu SMP Mon Feb 7 14:25:10 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nJAVA 17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn quarkus:dev\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24030/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24030/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42939",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42939/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42939/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42939/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42939",
+  "id": 2500180638,
+  "node_id": "I_kwDOCFbutM6VBbqe",
+  "number": 42939,
+  "title": "Oidc/authentication multi tenant: Don't throw at startup on unconfigured default tenant",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-09-02T07:09:41Z",
+  "updated_at": "2024-09-02T08:56:38Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nWe are running a multi tenant environment. Due to recent changes we were able to switch to the built-in `DefaultPolicyEnforcerResolver`. There is one thing that gives me an itch: we need to define a default oidc tenant, which we do not have/use. \r\nSo we end up defining a dummy default tenant e.g. just picking tenants[0]\r\nNot doing that will end up in an exception on startup at [KeycloakPolicyEnforcerUtil.java#L51](https://github.com/quarkusio/quarkus/blob/main/extensions/keycloak-authorization/runtime/src/main/java/io/quarkus/keycloak/pep/runtime/KeycloakPolicyEnforcerUtil.java#L51) the field `defaultPolicyEnforcer`\r\n\r\nHaving a shallow look in `DefaultPolicyEnforcerResolver`, it seems that `defaultPolicyEnforcer` is only used/applied when there is no specific tenant config, which in our case should never happen. \r\n\r\nSo my suggestion:\r\nInstead of having a `NoSuchElementException` which gets raised in case of an unconfigured default tenant at ([KeycloakPolicyEnforcerUtil.java#L51](https://github.com/quarkusio/quarkus/blob/main/extensions/keycloak-authorization/runtime/src/main/java/io/quarkus/keycloak/pep/runtime/KeycloakPolicyEnforcerUtil.java#L51)), the field `defaultPolicyEnforcer` of the `DefaultPolicyEnforcerResolver` itself should be optional. \r\n\r\nThis way, It seems to me that we would not need the defaultTenant config anymore, but Quarkus still would raise an error if it should be accessed during runtime, hinting a bad configuration.\r\n\r\n\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42939/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42939/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26682",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26682/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26682/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26682/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26682",
+  "id": 1302010613,
+  "node_id": "I_kwDOCFbutM5Nmxr1",
+  "number": 26682,
+  "title": "Native Build fail with Quarkus-awt and pdfbox",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-07-12T12:43:18Z",
+  "updated_at": "2023-09-13T14:17:12Z",
+  "closed_at": "2022-07-13T05:35:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe want to create image from pdf file and for that we are planning to use Quarkus and want to deploy as AWS lambda.\r\n\r\nAll things are working as expected  if I build application as non native with below command.\r\n\r\n```\r\n./gradlew clean build\r\n```\r\nNow to improve performance, I want to build native image. I am using below command to build native image.\r\n\r\n```\r\n./gradlew clean build -Dquarkus.package.type=native -Dquarkus.native.native-image-xmx=6g \r\n```\r\nThis native build command is giving below error:\r\n```\r\njava.lang.UnsupportedOperationException: Add AWT Quarkus extension to enable Java2D/ImageIO. Additional system libraries such as `freetype' and `fontconfig' might be needed.\r\nat java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment(GraphicsEnvironment.java:45)\r\nat java.awt.image.BufferedImage.createGraphics(BufferedImage.java:1181)\r\nat org.apache.pdfbox.rendering.PDFRenderer.renderImage(PDFRenderer.java:335)\r\nat org.apache.pdfbox.rendering.PDFRenderer.renderImage(PDFRenderer.java:272)\r\nat org.apache.pdfbox.rendering.PDFRenderer.renderImageWithDPI(PDFRenderer.java:258)\r\n```\r\n\r\nMy  **build.gradle**.\r\n```\r\ndependencies {\r\n    implementation enforcedPlatform(\"${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}\")\r\n    implementation enforcedPlatform(\"${quarkusPlatformGroupId}:quarkus-amazon-services-bom:${quarkusPlatformVersion}\")\r\n    implementation 'io.quarkus:quarkus-amazon-lambda'\r\n    implementation 'io.quarkiverse.amazonservices:quarkus-amazon-s3'\r\n    implementation 'io.quarkiverse.amazonservices:quarkus-amazon-sqs'\r\n    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'\r\n    implementation group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.26'\r\n    implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'\r\n    implementation group: 'org.jboss.resteasy', name: 'resteasy-multipart-provider', version: '4.7.5.Final'\r\n    implementation group: 'software.amazon.awssdk', name: 'url-connection-client', version: '2.17.205'\r\n    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.4'\r\n    implementation 'io.quarkus:quarkus-config-yaml'\r\n}\r\n``` \r\nMy **application.yml**\r\n```\r\nquarkus:\r\n  native:\r\n    additional-build-args: --initialize-at-run-time=org.apache.pdfbox.pdmodel.encryption.PublicKeySecurityHandler\r\n```\r\n\r\nWe also tried after adding `implementation 'io.quarkus:quarkus-awt'` in build.gradle file and build is getting failed.\r\n\r\nbuild logs after adding 'io.quarkus:quarkus-awt'`\r\n```\r\nError: java.util.concurrent.ExecutionException: com.oracle.graal.pointsto.constraints.UnsupportedFeatureException: No instances of java.awt.image.ColorConvertOp are allowed in the image heap as this class should be initialized at image runtime. To see how this object got instantiated use --trace-object-instantiation=java.awt.image.ColorConvertOp.\r\ncom.oracle.graal.pointsto.util.AnalysisError: java.util.concurrent.ExecutionException: com.oracle.graal.pointsto.constraints.UnsupportedFeatureException: No instances of java.awt.image.ColorConvertOp are allowed in the image heap as this class should be initialized at image runtime. To see how this object got instantiated use --trace-object-instantiation=java.awt.image.ColorConvertOp.\r\n        at com.oracle.graal.pointsto.util.AnalysisError.shouldNotReachHere(AnalysisError.java:172)\r\n        at com.oracle.graal.pointsto.util.AnalysisFuture.ensureDone(AnalysisFuture.java:66)\r\n        at com.oracle.graal.pointsto.heap.ImageHeapScanner.lambda$postTask$9(ImageHeapScanner.java:611)\r\n        at com.oracle.graal.pointsto.util.CompletionExecutor.executeCommand(CompletionExecutor.java:193)\r\n        at com.oracle.graal.pointsto.util.CompletionExecutor.lambda$executeService$0(CompletionExecutor.java:177)\r\n        at java.base/java.util.concurrent.ForkJoinTask$RunnableExecuteAction.exec(ForkJoinTask.java:1426)\r\n        at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:290)\r\n        at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1020)\r\n        at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1656)\r\n        at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1594)\r\n        at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:183)\r\nCaused by: java.util.concurrent.ExecutionException: com.oracle.graal.pointsto.constraints.UnsupportedFeatureException: No instances of java.awt.image.ColorConvertOp are allowed in the image heap as this class should be initialized at image runtime. To see how this object got instantiated use --trace-object-instantiation=java.awt.image.ColorConvertOp.\r\n        at java.base/java.util.concurrent.FutureTask.report(FutureTask.java:122)\r\n        at java.base/java.util.concurrent.FutureTask.get(FutureTask.java:191)\r\n        at com.oracle.graal.pointsto.util.AnalysisFuture.ensureDone(AnalysisFuture.java:64)\r\n        ... 9 more\r\n\r\n```\r\n\r\nCan anyone help here to build native with pdfbox or any alternative to create image from pdf using quarkus?\r\n\r\n\r\n### Expected behavior\r\n\r\nBuild must be completed and runner file will also working for the lambda.\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26682/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26682/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29846",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29846/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29846/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29846/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29846",
+  "id": 1495250108,
+  "node_id": "I_kwDOCFbutM5ZH7S8",
+  "number": 29846,
+  "title": "More control over when hibernate init and finish the connections in the app.",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-12-13T22:15:18Z",
+  "updated_at": "2023-01-03T10:32:12Z",
+  "closed_at": "2022-12-23T17:11:06Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nQuarkus and another many frameworks assume in wrong way the app need init hibernate/jpa on start/bootstrap of app.\r\n\r\nI need develop a app. In start/bootstrap not init hibernate. The app first need connect to remote http/rest api end point every 5 minutes. In the json response get the database connection params, IP from server, Database, User name, Password and window time in minutes. For example 5 minutes or 20 minutes or 30 minutes. When finish the time window i need close the ALL db connection (full hibernate shutdown) and wait for my turn again. Long pooling the rest api end point. And repeat the process.\r\n\r\nThe point is in quarkus. I no had control when hibernate/jpa init the connections, the hiraky pool. using the data from the remote endpoint. Always try to init hibernate/jpa when the app start. \r\n\r\nThe database protocol is always the same. For example MySQL, The models tables are the same too. The database, ip, user, password is very possible changed between turns (Is because i need full shutdown hibernate in middle of the execution).\r\n\r\nIn the doc not show any way of solution for this requirement.\r\n\r\nI known this is possible with vanilla Hibernate. Using the classical connection class Utils.\r\n\r\nI need compile this app to native using graalvm/native-image because is a IOT device and had only 128mb of ram.\r\n\r\n### Implementation ideas\r\n\r\nExpose some kind of DBConnectionManager class when you can bootstrap or shutdown the hibernate in any point of execution of app.\r\n\r\nExample:\r\n\r\n```java\r\nDataSource dataSource = new DataSource( \"JDBC_driver\", \"IP\", \"Database\", \"User\", \"Password\" ); //Here the info of the connection\r\n\r\n//Bootstrap in any place in the code.\r\nDBConnectionManager.startConnections( \"profile01\",  dataSource ); //exception if already connected.\r\n\r\n//Full shutdown hibenrate connection\r\nDBConnectionManager.finishConnections( \"profile01\", true ); //exception if not connected. true = force\r\n\r\n```\r\n\r\n\r\n ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29846/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29846/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

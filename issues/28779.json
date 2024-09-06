@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28779",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28779/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28779/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28779/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28779",
+  "id": 1420512919,
+  "node_id": "I_kwDOCFbutM5Uq06X",
+  "number": 28779,
+  "title": "mongodb devservices tests failing accessing docker binary on M1 runner",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 4147701997,
+      "node_id": "LA_kwDOCFbutM73OOjt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/m1",
+      "name": "env/m1",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Apple M1 machines"
+    },
+    {
+      "id": 5456027948,
+      "node_id": "LA_kwDOCFbutM8AAAABRTRhLA",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/podman",
+      "name": "env/podman",
+      "color": "edea47",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-10-24T09:20:02Z",
+  "updated_at": "2023-05-02T10:31:47Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe headline symptom is that all the tests in the mongodb-devservices suite fail, only on the Mac M1 runner. \r\n\r\nThe headline failure is \r\n\r\n```\r\n[Check failure on line 45 in integration-tests/mongodb-devservices/src/test/java/io/quarkus/it/mongodb/BookResourceTest.java](https://github.com/quarkusio/quarkus/commit/9bf92f7149b08bb3ab313d615ca35e75cb4274f5#annotation_5275206252)\r\n\r\nJVM Tests - JDK 17 MacOS M1\r\n\r\njava.net.SocketTimeoutException: Read timed out\r\n\tat java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:283)\r\n\tat java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:309)\r\n\tat java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:350)\r\n\tat java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:803)\r\n\tat java.base/java.net.Socket$SocketInputStream.read(Socket.java:966)\r\n```\r\n\r\nThe root cause is this: \r\n\r\n```\r\n2022-10-21T04:12:53.1380870Z 2022-10-21 00:12:53,097 WARN  [io.qua.dep.IsDockerWorking] (build-23) No docker binary found or general error: java.lang.RuntimeException: Input/Output error while executing command.```\r\n```\r\n\r\nIt's the exact same error you get if you don't have podman on your machine and try to run the docker tests. But it's only affecting one test, so it's obviously not a machine-wide issue. I wonder if it's some sort of cwd issue, or a fork of the shell that means it can't find the binary.\r\n\r\nThis is the line of code which is failing. Only for the mongodb dev services tests, even though the code is in util and couldn't be more common:\r\n\r\n```\r\n           try {\r\n                if (!ExecUtil.execSilentWithTimeout(Duration.ofMillis(DOCKER_CMD_CHECK_TIMEOUT), binary, \"-v\")) {\r\n                    LOGGER.warnf(\"'%s -v' returned an error code. Make sure your Docker binary is correct\", binary);\r\n                    return Result.UNKNOWN;\r\n                }\r\n            } catch (Exception e) {\r\n                LOGGER.warnf(\"No %s binary found or general error: %s\", binary, e);\r\n                return Result.UNKNOWN;\r\n            }\r\n```\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nNot reproducible locally. Appears on M1 CI/CD builds.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28779/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28779/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

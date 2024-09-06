@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30842",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30842/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30842/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30842/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30842",
+  "id": 1569641007,
+  "node_id": "I_kwDOCFbutM5djtIv",
+  "number": 30842,
+  "title": "Support for long primitive in quarkus-redis when using kotlin",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-02-03T10:47:38Z",
+  "updated_at": "2023-10-10T04:40:35Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nWhen trying to do a redis quide https://quarkus.io/guides/redis in kotlin I'm getting the following error `java.lang.IllegalArgumentException: Unable to encode object of type class java.lang.Long` when using ReactiveValueCommands with Long.\r\n\r\n`private val countCommands: ReactiveValueCommands<String, Long> = dataSource.value(Long::class.java)`\r\n\r\nThe issue is that `io.quarkus.redis.runtime.datasource.Marshaller` constructor is receiving `long` as a class hint which then resolves to `JsonCodec`, but when `Marshaller.codec(Class<?>)` method is called in order to determine a codec, `java.lang.Long` is passed as a param. Ultimately the codec cannot be found because `Marshaller.codecs` map has a codec for `long`, not for `java.lang.Long`.\r\n\r\nThe solution is to do this:\r\n`private val countCommands: ReactiveValueCommands<String, Long> = dataSource.value(Long::class.javaObjectType)`\r\ninstead of this:\r\n`private val countCommands: ReactiveValueCommands<String, Long> = dataSource.value(Long::class.java)`\r\n\r\nIt would be easier to use this from kotlin without needing to explicitly specify `javaObjectType`.\r\n\r\nThe reproducer is here in qs-redis module - https://github.com/tjakopan/quarkus-examples-kotlin. In order to reproduce the error, one can comment out line 13 and un-comment line 14 in `IncrementService` class and run the tests.\r\n\r\n### Implementation ideas\r\n\r\n`io.quarkus.redis.datasource.codecs.Codecs` class could specify a LongCodec, similar to already existing codecs for double, int, String and byte[]. And then the `Codecs.getDefaultCodecFor(Class<T>)` method could be changed to:\r\n\r\n```\r\n    public static <T> Codec<T> getDefaultCodecFor(Class<T> clazz) {\r\n        if (clazz.equals(Double.class) || clazz.equals(Double.TYPE)) {\r\n            return (Codec<T>) DoubleCodec.INSTANCE;\r\n        }\r\n        if (clazz.equals(Integer.class) || clazz.equals(Integer.TYPE)) {\r\n            return (Codec<T>) IntegerCodec.INSTANCE;\r\n        }\r\n       if (clazz.equals(Long.class) || clazz.equals(Long.TYPE)) {\r\n            return (Codec<T>) LongCodec.INSTANCE;\r\n        }\r\n        if (clazz.equals(String.class)) {\r\n            return (Codec<T>) StringCodec.INSTANCE;\r\n        }\r\n        if (clazz.equals(byte[].class)) {\r\n            return (Codec<T>) ByteArrayCodec.INSTANCE;\r\n        }\r\n        // JSON by default\r\n        return new JsonCodec<>(clazz);\r\n    }\r\n```\r\n\r\nWilling to contribute with this if needed.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30842/reactions",
+    "total_count": 4,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 2
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30842/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

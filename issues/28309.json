@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28309",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28309/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28309/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28309/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28309",
+  "id": 1391866633,
+  "node_id": "I_kwDOCFbutM5S9jMJ",
+  "number": 28309,
+  "title": "ARC interferes with Smallrye ConfigProducer",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2022-09-30T05:50:36Z",
+  "updated_at": "2022-12-15T05:29:18Z",
+  "closed_at": "2022-12-15T05:29:18Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nLanguage: Kotlin\r\n\r\nI want to inject a config property of a list of custom types:\r\n\r\n```kotlin\r\n@Provider\r\nclass TestClass {\r\n    @ConfigProperty(name = \"property.list\")\r\n    private lateinit var typeList: List<MyType>\r\n\r\n    @ConfigProperty(name = \"property.single\")\r\n    private lateinit var singleType: MyType\r\n}\r\n```\r\n\r\nWhile Smallrye can resolve and fill `singleType`, it fails on the list. The cause in the stack trace is:\r\n\r\n```\r\nCaused by: java.lang.IllegalArgumentException: SRCFG02005: Type has no raw type class: io.quarkus.arc.impl.WildcardTypeImpl@2d198533\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.rawTypeOf(ConfigProducerUtil.java:224)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.resolveConverter(ConfigProducerUtil.java:155)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.resolveConverter(ConfigProducerUtil.java:149)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.resolveConverter(ConfigProducerUtil.java:160)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.resolveConverter(ConfigProducerUtil.java:149)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.convertValues(ConfigProducerUtil.java:106)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.getValue(ConfigProducerUtil.java:76)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.getValue(ConfigProducerUtil.java:58)\r\n\tat io.smallrye.config.inject.ConfigProducer.producesListConfigProperty(ConfigProducer.java:136)\r\n\tat io.smallrye.config.inject.ConfigProducer_ProducerMethod_producesListConfigProperty_1258131a638f518025054697883e1874162124ce_Bean.create(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_ProducerMethod_producesListConfigProperty_1258131a638f518025054697883e1874162124ce_Bean.get(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_ProducerMethod_producesListConfigProperty_1258131a638f518025054697883e1874162124ce_Bean.get(Unknown Source)\r\n\tat io.quarkus.arc.impl.CurrentInjectionPointProvider.get(CurrentInjectionPointProvider.java:60)\r\n\t... 89 more\r\n```\r\n\r\nFrom what I see, `WildcardTypeImpl` provides `java.util.List` as `rawType` - should it provide the upper bound of `actualTypeArgument`? \r\n\r\nI tried mitigating it by providing an explizit Converter for `List<MyType>` but the result is the same.\r\n\r\n<img width=\"994\" alt=\"Screenshot 2022-09-30 at 07 42 58\" src=\"https://user-images.githubusercontent.com/1572945/193198675-66a03abc-49b6-499e-b81f-769daf58aada.png\">\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nConfig Converter for generic type of `List<T>` is used.\r\n\r\n### Actual behavior\r\n\r\nException and quarkus fails to start.\r\n\r\n```\r\njava.lang.RuntimeException: java.lang.ExceptionInInitializerError\r\n\r\nCaused by: java.lang.ExceptionInInitializerError\r\n\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n\t... 48 more\r\nCaused by: java.lang.RuntimeException: Error injecting java.util.List<? extends de.test.MyType> de.test.TestClass. typeList\r\nCaused by: java.lang.IllegalArgumentException: SRCFG02005: Type has no raw type class: io.quarkus.arc.impl.WildcardTypeImpl@2d198533\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.rawTypeOf(ConfigProducerUtil.java:224)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.resolveConverter(ConfigProducerUtil.java:155)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.resolveConverter(ConfigProducerUtil.java:149)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.resolveConverter(ConfigProducerUtil.java:160)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.resolveConverter(ConfigProducerUtil.java:149)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.convertValues(ConfigProducerUtil.java:106)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.getValue(ConfigProducerUtil.java:76)\r\n\tat io.smallrye.config.inject.ConfigProducerUtil.getValue(ConfigProducerUtil.java:58)\r\n\tat io.smallrye.config.inject.ConfigProducer.producesListConfigProperty(ConfigProducer.java:136)\r\n\tat io.smallrye.config.inject.ConfigProducer_ProducerMethod_producesListConfigProperty_1258131a638f518025054697883e1874162124ce_Bean.create(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_ProducerMethod_producesListConfigProperty_1258131a638f518025054697883e1874162124ce_Bean.get(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_ProducerMethod_producesListConfigProperty_1258131a638f518025054697883e1874162124ce_Bean.get(Unknown Source)\r\n\tat io.quarkus.arc.impl.CurrentInjectionPointProvider.get(CurrentInjectionPointProvider.java:60)\r\n\t... 89 more\r\n\r\n\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Create custom type\r\n2. Create Type Converter and add is to `org.eclipse.microprofile.config.spi.Converter`\r\n3. Create Bean using this type as generic parameter of a list\r\n4. Start Quarkus (or a QuarkusTest)\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin mymac.local 21.6.0 Darwin Kernel Version 21.6.0: Wed Aug 10 14:25:27 PDT 2022; root:xnu-8020.141.5~2/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.16\" 2022-07-19 OpenJDK Runtime Environment Temurin-11.0.16+8 (build 11.0.16+8) OpenJDK 64-Bit Server VM Temurin-11.0.16+8 (build 11.0.16+8, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.12.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.6.3 (cecedd343002696d0abb50b32b541b8a6ba2883f)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28309/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28309/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38715",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38715/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38715/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38715/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38715",
+  "id": 2127455870,
+  "node_id": "I_kwDOCFbutM5-zmZ-",
+  "number": 38715,
+  "title": "Native executable quarkus-amazon-lambda images built on Mac M1 Pro not working on AWS",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1958884827,
+      "node_id": "MDU6TGFiZWwxOTU4ODg0ODI3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/funqy",
+      "name": "area/funqy",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 4147701997,
+      "node_id": "LA_kwDOCFbutM73OOjt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/m1",
+      "name": "env/m1",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Apple M1 machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-02-09T16:17:07Z",
+  "updated_at": "2024-07-08T10:13:25Z",
+  "closed_at": "2024-06-03T08:34:08Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIm struggling since yesterday to invoke a AWS Lambda using a native image built on a Mac laptop with the M1 Pro processor.\r\nTried out with different Quarkus extensions like `quarkus-amazon-lambda`, `quarkus-amazon-lambda-http` and `quarkus-funqy-amazon-lambda`.\r\n\r\nThis bug description will use `quarkus-amazon-lambda` as an example of the behavior.\n\n### Expected behavior\n\nExpect to be able to invoke the lambda either from AWS Console, or using local tools like `./target/manage.sh native invoke` or `sam local invoke --template target/sam.native.yaml --event payload.json`\n\n### Actual behavior\n\nImage built with the command `quarkus build --native --no-tests -Dquarkus.native.container-build=true` and Lambda created with `./target/manage.sh native create`.\r\nWhen invoking the Lambda either from AWS Console or `./target/manage.sh native invoke` results in following error:\r\n\r\n```\r\nInvoking function\r\n++ aws lambda invoke response.txt --cli-binary-format raw-in-base64-out --function-name AwsLambdaTestNative --payload file://payload.json --log-type Tail --query LogResult --output text\r\n++ base64 --decode\r\nINIT_REPORT Init Duration: 4.33 ms\tPhase: init\tStatus: error\tError Type: Runtime.InvalidEntrypoint\r\nINIT_REPORT Init Duration: 2.56 ms\tPhase: invoke\tStatus: error\tError Type: Runtime.InvalidEntrypoint\r\nSTART RequestId: 3fe9e6da-5fd9-4b8a-8273-ff0a0288b3fe Version: $LATEST\r\nRequestId: 3fe9e6da-5fd9-4b8a-8273-ff0a0288b3fe Error: fork/exec /var/task/bootstrap: exec format error\r\nRuntime.InvalidEntrypoint\r\nEND RequestId: 3fe9e6da-5fd9-4b8a-8273-ff0a0288b3fe\r\nREPORT RequestId: 3fe9e6da-5fd9-4b8a-8273-ff0a0288b3fe\tDuration: 14.15 ms\tBilled Duration: 15 ms\tMemory Size: 256 MB\tMax Memory Used: 3 MB\r\n{\"errorType\":\"Runtime.InvalidEntrypoint\",\"errorMessage\":\"RequestId: 3fe9e6da-5fd9-4b8a-8273-ff0a0288b3fe Error: fork/exec /var/task/bootstrap: exec format error\"}%\r\n```\r\n\r\nRunning `sam local invoke --template target/sam.native.yaml --event payload.json` results in:\r\n```\r\nInvoking not.used.in.provided.runtime (provided)\r\nDecompressing /Users/bredlej/Coding/java/aws/aws-lambda-test/target/function.zip\r\nLocal image is up-to-date\r\nUsing local image: public.ecr.aws/lambda/provided:alami-rapid-x86_64.\r\n\r\nMounting /private/var/folders/l4/ljjl5xms541dgwsynf8ykt300000gn/T/tmpm9quhj8k as /var/task:ro,delegated, inside runtime container\r\nSTART RequestId: 7a3b9c76-fdcd-47c5-8d59-d6e6d95e4244 Version: $LATEST\r\n09 Feb 2024 15:50:08,774 [ERROR] (rapid) Init failed error=fork/exec /var/task/bootstrap: no such file or directory InvokeID=\r\n09 Feb 2024 15:50:08,783 [ERROR] (rapid) Invoke failed error=fork/exec /var/task/bootstrap: no such file or directory InvokeID=709a18a7-1132-4ba0-8347-a53377c33edb\r\n09 Feb 2024 15:50:08,787 [ERROR] (rapid) Invoke DONE failed: Runtime.InvalidEntrypoint\r\n\r\nError: 'content-type'\r\nTraceback:\r\n  File \"click/core.py\", line 1078, in main\r\n  File \"click/core.py\", line 1688, in invoke\r\n  File \"click/core.py\", line 1688, in invoke\r\n  File \"click/core.py\", line 1434, in invoke\r\n  File \"click/core.py\", line 783, in invoke\r\n  File \"samcli/cli/cli_config_file.py\", line 347, in wrapper\r\n  File \"click/decorators.py\", line 92, in new_func\r\n  File \"click/core.py\", line 783, in invoke\r\n  File \"samcli/lib/telemetry/metric.py\", line 185, in wrapped\r\n  File \"samcli/lib/telemetry/metric.py\", line 150, in wrapped\r\n  File \"samcli/lib/utils/version_checker.py\", line 43, in wrapped\r\n  File \"samcli/cli/main.py\", line 95, in wrapper\r\n  File \"samcli/commands/local/invoke/cli.py\", line 104, in cli\r\n  File \"samcli/commands/local/invoke/cli.py\", line 205, in do_cli\r\n  File \"samcli/commands/local/lib/local_lambda.py\", line 147, in invoke\r\n  File \"samcli/lib/telemetry/metric.py\", line 325, in wrapped_func\r\n  File \"samcli/local/lambdafn/runtime.py\", line 213, in invoke\r\n  File \"samcli/local/docker/container.py\", line 433, in wait_for_result\r\n  File \"samcli/lib/utils/retry.py\", line 31, in wrapper\r\n  File \"samcli/local/docker/container.py\", line 405, in wait_for_http_response\r\n  File \"requests/structures.py\", line 52, in __getitem__\r\n\r\nAn unexpected error was encountered while executing \"sam local invoke\".\r\nSearch for an existing issue:\r\nhttps://github.com/aws/aws-sam-cli/issues?q=is%3Aissue+is%3Aopen+Bug%3A%20sam%20local%20invoke%20-%20KeyError\r\nOr create a bug report:\r\nhttps://github.com/aws/aws-sam-cli/issues/new?template=Bug_report.md&title=Bug%3A%20sam%20local%20invoke%20-%20KeyError\r\nFunction 'AwsLambdaTestNative' timed out after 15 seconds\r\n```\n\n### How to Reproduce?\n\n1. Create a Quarkus project in code.quarkus.io with only **quarkus-amazon-lambda** extension selected.\r\n2. In the terminal go inside the downloaded Quarkus projects folder\r\n3. Run `quarkus build --native --no-tests -Dquarkus.native.container-build=true`\r\n4. Edit `./target/manage.sh` and change the **RUNTIME** environment value to `java17` (or `java21`)\r\n5. Run `./target/manage.sh native create`\r\n6. Run `./target/manage.sh native invoke`\r\nor\r\n6. Run `sam local invoke --template target/sam.native.yaml --event payload.json`\r\nor\r\n6. Login to AWS Console/Lambda/Functions, select the newly created function and run a test with the following json:\r\n```json\r\n{\r\n  \"name\" : \"Bred\"\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin MacBook-Pro-2 23.2.0 Darwin Kernel Version 23.2.0: Wed Nov 15 21:55:06 PST 2023; root:xnu-10002.61.3~2/RELEASE_ARM64_T6020 arm64\n\n### Output of `java -version`\n\nopenjdk version \"21\" 2023-09-19 OpenJDK Runtime Environment (build 21+35-2513) OpenJDK 64-Bit Server VM (build 21+35-2513, mixed mode, sharing)\n\n### Mandrel or GraalVM version (if different from Java)\n\nMANDREL 23.1.2.0\n\n### Quarkus version or git rev\n\n3.7.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /Users/bredlej/.m2/wrapper/dists/apache-maven-3.9.6-bin/3311e1d4/apache-maven-3.9.6 Java version: 21, vendor: Oracle Corporation, runtime: /Users/bredlej/Library/Java/JavaVirtualMachines/openjdk-21/Contents/Home Default locale: pl_PL, platform encoding: UTF-8 OS name: \"mac os x\", version: \"14.2.1\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\nNote that `quarkus` build generates a **manage.sh** file with `RUNTIME=java11` which causes problems with class loading and you have to manually set it to `java17` or `java21`\r\n\r\nWhen doing a jvm build of the same project with \r\n1. `quarkus build`\r\n2. `./target/manage.sh create`\r\n3. `./target/manage.sh invoke`\r\n\r\nThe lambda works fine:\r\n```\r\nInvoking function\r\n++ aws lambda invoke response.txt --cli-binary-format raw-in-base64-out --function-name AwsLambdaTest --payload file://payload.json --log-type Tail --query LogResult --output text\r\n++ base64 --decode\r\n__  ____  __  _____   ___  __ ____  ______\r\n--/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n-/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2024-02-09 15:36:36,768 INFO  [io.quarkus] (main) aws-lambda-test 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.7.2) started in 1.068s.\r\n2024-02-09 15:36:36,770 INFO  [io.quarkus] (main) Profile prod activated.\r\n2024-02-09 15:36:36,771 INFO  [io.quarkus] (main) Installed features: [amazon-lambda, cdi]\r\nSTART RequestId: 127d995b-b4bc-4e65-b9b0-9704d528eec1 Version: $LATEST\r\nEND RequestId: 127d995b-b4bc-4e65-b9b0-9704d528eec1\r\nREPORT RequestId: 127d995b-b4bc-4e65-b9b0-9704d528eec1\tDuration: 142.29 ms\tBilled Duration: 143 ms\tMemory Size: 256 MB\tMax Memory Used: 129 MB\tInit Duration: 1390.00 ms\r\n\"Hello Bill\"%\r\n```\r\n\r\nAdditionally here's my `sam --info` result:\r\n```\r\n{\r\n  \"version\": \"1.109.0\",\r\n  \"system\": {\r\n    \"python\": \"3.8.13\",\r\n    \"os\": \"macOS-14.2.1-arm64-arm-64bit\"\r\n  },\r\n  \"additional_dependencies\": {\r\n    \"docker_engine\": \"20.10.22\",\r\n    \"aws_cdk\": \"Not available\",\r\n    \"terraform\": \"Not available\"\r\n  },\r\n  \"available_beta_feature_env_vars\": [\r\n    \"SAM_CLI_BETA_FEATURES\",\r\n    \"SAM_CLI_BETA_BUILD_PERFORMANCE\",\r\n    \"SAM_CLI_BETA_TERRAFORM_SUPPORT\",\r\n    \"SAM_CLI_BETA_RUST_CARGO_LAMBDA\"\r\n  ]\r\n}\r\n```\r\n\r\nIt's possible I don't understand something with the native builds and creating AWS Lambda functions - if yes, kindly explain what I'm doing wrong.\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38715/reactions",
+    "total_count": 2,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38715/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

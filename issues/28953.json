@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28953",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28953/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28953/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28953/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28953",
+  "id": 1429920230,
+  "node_id": "I_kwDOCFbutM5VOtnm",
+  "number": 28953,
+  "title": "Console output incomplete in Konsole when local GraalVM is used",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-10-31T14:14:36Z",
+  "updated_at": "2024-08-28T09:12:03Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWith some integration tests, when setting GraalVM via `export GRAALVM_HOME=/home/ppalaga/.sdkman/candidates/java/22.3.r11-grl` the console output of `mvn clean verify -Pnative` ends right after the native compilation and the rest of maven build including native tests is not shown. I can see the same happening with `export GRAALVM_HOME=/home/ppalaga/.sdkman/candidates/java/22.2.r17-grl`\r\n\r\nFurther observations:\r\n\r\n* I see this weird behavior in Konsole (default terminal emulator of KDE Plasma) and in Eclipse Terminal. \r\n* The behavior in XTerm is normal. In all cases `echo $SHELL` returns `/bin/bash`\r\n* The behavior is correct when using the container build via `-Dquarkus.native.container-build=true`\r\n* I am not aware of having any special Konsole settings or Eclipse Terminal settings. This is Fedora 35 with KDE plasma. \r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nMaven output continues to show after the native compilation.\r\n\r\n### Actual behavior\r\n\r\nNo Maven output native compilation, although the native tests are running - it takes a while till the process exists and the prompt appears and failsafe reports can be seen under `target` directory.\r\n\r\n\r\n\r\n### How to Reproduce?\r\n\r\n```\r\ngit clone git@github.com:quarkiverse/quarkus-cxf.git\r\ncd quarkus-cxf\r\ngit reset --hard 815418390e8de9ed11cdfe6030f2ee1d4c470b5d\r\nmvn clean install -DskipTests -Dquarkus.build.skip\r\ncd integration-tests/ws-security-client\r\nexport GRAALVM_HOME=/home/ppalaga/.sdkman/candidates/java/22.2.r17-grl\r\nmvn clean verify -Pnative\r\n...\r\n[7/7] Creating image...                                                                                  (7.3s @ 2.81GB)\r\n  47.15MB (51.21%) for code area:    75,147 compilation units\r\n  44.48MB (48.31%) for image heap:  484,896 objects and 832 resources\r\n 457.61KB ( 0.49%) for other data\r\n  92.08MB in total\r\n------------------------------------------------------------------------------------------------------------------------\r\nTop 10 packages in code area:                               Top 10 object types in image heap:\r\n   1.67MB jdk.proxy5                                          10.31MB byte[] for code metadata\r\n   1.66MB sun.security.ssl                                     5.69MB java.lang.Class\r\n   1.11MB java.util                                            4.50MB java.lang.String\r\n 740.65KB com.sun.org.apache.xalan.internal.xsltc.compiler     4.10MB byte[] for java.lang.String\r\n 735.87KB com.sun.crypto.provider                              3.72MB byte[] for general heap data\r\n 685.78KB com.oracle.svm.core.code                             2.17MB byte[] for embedded resources\r\n 566.35KB java.lang.invoke                                     1.89MB com.oracle.svm.core.hub.DynamicHubCompanion\r\n 513.49KB com.sun.org.apache.xerces.internal.impl              1.44MB byte[] for reflection metadata\r\n 512.34KB java.lang                                          901.32KB java.lang.String[]\r\n 500.39KB c.s.org.apache.xerces.internal.impl.xs.traversers  806.34KB java.util.HashMap$Node\r\n  37.99MB for 1038 more packages                               8.51MB for 4419 more object types\r\n------------------------------------------------------------------------------------------------------------------------\r\n                        4.3s (4.3% of total time) in 48 GCs | Peak RSS: 7.43GB | CPU load: 10.85\r\n------------------------------------------------------------------------------------------------------------------------\r\nProduced artifacts:\r\n /home/ppalaga/orgs/cxf/quarkiverse-cxf/integration-tests/ws-security-client/target/quarkus-cxf-integration-test-ws-security-client-1.6.0-SNAPSHOT-native-image-source-jar/quarkus-cxf-integration-test-ws-security-client-1.6.0-SNAPSHOT-runner (executable)\r\n\r\n# no more output here\r\n```\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux terpistone 5.19.16-100.fc35.x86_64 #1 SMP PREEMPT_DYNAMIC Sun Oct 16 21:50:15 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\n11.0.7, vendor: AdoptOpenJDK, runtime: /home/data/jvm/adopt-openjdk/jdk-11.0.7+10\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n22.3.r11-grl or 22.2.r17\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn -v Apache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63) Maven home: /home/ppalaga/.sdkman/candidates/maven/3.8.6 Java version: 11.0.7, vendor: AdoptOpenJDK, runtime: /home/data/jvm/adopt-openjdk/jdk-11.0.7+10 Default locale: en_IE, platform encoding: UTF-8 OS name: \"linux\", version: \"5.19.16-100.fc35.x86_64\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28953/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28953/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

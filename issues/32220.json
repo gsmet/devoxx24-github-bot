@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32220",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32220/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32220/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32220/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32220",
+  "id": 1645599024,
+  "node_id": "I_kwDOCFbutM5iFdkw",
+  "number": 32220,
+  "title": "Qute template extensions are not resolved reliably",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1714005220,
+      "node_id": "MDU6TGFiZWwxNzE0MDA1MjIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/qute",
+      "name": "area/qute",
+      "color": "0366d6",
+      "default": false,
+      "description": "The template engine"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-03-29T11:25:43Z",
+  "updated_at": "2023-03-30T13:23:10Z",
+  "closed_at": "2023-03-30T13:23:09Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI am working on a Quarkus project where Qute is used to render an HTML file. The project uses Kotlin with annotation processing (for generating a Hibernate meta model) and gradle as build tool. The template file contains a call to an Qute extension method of `ZonedDateTime` which is defined in `TimeTemplateExtensions`:\r\n\r\n```\r\n{deliveryNote.createdAt.atZoneSameInstant(timezone).format('dd.MM.yyyy')}\r\n```\r\nwhich on some builds causes the following error:\r\n```\r\nio.quarkus.qute.TemplateException: deliveryNotePdf.html:132:22 - {deliveryNote.finishedAt.atZoneSameInstant(timezone).format('HH:mm')}: Property/method [format('HH:mm')] not found on class [java.time.ZonedDateTime] nor handled by an extension method\r\n```\r\n\r\nThe problem is that I cannot reproduce the error reliably. Sometimes, I will get this error and when I run the `assemble` or `quarkusDev` task again without changing the source code, it will work. Sometimes, it will still fail on subsequent tries, but when I change an unrelated part of the source code, it will work again.\r\n\r\nMaybe there is some sort of race condition in the process of type checking the template where the extension methods are not available yet when the template is processed.\n\n### Expected behavior\n\nI expect the build to succeed or at least fail consistently in case I actually did something wrong when calling the extension method\n\n### Actual behavior\n\nIt says `Property/method [format('HH:mm')] not found on class [java.time.ZonedDateTime] nor handled by an extension method`, even though there is a method\r\n```\r\nstatic String format(TemporalAccessor temporal, String pattern)\r\n```\r\nin `TimeTemplateExtensions` and `ZonedDateTime` implements `TemporalAccessor`.\n\n### How to Reproduce?\n\nSadly I have not been able to build a reproducer. I tried building a project using Kotlin, Gradle and using Kapt, but the error never occurred there.\n\n### Output of `uname -a` or `ver`\n\n5.15.0-69-generic #76~20.04.1-Ubuntu SMP Mon Mar 20 15:54:19 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"14.0.2\" 2020-07-14 OpenJDK Runtime Environment (build 14.0.2+12-Ubuntu-120.04) OpenJDK 64-Bit Server VM (build 14.0.2+12-Ubuntu-120.04, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.15.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32220/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32220/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

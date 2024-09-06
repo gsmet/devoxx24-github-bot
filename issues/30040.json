@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30040",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30040/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30040/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30040/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30040",
+  "id": 1508180307,
+  "node_id": "I_kwDOCFbutM5Z5QFT",
+  "number": 30040,
+  "title": "Resteasy Reactive Rest Client fails to deserialize \"fast\" json streams",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-12-22T16:33:50Z",
+  "updated_at": "2023-01-13T17:46:13Z",
+  "closed_at": "2023-01-13T17:45:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI am trying to use `RestMediaType.APPLICATION_STREAM_JSON` to stream a `Multi` of thousands of objects from my reactive java server to a reactive java client, using the rest client. \r\n\r\nHowever, the deserialization of the objects fails with `com.fasterxml.jackson.databind.JsonMappingException: Unexpected end-of-input` errors, and the investigation I have done makes it look like the json objects are being broken up and then attempted to be read before they are put back together.\r\n\r\nI believe this is some kind of buffering or order-of-operations issue with the reactive rest client, because the only workaround I have found is to \"throttle\" the server by delaying the sending of individual objects in the `Multi` by a few milliseconds each. Adding an `onOverflow()` buffer to my own code does not help.\n\n### Expected behavior\n\nThe client is able to successfully deserialize a stream of newline-delimited json objects, without server throttling.\n\n### Actual behavior\n\n`com.fasterxml.jackson.core.io.JsonEOFException: Unexpected end-of-input` in the client\n\n### How to Reproduce?\n\nReproducer: `service3` (client) and `service4` (server) in https://github.com/fleckware/quarkus-test\r\n\r\n1. in one terminal `./gradlew service4:quarkusDev` \r\n2. in a separate terminal `./gradlew service3:quarkusDev`\r\n3. in a separate terminal `curl localhost:8081/service4/test/fast > output.json`\r\n4. observe that when hitting the streaming endpoint on the server directly, there is no issue\r\n5. now try to hit it using the rest client `curl localhost:8080/service3/test/fast`\r\n6. observe the json mapping error in the `service3` terminal\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk 11.0.10\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.15.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle 7.4.2\n\n### Additional information\n\nIf anyone wants to see the workaround in action, you can comment out line 60 and uncomment lines 56-58 in `Service4Resource.java` (might have to send the curl in twice after rebuilding, for some reason with quarkusDev it doesn't seem to work on the first try)",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30040/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30040/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

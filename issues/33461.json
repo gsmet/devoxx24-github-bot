@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33461",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33461/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33461/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33461/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33461",
+  "id": 1715143052,
+  "node_id": "I_kwDOCFbutM5mOwGM",
+  "number": 33461,
+  "title": "Warn in case the code uses old `javax.ws` annotations",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-05-18T07:13:44Z",
+  "updated_at": "2023-05-19T05:20:03Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nWhen I upgraded the code from version `2.X` to `3.X`, I noticed that I'm forced to add a dependency:\r\n\r\n``` xml\r\n<dependency>\r\n            <groupId>javax.ws.rs</groupId>\r\n            <artifactId>javax.ws.rs-api</artifactId>\r\n            <version>2.1.1</version>\r\n        </dependency>\r\n```\r\n\r\nto compile the old code - so I added it. Quarkus compiled, booted and everything seemed fine until I tried to access the REST endpoint. I got a generic \"resource not found\" message. It took me about an hour to figure out that I needed to replace the dependency with:\r\n\r\n``` xml\r\n<dependency>\r\n            <groupId>jakarta.ws.rs</groupId>\r\n            <artifactId>jakarta.ws.rs-api</artifactId>\r\n            <version>3.1.0</version>\r\n        </dependency>\r\n```\r\n\r\nThe problem is obvious: Quarkus `3.X` uses a new version of JEE that has been moved to the `jakarta` package instead of the `javax` package. It was my fault, and this fact is probably documented somewhere in the changelog that I haven't read.\r\n\r\nI suppose there will be more stupid developers like me who run into this problem when updating old code, and therefore it may be helpful to warn them during the build phase, or maybe explicitly not build the code.\n\n### Implementation ideas\n\nDetect old `javax.ws.rs` on the classpath and if found, print a WARNING during the build or fail the build altogether.\r\n\r\nAlternatively, detect that the endpoints are not registered because they use the old JEE annotations (I have no idea how the detection works and if this is even possible) and fail only if such endpoint is skipped due to invalid annotation package use.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33461/reactions",
+    "total_count": 3,
+    "+1": 3,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33461/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

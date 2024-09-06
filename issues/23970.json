@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23970",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23970/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23970/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23970/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23970",
+  "id": 1150436005,
+  "node_id": "I_kwDOCFbutM5EkkKl",
+  "number": 23970,
+  "title": "gRPC - TLS tests fails in FIPS mode (HotSpot and Native): NSS DB read-only PKCS#11 store would have to be used",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    },
+    {
+      "id": 3866841773,
+      "node_id": "LA_kwDOCFbutM7me1Kt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/securepipeline",
+      "name": "area/securepipeline",
+      "color": "0366d6",
+      "default": false,
+      "description": "issues related to ensure Quarkus can be used in a secure pipeline setups like FIPS or similar"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-02-25T13:17:58Z",
+  "updated_at": "2022-02-25T13:19:00Z",
+  "closed_at": "2022-02-25T13:18:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\ngRPC - TLS tests run with pem keys:\r\n```\r\nquarkus.grpc.clients.hello.ssl.trust-store=tls/ca.pem\r\nquarkus.grpc.server.ssl.certificate=tls/server.pem\r\nquarkus.grpc.server.ssl.key=tls/server.key\r\n```\r\nAnd that does not hold water when ran with FIPS aware JDK on a FIPS enforcing system as per:\r\n```\r\nWith FIPS mode, OpenJDK uses the NSS DB as a read-only PKCS#11 store for keys.\r\nAs a result, the keystore.type security property is set to PKCS11. \r\n```\r\nSource: [FIPS keystore doc](https://access.redhat.com/documentation/en-us/openjdk/11/html-single/configuring_openjdk_11_on_rhel_with_fips/index#key_store)\r\n\r\nIt results in the error message:\r\n```\r\nCaused by: java.security.KeyStoreException: sun.security.pkcs11.wrapper.PKCS11Exception: CKR_SESSION_READ_ONLY\r\n```\r\n\r\ngRPC extension HotSpot unit tests are also failing in FIPS mode:\r\n\r\n```\r\nCaused by: java.security.KeyManagementException: FIPS mode: only SunJSSE TrustManagers may be used\r\n```\r\nand also the aforementioned issue with keystores (locally held pem and JKS):\r\n\r\n```\r\nCaused by: java.security.KeyStoreException: sun.security.pkcs11.wrapper.PKCS11Exception: CKR_SESSION_READ_ONLY\r\n```\r\n\r\nGiven the legitimate test case use of things like:\r\n```java\r\n    // Create a TrustManager which trusts everything\r\n    private static TrustManager createTrustAllTrustManager() {\r\n        return new X509TrustManager() {\r\n            @Override\r\n            public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {\r\n            }\r\n\r\n            @Override\r\n            public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {\r\n            }\r\n\r\n            @Override\r\n            public X509Certificate[] getAcceptedIssuers() {\r\n                return new X509Certificate[0];\r\n            }\r\n        };\r\n    }\r\n```\r\nI think that this particular test setup will remain FIPS incompatible (nothing wrong about that I would say).\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nOn a FIPS enforcing system, using FIPS aware native-image:\r\n```\r\n./mvnw clean install -Dquickly -pl '!devtools/gradle,!devtools/gradle/gradle-model,!devtools/gradle/gradle-extension-plugin,!devtools/gradle/gradle-application-plugin,!integration-tests/gradle'\r\n./mvnw verify -f integration-tests/pom.xml --fail-at-end --batch-mode -Dno-format -DfailIfNoTests=false -pl grpc-tls\r\n./mvnw verify -f pom.xml --fail-at-end --batch-mode -Dno-format -Dnative -DfailIfNoTests=false -pl extensions/grpc/deployment\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux rhel9fips 5.14.0-63.el9.x86_64\n\n### Output of `java -version`\n\nRed Hat build of OpenJDK 64-Bit Server VM 18.9 (build 11.0.14.1+1-LTS, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n95cc838\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23970/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23970/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

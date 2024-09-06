@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34061",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34061/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34061/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34061/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34061",
+  "id": 1758951257,
+  "node_id": "I_kwDOCFbutM5o13dZ",
+  "number": 34061,
+  "title": "Gradle multi module project with Kotlin 1.8.21 and `java-test-fixtures` plugin fail to test/build",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-06-15T14:23:07Z",
+  "updated_at": "2023-06-27T14:19:55Z",
+  "closed_at": "2023-06-27T14:14:53Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAfter upgrading project from Quarkus 3.0.4.Final to Quarkus 3.1.1.Final, when running `./gradlew build`, tests started failing with with `jakarta.enterprise.inject.AmbiguousResolutionException`\r\n\r\n\r\nThe project is a Gradle multi module project, using Kotlin. Some of the sub-modules to use `java-test-fixtures` to share common test fixtures. \r\n\r\nI've created a reproducer and pushed to a public GitHub repository.\r\n\r\n### Expected behavior\r\n\r\nWhen updating the Quarkus application to 3.1.1.Final, the previous behavior of 3.0.4.Final would be kept, allowing to run tests with a submodule that uses the `java-test-fixtures`\r\n\r\nRunning `./gradlew build` would result in a successful build\r\n\r\n\r\n\r\n### Actual behavior\r\n\r\nRunning `./gradlew build` will result in error\r\n\r\n```\r\n\r\n> Task :app:test\r\n\r\n  2023-06-15 13:33:21,257 WARN  [io.qua.arc.dep.SplitPackageProcessor] (build-26) Detected a split package usage which is considered a bad practice and should be avoided. Following packages were detected in multiple archives: \r\n  - \"org.acme.dao\" found in [5c7507f26c01e1d823c326aa3ccf009a5288ae08:app-1.0.0-SNAPSHOT::jar, org.acme:app::jar, org.acme:lib::jar]\r\n  - \"org.acme\" found in [5c7507f26c01e1d823c326aa3ccf009a5288ae08:app-1.0.0-SNAPSHOT::jar, org.acme:app::jar]\r\n\r\norg.acme.GreetingResourceTest\r\n\r\n  Test testHelloEndpoint() FAILED\r\n\r\n  java.lang.RuntimeException: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\nError:   \t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 2 deployment problems: \r\n  [1] Ambiguous dependencies for type org.acme.dao.GreetingService and qualifiers [@Default]\r\n  \t- java member: org.acme.GreetingResource#service\r\n  \t- declared on CLASS bean [types=[org.acme.GreetingResource, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.GreetingResource]\r\n  \t- available beans:\r\n  \t\t- CLASS bean [types=[java.lang.Object, org.acme.dao.GreetingService], qualifiers=[@Default, @Any], target=org.acme.dao.GreetingService]\r\n  \t\t- CLASS bean [types=[java.lang.Object, org.acme.dao.GreetingService], qualifiers=[@Default, @Any], target=org.acme.dao.GreetingService]\r\n  [2] Ambiguous dependencies for type org.acme.dao.GreetingService and qualifiers [@Default]\r\n  \t- java member: org.acme.GreetingResource#service\r\n  \t- declared on CLASS bean [types=[org.acme.GreetingResource, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.GreetingResource]\r\n  \t- available beans:\r\n  \t\t- CLASS bean [types=[java.lang.Object, org.acme.dao.GreetingService], qualifiers=[@Default, @Any], target=org.acme.dao.GreetingService]\r\n  \t\t- CLASS bean [types=[java.lang.Object, org.acme.dao.GreetingService], qualifiers=[@Default, @Any], target=org.acme.dao.GreetingService]\r\n```\r\n\r\nRefer here for the GitHub Actions logs (https://github.com/andrezimmermann/quarkus-kotlin-with-test-fixture/actions/runs/5279449037/jobs/9550135035)\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: \r\n\r\nI've pushed a small project that imitates the structure of my project, with Quarkus 3.1.1.Final\r\n\r\n1. clone https://github.com/andrezimmermann/quarkus-kotlin-with-test-fixture\r\n2. run `./gradlew build`, this would fail\r\n\r\nI've added a branch with Quarkus 3.0.4.Final, that successfully builds  \r\n1. clone https://github.com/andrezimmermann/quarkus-kotlin-with-test-fixture/tree/passing-build\r\n2. run `./gradlew build`, this would pass\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux desktop 6.3.7-x64v3-xanmod1 #0~20230609.ad1a983 SMP PREEMPT_DYNAMIC Sat Jun 10 00:20:29 UTC  x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.5\" 2022-10-18 OpenJDK Runtime Environment GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08) OpenJDK 64-Bit Server VM GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.1.1\r\n\r\n### Additional information\r\n\r\nWith Quarkus 3.1.1.Final, setting the kotlin version to 1.8.10, asides from the Kotlin daemon compilation errors, does successfully builds.\r\n\r\n```\r\n> Task :app:compileTestKotlin\r\nFailed to compile with Kotlin daemon: java.lang.NoSuchMethodError: 'void org.jetbrains.kotlin.daemon.common.IncrementalCompilationOptions.<init>(boolean, java.util.List, java.util.List, org.jetbrains.kotlin.incremental.ClasspathChanges, java.io.File, org.jetbrains.kotlin.daemon.common.CompilerMode, org.jetbrains.kotlin.daemon.common.CompileService$TargetPlatform, java.lang.Integer[], int, java.lang.Integer[], boolean, java.util.List, org.jetbrains.kotlin.daemon.common.MultiModuleICSettings, org.jetbrains.kotlin.incremental.IncrementalModuleInfo, java.lang.String[], boolean)'\r\n```\r\n\r\nThat is why initially I thought was a Kotlin issue, after investigating it further, I came to the conclusion that was indeed `java-test-fixtures` plugin that does not play well with Kotlin version. Maybe is directly related with the usage of the Kotlin daemon for compilation?\r\n\r\nRemoving the `java-test-fixtures` does makes the Quarkus 3.1.1.Final and Kotlin 1.8.21 build pass, which indicates is the plugin that interferes with some changes from Quarkus 3.1.1.Final. (https://github.com/andrezimmermann/quarkus-kotlin-with-test-fixture/pull/2)\r\n\r\nSorry for the trouble, any help would be appreciated\r\n\r\n ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34061/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34061/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

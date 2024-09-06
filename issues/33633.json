@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33633",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33633/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33633/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33633/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33633",
+  "id": 1727561513,
+  "node_id": "I_kwDOCFbutM5m-H8p",
+  "number": 33633,
+  "title": "Deploying with `quarkus` cli from a 'cleaned' project doesn't perform previoius lifecycle phases",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2313298528,
+      "node_id": "MDU6TGFiZWwyMzEzMjk4NTI4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cli",
+      "name": "area/cli",
+      "color": "0366d6",
+      "default": false,
+      "description": "Related to quarkus cli (not maven/gradle/etc.)"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-05-26T12:46:08Z",
+  "updated_at": "2023-05-26T19:08:44Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe `quarkus deploy` command isn't generating and compiling the code. Then the application endpoints are not accessibles when deploy the project with the --clean option.\r\n\r\n### Expected behavior\r\n\r\nI would expect the lifecycle phases are executed sequentially to complete the lifecycle. This means that when the `quarkus deploy`command is used,it will generate the code, then will try to compile the sources, run tests, package the binaries and then deploy the package to the cluster.\r\n\r\n### Actual behavior\r\n\r\n`quarkus deploy` just clears out the existing classes and then run the deploy phase:\r\n\r\n```\r\n[INFO] Scanning for projects...\r\n[INFO] \r\n[INFO] ----------------------< org.acme:getting-started >----------------------\r\n[INFO] Building getting-started 1.0.0-SNAPSHOT\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[INFO] \r\n[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ getting-started ---\r\n[INFO] Deleting /Users/auri/Code/getting-started-on-quarkus-demo/target\r\n[INFO] \r\n[INFO] --- maven-resources-plugin:2.6:resources (default-cli) @ getting-started ---\r\n[INFO] Using 'UTF-8' encoding to copy filtered resources.\r\n[INFO] Copying 3 resources\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD SUCCESS\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  0.648 s\r\n[INFO] Finished at: 2023-05-26T13:43:13+02:00\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Scanning for projects...\r\n[INFO] \r\n[INFO] ----------------------< org.acme:getting-started >----------------------\r\n[INFO] Building getting-started 1.0.0-SNAPSHOT\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[INFO] \r\n[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ getting-started ---\r\n[INFO] Deleting /Users/auri/Code/getting-started-on-quarkus-demo/target\r\n[INFO] \r\n[INFO] --- quarkus-maven-plugin:3.0.3.Final:deploy (default-cli) @ getting-started ---\r\n[WARNING] [io.quarkus.hibernate.orm.deployment.HibernateOrmProcessor] Hibernate ORM is disabled because no JPA entities were found\r\n[INFO] [io.quarkus.container.image.openshift.deployment.OpenshiftProcessor] Starting (in-cluster) container image build for jar using: BINARY on server: https://api.sandbox-m3.1530.p1.openshiftapps.com:6443/ in namespace:amunozhe-dev.\r\n[INFO] [io.quarkus.\r\n```\r\nNote the WARNING message: `Hibernate ORM is disabled because no JPA entities were found`while I have at least one @Entity class.\r\n\r\n\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\nBe sure to be connected to a (OpenShift) cluster.\r\n\r\n1 - unzip getting-started.zip\r\n2 - quarkus deploy openshift --clean --image-build -Dquarkus.openshift.route.expose=true\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.4.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n```\r\nApache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39)\r\nMaven home: /Users/auri/.sdkman/candidates/maven/current\r\nJava version: 17.0.5, vendor: GraalVM Community, runtime: /Users/auri/.sdkman/candidates/java/22.3.r17-grl\r\nDefault locale: es_ES, platform encoding: UTF-8\r\nOS name: \"mac os x\", version: \"13.3.1\", arch: \"aarch64\", family: \"mac\"\r\n```\r\n[getting-started.zip](https://github.com/quarkusio/quarkus/files/11575345/getting-started.zip)\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33633/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33633/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

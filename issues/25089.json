@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25089",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25089/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25089/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25089/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25089",
+  "id": 1212000126,
+  "node_id": "I_kwDOCFbutM5IPad-",
+  "number": 25089,
+  "title": "WiringProcessor incorrectly produces \"mp.messaging.incoming.\"<channel name> configuration property.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 18,
+  "created_at": "2022-04-22T08:17:49Z",
+  "updated_at": "2022-07-21T07:23:46Z",
+  "closed_at": "2022-07-17T17:11:14Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWiringProcessor incorrectly produces \"mp.messaging.incoming.\"<channel name> configuration property for each injection point qualified with `@Channel` annotation and is not `Emitter` nor `MutinyEmitter`.\r\n\r\nSee extensions/smallrye-reactive-messaging/deployment/src/main/java/io/quarkus/smallrye/reactivemessaging/deployment/WiringProcessor.java\r\n```java\r\n            if (channel.isPresent() && !(isEmitter || isMutinyEmitter)) {\r\n                handleChannelInjection(appChannels, channels, channel.get());\r\n            }\r\n``` \r\nThere is no check for injected type being `Publisher` or `PublisherBuilder` or one with configured `EmitterFactory`.\r\nIf you also have configured outgoing channel with the same name there will be runtime exception during Smallrye initialization:\r\n```\r\nSRMSG00073: Invalid configuration, the following channel names cannot be used for both incoming and outgoing [<channel name>]\r\n``` \r\nThis behaviour prevents you from using `@Channel` as a regular qualifier for custom CDI injection. \r\n\r\n### Expected behavior\r\n\r\nQuarkus deployment extension must not produce incoming channel configuration for injection points qualified with `@Channel` which is not  `Emitter`, `MutinyEmitter`, `Publisher`, `PublisherBuilder` or one with configured `EmitterFactory`.\r\n\r\n### Actual behavior\r\n\r\nQuarkus deployment extension produces \"mp.messaging.incoming.\"<channel name> configuration property for each injection point qualified with `@Channel` annotation and is not `Emitter` nor `MutinyEmitter`.\r\n\r\n### How to Reproduce?\r\n\r\n1. Add channel outgoing configuration in config file\r\n```\r\n# you may use any connector name, but connector must be specified \r\nmp.messaging.outgoing.test.connector=test\r\nmp.messaging.outgoing.test.address=test\r\n```\r\n2. Create CDI bean definition with `@Channel` qualified producer method\r\n``` kotlin\r\ninterface TestBean {\r\n    fun call()\r\n}\r\n\r\n@ApplicationScoped\r\nclass TestBeanFactory {\r\n    @Produces\r\n    @Channel(\"\")\r\n    fun testBean() = object : TestBean {\r\n        override fun call() {\r\n\r\n        }\r\n    }\r\n}\r\n```\r\n3. Create CDI bean to inject our test bean\r\n```kotlin\r\n@ApplicationScoped\r\nclass TestApp(@param:Channel(\"test\") private val testBean: TestBean) {\r\n\r\n    fun onStart(@Observes event: StartupEvent) {\r\n\r\n        testBean.call()\r\n    }\r\n}\r\n```\r\n\r\n4. Run the app and you will see error:\r\n```\r\nSRMSG00073: Invalid configuration, the following channel names cannot be used for both incoming and outgoing: [test]\r\n```\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25089/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25089/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

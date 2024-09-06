@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32552",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32552/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32552/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32552/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32552",
+  "id": 1663280094,
+  "node_id": "I_kwDOCFbutM5jI6Pe",
+  "number": 32552,
+  "title": "Can't create multiple stored procedures with transactions in setup script for MS-SQL",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 19,
+  "created_at": "2023-04-11T22:01:04Z",
+  "updated_at": "2023-04-13T17:37:41Z",
+  "closed_at": "2023-04-13T08:16:03Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm working to import a schema from an existent MS-SQL database, and have devservices handle setting up that test instance and use a specified `.sql` file to set it up.\r\n\r\nHowever, it seems that there is no way to have more than one `CREATE PROCEDURE` statement present in that file, as it is treated as one batch. The `GO` keyword is also not available in this setup script, making it impossible to setup the schema I need for testing.\r\n\r\nThis is further confirmed as the case when the script is pasted into MS SQM Server Management Studio; the first `CREATE PROCEDURE` statement has an error noting that multiple cannot exist in the same batch.\r\n\r\nPossible solutions, from my thoughts:\r\n\r\n- Somehow recognize the `GO` keyword, or other way to separate batches in the same file\r\n- Support multiple scripts specified in `quarkus.datasource.devservices.init-script-path`, and execute each in order\r\n\r\n\r\n### Expected behavior\r\n\r\nAn SQL Script that has multiple `CREATE PROCEDURE` commands should be able to used\r\n\r\n### Actual behavior\r\n\r\nError message:\r\n\r\n```\r\nCaused by: org.testcontainers.ext.ScriptUtils$ScriptStatementFailedException: Script execution failed (import.sql:234): CREATE PROCEDURE testProcedureOne ( @Correlation_Id VARCHAR(100) ) AS BEGIN\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nExample setup script:\r\n\r\nimport.sql\r\n```sql\r\nCREATE TABLE foo;\r\n...\r\n\r\nCREATE PROCEDURE testProcedureOne \r\n(@Process AS VARCHAR(50))\r\nAS\r\nBEGIN\r\n        BEGIN TRY\r\n\t    BEGIN TRANSACTION -- having this transaction causes issues\r\n\t\tSELECT * FROM foo;\r\n\r\n\t\tCOMMIT TRANSACTION\r\n\tEND TRY\r\n\tBEGIN CATCH\r\n\t    ROLLBACK TRANSACTION\r\n\t\tSELECT * FROM foo;\r\n\r\n\tEND CATCH\r\nEND;\r\n\r\nCREATE PROCEDURE testProcedureTwo\r\n(@Process AS VARCHAR(50))\r\nAS\r\nBEGIN\r\n    SELECT * FROM foo;\r\nEND;\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMINGW64_NT-10.0-19044 DEVDP-AM027 3.3.6-bec3d608-341.x86_64 2023-02-22 08:29 UTC x86_64 Msys\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.18\" 2023-01-17 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.6\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32552/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32552/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

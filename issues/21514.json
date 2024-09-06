@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21514",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21514/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21514/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21514/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21514",
+  "id": 1055819101,
+  "node_id": "I_kwDOCFbutM4-7oVd",
+  "number": 21514,
+  "title": "java.lang.OutOfMemoryError: Direct Buffer Memory in Netty",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2021-11-17T07:57:27Z",
+  "updated_at": "2021-11-17T12:28:35Z",
+  "closed_at": "2021-11-17T12:28:34Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm running Quarkus 2.3.1, Redisson 3.16.0. Whenever the application comes under a bit of load, I start getting out of memory errors in Netty. Googling makes me suspect garbage collection issues, but deciphering the run-java shell script in the Quarkus included Dockerfile is a challenge. The issues started when moving from imperative to reactive REST endpoints in my application. Stack trace below.\r\n\r\n{\r\n  \"class\": \"java.nio.Bits\",\r\n  \"method\": \"reserveMemory\",\r\n  \"line\": 175\r\n},\r\n{\r\n  \"class\": \"java.nio.DirectByteBuffer\",\r\n  \"method\": \"<init>\",\r\n  \"line\": 118\r\n},\r\n{\r\n  \"class\": \"java.nio.ByteBuffer\",\r\n  \"method\": \"allocateDirect\",\r\n  \"line\": 317\r\n},\r\n{\r\n  \"class\": \"io.netty.buffer.PoolArena$DirectArena\",\r\n  \"method\": \"allocateDirect\",\r\n  \"line\": 632\r\n},\r\n{\r\n  \"class\": \"io.netty.buffer.PoolArena$DirectArena\",\r\n  \"method\": \"newUnpooledChunk\",\r\n  \"line\": 621\r\n},\r\n{\r\n  \"class\": \"io.netty.buffer.PoolArena\",\r\n  \"method\": \"allocateHuge\",\r\n  \"line\": 213\r\n},\r\n{\r\n  \"class\": \"io.netty.buffer.PoolArena\",\r\n  \"method\": \"allocate\",\r\n  \"line\": 141\r\n},\r\n{\r\n  \"class\": \"io.netty.buffer.PoolArena\",\r\n  \"method\": \"reallocate\",\r\n  \"line\": 286\r\n},\r\n{\r\n  \"class\": \"io.netty.buffer.PooledByteBuf\",\r\n  \"method\": \"capacity\",\r\n  \"line\": 118\r\n},\r\n{\r\n  \"class\": \"io.netty.buffer.AbstractByteBuf\",\r\n  \"method\": \"ensureWritable0\",\r\n  \"line\": 305\r\n},\r\n{\r\n  \"class\": \"io.netty.buffer.AbstractByteBuf\",\r\n  \"method\": \"ensureWritable\",\r\n  \"line\": 280\r\n},\r\n{\r\n  \"class\": \"io.netty.buffer.AbstractByteBuf\",\r\n  \"method\": \"writeBytes\",\r\n  \"line\": 1103\r\n},\r\n{\r\n  \"class\": \"io.netty.handler.codec.ByteToMessageDecoder$1\",\r\n  \"method\": \"cumulate\",\r\n  \"line\": 99\r\n},\r\n{\r\n  \"class\": \"io.netty.handler.codec.ByteToMessageDecoder\",\r\n  \"method\": \"channelRead\",\r\n  \"line\": 274\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.AbstractChannelHandlerContext\",\r\n  \"method\": \"invokeChannelRead\",\r\n  \"line\": 379\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.AbstractChannelHandlerContext\",\r\n  \"method\": \"invokeChannelRead\",\r\n  \"line\": 365\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.AbstractChannelHandlerContext\",\r\n  \"method\": \"fireChannelRead\",\r\n  \"line\": 357\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.DefaultChannelPipeline$HeadContext\",\r\n  \"method\": \"channelRead\",\r\n  \"line\": 1410\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.AbstractChannelHandlerContext\",\r\n  \"method\": \"invokeChannelRead\",\r\n  \"line\": 379\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.AbstractChannelHandlerContext\",\r\n  \"method\": \"invokeChannelRead\",\r\n  \"line\": 365\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.DefaultChannelPipeline\",\r\n  \"method\": \"fireChannelRead\",\r\n  \"line\": 919\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe\",\r\n  \"method\": \"read\",\r\n  \"line\": 166\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.nio.NioEventLoop\",\r\n  \"method\": \"processSelectedKey\",\r\n  \"line\": 719\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.nio.NioEventLoop\",\r\n  \"method\": \"processSelectedKeysOptimized\",\r\n  \"line\": 655\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.nio.NioEventLoop\",\r\n  \"method\": \"processSelectedKeys\",\r\n  \"line\": 581\r\n},\r\n{\r\n  \"class\": \"io.netty.channel.nio.NioEventLoop\",\r\n  \"method\": \"run\",\r\n  \"line\": 493\r\n},\r\n{\r\n  \"class\": \"io.netty.util.concurrent.SingleThreadEventExecutor$4\",\r\n  \"method\": \"run\",\r\n  \"line\": 986\r\n},\r\n{\r\n  \"class\": \"io.netty.util.internal.ThreadExecutorMap$2\",\r\n  \"method\": \"run\",\r\n  \"line\": 74\r\n},\r\n{\r\n  \"class\": \"io.netty.util.concurrent.FastThreadLocalRunnable\",\r\n  \"method\": \"run\",\r\n  \"line\": 30\r\n},\r\n{\r\n  \"class\": \"java.lang.Thread\",\r\n  \"method\": \"run\",\r\n  \"line\": 829\r\n}\n\n### Expected behavior\n\nNo error should be thrown\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nRunning on Docker image registry.access.redhat.com/ubi8/ubi-minimal:8.3\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment 18.9 (build 11.0.13+8-LTS) OpenJDK 64-Bit Server VM 18.9 (build 11.0.13+8-LTS, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.3.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21514/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21514/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

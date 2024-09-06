@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34257",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34257/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34257/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34257/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34257",
+  "id": 1770204843,
+  "node_id": "I_kwDOCFbutM5pgy6r",
+  "number": 34257,
+  "title": "RequestScoped is destroyed when connection close (disconnect) and another bean is created",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-06-22T18:36:18Z",
+  "updated_at": "2023-07-10T13:21:49Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi,\r\n\r\nI'm experiencing strange behavior with RequestScoped. But I'm not sure if it's a bug. In any case, in my view, this could lead to serious security flaws.\r\n\r\n**When an http request is initiated and the connection is terminated before the response (eg user closes the browser) the RequestScoped beans are destroyed and recreated as if a new request had been initiated.**\r\n\r\nSwitching to SessionScoped the behavior is different: the beans are not destroyed like RequestScoped. However, I discovered this behavior by injecting the SecurityIdentity. In the middle of processing the request, my SecurityIdentitiy becomes anonymous and I lose the request user information. In my case, some methods that write user logs appear as if there is no user.\r\n\r\nI believe that SessionScoped is not the solution, as there are other particularities.\n\n### Expected behavior\n\nRequestScoped should persist between request->response cycle.\n\n### Actual behavior\n\nRequestScoped are destroyed when connection finish and another bean is created.\n\n### How to Reproduce?\n\nSimple test:\r\n\r\nCreate a RequestScoped bean and a Resource:\r\n```\r\n@RequestScoped\r\npublic class RequestScopedBean {\r\n    int value;\r\n   ...Setters and Getters\r\n}\r\n\r\n@Path(\"/\")\r\n@ApplicationScoped\r\npublic class Resource {\r\n\r\n    @Inject\r\n    RequestScopedBean rqb;\r\n\r\n    @Path(\"/test\")\r\n    @GET\r\n    protected String test() throws Exception {\r\n        int c = 0;\r\n        while (c++ < 4) {\r\n            rqb.setValue(rqb.getValue()+1);\r\n            Log.infof(\"Tedt %d == %d\", c, rqb.getValue());\r\n            Thread.sleep(10000);\r\n        }\r\n        return \"OK\";\r\n    }\r\n}\r\n```\r\n\r\nCall `/test` from an browser and close the page after first log \"Test 1 == 1\".\r\nIf the `rqb` is recreated you will see \"Test 2 == 1\".\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [versão 10.0.19045.3086]\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Zulu15.36+13-CA (build 15.0.5+3-MTS)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.7.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.4.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34257/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34257/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

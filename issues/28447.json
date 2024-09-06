@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28447",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28447/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28447/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28447/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28447",
+  "id": 1400950557,
+  "node_id": "I_kwDOCFbutM5TgM8d",
+  "number": 28447,
+  "title": "Maven Multi-Module and Dev-Mode: Dependent class is not properly loaded",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-10-07T10:20:21Z",
+  "updated_at": "2022-10-07T15:29:33Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n__Disclaimer__: I'm not sure if this is a bug or a limitation of Quarkus Live Reload Mode, so I'm opening this bug report.\r\n\r\nIf a change is made in a submodule of a Maven multi-module project that does not directly affect the main module, an exception is thrown. This is because only the changed class is compiled and loaded and not the classes that use that class.\r\n\r\nExplanation and reproducer see below.\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n[reproducer.zip](https://github.com/quarkusio/quarkus/files/9732988/reproducer.zip)\r\n\r\n1. `./mvnw -f core/pom.xml quarkus:dev`\r\n2. http://localhost:8080/persons\r\n3. Change the property `age` in class `Person` from type `int` to `long`\r\n4. http://localhost:8080/persons\r\n\r\n```java\r\njava.lang.NoSuchMethodError: 'void org.acme.model.Person.<init>(java.lang.String, int)'\r\n\tat org.acme.PersonResource.getPersons(PersonResource.java:17)\r\n\tat org.acme.PersonResource_Subclass.getPersons$$superforward1(Unknown Source)\r\n\tat org.acme.PersonResource_Subclass$$function$$2.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:33)\r\n\tat org.acme.PersonResource_Subclass.getPersons(Unknown Source)\r\n\tat org.acme.PersonResource$quarkusrestinvoker$getPersons_b1ceee8c46147a6db196b42da6e33b1773010f00.invoke(Unknown Source)\r\n\tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:115)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:142)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:564)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n````\r\n\r\nThe problem here is that the `Person` class is compiled and loaded, but the `PersonResource` class is not.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nJava 17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28447/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28447/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

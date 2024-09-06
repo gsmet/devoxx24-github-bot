@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34379",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34379/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34379/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34379/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34379",
+  "id": 1778923284,
+  "node_id": "I_kwDOCFbutM5qCDcU",
+  "number": 34379,
+  "title": "Gzip not working in quarkus resteasy-reactive.",
+  "labels": [
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2023-06-28T13:15:31Z",
+  "updated_at": "2023-07-07T10:06:09Z",
+  "closed_at": "2023-07-07T03:56:32Z",
+  "active_lock_reason": null,
+  "body": "okay, in that case, a `ContainerResponseFilter` can help, when you use resteasy-reactive. \r\nFor resteasy classic (the quarkus-resteasy extensions), I am not sure if this gets invoked, since files are served from a vert.x handler before the resteasy classic handler has any chance to run, afaik.\r\n\r\n```\r\n@Provider\r\n@PreMatching\r\npublic class GZIPResponseFilter implements ContainerResponseFilter {\r\n    @Override\r\n    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {\r\n        if (requestContext.getUriInfo().getPath().contains(\"WebGL.framework.js.gz\")) {\r\n            responseContext.getHeaders().putSingle(\"Content-Encoding\", \"gzip\");\r\n        }\r\n    }\r\n}\r\n```\r\n\r\n_Originally posted by @Postremus in https://github.com/quarkusio/quarkus/discussions/23162#discussioncomment-2040953_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34379/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34379/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

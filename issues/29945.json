@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29945",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29945/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29945/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29945/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29945",
+  "id": 1502019760,
+  "node_id": "I_kwDOCFbutM5ZhwCw",
+  "number": 29945,
+  "title": "Files in multipart form are null",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-12-18T20:18:31Z",
+  "updated_at": "2022-12-19T10:16:59Z",
+  "closed_at": "2022-12-19T10:16:26Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have the following Java code:\r\n```java\r\n    @Path(\"create\")\r\n    @POST\r\n    @Consumes(MediaType.MULTIPART_FORM_DATA)\r\n    @Produces(MediaType.WILDCARD)\r\n    public void create(@RestForm(\"sale\") boolean forSale, @RestForm(\"type\") String type, @RestForm(\"photo\") FileUpload photo) {\r\n        System.out.println(photo.uploadedFile());\r\n    }\r\n```\r\n\r\nAnd the following JS code:\r\n```js\r\n        const data = new FormData();\r\n        data.append(\"type\", newType);\r\n        data.append(\"sale\", forSale.toString())\r\n        data.append(\"photo\", file)\r\n\r\n        let response = fetch(\"<redacted>/create\", {\r\n            method: \"POST\",\r\n            body: data,\r\n        }).then(() => {\r\n            refreshCallback();\r\n        });\r\n```\r\n\r\nThe request sent from the client:\r\n\r\n```\r\nPOST <redacted>/create HTTP/1.1\r\nHost: localhost:8069\r\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/109.0\r\nAccept: */*\r\nAccept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate, br\r\nReferer: http://localhost:8069/<redacted>\r\nContent-Type: multipart/form-data; boundary=---------------------------14145789041259461299383314053\r\nContent-Length: 426\r\nOrigin: http://localhost:8069\r\nConnection: keep-alive\r\nCookie: session=\"dmAeXiWyujy/VoNixfloOPKyRel+K8nNd+/FPU43OQ==\"\r\nSec-Fetch-Dest: empty\r\nSec-Fetch-Mode: cors\r\nSec-Fetch-Site: same-origin\r\nPragma: no-cache\r\nCache-Control: no-cache\r\n\r\n-----------------------------14145789041259461299383314053\r\nContent-Disposition: form-data; name=\"type\"\r\n\r\ntest\r\n-----------------------------14145789041259461299383314053\r\nContent-Disposition: form-data; name=\"sale\"\r\n\r\ntrue\r\n-----------------------------14145789041259461299383314053\r\nContent-Disposition: form-data; name=\"photo\"\r\n\r\nC:\\fakepath\\4631466951_1.jpg\r\n-----------------------------14145789041259461299383314053--\r\n\r\n```\r\n\r\nWhen the request is handled by the server, the FileUpload field photo is null.\n\n### Expected behavior\n\nAll fields should have values\n\n### Actual behavior\n\nThe FileUpload field \"photo\" is null. \n\n### How to Reproduce?\n\nUse the snippets in the description to reproduce.\n\n### Output of `uname -a` or `ver`\n\nLinux dada 6.0.12-zen1-1-zen #1 ZEN SMP PREEMPT_DYNAMIC Thu, 08 Dec 2022 11:03:40 +0000 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18 OpenJDK Runtime Environment (build 17.0.5+1) OpenJDK 64-Bit Server VM (build 17.0.5+1, mixed mode)\n\n### GraalVM version (if different from Java)\n\nNot applicable\n\n### Quarkus version or git rev\n\n2.14.2.Final also on 2.15.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n------------------------------------------------------------ Gradle 7.5.1 ------------------------------------------------------------  Build time:   2022-08-05 21:17:56 UTC Revision:     d1daa0cbf1a0103000b71484e1dbfe096e095918  Kotlin:       1.6.21 Groovy:       3.0.10 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          17.0.5 (Oracle Corporation 17.0.5+1) OS:           Linux 6.0.12-zen1-1-zen amd64\n\n### Additional information\n\nMaybe this could be related to #27215",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29945/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29945/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

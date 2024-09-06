@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35684",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35684/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35684/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35684/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35684",
+  "id": 1877353915,
+  "node_id": "I_kwDOCFbutM5v5iW7",
+  "number": 35684,
+  "title": "Add checks for quarkus.elasticsearch.max-connections and quarkus.elasticsearch.max-connections-per-route values",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2222769329,
+      "node_id": "MDU6TGFiZWwyMjIyNzY5MzI5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/elasticsearch",
+      "name": "area/elasticsearch",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-09-01T12:40:14Z",
+  "updated_at": "2023-09-22T15:23:03Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nAdd checks for `quarkus.elasticsearch.max-connections` and `quarkus.elasticsearch.max-connections-per-route` values.\r\n`quarkus.elasticsearch.io-thread-counts` could be checked on Quarkus side too, some details a bit lower.\r\n\r\n0 or negative is forbidden in Hibernate Search, it probably should be in this client as well\r\n\r\nhttps://github.com/quarkusio/quarkus/blob/main/extensions/elasticsearch-rest-client/runtime/src/main/java/io/quarkus/elasticsearch/restclient/lowlevel/runtime/RestClientBuilderHelper.java#L75 passes the values to HttpAsyncClientBuilder\r\n\r\nAnd it reflects only the values higher than 0 in `public CloseableHttpAsyncClient build()` method\r\n```java\r\n                if (maxConnTotal > 0) {\r\n                    poolingmgr.setMaxTotal(maxConnTotal);\r\n                }\r\n                if (maxConnPerRoute > 0) {\r\n                    poolingmgr.setDefaultMaxPerRoute(maxConnPerRoute);\r\n                }\r\n```\r\n\r\nquarkus.elasticsearch.io-thread-counts=0 throws exception in runtime when the client is used/injected for the first time.\r\nThe check is done outside Quarkus, `quarkus.elasticsearch.io-thread-counts` could be checked on Quarkus side too.\r\n```\r\nCaused by: java.lang.IllegalArgumentException: ioThreadCount may not be negative or zero\r\n\tat org.apache.http.util.Args.positive(Args.java:104)\r\n\tat org.apache.http.impl.nio.reactor.IOReactorConfig.<init>(IOReactorConfig.java:95)\r\n\tat org.apache.http.impl.nio.reactor.IOReactorConfig$Builder.build(IOReactorConfig.java:505)\r\n\tat io.quarkus.elasticsearch.restclient.lowlevel.runtime.RestClientBuilderHelper$2.customizeHttpClient(RestClientBuilderHelper.java:71)\r\n```\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35684/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35684/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

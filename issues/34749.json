@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34749",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34749/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34749/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34749/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34749",
+  "id": 1804515622,
+  "node_id": "I_kwDOCFbutM5rjrkm",
+  "number": 34749,
+  "title": "Openshift manifest generator does not detect commit id in \"detached HEAD\" state",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2023-07-14T09:12:51Z",
+  "updated_at": "2023-07-14T12:42:44Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have an application with `quarkus-openshift` extension, which I use to generate kubernetes and openshift manifests for OCP.\r\nUsually this manifests contain two annotations in Service->metadata: `app.quarkus.io/build-timestamp` and `app.quarkus.io/commit-id`. But when I switch to some particular commit (so-called \"detached HEAD\" state), the `app.quarkus.io/commit-id` is not generated anymore.\r\n\r\n### Expected behavior\r\n\r\nCommit id should be detected and added to the manifest if it exists, kubernetest.yml should look like that:\r\n\r\n```\r\napiVersion: v1\r\nkind: Service\r\nmetadata:\r\n  annotations:\r\n    app.quarkus.io/commit-id: caab9bdec4bb2648b84ac2ac73d21f4bf6252a4d\r\n    app.quarkus.io/build-timestamp: 2023-07-14 - 09:01:25 +0000\r\n  labels:\r\n    app.kubernetes.io/name: theapp\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n    app.kubernetes.io/managed-by: quarkus\r\n  name: theapp\r\n<...>\r\n```\r\n\r\n### Actual behavior\r\n\r\n```\r\napiVersion: v1\r\nkind: Service\r\nmetadata:\r\n  annotations:\r\n    app.quarkus.io/build-timestamp: 2023-07-14 - 08:56:03 +0000\r\n  labels:\r\n    app.kubernetes.io/name: theapp\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n    app.kubernetes.io/managed-by: quarkus\r\n  name: theapp\r\n<...>\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1.  Clone the reproducer: `git@github.com:fedinskiy/reproducer.git`\r\n2. Check status: \r\n```\r\n$ git log -n1\r\ncommit caab9bdec4bb2648b84ac2ac73d21f4bf6252a4d (HEAD -> impotent-idempotent, origin/impotent-idempotent)\r\nAuthor: Fedor Dudinskiy <fdudinsk@redhat.com>\r\nDate:   Tue Jul 11 13:12:48 2023 +0200\r\n$ git status\r\nOn branch impotent-idempotent\r\nYour branch is up to date with 'origin/impotent-idempotent'.\r\n\r\nnothing to commit, working tree clean\r\n\r\n```\r\n3. Generate manifests: `mvn clean install -DskipTests`\r\n4. Check manifests: `less target/openshift/kubernetes.yml # I use non-standard folder, but doesn't not affect the result` \r\n5. Detach HEAD: `git checkout caab9bdec4bb2648b84ac2ac73d21f4bf6252a4d`\r\n6. Check state:\r\n```\r\n$ git log -n1\r\ncommit caab9bdec4bb2648b84ac2ac73d21f4bf6252a4d (HEAD, origin/impotent-idempotent, impotent-idempotent)\r\nAuthor: Fedor Dudinskiy <fdudinsk@redhat.com>\r\nDate:   Tue Jul 11 13:12:48 2023 +0200\r\n$ git status\r\nHEAD detached at caab9bd\r\nnothing to commit, working tree clean\r\n```\r\n7. Generate manifests: `mvn clean install -DskipTests`\r\n8. Check new manifests: `less target/openshift/kubernetes.yml`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n6.3.8-200.fc38.x86_64\r\n\r\n### Output of `java -version`\r\n\r\n17.0.5, vendor: GraalVM Community\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.7 (b89d5959fcde851dcb1c8946a785a163f14e1e29)\r\n\r\n### Additional information\r\n\r\ngit version 2.41.0\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34749/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34749/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

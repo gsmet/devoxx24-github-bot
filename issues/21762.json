@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21762",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21762/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21762/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21762/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21762",
+  "id": 1065436357,
+  "node_id": "I_kwDOCFbutM4_gUTF",
+  "number": 21762,
+  "title": "Resteasy \"connection was closed\" error after upgrading to 2.4.x",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2021-11-28T21:08:07Z",
+  "updated_at": "2021-12-06T07:34:53Z",
+  "closed_at": "2021-11-29T11:01:44Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAfter bumping the Quarkus version to 2.4.x (tested 2.4.0.Final, 2.4.1.Final, and 2.4.2.Final) in Keycloak, the following error is happening every time you reload a page multiple times during a short period (e.g.: holding F5 when at the browser):\r\n\r\n```\r\n2021-11-28 17:51:03,913 ERROR [org.jbo.thr.errors] (executor-thread-4) Thread Thread[executor-thread-4,5,main] threw an uncaught exception: java.lang.RuntimeException: java.io.IOException: j\r\nava.io.IOException: io.vertx.core.VertxException: Connection was closed\r\n        at io.quarkus.resteasy.runtime.standalone.VertxHttpRequest$VertxExecutionContext$VertxHttpAsyncResponse.vertxFlush(VertxHttpRequest.java:396)\r\n        at io.quarkus.resteasy.runtime.standalone.VertxHttpRequest$VertxExecutionContext$VertxHttpAsyncResponse$1.run(VertxHttpRequest.java:326)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$13.runWith(VertxCoreRecorder.java:543)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:829)\r\nCaused by: java.io.IOException: java.io.IOException: io.vertx.core.VertxException: Connection was closed\r\n        at io.quarkus.resteasy.runtime.standalone.VertxOutputStream.close(VertxOutputStream.java:124)\r\n        at io.quarkus.resteasy.runtime.standalone.VertxHttpResponse.finish(VertxHttpResponse.java:145)\r\n        at io.quarkus.resteasy.runtime.standalone.VertxHttpRequest$VertxExecutionContext$VertxHttpAsyncResponse.vertxFlush(VertxHttpRequest.java:394)\r\n        ... 8 more\r\nCaused by: java.io.IOException: io.vertx.core.VertxException: Connection was closed\r\n        at io.quarkus.resteasy.runtime.standalone.VertxBlockingOutput.write(VertxBlockingOutput.java:79)\r\n        at io.quarkus.resteasy.runtime.standalone.VertxHttpResponse.writeBlocking(VertxHttpResponse.java:172)\r\n        at io.quarkus.resteasy.runtime.standalone.VertxOutputStream.close(VertxOutputStream.java:122)\r\n        ... 10 more\r\nCaused by: io.vertx.core.VertxException: Connection was closed\r\n```\r\n\r\nThe error does not happen if we downgrade to version 2.3.1.\r\n\r\n### Expected behavior\r\n\r\nNo errors in logs if loading a page multiple times.\r\n\r\n### Actual behavior\r\n\r\nErrors are shown in logs as per description.\r\n\r\n### How to Reproduce?\r\n\r\nI'm did not work yet a reproducer but the error is very easy to reproduce by following these steps:\r\n\r\n1) Build Keycloak.X Distribution with pom.xml in quarkus package set to 2.5.0.Final (and postgres to 42.3.1), use e.g. mvn clean install -DskipTests -Pdistribution in root directory (or see readme here: https://github.com/keycloak/keycloak/tree/main/quarkus ).\r\n2) unpack zip from distribution/server-x-dist/target\r\n3) cd /bin\r\n4) run ./kc.sh start-dev\r\n5) Using a browser, reload the page multiple times during a very short period of time\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux fedora 5.14.18-200.fc34.x86_64 #1 SMP Fri Nov 12 16:48:10 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.13\" 2021-10-19 OpenJDK Runtime Environment 18.9 (build 11.0.13+8) OpenJDK 64-Bit Server VM 18.9 (build 11.0.13+8, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.4.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21762/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21762/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

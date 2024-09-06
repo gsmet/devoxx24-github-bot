@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28027",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28027/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28027/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28027/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28027",
+  "id": 1376730002,
+  "node_id": "I_kwDOCFbutM5SDzuS",
+  "number": 28027,
+  "title": "Wrong type detection in hibernate-reactive on postgres bigint PK",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-09-17T10:12:15Z",
+  "updated_at": "2022-09-17T10:50:01Z",
+  "closed_at": "2022-09-17T10:50:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nVersions:\r\n\r\nQuarkus: 2.12.1.Final\r\nPostrgres: 14.5-1.pgdg110+1\r\n\r\nI'm getting the following error: \r\n```java.lang.IllegalArgumentException: Provided id of the wrong type for class tech.laude.h3lp3r.domain.Person. Expected: class java.lang.Long, got class java.lang.Integer ```\r\n\r\nI've tried generating the table from Quarkus and manually, same result.\r\n\r\nEntity code:\r\n```java\r\n@Entity\r\npublic class Person extends PanacheEntity {\r\n    public String name;\r\n }\r\n```\r\nUsing `PanacheEntityBase` with manual `id` definition shows same problem.\r\n\r\nGenerated table in postgres:\r\n\r\n```\r\n# \\d person\r\n                      Table \"public.person\"\r\n Column |          Type          | Collation | Nullable | Default\r\n--------+------------------------+-----------+----------+---------\r\n id     | bigint                 |           | not null |\r\n name   | character varying(255) |           |          |\r\nIndexes:\r\n    \"person_pkey\" PRIMARY KEY, btree (id)\r\n```\r\n\r\nMy endpoint:\r\n```java\r\n    @GET\r\n    @Path(\"/test\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public Person test() {\r\n        return Person.findById(1);\r\n    }\r\n```\r\n\r\n\n\n### Expected behavior\n\nNo error\n\n### Actual behavior\n\nAn exception is raised:\r\n\r\n```\r\nCaused by: org.hibernate.TypeMismatchException: Provided id of the wrong type for class acme.domain.Person. Expected: class java.lang.Long, got class java.lang.Integer\r\n        at org.hibernate.event.internal.DefaultLoadEventListener.checkIdClass(DefaultLoadEventListener.java:155)\r\n        at org.hibernate.event.internal.DefaultLoadEventListener.onLoad(DefaultLoadEventListener.java:71)\r\n        at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:118)\r\n        at org.hibernate.internal.SessionImpl.fireLoadNoChecks(SessionImpl.java:1231)\r\n        at org.hibernate.internal.SessionImpl.fireLoad(SessionImpl.java:1220)\r\n        at org.hibernate.internal.SessionImpl.access$2100(SessionImpl.java:202)\r\n        at org.hibernate.internal.SessionImpl$IdentifierLoadAccessImpl.doLoad(SessionImpl.java:2835)\r\n```\n\n### How to Reproduce?\n\nReproduce:\r\n\r\n1. Configure a postgresql instance with docker\r\n```\r\ndocker run --name db1 --rm -p 5432:5432 -e POSTGRES_DB=db1 -e POSTGRES_USER=sarah -e POSTGRES_PASSWORD=connor -d postgres:14\r\n```\r\n2. Configure application.properties to connect to the db\r\n```\r\nquarkus.datasource.db-kind = postgresql\r\nquarkus.datasource.username = sarah\r\nquarkus.datasource.password = connor\r\nquarkus.datasource.jdbc.url = jdbc:postgresql://localhost:5432/db1\r\nquarkus.hibernate-orm.database.generation = drop-and-create\r\n```\r\n3. Create an entity Person like the described previously\r\n4. Create a Resource like:\r\n```java\r\n@Path(\"/\")\r\npublic class PersonResource {\r\n    @GET\r\n    @Path(\"/test\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public Person test() {\r\n        return Person.findById(1);\r\n    }\r\n}\r\n```\r\n5. `./mvnw compile`\r\n6. `quarkus dev`\r\n7. Create a record in the table: `insert into person (id, name) values (1, 'Rob');`\r\n8. Call the service with curl or whatever toool:\r\n```sh\r\ncurl localhost:8080/test\r\n```\n\n### Output of `uname -a` or `ver`\n\n`Linux ThinkPad-Rob 5.15.57.1-microsoft-standard-WSL2 #1 SMP Wed Jul 27 02:20:31 UTC 2022 x86_64 GNU/Linux`\n\n### Output of `java -version`\n\n```openjdk version \"17.0.4\" 2022-07-19 OpenJDK Runtime Environment (build 17.0.4+8-Debian-1) OpenJDK 64-Bit Server VM (build 17.0.4+8-Debian-1, mixed mode, sharing)```\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.12.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n`quarkus dev`\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28027/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28027/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

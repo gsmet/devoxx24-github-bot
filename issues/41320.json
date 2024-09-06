@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41320",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41320/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41320/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41320/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41320",
+  "id": 2363143560,
+  "node_id": "I_kwDOCFbutM6M2rWI",
+  "number": 41320,
+  "title": "Add async callback support for Quarkus WebSockets Next",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-06-19T21:19:19Z",
+  "updated_at": "2024-06-25T06:36:51Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nWhen working with Quarkus WebSockets Next it seems impossible to execute async callbacks. \r\nUse cases are:\r\n-  some code takes long time to execute and I don't want to block ws endpoint while my app is handling one request, so I try to execute this code in another thread with callback to websocket (by callback I mean sending some data back to client);\r\n-   some tasks have to be executed in parallel and each should return some callback to websocket \r\nHere is code sample:\r\n```java\r\npackage com.andreiyusupau;\r\n\r\nimport io.quarkus.websockets.next.OnTextMessage;\r\nimport io.quarkus.websockets.next.WebSocket;\r\nimport io.quarkus.websockets.next.WebSocketConnection;\r\nimport jakarta.inject.Inject;\r\n\r\nimport java.util.concurrent.ExecutorService;\r\nimport java.util.concurrent.Executors;\r\nimport java.util.concurrent.TimeUnit;\r\n\r\n@WebSocket(path = \"/test-next\")\r\npublic class WebsocketNext {\r\n\r\n    @Inject\r\n    WebSocketConnection connection;\r\n    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();\r\n\r\n    @OnTextMessage\r\n    public void onMessage(String message) {\r\n        executorService.execute(() -> {\r\n            try {\r\n                // emulate slow operation\r\n                TimeUnit.SECONDS.sleep(2L);\r\n                connection.sendText(message);\r\n            } catch (InterruptedException e) {\r\n                throw new RuntimeException(e);\r\n            }\r\n        });\r\n    }\r\n\r\n}\r\n\r\n```\r\nRunning it leads to the following exception:\r\n```java\r\nException in thread \"\" jakarta.enterprise.context.ContextNotActiveException: SessionScoped context was not active when trying to obtain a bean instance for a client proxy of SYNTHETIC bean [class=io.quarkus.websockets.next.WebSocketConnection, id=2wpUB3H8VV_VmvxBreyF9vW6OLI]\r\n\tat io.quarkus.arc.impl.ClientProxies.notActive(ClientProxies.java:70)\r\n\tat io.quarkus.arc.impl.ClientProxies.getSingleContextDelegate(ClientProxies.java:30)\r\n\tat io.quarkus.websockets.next.WebSocketConnection_2wpUB3H8VV_VmvxBreyF9vW6OLI_Synthetic_ClientProxy.arc$delegate(Unknown Source)\r\n\tat io.quarkus.websockets.next.WebSocketConnection_2wpUB3H8VV_VmvxBreyF9vW6OLI_Synthetic_ClientProxy.sendText(Unknown Source)\r\n\tat com.andreiyusupau.WebsocketNext.lambda$onMessage$0(WebsocketNext.java:25)\r\n\tat java.base/java.util.concurrent.ThreadPerTaskExecutor$TaskRunner.run(ThreadPerTaskExecutor.java:314)\r\n\tat java.base/java.lang.VirtualThread.run(VirtualThread.java:309)\r\n```\r\n\r\n\r\nSame example for Jakarta Websockets implemented by Quarkus works fine:\r\n```java\r\npackage com.andreiyusupau;\r\n\r\nimport jakarta.enterprise.context.ApplicationScoped;\r\nimport jakarta.websocket.OnMessage;\r\nimport jakarta.websocket.Session;\r\nimport jakarta.websocket.server.ServerEndpoint;\r\n\r\nimport java.io.IOException;\r\nimport java.util.concurrent.ExecutorService;\r\nimport java.util.concurrent.Executors;\r\nimport java.util.concurrent.TimeUnit;\r\n\r\n@ServerEndpoint(\"/test\")\r\n@ApplicationScoped\r\npublic class Websocket {\r\n\r\n    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();\r\n\r\n    @OnMessage\r\n    public void onMessage(String message, Session session) {\r\n        executorService.execute(() -> {\r\n            try {\r\n                // emulate slow operation\r\n                TimeUnit.SECONDS.sleep(2L);\r\n                session.getBasicRemote().sendText(message);\r\n            } catch (InterruptedException | IOException e) {\r\n                throw new RuntimeException(e);\r\n            }\r\n        });\r\n    }\r\n\r\n}\r\n\r\n```\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41320/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41320/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28803",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28803/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28803/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28803/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28803",
+  "id": 1421684064,
+  "node_id": "I_kwDOCFbutM5UvS1g",
+  "number": 28803,
+  "title": "Error connecting to external PostgreSQL v15 in environment different of DEV.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-10-25T01:04:41Z",
+  "updated_at": "2022-10-25T06:29:38Z",
+  "closed_at": "2022-10-25T06:29:36Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have two problems: I am not able to connect to the external PostgreSQL server in an environment different of DEV and in STAGING the error logs are not displayed.\r\n\r\nIn the STAGING environment (Docker JVM), in addition to not connecting, there is no error.\r\n\r\n### Expected behavior\r\n\r\nIn a STAGING environment you should:\r\n1. have created the database;\r\n2. Error in console when entering wrong database connection string.\r\n\r\n### Actual behavior\r\n\r\n**1. Scenario 1:** in a DEV environment, with the correct database settings, I can access and the DDL SQL commands are executed and an example table is created.\r\n\r\n* OK behavior.\r\n\r\nquarkus.datasource.db-kind = postgresql\r\nquarkus.datasource.username = quarkus\r\nquarkus.datasource.password = quarkus\r\nquarkus.datasource.jdbc.url = jdbc:postgresql://**199.193.112.2:5432**/auth_service\r\nquarkus.datasource.jdbc.max-size = 5\r\n%staging.quarkus.datasource.jdbc.url = jdbc:postgresql://199.193.112.2:5432/auth_service\r\nquarkus.hibernate-orm.database.generation=update\r\n\r\n**2. Scenario 2:** in a DEV environment, with the following wrong database settings, I am presented with errors in the console.\r\n\r\n* OK behavior.\r\n\r\nquarkus.datasource.db-kind = postgresql\r\nquarkus.datasource.username = quarkus\r\nquarkus.datasource.password = quarkus\r\nquarkus.datasource.jdbc.url = jdbc:postgresql://**10.2.1.1:5432**/auth_service\r\nquarkus.datasource.jdbc.max-size = 5\r\n%staging.quarkus.datasource.jdbc.url = jdbc:postgresql://199.193.112.2:5432/auth_service\r\nquarkus.hibernate-orm.database.generation=update\r\n\r\n-- Errors\r\n\r\n2022-10-24 21:26:29,011 WARN  [org.hib.eng.jdb.env.int.JdbcEnvironmentInitiator] (JPA Startup Thread: <default>) HHH000342: Could not obtain connection to query metadata: org.postgresql.util.PSQLException: Connection to localhost:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.\r\n\r\n**3. Scenario 3**: in a **STAGING** environment, via Docker, with the correct database settings, **no SQL DDL** is executed:\r\n\r\n* Unexpected Behavior.\r\n\r\nquarkus.datasource.db-kind = postgresql\r\nquarkus.datasource.username = quarkus\r\nquarkus.datasource.password = quarkus\r\nquarkus.datasource.jdbc.url = jdbc:postgresql://10.2.1.1:5432/auth_service\r\nquarkus.datasource.jdbc.max-size = 5\r\n%staging.quarkus.datasource.jdbc.url = jdbc:postgresql://**199.193.112.2:5432**/auth_service\r\nquarkus.hibernate-orm.database.generation=update\r\n\r\n-- docker commands\r\n\r\n#./mvnw clean quarkus:build -Dquarkus.profile=staging\r\n#docker stop casoca && docker rm casoca && docker image rm casoca-jvm\r\n#docker build -f src/main/docker/Dockerfile.jvm -t casoca-jvm .\r\n#docker run -itd --name casoca casoca-jvm\r\n\r\n* connecting at address 199.193.112.2 5432 with the above credentials works. Address 0.0.0.0/0 is released in PostgreSQL.\r\n\r\n\r\n**4. Scenario 4**: in a **STAGING** environment, via Docker, with the wrong database settings, **no error log is show**:\r\n\r\n* Unexpected Behavior.\r\n\r\nquarkus.datasource.db-kind = postgresql\r\nquarkus.datasource.username = quarkus\r\nquarkus.datasource.password = quarkus\r\nquarkus.datasource.jdbc.url = jdbc:postgresql://10.2.1.1:5432/auth_service\r\nquarkus.datasource.jdbc.max-size = 5\r\n%staging.quarkus.datasource.jdbc.url = jdbc:postgresql://**10.1.1.1:5432**/auth_service\r\nquarkus.hibernate-orm.database.generation=update\r\n\r\n-- docker commands\r\n\r\n#./mvnw clean quarkus:build -Dquarkus.profile=staging\r\n#docker stop casoca && docker rm casoca && docker image rm casoca-jvm\r\n#docker build -f src/main/docker/Dockerfile.jvm -t casoca-jvm .\r\n#docker run -itd --name casoca casoca-jvm\r\n\r\n\r\n\r\n### How to Reproduce?\r\n\r\n1. clone the [repo](https://github.com/eloom/code-with-quarkus)\r\n\r\n2. execute commands\r\n#./mvnw clean quarkus:build -Dquarkus.profile=staging\r\n#docker stop casoca && docker rm casoca && docker image rm casoca-jvm\r\n#docker build -f src/main/docker/Dockerfile.jvm -t casoca-jvm .\r\n#docker run -itd --name casoca casoca-jvm\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMac and AlmaLinux 8.6\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.4\" 2022-07-19\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nMy environment\r\n\r\nOpen JDK 17 for Mac / Open JDK 17 for AlmaLinux 8.6\r\n \r\nDocker Desktop 4.12.0\r\n\r\nPostgreSQL 15 - External",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28803/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28803/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

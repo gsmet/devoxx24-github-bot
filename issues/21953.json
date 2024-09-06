@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21953",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21953/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21953/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21953/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21953",
+  "id": 1072147029,
+  "node_id": "I_kwDOCFbutM4_56pV",
+  "number": 21953,
+  "title": "Common Quarkus project marked as duplicate classes in tests (split package issue)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1520022286,
+      "node_id": "MDU6TGFiZWwxNTIwMDIyMjg2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/bootstrap",
+      "name": "area/bootstrap",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-12-06T13:21:57Z",
+  "updated_at": "2021-12-31T17:53:45Z",
+  "closed_at": "2021-12-31T17:53:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi,\r\n\r\nIn my ecosystem, I have several \"main projects\" and one \"common project\".\r\n\r\n### Configuration\r\n\r\nAll projects, including the common one, are Quarkus projects.\r\nThe common project is depdency of the main projects.\r\nI use Gradle, so in the main projects I have it in build.gradle:\r\n\r\n`implementation project(':flexi-common')`\r\n\r\nAnd settings.gradle:\r\n\r\n```\r\ninclude ':flexi-common'\r\nproject(':flexi-common').projectDir = new File(settingsDir, '../flexi-common')\r\n```\r\n\r\nFor correct indexing, all main projects have in \"applications.properties\":\r\n\r\n```\r\nquarkus.index-dependency.flexi-common.group-id=br.com.grupomasut.flexi\r\nquarkus.index-dependency.flexi-common.artifact-id=flexi-common\r\n```\r\n\r\nThe common project cannot add new properties using \"applications.properties\", so it is blank.\r\n\r\n### Execution\r\n\r\nProjects work correctly with dependency injection when they are put into production. \r\nHowever, they have problems when the tests are run (`quarkusTest`).\r\n\r\nI created a test in the common project and I got the errors:\r\n\r\n```\r\n2021-12-06 09:48:46,018 WARN  [io.qua.arc.dep.SplitPackageProcessor] (build-32) Detected a split package usage which is considered a bad practice and should be avoided. Following packages were detected in multiple archives: \r\n- \"br.com.grupomasut.flexi.common.rest\" found in [application classes, br.com.grupomasut.flexi:flexi-common::jar]\r\n- \"br.com.grupomasut.flexi.common.rastreamento.vcar.service\" found in [application classes, br.com.grupomasut.flexi:flexi-common::jar]\r\n...\r\n```\r\n\r\n```\r\n2021-12-06 09:48:46,396 ERROR [io.qua.test] (Test runner thread) ==================== TEST REPORT #1 ====================\r\n2021-12-06 09:48:46,396 ERROR [io.qua.test] (Test runner thread) Test VeiculosRemoteServiceTest#converterPlaca() failed \r\n: java.lang.RuntimeException: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.SyntheticBeansProcessor#initStatic threw an exception: java.lang.IllegalStateException: A synthetic bean with identifier 1b62793a0fe03e7a4b59c9c159a923b0b6453b94 is already registered: SYNTHETIC bean [types=[br.com.grupomasut.flexi.common.rastreamento.vcar.graphql.VcarGraphqlClient], qualifiers=[@Default, @Any], target=n/a]\r\n\tat io.quarkus.arc.processor.BeanDeployment.addSyntheticBean(BeanDeployment.java:1165)\r\n...\r\n```\r\n\r\n### Chaning Configurations\r\n\r\nI don't understand the reason for the \"duplication\" of packages. At least that's what it looks like, the common project is entered twice.\r\nBut I suppose the gradle + applications.properties are including the common project twice.\r\n\r\nSo I changed Gradle's settings to \"compileOnly\", \"compile\", \"runtime\", but don't work.\r\nIn some cases the error persists in others it is not possible to resolve the dependency injections in the code.\r\n\r\nI commented on indexing in \"applications.properties\", also without success.\r\n\r\nIt is also possible to bypass the \"split package\" problem by adding in \"applications.properties\" of the common project:\r\n\r\n`quarkus.arc.ignored-split-packages=br.com.grupomasut.flexi.*`\r\n\r\nBut apparently it only masks the problem.\n\n### Expected behavior\n\nI expected the tests to run successfully on both the common project and the main project.\n\n### Actual behavior\n\nExecution proceeds as expected. However, the tests general the cited errors.\n\n### How to Reproduce?\n\nCreate two Quarkus projects:\r\n\r\n- Project 1 (lib)\r\n - Write a test\r\n- Project 2 (main)\r\n - Include Project 1 as dependency\r\n\r\nTry quarkusTest in Project 2\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [versão 10.0.19043.1348]\n\n### Output of `java -version`\n\nazul-15.0.4\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.5.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 6.9\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21953/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21953/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

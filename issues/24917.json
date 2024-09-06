@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24917",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24917/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24917/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24917/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24917",
+  "id": 1203236142,
+  "node_id": "I_kwDOCFbutM5Ht-0u",
+  "number": 24917,
+  "title": "Mutiny.Session.withTransaction(...) needs duplicated context",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2022-04-13T12:30:27Z",
+  "updated_at": "2022-05-01T15:20:26Z",
+  "closed_at": "2022-05-01T15:20:26Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI am trying to run task with `@Scheduled`:\r\n```kotlin\r\n    @Scheduled(every = \"PT5S\")\r\n    fun start2() {\r\n        var setting = vertx.executeBlocking<Setting> {\r\n            sf.withTransaction { sess ->  sess.find(Setting::class.java, \"test\")} \r\n                .await()\r\n                .atMost(Duration.ofSeconds(2))\r\n        }\r\n        setting.onSuccess { logger.info { it } }\r\n            .onFailure { logger.error(it) { it } }\r\n    }\r\n```\r\nAnd get error about duplicated context needed:\r\n`java.lang.IllegalStateException: Can't get the context safety flag: the current context is not a duplicated context`\r\n\r\nI'm tryed also with no result\r\n```kotlin\r\n    @Scheduled(every = \"PT5S\")\r\n    fun start2() {\r\n        var setting = vertx.executeBlocking<Setting> {\r\n            sf.withSession { session -> sf.withTransaction { sess ->  sess.find(Setting::class.java, \"test\")} }\r\n                .await()\r\n                .atMost(Duration.ofSeconds(2))\r\n        }\r\n        setting.onSuccess { logger.info { it } }\r\n            .onFailure { logger.error(it) { it } }\r\n    }\r\n```\r\n\r\nWithout `vertx.executeBlocking<Setting> {}` I get error:\r\n`The current operation requires a safe (isolated) Vert.x sub-context, but the current context hasn't been flagged as such. You can still use Hibernate Reactive, you just need to avoid using the methods which implicitly require accessing the stateful context, such as MutinySessionFactory#withTransaction and #withSession.`\n\n### Expected behavior\n\nMutiy.Session.withTransaction(...) works fine in scheduler\n\n### Actual behavior\n\nError:\r\n`java.lang.IllegalStateException: Can't get the context safety flag: the current context is not a duplicated context`\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\njdk 17.0.2\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.5 and 2.8.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle 7.4.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24917/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24917/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

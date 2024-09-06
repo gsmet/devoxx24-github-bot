@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38119",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38119/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38119/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38119/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38119",
+  "id": 2074018210,
+  "node_id": "I_kwDOCFbutM57nwGi",
+  "number": 38119,
+  "title": "Supersonic start, Subsonic stop",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2024-01-10T10:05:08Z",
+  "updated_at": "2024-01-11T10:22:12Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhile writing a cli in Quarkus over the break that uses simply a rest and websocket client and picocli I noticed an annoying delay in stopping Quarkus using `Quarkus.asyncExit()`.\r\n\r\nIt is about 0.5-1s long.\r\n\r\nIf I call `System.exit()` instead its instant.\r\n\r\nIt has similar impact on both JVM and nativeimage.\r\n\r\nBy some \"fun\" using jfr and asyncprofiler and talking with @franz1981 found that \r\nafter asyncExit has happened the JVM is waiting due to how locks are done in the asyncExit flow.\r\n\r\nwe didn't get to bottom on why - but agreed to open bug on it as seems clear to be an issue.\r\n\r\nIt does not happen on a default created app thus its probably one of websocket or resteasy client handling causing issues.\r\n\r\n\r\n\r\nreproducer is currently: https://github.com/maxandersen/home-assistant-qli\r\n\r\nasyncExit is at https://github.com/maxandersen/home-assistant-qli/blob/main/src/main/java/dk/xam/hassq/commands/hassq.java#L131\r\n\r\nIf changing to system.exit no waiting but then it breaks devmode.\r\n\r\nYou can see it by just running `jbang https://github.com/maxandersen/home-assistant-qli/releases/download/v0.0.3/hass-qli-0.0.3.jar`\r\n\r\nI've uploaded a wallclocked, 5ms sampling and separated by thread run flamegraph at https://gist.github.com/maxandersen/6dfa0a8bf1572640845cb8c59fcf6d01\r\n\r\nYou can reproduce it with:\r\n`jbang --javaagent=ap-loader@jvm-profiling-tools/ap-loader=start,event=wall,interval=5ms,threads,file=wallclock.html hass-qli-early-access@maxandersen`\r\n\r\nFlame graph of the main one-thread:\r\n\r\n![2024-01-10_12-34-26](https://github.com/quarkusio/quarkus/assets/54129/b988f72e-ea70-4c0e-a956-cf6b1782716e)\r\n\r\nThe full overview:\r\n\r\n\r\n![2024-01-10_12-37-10](https://github.com/quarkusio/quarkus/assets/54129/5d13b578-92b6-42d9-a999-4cc59d7e22fe)\r\n\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38119/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38119/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

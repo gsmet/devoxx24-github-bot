@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40314",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40314/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40314/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40314/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40314",
+  "id": 2265927695,
+  "node_id": "I_kwDOCFbutM6HD1AP",
+  "number": 40314,
+  "title": "It's not possible to recover from the database exception with the hibernate reactive",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-04-26T14:37:05Z",
+  "updated_at": "2024-04-27T12:45:25Z",
+  "closed_at": "2024-04-27T12:45:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nConsider we have an entity like this:\r\n```java\r\n@Table(name = \"person\")\r\n@Entity\r\npublic class Person {\r\n\r\n    @Id\r\n    @GeneratedValue\r\n    private UUID id;\r\n\r\n    @Column(name = \"first_name\", nullable = false)\r\n    private String firstName;\r\n\r\n    @Column(name = \"last_name\")\r\n    private String lastName;\r\n\r\n    //getters/setters\r\n}\r\n```\r\n\r\nrepository (I'm using Panache)\r\n```java\r\n@ApplicationScoped\r\npublic class PersonRepository implements PanacheRepositoryBase<Person, UUID> {\r\n}\r\n```\r\nand finally service:\r\n```java\r\n@ApplicationScoped\r\npublic class PersonService {\r\n\r\n    private static final Logger log = Logger.getLogger(PersonService.class);\r\n\r\n    @Inject\r\n    PersonRepository repository;\r\n\r\n    public Uni<Boolean> batchCreate(List<Person> persons) {\r\n        return Multi.createFrom().iterable(persons)\r\n                .onItem().transformToUniAndConcatenate(person -> Uni.createFrom().item(person)\r\n                        .chain(repository::persist)\r\n                        .replaceWith(Boolean.TRUE)\r\n                        .onFailure().recoverWithItem(throwable -> {\r\n                            log.warn(\"Something went wrong: \" + throwable.getMessage());\r\n                            return Boolean.FALSE;\r\n                        })).collect().asList()\r\n                .map(list -> list.stream().noneMatch(Boolean.FALSE::equals));\r\n    }\r\n}\r\n```\r\nAccording to [this](https://quarkus.io/blog/mutiny-failure-handling/) article it's possible to isolate underlying execution and catch exception to process the remaining correct records from `Multi`. In my real application I'm consuming a batch of records from Kafka and I'm expecting that incorrect records will be just logged, but other correct records from the batch will be saved to the database.\r\nKafka consumer example:\r\n```java\r\n@ApplicationScoped\r\npublic class PersonConsumer {\r\n\r\n    @Inject\r\n    PersonService service;\r\n\r\n    @WithTransaction\r\n    @Incoming(\"person.create\")\r\n    public Uni<Void> consume(List<Person> persons) {\r\n        return service.batchCreate(persons).replaceWithVoid();\r\n    }\r\n}\r\n```\r\nSo when I'm sending a message like this:\r\n```\r\n[\r\n\t{\r\n\t\t\"lastName\": \"Bobson\"\r\n\t},\r\n\t{\r\n\t\t\"firstName\": \"Alice\",\r\n\t\t\"lastName\": \"Alisson\"\r\n\t}\r\n]\r\n```\r\nI'm expecting that Alice will be saved in the database and error message about Bob record (required first name is missed) is logged. But the whole message is \"nacked\" and nothing is saved to the database\n\n### Expected behavior\n\nOne correct record from the batch is saved to the database. No Kafka errors\n\n### Actual behavior\n\nKafka message is \"nacked\" and no records are saved to the database\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40314/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40314/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39521",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39521/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39521/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39521/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39521",
+  "id": 2191921849,
+  "node_id": "I_kwDOCFbutM6CphK5",
+  "number": 39521,
+  "title": "@QuarkusTest Error injecting io.quarkus.arc.runtime.ConfigStaticInitValues",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 2236031886,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxODg2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/metrics",
+      "name": "area/metrics",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2024-03-18T11:16:59Z",
+  "updated_at": "2024-03-21T15:11:12Z",
+  "closed_at": "2024-03-21T11:12:36Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe Exception started appearing after migrating to Quarkus 3.8 from 3.2. It appears when several different @TestProfile() are used in a single run of @QuarkusTest. If a test has a different profile to the previously run test then Quarkus will be shut down and started with the new profile before running the tests. There is a GC notification coming asynchronously in a dedicated thread, and by the time it arrives, Quarkus CDI context is cleared, which results in NPE. The complete stacktrace looks like this:\r\n\r\n```\r\njava.lang.RuntimeException: Error injecting io.quarkus.arc.runtime.ConfigStaticInitValues io.quarkus.arc.runtime.ConfigStaticInitCheckInterceptor.configValues\r\n\tat io.quarkus.arc.runtime.ConfigStaticInitCheckInterceptor_Bean.doCreate(Unknown Source)\r\n\tat io.quarkus.arc.runtime.ConfigStaticInitCheckInterceptor_Bean.create(Unknown Source)\r\n\tat io.quarkus.arc.runtime.ConfigStaticInitCheckInterceptor_Bean.get(Unknown Source)\r\n\tat io.quarkus.arc.runtime.ConfigStaticInitCheckInterceptor_Bean.get(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_Subclass.<init>(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_Bean.doCreate(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_Bean.create(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_Bean.create(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:119)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:38)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:35)\r\n\tat io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.c19(Unknown Source)\r\n\tat io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.computeIfAbsent(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:35)\r\n\tat io.quarkus.arc.impl.ClientProxies.getApplicationScopedDelegate(ClientProxies.java:21)\r\n\tat io.smallrye.config.inject.ConfigProducer_ClientProxy.arc$delegate(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_ClientProxy.arc_contextualInstance(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_ProducerMethod_produceBooleanConfigProperty_vanAxwNEeXT5HCx4jOWn3otsCog_Bean.doCreate(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_ProducerMethod_produceBooleanConfigProperty_vanAxwNEeXT5HCx4jOWn3otsCog_Bean.create(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_ProducerMethod_produceBooleanConfigProperty_vanAxwNEeXT5HCx4jOWn3otsCog_Bean.get(Unknown Source)\r\n\tat io.smallrye.config.inject.ConfigProducer_ProducerMethod_produceBooleanConfigProperty_vanAxwNEeXT5HCx4jOWn3otsCog_Bean.get(Unknown Source)\r\n\tat io.quarkus.arc.impl.CurrentInjectionPointProvider.get(CurrentInjectionPointProvider.java:48)\r\n\tat com.azul.cc.infrastructure.micrometer.DistributionStatisticConfigurator_Bean.doCreate(Unknown Source)\r\n\tat com.azul.cc.infrastructure.micrometer.DistributionStatisticConfigurator_Bean.create(Unknown Source)\r\n\tat com.azul.cc.infrastructure.micrometer.DistributionStatisticConfigurator_Bean.create(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:119)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:38)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:35)\r\n\tat io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.c39(Unknown Source)\r\n\tat io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.computeIfAbsent(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:35)\r\n\tat io.quarkus.arc.impl.ClientProxies.getApplicationScopedDelegate(ClientProxies.java:21)\r\n\tat com.azul.cc.infrastructure.micrometer.DistributionStatisticConfigurator_ClientProxy.arc$delegate(Unknown Source)\r\n\tat com.azul.cc.infrastructure.micrometer.DistributionStatisticConfigurator_ClientProxy.map(Unknown Source)\r\n\tat io.micrometer.core.instrument.MeterRegistry.getMappedId(MeterRegistry.java:606)\r\n\tat io.micrometer.core.instrument.MeterRegistry.registerMeterIfNecessary(MeterRegistry.java:589)\r\n\tat io.micrometer.core.instrument.MeterRegistry.timer(MeterRegistry.java:336)\r\n\tat io.micrometer.core.instrument.Timer$Builder.register(Timer.java:459)\r\n\tat io.micrometer.core.instrument.Timer$Builder.register(Timer.java:453)\r\n\tat io.micrometer.core.instrument.binder.jvm.JvmGcMetrics$GcMetricsNotificationListener.handleNotification(JvmGcMetrics.java:211)\r\n\tat java.management/sun.management.NotificationEmitterSupport.sendNotification(NotificationEmitterSupport.java:155)\r\n\tat jdk.management/com.sun.management.internal.GarbageCollectorExtImpl.createGCNotification(GarbageCollectorExtImpl.java:115)\r\nCaused by: java.lang.NullPointerException: Cannot invoke \"io.quarkus.arc.ArcContainer.getActiveContext(java.lang.Class)\" because \"<local2>\" is null\r\n\tat io.quarkus.arc.runtime.ConfigStaticInitValues_Bean.get(Unknown Source)\r\n\tat io.quarkus.arc.runtime.ConfigStaticInitValues_Bean.get(Unknown Source)\r\n\t... 42 more\r\n```\r\nQuarkus version 3.8.2\r\nGrpc version 1.59.1\r\nProtobuf version 3.25.0\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.4.1\" 2022-08-12 LTS\n\n### Quarkus version or git rev\n\n3.8.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.0 \n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39521/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39521/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

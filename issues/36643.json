@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36643",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36643/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36643/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36643/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36643",
+  "id": 1957532185,
+  "node_id": "I_kwDOCFbutM50rZIZ",
+  "number": 36643,
+  "title": "Connection not released to Agroal connection pool when JPA query using getResultStream runs outside transaction",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2955097332,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3MzMy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/agroal",
+      "name": "area/agroal",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-10-23T16:16:16Z",
+  "updated_at": "2023-10-24T07:35:54Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nGiven a `jakarta.persistence.TypedQuery` created by a `jakarta.persistence.EntityManager` in a Quarkus application, executed outside of a transaction and using `getResultStream()` to access the result set, then the Agroal connection used by the statement is not released back to the pool at the end of the statement. \n\n### Expected behavior\n\nThe Agroal connection used to execute the query should be returned to the pool after execution of the statement in any case. \n\n### Actual behavior\n\nIf `query.getResultStream()` is used to access the result set, then `logicalConnectionManagedImpl.afterStatement()` is called. Since the `PhysicalConnectionHandlingMode` is `DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION`, the connection is not released. The `logicalConnectionManagedImpl.beforeTransactionCompletion()` and `logicalConnectionManagedImpl.afterTransaction()` methods that would release the connection given `DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION` are never called. \r\n\r\nIf `query.getSingleResult()` is used to access the result set, then the `logicalConnectionManagedImpl.afterTransaction()` method is called and it releases the connection to the pool. \n\n### How to Reproduce?\n\n```\r\n    @Transactional(Transactional.TxType.NOT_SUPPORTED)\r\n    public Product getProductByProductId(String productId) {\r\n        TypedQuery<Product> query = entityManager.createQuery(\"select p from Product p where p.productId = :productId\", Product.class);\r\n        query.setParameter(\"productId\", productId);\r\n        Stream<Product> productStream = query.getResultStream();\r\n        Optional<Product> productOptional = productStream.findFirst();\r\n        productStream.close();\r\n        Product product = productOptional.get();\r\n        return product;\r\n    }\r\n```\r\n*Note that the issue cannot be reproduced if this method is called from a REST resource*, because then the `destroy` method of the `RequestScopedSessionHolder` will release the connection, but it can be reproduced when the above code is called from a messaging `@Incoming` method. \n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nOpening this issue as a follow up to the discussion with @yrodiere in https://github.com/quarkusio/quarkus/issues/28619. \r\nThe behaviour is documented for [Panache](https://quarkus.io/guides/hibernate-orm-panache#most-useful-operations), but not for [JPA/Hibernate](https://quarkus.io/guides/hibernate-orm) as far as I can tell. ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36643/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36643/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

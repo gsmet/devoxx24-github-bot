@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25254",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25254/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25254/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25254/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25254",
+  "id": 1220674526,
+  "node_id": "I_kwDOCFbutM5IwgPe",
+  "number": 25254,
+  "title": "Zombie timer eats my brain after live reload (dev mode).",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-04-29T12:14:32Z",
+  "updated_at": "2023-03-20T15:19:09Z",
+  "closed_at": "2023-03-20T15:19:09Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have an application that calls `vertx.setTimer(...)` and in the handler does a REST call on Resteasy client proxy (tested both reactive and non-reactive impl). After live reload in dev mode I get a confusing exception (IllegalStateException) about calling into closed client; turns out that the timer is not cancelled during live reload, but the REST client is closed. In other words the timer operates on already destructed bean.\n\n### Expected behavior\n\nThe timer should be automatically cancelled during live reload.\n\n### Actual behavior\n\nThe timer handler is invoked after live reload with bean from previous iteration.\n\n### How to Reproduce?\n\nCreate an application and run it in dev-mode, typing S to trigger live reload. Within 10 seconds you should see the exception,\r\n\r\n```java\r\n@ApplicationScoped\r\n@Startup\r\npublic class GreetingResource {\r\n   private static final Logger log = Logger.getLogger(GreetingResource.class);\r\n\r\n   @Inject\r\n   @RestClient\r\n   MyClient client;\r\n\r\n   @Inject\r\n   Vertx vertx;\r\n\r\n   @PostConstruct\r\n   void init() {\r\n      vertx.setTimer(1, this::useClient);\r\n   }\r\n\r\n   private void useClient(@SuppressWarnings(\"unused\") long timerId) {\r\n      vertx.executeBlocking(promise -> {\r\n         useClient();\r\n         promise.complete();\r\n      }, false, null);\r\n   }\r\n\r\n   private void useClient() {\r\n      try {\r\n         log.infof(\"Result: %d\", client.getSomething().getStatus());\r\n         vertx.setTimer(10000, this::useClient);\r\n      } catch (Exception e) {\r\n         log.error(\"Thrown \", e);\r\n      }\r\n   }\r\n}\r\n```\r\n```java\r\n@RegisterRestClient(configKey = \"my.client\")\r\npublic interface MyClient {\r\n   @GET\r\n   @Path(\"/\")\r\n   Response getSomething();\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nOpenJDK 64-Bit Server VM 18.9 (build 11.0.13+8, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.8.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25254/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25254/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

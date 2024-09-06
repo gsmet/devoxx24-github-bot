@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29463",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29463/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29463/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29463/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29463",
+  "id": 1463003180,
+  "node_id": "I_kwDOCFbutM5XM6gs",
+  "number": 29463,
+  "title": "Subclass type not marshalled in rest GET return type List<X>",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-11-24T09:08:26Z",
+  "updated_at": "2022-11-25T12:18:04Z",
+  "closed_at": "2022-11-24T12:03:35Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nGiven rest endpoint:\r\n\r\n```java\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n    @GET\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public List<Parent> hello() {\r\n        return List.of(new Parent.ChildA());\r\n    }\r\n}\r\n```\r\n\r\nand classes:\r\n\r\n```java\r\n@JsonPropertyOrder({ \"type\" })\r\n@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = \"type\", visible = true)\r\n@JsonSubTypes({\r\n        @JsonSubTypes.Type(value = Parent.ChildA.class, name = \".ChildA\"),\r\n        @JsonSubTypes.Type(value = Parent.ChildB.class, name = \".ChildB\") })\r\npublic abstract class Parent {\r\n    \r\n    public List<Shape> shapes = List.of(new Shape.Circle());\r\n    \r\n    @JsonTypeName(\".ChildA\")\r\n    public static class ChildA extends Parent {\r\n        public String attChildA = \"valA\";\r\n    }\r\n\r\n    @JsonTypeName(\".ChildB\")\r\n    public static class ChildB extends Parent {\r\n        public String attChildB = \"valB\";\r\n    }\r\n}\r\n```\r\n\r\nI expect the `type` attribute to be returned for the `Parent` subclass. e.g. `[{\"type\":\".ChildA\",...`\r\nIt does work however, on object lists, assuming they are not at the top level.\r\nWe checked on `EAP`, and we have the expected behavior (`type` attribute is always returned, regardless of the object list being at the top level or not).\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nWe expect the endpoint to return: `[{\"type\":\".ChildA\",\"shapes\":[{\"type\":\".Circle\",\"attChildA\":\"circle\"}],\"attChildA\":\"valA\"}]`\r\n\r\n### Actual behavior\r\n\r\n`[{\"shapes\":[{\"type\":\".Circle\",\"attChildA\":\"circle\"}],\"attChildA\":\"valA\"}]`\r\n\r\n### How to Reproduce?\r\n\r\n```\r\ngit clone https://github.com/vsevel/reproducer_rest_list_subclass\r\nmvn clean package\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29463/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29463/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

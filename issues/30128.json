@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30128",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30128/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30128/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30128/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30128",
+  "id": 1516637750,
+  "node_id": "I_kwDOCFbutM5aZg42",
+  "number": 30128,
+  "title": "Unable to run quarkus tests via junit5 ConsoleLauncher ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-01-02T18:43:55Z",
+  "updated_at": "2023-01-02T18:45:12Z",
+  "closed_at": "2023-01-02T18:45:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n(We're migrating to bazel, and trying to use eg java_test which uses the junit runner under the covers)\r\n\r\nTo simplify the example, I've used the maven assembly plugin to create an uber jar (our app plus all the deps in a single jar), and then invoked junit like this:\r\n```\r\njava -jar junit-platform-console-standalone-1.9.1.jar -cp target/hydra-service-1.0.0-SNAPSHOT-uber.jar --include-classname='.*' --select-class co.etc.etc.etc.ResultMappingProviderTest\r\n\r\nThanks for using JUnit! Support its development at https://junit.org/sponsoring\r\n\r\n╷\r\n├─ JUnit Jupiter ✔\r\n│  └─ ResultMappingProviderTest ✔\r\n│     ├─ testNumberOfSymbolsAddedWhenProcessNotFedByDataprep() ✘ java.lang.RuntimeException: java.lang.NoSuchMethodException: io.quarkus.runner.bootstrap.AugmentActionImpl.<init>(io.quarkus.bootstrap.app.CuratedApplication, java.util.List)\r\n│     ├─ ...() ■ Boot failed\r\n│     ├─ ...() ■ Boot failed\r\n│     ├─ testNumberOfSymbolsAddedWhenWorkflowNotActive() ■ Boot failed\r\n...\r\n├─ JUnit Vintage ✔\r\n└─ JUnit Platform Suite ✔\r\n\r\nFailures (1):\r\n  JUnit Jupiter:ResultMappingProviderTest:testNumberOfSymbolsAddedWhenProcessNotFedByDataprep()\r\n    MethodSource [className = 'co.du.hydra.svc.results.server.rest.vanilla.service.ResultMappingProviderTest', methodName = 'testNumberOfSymbolsAddedWhenProcessNotFedByDataprep', methodParameterTypes = '']\r\n    => java.lang.RuntimeException: java.lang.RuntimeException: java.lang.NoSuchMethodException: io.quarkus.runner.bootstrap.AugmentActionImpl.<init>(io.quarkus.bootstrap.app.CuratedApplication, java.util.List)\r\n       io.quarkus.test.junit.QuarkusTestExtension.throwBootFailureException(QuarkusTestExtension.java:674)\r\n       io.quarkus.test.junit.QuarkusTestExtension.interceptTestClassConstructor(QuarkusTestExtension.java:747)\r\n       org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)\r\n       org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)\r\n       org.junit.jupiter.api.extension.InvocationInterceptor.interceptTestClassConstructor(InvocationInterceptor.java:73)\r\n       [...]\r\n     Caused by: java.lang.RuntimeException: java.lang.NoSuchMethodException: io.quarkus.runner.bootstrap.AugmentActionImpl.<init>(io.quarkus.bootstrap.app.CuratedApplication, java.util.List)\r\n       io.quarkus.bootstrap.app.CuratedApplication.createAugmentor(CuratedApplication.java:115)\r\n       io.quarkus.test.junit.QuarkusTestExtension.doJavaStart(QuarkusTestExtension.java:311)\r\n       io.quarkus.test.junit.QuarkusTestExtension.ensureStarted(QuarkusTestExtension.java:643)\r\n       io.quarkus.test.junit.QuarkusTestExtension.beforeAll(QuarkusTestExtension.java:689)\r\n       org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeBeforeAllCallbacks$12(ClassBasedTestDescriptor.java:395)\r\n       [...]\r\n     Caused by: java.lang.NoSuchMethodException: io.quarkus.runner.bootstrap.AugmentActionImpl.<init>(io.quarkus.bootstrap.app.CuratedApplication, java.util.List)\r\n       java.base/java.lang.Class.getConstructor0(Class.java:3349)\r\n       java.base/java.lang.Class.getConstructor(Class.java:2151)\r\n       io.quarkus.bootstrap.app.CuratedApplication.createAugmentor(CuratedApplication.java:113)\r\n       [...]\r\n\r\nTest run finished after 6093 ms\r\n[         4 containers found      ]\r\n[         0 containers skipped    ]\r\n[         4 containers started    ]\r\n[         0 containers aborted    ]\r\n[         4 containers successful ]\r\n[         0 containers failed     ]\r\n[         9 tests found           ]\r\n[         0 tests skipped         ]\r\n[         9 tests started         ]\r\n[         8 tests aborted         ]\r\n[         0 tests successful      ]\r\n[         1 tests failed          ]\r\n\r\n```\r\n\r\nI know this isn't a core or documented use case, but any pointers at all would be very much appreciated. I'll happily share our bazel for future users.\n\n### Expected behavior\n\nI expected the tests to run. Running via `mvn` everything works as expected and the tests run.\n\n### Actual behavior\n\nThrows a boot error:\r\n```\r\njava.lang.RuntimeException: java.lang.NoSuchMethodException: io.quarkus.runner.bootstrap.AugmentActionImpl.<init>(io.quarkus.bootstrap.app.CuratedApplication, java.util.List)\r\n```\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nDarwin K2J7Y60N60 21.6.0 Darwin Kernel Version 21.6.0: Thu Sep 29 20:13:56 PDT 2022; root:xnu-8020.240.7~1/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"11.0.16.1\" 2022-08-12 OpenJDK Runtime Environment Homebrew (build 11.0.16.1+0) OpenJDK 64-Bit Server VM Homebrew (build 11.0.16.1+0, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n1.13.7.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30128/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30128/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

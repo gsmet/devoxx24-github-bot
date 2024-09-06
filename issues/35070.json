@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35070",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35070/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35070/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35070/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35070",
+  "id": 1825002854,
+  "node_id": "I_kwDOCFbutM5sx1Vm",
+  "number": 35070,
+  "title": "oracle error ORA-01461 when persisting entity with special characters in absurdly specific circumstances",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-07-27T19:05:18Z",
+  "updated_at": "2024-07-23T08:45:12Z",
+  "closed_at": "2023-07-31T10:20:42Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn some absurdly specific circumstances, trying to persist an entity containing the string `Nêin` will cause the following error when connected to an oracle database:  \r\n> ORA-01461: can bind a LONG value only for insert into a LONG column\r\n\r\nThis looks more like a hibernate bug than a quarkus bug, but creating a reproducer with quarkus is way easier, because it requires an actual oracle database, which is trivially availabe using dev services.\r\n\r\nLet's say we have this entity:\r\n```java\r\n@Entity\r\n@Data\r\n@NoArgsConstructor(access = AccessLevel.PROTECTED) // for JPA\r\npublic class MyEntity {\r\n    @Id\r\n    @GeneratedValue\r\n    private Long id;\r\n\r\n    @Column\r\n    Boolean someBool;\r\n\r\n    @Column\r\n    String someString;\r\n\r\n    public MyEntity(Boolean someBool, String someString) {\r\n        this.someBool = someBool;\r\n        this.someString = someString;\r\n    }\r\n}\r\n```\r\n\r\nand a JDBC batch size of at least 2 (e.g. setting `quarkus.hibernate-orm.jdbc.statement-batch-size` to 2). Then, running this code will result in the aforementioned error:\r\n\r\n```java\r\nMyEntity entityOk = new MyEntity(null, null);\r\nMyEntity entityBorked = new MyEntity(true, \"Nêin\");\r\n\r\nentityManager.persist(entityOk);\r\nentityManager.persist(entityBorked);\r\nentityManager.flush(); // ERROR! ORA-01461\r\n```\r\n\r\nThe absurd thing isn't even that the error looks completely unrelated, but that these little changes all fix the problem:\r\n\r\n- Using other special characters, e.g. stuff like \"äöüßÄÖÜẞ💩\"</li>\r\n- Slightly changing the string's size, e.g. \"Nêi\" and \"Nêin_\" both work</li>\r\n- Using the decomposite unicode normalization \"Nêin\" (e + 0x0302 \"COMBINING CIRCUMFLEX ACCENT\")\r\n  instead of the composite form \"Nêin\" (0x00EA \"LATIN SMALL LETTER E WITH CIRCUMFLEX\")</li>\r\n- Not having a JDBC batch size > 1, or flushing in-between the two inserts</li>\r\n- Changing the order in which the two entities are persisted</li>\r\n- Removing the random additional nullable boolean field</li>\r\n- Not having the Boolean be null for one and not-null for the other entity,\r\n  e.g. true->false or false->true makes the test pass</li>\r\n- not having the first entity's string be null</li>\r\n\r\nI have attached a reproducer project: [quarkus-nein-reproducer.zip](https://github.com/quarkusio/quarkus/files/12187389/quarkus-nein-reproducer.zip)\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.2.Final (broken starting with 3.1.0, fine with 3.0.4)\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.2\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35070/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35070/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

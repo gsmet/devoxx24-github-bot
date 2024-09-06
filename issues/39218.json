@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39218",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39218/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39218/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39218/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39218",
+  "id": 2171166765,
+  "node_id": "I_kwDOCFbutM6BaWAt",
+  "number": 39218,
+  "title": "Gradle build cache returns incorrect results when changing the app version",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-03-06T10:31:30Z",
+  "updated_at": "2024-04-23T06:08:19Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe file `gradle.properties` is not used as input for the Quarkus Gradle Plugin. This leads to incorrect build cache hits.\r\n\r\nUnder circumstances that are difficult to reproduce, the error leads to the following exception:\r\n\r\n```\r\njava.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n        at io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:62)\r\n        at io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:33)\r\nCaused by: io.quarkus.runtime.configuration.ConfigurationException: Failed to read configuration properties\r\n        at io.quarkus.deployment.steps.RuntimeConfigSetup.deploy(Unknown Source)\r\n        ... 11 more\r\nCaused by: java.lang.RuntimeException: Failed to open /deployments/lib/main/org.acme.module1-0.1.0-SNAPSHOT.jar\r\n        at io.quarkus.bootstrap.runner.JarResource.ensureJarFileIsOpen(JarResource.java:172)\r\n        at io.quarkus.bootstrap.runner.JarResource.readLockAcquireAndGetJarReference(JarResource.java:153)\r\n        at io.quarkus.bootstrap.runner.JarResource.getResourceURL(JarResource.java:101)\r\n        at io.quarkus.bootstrap.runner.RunnerClassLoader.findResources(RunnerClassLoader.java:214)\r\n        at java.base/java.lang.ClassLoader.getResources(ClassLoader.java:1483)\r\n        at io.smallrye.common.classloader.ClassPathUtils.consumeAsPaths(ClassPathUtils.java:84)\r\n        at io.smallrye.config.AbstractLocationConfigSourceLoader.tryClassPath(AbstractLocationConfigSourceLoader.java:141)\r\n        at io.smallrye.config.AbstractLocationConfigSourceLoader.loadConfigSources(AbstractLocationConfigSourceLoader.java:104)\r\n        at io.smallrye.config.AbstractLocationConfigSourceLoader.loadConfigSources(AbstractLocationConfigSourceLoader.java:87)\r\n        at io.smallrye.config.source.yaml.YamlConfigSourceProvider.getConfigSources(YamlConfigSourceProvider.java:30)\r\n        at io.smallrye.config.SmallRyeConfig$ConfigSources.buildSources(SmallRyeConfig.java:758)\r\n        at io.smallrye.config.SmallRyeConfig$ConfigSources.<init>(SmallRyeConfig.java:715)\r\n        at io.smallrye.config.SmallRyeConfig.<init>(SmallRyeConfig.java:81)\r\n        at io.smallrye.config.SmallRyeConfigBuilder.build(SmallRyeConfigBuilder.java:724)\r\n        at io.quarkus.runtime.generated.Config.readConfig(Unknown Source)\r\n        at io.quarkus.runtime.generated.Config.createRunTimeConfig(Unknown Source)\r\n        ... 12 more\r\nCaused by: java.nio.file.NoSuchFileException: /deployments/lib/main/org.acme.module1-0.1.0-SNAPSHOT.jar\r\n        at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)\r\n        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:106)\r\n        at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)\r\n        at java.base/sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)\r\n        at java.base/sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:171)\r\n        at java.base/sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)\r\n        at java.base/java.nio.file.Files.readAttributes(Files.java:1853)\r\n        at java.base/java.util.zip.ZipFile$Source.get(ZipFile.java:1445)\r\n        at java.base/java.util.zip.ZipFile$CleanableResource.<init>(ZipFile.java:724)\r\n        at java.base/java.util.zip.ZipFile.<init>(ZipFile.java:251)\r\n        at java.base/java.util.zip.ZipFile.<init>(ZipFile.java:180)\r\n        at java.base/java.util.jar.JarFile.<init>(JarFile.java:345)\r\n        at io.smallrye.common.io.jar.JarFiles.create(JarFiles.java:33)\r\n        at io.quarkus.bootstrap.runner.JarResource.ensureJarFileIsOpen(JarResource.java:170)\r\n        ... 27 more\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n[reproducer.zip](https://github.com/quarkusio/quarkus/files/14508317/reproducer.zip)\r\n\r\n1. `./gradlew clean build --console=plain --rerun-tasks`\r\n2. Change `version` in `gradle.properties` to `1.0.1-SNAPSHOT`\r\n3. `./gradlew clean build --console=plain --rerun-tasks`\r\n4. Change `version` in `gradle.properties` back to `1.0.0-SNAPSHOT`\r\n5. `./gradlew clean build --console=plain`\r\n6. Run `java -jar server/build/quarkus-app/quarkus-run.jar`\r\n\r\n=> Failure: Quarkus shows Version `1.0.1-SNAPSHOT` instead of `1.0.0-SNAPSHOT`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nJava 17\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus 3.8.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39218/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39218/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

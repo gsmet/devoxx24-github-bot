@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32313",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32313/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32313/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32313/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32313",
+  "id": 1649777960,
+  "node_id": "I_kwDOCFbutM5iVZ0o",
+  "number": 32313,
+  "title": "MongoDB SRV addresses not resolved in Kubernetes",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-03-31T17:45:02Z",
+  "updated_at": "2023-04-21T16:46:13Z",
+  "closed_at": "2023-04-21T16:23:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI initially started a [discussion](https://github.com/quarkusio/quarkus/discussions/31971) about this, but now I am more convinced is an issue.\r\nAnyway since SRV support is an experimental feature, if you tell me to, I'll close this issue right away.\r\n\r\nLong story short:\r\n\r\nI can't resolve SRV addresses in my kubernetes cluster, both in JVM and Native mode.\r\n\r\nLocally everything works in JVM mode.\r\nIn kubernetes everything works, both in JVM and in Native mode, if I use old format for connection string instead of the SRV one.\r\n\r\nOf course, in any of the case described above, I am talking about resolving and connecting to the same MongoDB Atlas environment with the same configuration (as much as possible).\r\n\r\nSince using old connection strings works in every mode in my kubernetes, I exclude network/configuration issues with MongoDB Atlas.\r\n\r\nJust to be clear this is an old connection string (the one working) : \r\nmongodb://quarkus:password@ac-2mpq9bp-shard-00-00.uvyzu7h.mongodb.net:27017,ac-2mpq9bp-shard-00-01.uvyzu7h.mongodb.net:27017,ac-2mpq9bp-shard-00-02.uvyzu7h.mongodb.net:27017/?ssl=true&replicaSet=atlas-7l5e5e-shard-0&authSource=admin&retryWrites=true&w=majority\r\n\r\nThis is a SRV connection string (the one not working) :\r\nmongodb+srv://quarkus:password@quarkus.uvyzu7h.mongodb.net/?retryWrites=true&w=majority\r\n\r\nI tried to enabled DEBUG log level to catch something relevant but all I can see, in the end is this error : \r\n\r\n```\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat12:28:30 INFO traceId=, parentId=, spanId=, sampled= [or.mo.dr.cluster] (cluster-ClusterId{value='6426d1d0c11d2a13b94ccbaa', description='null'}-srv-quarkus.uvyzu7h.mongodb.net) Exception while resolving SRV records: com.mongodb.MongoConfigurationException: Failed looking up SRV record for '_mongodb._tcp.quarkus.uvyzu7h.mongodb.net'.\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at com.mongodb.internal.dns.DefaultDnsResolver.resolveHostFromSrvRecords(DefaultDnsResolver.java:92)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at com.mongodb.internal.connection.DefaultDnsSrvRecordMonitor$DnsSrvRecordMonitorRunnable.run(DefaultDnsSrvRecordMonitor.java:80)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at java.base@17.0.6/java.lang.Thread.run(Thread.java:833)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at org.graalvm.nativeimage.builder/com.oracle.svm.core.thread.PlatformThreads.threadStartRoutine(PlatformThreads.java:775)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at org.graalvm.nativeimage.builder/com.oracle.svm.core.posix.thread.PosixPlatformThreads.pthreadStartRoutine(PosixPlatformThreads.java:203)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchatCaused by: com.mongodb.MongoConfigurationException: Unable to look up SRV record for host _mongodb._tcp.quarkus.uvyzu7h.mongodb.net\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at io.quarkus.mongodb.runtime.dns.MongoDnsClient.resolveSrvRequest(MongoDnsClient.java:152)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at io.quarkus.mongodb.runtime.dns.MongoDnsClient.getResourceRecordData(MongoDnsClient.java:104)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at com.mongodb.internal.dns.DefaultDnsResolver.resolveHostFromSrvRecords(DefaultDnsResolver.java:74)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat ... 4 more\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchatCaused by: io.smallrye.mutiny.TimeoutException\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:64)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at io.quarkus.mongodb.runtime.dns.MongoDnsClient.resolveSrvRequest(MongoDnsClient.java:138)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat ... 6 more\r\n```\r\n\r\nI tried many combination of the following relevant properties (but in the end I ALWAYS see the error above) : \r\n\r\nquarkus.mongodb.dns.server-host=8.8.8.8\r\nquarkus.mongodb.native.dns.server-host=8.8.8.8\r\nquarkus.mongodb.native.dns.use-vertx-dns-resolver=true\r\nquarkus.naming.enable-jndi=true\r\n\r\nSince locally everything works, I don't think this is an issue strictly related to MongoDB.\r\nMaybe this is more about using both these extensions.\r\nMaybe Kubernetes extension should register the quarkus.mongodb.dns.server-host value among the pod dns servers ?\r\n\r\nI am sorry I failed to be more concise.\r\n\r\n### Expected behavior\r\n\r\nSRV addresses should be resolved normally\r\n\r\n### Actual behavior\r\n\r\nSRV addresses resolution requests cause a timeout exception\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.0 CR1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32313/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32313/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

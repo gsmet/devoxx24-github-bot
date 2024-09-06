@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41546",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41546/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41546/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41546/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41546",
+  "id": 2380076493,
+  "node_id": "I_kwDOCFbutM6N3RXN",
+  "number": 41546,
+  "title": "Restore access to HttpSecurityPolicy retriever for current RoutingContext",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2024-06-28T10:11:45Z",
+  "updated_at": "2024-07-05T16:32:18Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nRemoved between 3.2 to 3.8 with no reason (see implementation ideas), this features is key to easily reduce deny of service risks on the security authentication provider transforming 403 on configured DENY paths into 404 responses.\r\n\r\nWith this method, on a custom HttpAuthenticationMechanism, one can instead of returning a 403, analyze the current path, see if there is any DENY policy on it, and return a 404 (or whatever) before trying any authentication.\r\n\r\nWithout this method, is gets tricky and heavy to achieve the same goal.\r\n\r\n### Implementation ideas\r\n\r\nThe method:\r\npublic static List<HttpSecurityPolicy> findPermissionCheckers(RoutingContext context);\r\nBecame private with a new parameter (https://github.com/quarkusio/quarkus/blob/05763506f0fa1a0d2884059381cab8bbbc47e265/extensions/vertx-http/runtime/src/main/java/io/quarkus/vertx/http/runtime/security/AbstractPathMatchingHttpSecurityPolicy.java#L177):\r\n\r\n```java\r\nprivate static List<HttpSecurityPolicy> findPermissionCheckers(RoutingContext context, \r\n            ImmutablePathMatcher<List<HttpMatcher>> pathMatcher);\r\n```\r\n\r\n But its implementation still exists on (L90-99 https://github.com/quarkusio/quarkus/blob/05763506f0fa1a0d2884059381cab8bbbc47e265/extensions/vertx-http/runtime/src/main/java/io/quarkus/vertx/http/runtime/security/AbstractPathMatchingHttpSecurityPolicy.java#L90) of method:\r\n\r\n```java\r\n Uni<CheckResult> checkPermission(RoutingContext routingContext, Uni<SecurityIdentity> identity,\r\n            AuthorizationRequestContext requestContext);\r\n```\r\n            \r\nAn obviously good practice would be not to remove usefull public methods when their code can still be present.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41546/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41546/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

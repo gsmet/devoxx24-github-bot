@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32434",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32434/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32434/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32434/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32434",
+  "id": 1655613223,
+  "node_id": "I_kwDOCFbutM5irqcn",
+  "number": 32434,
+  "title": "S3 Extension has problems using localstack and us-east-1 but not us-east-2 ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2550509852,
+      "node_id": "MDU6TGFiZWwyNTUwNTA5ODUy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-services",
+      "name": "area/amazon-services",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-04-05T13:22:13Z",
+  "updated_at": "2023-05-25T12:14:58Z",
+  "closed_at": "2023-05-25T12:14:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThis may or may not be an issue with the AWS extension, specifically S3, but I just worked through a scenario with LocalStack where for some reason using `us-east-1` was failing to create a bucket because it was passing over (or not) the `content-length`.\r\n\r\nSwitching the localstack test to use `us-east-2` instead of `us-east-1` resolved the issue.\r\n\r\nI have not checked but the folks over at localstack thought maybe the AWS client was out of date.\r\n\r\nThis only was failing on the CI side and these were the settings that worked.\r\n\r\n```\r\n.java_e2e_services:\r\n  services:\r\n    - name: localstack/localstack\r\n      alias: localstack\r\n  variables:\r\n    AWS_ACCESS_KEY_ID: test\r\n    AWS_REGION: us-east-2\r\n    AWS_SECRET_ACCESS_KEY: test\r\n    CI_DEBUG_SERVICES: \"true\"\r\n    DEBUG: 1\r\n    FORCE_NONINTERACTIVE: \"true\"\r\n    LS_LOG: trace\r\n    LOCALSTACK_HOST: localstack\r\n    SERVICES: s3\r\n    SKIP_E2E_TESTS: \"false\"\r\n    _TEST_QUARKUS_S3_ENDPOINT_OVERRIDE: http://localstack:4566\r\n    _TEST_QUARKUS_S3_PATH_STYLE_ACCESS: \"true\"\r\n```\r\n\r\nCode-wise, the settings looked like this.\r\n\r\n```\r\nquarkus:\r\n  s3:\r\n    aws:\r\n      region: ${AWS_REGION:us-east-2}\r\n      credentials:\r\n        type: static\r\n        static-provider:\r\n          access-key-id: test\r\n          secret-access-key: test\r\n\r\n\"%test\":\r\n  quarkus:\r\n    s3:\r\n      endpoint-override: http://s3.localhost.localstack.cloud:4566\r\n```\r\n\r\nFor reference: \r\n- [Slack Conversation](https://github.com/localstack/localstack/issues/8073)\r\n- [GitHub Ticket](https://localstack-community.slack.com/archives/CMAFN2KSP/p1680654627768269)\r\n\n\n### Expected behavior\n\nCreating a bucket regardless of region would work especially since it worked on an older version.\n\n### Actual behavior\n\nScenarios:\r\n- Locally using v2.x of LocalStack works\r\n- In CI, using v1.4 of LocalStack works\r\n- In CI, using v2.x of LocalStack does not work using `us-east-1` but does using `us-east-2`\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.5.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nThis may not even be related to the extension or S3 client but just thought I would raise it in case anyone else comes across it.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32434/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32434/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

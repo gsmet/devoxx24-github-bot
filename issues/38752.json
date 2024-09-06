@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38752",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38752/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38752/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38752/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38752",
+  "id": 2132051407,
+  "node_id": "I_kwDOCFbutM5_FIXP",
+  "number": 38752,
+  "title": "Java heap space issues (memory leak?) when migrating from RESTEasy classic to RESTEasy reactive",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2024-02-13T10:56:08Z",
+  "updated_at": "2024-06-20T12:28:59Z",
+  "closed_at": "2024-02-29T20:10:28Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe decided to finally migrate from RESTEasy classic to RESTEasy reactive but when our build landed in production, we quickly started running into java heap space issues. By reverting back to RESTEasy classic (and doing only this), the problem disappears.\r\n\r\nMigrated extensions:\r\n\r\n* quarkus-resteasy-jackson\r\n* quarkus-rest-client-jackson\r\n* (quarkus-resteasy-multipart) - a bit special because we use it for classic, but it is bundled inside reactive\r\n* quarkus-oidc-client-filter\r\n* quarkus-keycloak-admin-client\r\n\r\n### Expected behavior\r\n\r\nSimilar memory pressure for RESTEasy classic and RESTEasy reactive\r\n\r\n### Actual behavior\r\n\r\nHigher memory pressure (leading to java heap space issues) with RESTEasy reactive, than with RESTEasy classic (which does not run into java heap space issues).\r\n\r\n### How to Reproduce?\r\n\r\nI don’t have a reproducer but I’m also not sure how to write one for this issue. We didn’t notice the problem until we deployed in production, where the load is unique. I could try to spend some time with a load testing suite to see if I can further pinpoint the issue to a particular coding paradigm, but for now all I can provide are screenshots and heap dumps.\r\n\r\nFor reference, it’s a pretty big codebase (not the average microservice) and we have a relatively slow release cycle (little under 3 months) so there were a lot of changes to examine.\r\n\r\nOne particular special thing we employ in our code base is the usage of subresources, which I have understood meanwhile seems to be a rarely used feature with which we have [already identified multiple issues](https://github.com/DeMol-EE/quarkus-reproducer-37148).\r\n\r\nAs it could be related, I want to mention the points that came up when switching between classic and reactive (as it highlights areas that are affected and thus features we use):\r\n* we use compression, which is quite different between the 2 flavors (`@Compressed` vs `@GZIP`)\r\n* we have one endpoint that uses multipart (but it is not called regularly and I don’t think this is the culprit)\r\n* we have a handful of rest clients for which we use `OidcClientRequestFilter`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\neclipse terumin 17-jdk-ubi9-minimal (docker image)\r\n\r\n### Output of `java -version`\r\n\r\nJDK 17\r\n\r\n### Quarkus version or git rev\r\n\r\n3.6.7\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn 3.9.5\r\n\r\n### Additional information\r\n\r\nWe’re running JVM mode on an openshift 4 cluster. This service is running on 4 pods and handles about 50-100 requests per second. Here’s a screenshot of our grafana dashboard that monitors memory usage across the latest 24h:\r\n\r\n<img width=\"1122\" alt=\"image\" src=\"https://github.com/quarkusio/quarkus/assets/1039594/47442ae7-48f6-4e8b-bc01-e052042e90ad\">\r\n\r\nThe vertical bars yesterday highlight pods being killed and rescheduled continuously. Here is a close up of the afternoon, which shows that the average lifetime of a pod was < 10 minutes:\r\n\r\n<img width=\"1112\" alt=\"image\" src=\"https://github.com/quarkusio/quarkus/assets/1039594/b644fe27-4a72-4041-bbbb-149041a1c5d2\">\r\n\r\nWe deployed the build wherein we revert from RESTEasy reactive to RESTEasy classic around 17:10\r\n\r\n<img width=\"1111\" alt=\"image\" src=\"https://github.com/quarkusio/quarkus/assets/1039594/0fc07843-969d-42d6-9074-4c2374c0da27\">\r\n\r\nThis is also the end of the business day, so it is normal that we see a significant drop in requests/traffic at this point. We skip the night and fast forward to this morning, where we see an uptick in pressure, but no more heap space issues and thus no more pods being killed:\r\n\r\n<img width=\"1137\" alt=\"image\" src=\"https://github.com/quarkusio/quarkus/assets/1039594/b4e2d1f7-2b6f-4433-ae03-dbcb16f60fa4\">\r\n\r\nIf desirable, I have a handful of heap dumps from a pod with RESTEasy reactive and a pod with RESTEasy classic. Though I have no reproducer, perhaps examining the dumps could reveal a possible cause.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38752/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38752/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

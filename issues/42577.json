@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42577",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42577/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42577/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42577/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42577",
+  "id": 2468839854,
+  "node_id": "I_kwDOCFbutM6TJ4Gu",
+  "number": 42577,
+  "title": "Keycloak admin client - error response body is unreachable",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2024-08-15T20:02:27Z",
+  "updated_at": "2024-08-28T07:52:23Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using Quarkus with dependency quarkus-keycloak-admin-client-reactive and invoking some method which does not return Response how do I get real reason why invocation has failed?\r\n\r\nFor example, if I invoke a method to update user:\r\n\r\nUserResource userResource = fetchUserById(userId);\r\nuserResource.update(user);\r\n\r\nI get the following exception stack trace:\r\n\r\n```\r\nERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-1) HTTP Request to /rest/v1/change-username failed, error id: d149a840-21bb-454f-97d9-50af5dc70359-1: org.jboss.resteasy.reactive.ClientWebApplicationException: Received: 'Server response is: 400' when invoking: Rest Client method: 'org.keycloak.admin.client.resource.UserResource#update'\r\n        at org.jboss.resteasy.reactive.client.impl.RestClientRequestContext.unwrapException(RestClientRequestContext.java:195)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.handleException(AbstractResteasyReactiveContext.java:331)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:175)\r\n        at org.jboss.resteasy.reactive.client.impl.RestClientRequestContext$1.lambda$execute$0(RestClientRequestContext.java:314)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:279)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:261)\r\n        at io.vertx.core.impl.ContextInternal.lambda$runOnContext$0(ContextInternal.java:59)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:566)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:840)\r\nCaused by: org.jboss.resteasy.reactive.client.api.WebClientApplicationException: Server response is: 400\r\n        at org.jboss.resteasy.reactive.client.handlers.ClientSetResponseEntityRestHandler.handle(ClientSetResponseEntityRestHandler.java:32)\r\n        at org.jboss.resteasy.reactive.client.handlers.ClientSetResponseEntityRestHandler.handle(ClientSetResponseEntityRestHandler.java:23)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.invokeHandler(AbstractResteasyReactiveContext.java:231)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n        ... 12 more\r\n```\r\n\r\nTrying to get entity from ClientWebApplicationException or WebApplicationException is giving me null.\r\n\r\nBut if I turn on the debug log for http request:\r\n```\r\nquarkus.rest-client.logging.scope=request-response\r\nquarkus.rest-client.logging.body-limit=1024\r\nquarkus.log.category.\"org.jboss.resteasy.reactive.client.logging\".level=DEBUG\r\n```\r\nI can see that http response has a body attached with a detail why request has failed. It's just that is is not mapped to an exception. For example:\r\n```\r\nDEBUG [org.jbo.res.rea.cli.log.DefaultClientLogger] (vert.x-eventloop-thread-0) Response: PUT https://keycloak-instance/admin/realms/realmName/users/da71b24c-eb88-4147-85a6-b172a093958f, Status[400 Bad Request], Headers[Date=Wed, 14 Aug 2024 20:35:50 GMT Content-Type=application/json Content-Length=92 Connection=keep-alive Referrer-Policy=no-referrer Strict-Transport-Security=max-age=31536000; includeSubDomains X-Content-Type-Options=nosniff X-Frame-Options=SAMEORIGIN X-XSS-Protection=1; mode=block], Body:\r\n{\"field\":\"username\",\"errorMessage\":\"error-username-invalid-character\",\"params\":[\"username\"]}\r\n```\r\nBut if I create a user:\r\n```\r\nResponse response = keycloak.realm(\"realmName\").users().create(user);\r\n```\r\nI can read the entity from response which gives me reason why request have failed.\r\n\r\nDoes anyone know how to get response body when doing the user update?\r\n\r\nI have tried implementing custom exception mappers but guess they don't work because it is handled by rest client.\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42577/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42577/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "reopened"
+}

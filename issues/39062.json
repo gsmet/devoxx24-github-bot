@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39062",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39062/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39062/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39062/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39062",
+  "id": 2159298792,
+  "node_id": "I_kwDOCFbutM6AtEjo",
+  "number": 39062,
+  "title": "JBossThread (off-heap) memory footprint due to FastThreadLocal usage",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1259794948,
+      "node_id": "MDU6TGFiZWwxMjU5Nzk0OTQ4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/priority/urgent",
+      "name": "priority/urgent",
+      "color": "d73a4a",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-02-28T16:01:01Z",
+  "updated_at": "2024-03-01T10:29:20Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "The blocking thread pool of Quarkus is extending Netty's `FastThreadLocalThread` for several reasons (@cescoffier knows more on this), but it leads to 2 problems:\r\n- Increase the (off-heap) memory footprint of our Quarkus instances due to both Netty's `Recycler`s and, even worse, `PoolThreadCache` (at https://github.com/netty/netty/blob/4ba1c3e7e190bdc9bdd0ece237042f16e843c797/buffer/src/main/java/io/netty/buffer/PooledByteBufAllocator.java#L525) which can become pretty big and stay still on idle threads too, without being available to others\r\n- In case idle (non-core) threads get killed and recreated, new `PoolThreadCache`s allocations can still cause extending existing allocation(s) off-heap arena, which with glibc, can cause a spike in memory usage (more info at https://sourceware.org/bugzilla/show_bug.cgi?id=11261)\r\n\r\nIdeally if jboss-thread(s) `Thread`s won't be `FastThreadLocalThread`s it will just work fine, because `useCacheForAllThreads` is false by default. Another option, instead, similar to #39061, is to use heap-based unpooled buffers, but given that core jboss-thread(s) are long living, will likely impact performance.\r\n\r\nThere's another option to investigate which periodically schedule trimming of thread local caches (see https://github.com/netty/netty/blob/4ba1c3e7e190bdc9bdd0ece237042f16e843c797/buffer/src/main/java/io/netty/buffer/PooledByteBufAllocator.java#L127-L145), but sadly it will be applied to event loops/I/O threads too, which is not something we want (I believe).",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39062/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39062/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

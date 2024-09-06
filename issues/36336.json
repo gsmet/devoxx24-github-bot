@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36336",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36336/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36336/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36336/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36336",
+  "id": 1931525594,
+  "node_id": "I_kwDOCFbutM5zIL3a",
+  "number": 36336,
+  "title": "@CacheResult on legacy @RegisterRestClient throws CCE on 3.4.2",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2023-10-07T22:17:38Z",
+  "updated_at": "2024-08-19T09:52:14Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nUsing `@CacheResult` with legacy `@RegisterRestClient` throws `ClassCastException` on 3.4.2\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nUsing the following dependencies:\r\n* quarkus-cache\r\n* quarkus-resteasy\r\n* quarkus-rest-client\r\n* quarkus-rest-client-jackson\r\n\r\nGiven the below example service and resource classes:\r\n```java\r\npackage org.acme.cache;\r\n\r\nimport org.eclipse.microprofile.rest.client.inject.RestClient;\r\nimport jakarta.inject.Inject;\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\n\r\n@Path(\"/ip\")\r\npublic class IpResource {\r\n    @Inject\r\n    @RestClient\r\n    IpService service;\r\n\r\n    @GET\r\n    public String getIp() {\r\n        return service.getIp();\r\n    }\r\n}\r\n```\r\n\r\n```java\r\npackage org.acme.cache;\r\n\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\nimport org.eclipse.microprofile.rest.client.inject.RegisterRestClient;\r\nimport io.quarkus.cache.CacheResult;\r\n\r\n@Path(\"/\")\r\n@RegisterRestClient(configKey=\"ip\")\r\npublic interface IpService {\r\n  @GET\r\n  @CacheResult(cacheName = \"ip\")\r\n  String getIp();\r\n}\r\n```\r\n\r\nand `ip/mp-rest/url=https://api.ipify.org/` entry in `application.properties`.\r\n\r\nOn Quarkus 3.3.3, it works:\r\n> $ curl localhost:8080/ip\r\n90.xxx.xx.xxx\r\n\r\nOn Quarkus 3.4.2:\r\n> $ curl localhost:8080/ip\r\n{\"details\":\"Error id 778dc968-4c07-44eb-b8ab-983596bce955-1, org.jboss.resteasy.spi.UnhandledException: java.lang.ClassCastException: class jdk.proxy3.$Proxy65 cannot be cast to class io.quarkus.arc.AbstractAnnotationLiteral .....\r\n\r\n\r\nException stack trace:\r\n```\r\nCaused by: java.lang.ClassCastException: class jdk.proxy3.$Proxy65 cannot be cast to class io.quarkus.arc.AbstractAnnotationLiteral (jdk.proxy3.$Proxy65 is in module jdk.proxy3 of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @77e9807f; io.quarkus.arc.AbstractAnnotationLiteral is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @77e9807f)\r\n        at io.quarkus.cache.runtime.CacheInterceptor.getArcCacheInterceptionContext(CacheInterceptor.java:76)\r\n        at io.quarkus.cache.runtime.CacheInterceptor.getInterceptionContext(CacheInterceptor.java:56)\r\n        at io.quarkus.cache.runtime.CacheResultInterceptor.intercept(CacheResultInterceptor.java:38)\r\n``` \r\n\r\nCommenting out the `@CacheResult` lines makes the rest client work on 3.4.2 as well.\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.8\" 2023-07-18 OpenJDK Runtime Environment Temurin-17.0.8+7 (build 17.0.8+7) OpenJDK 64-Bit Server VM Temurin-17.0.8+7 (build 17.0.8+7, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.4.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36336/reactions",
+    "total_count": 2,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36336/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41972",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41972/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41972/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41972/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41972",
+  "id": 2416110283,
+  "node_id": "I_kwDOCFbutM6QAurL",
+  "number": 41972,
+  "title": "Build fails if a dependency contains dependency to old smallrye-config",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-07-18T11:24:47Z",
+  "updated_at": "2024-07-30T15:24:12Z",
+  "closed_at": "2024-07-30T15:24:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nConsider an empty quarkus project with the following pom.xml : \r\n\r\n```xml\r\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\r\n    <modelVersion>4.0.0</modelVersion>\r\n    <groupId>com.example</groupId>\r\n    <artifactId>bughunt6000</artifactId>\r\n    <version>1.0-SNAPSHOT</version>\r\n\r\n    <properties>\r\n        <maven.compiler.release>17</maven.compiler.release>\r\n        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\r\n        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>\r\n\r\n        <quarkus.version>3.12.2</quarkus.version>\r\n    </properties>\r\n\r\n    <dependencyManagement>\r\n        <dependencies>\r\n            <dependency>\r\n                <groupId>io.quarkus.platform</groupId>\r\n                <artifactId>quarkus-bom</artifactId>\r\n                <version>${quarkus.version}</version>\r\n                <type>pom</type>\r\n                <scope>import</scope>\r\n            </dependency>\r\n        </dependencies>\r\n    </dependencyManagement>\r\n\r\n    <dependencies>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-arc</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>my.company</groupId>\r\n            <artifactId>foobar-library</artifactId>\r\n            <version>6.1.6</version>\r\n        </dependency>\r\n    </dependencies>\r\n\r\n    <build>\r\n        <plugins>\r\n            <plugin>\r\n                <groupId>io.quarkus.platform</groupId>\r\n                <artifactId>quarkus-maven-plugin</artifactId>\r\n                <version>${quarkus.version}</version>\r\n                <extensions>true</extensions>\r\n                <executions>\r\n                    <execution>\r\n                        <goals>\r\n                            <goal>build</goal>\r\n                            <goal>generate-code</goal>\r\n                            <goal>generate-code-tests</goal>\r\n                            <goal>native-image-agent</goal>\r\n                        </goals>\r\n                    </execution>\r\n                </executions>\r\n            </plugin>\r\n            <plugin>\r\n                <artifactId>maven-compiler-plugin</artifactId>\r\n                <version>3.13.0</version>\r\n                <configuration>\r\n                    <compilerArgs>\r\n                        <arg>-parameters</arg>\r\n                    </compilerArgs>\r\n                </configuration>\r\n            </plugin>\r\n        </plugins>\r\n    </build>\r\n</project>\r\n```\r\n\r\nExecuting `mvn quarkus:build` fails with the following error:\r\n\r\n> [ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:3.12.2:build (default-cli) on project bughunt6000: Execution default-cli of goal io.quarkus.platform:quarkus-maven-plugin:3.12.2:build failed: An API incompatibility was encountered while executing io.quarkus.platform:quarkus-maven-plugin:3.12.2:build: java.lang.NoSuchMethodError: 'boolean io.smallrye.config.common.utils.StringUtil.isInPath(java.lang.String, java.lang.String)'\n\n### Expected behavior\n\nThe build should succeed\n\n### Actual behavior\n\nExecuting `mvn quarkus:build` fails with the following error:\r\n\r\n> [ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:3.12.2:build (default-cli) on project bughunt6000: Execution default-cli of goal io.quarkus.platform:quarkus-maven-plugin:3.12.2:build failed: An API incompatibility was encountered while executing io.quarkus.platform:quarkus-maven-plugin:3.12.2:build: java.lang.NoSuchMethodError: 'boolean io.smallrye.config.common.utils.StringUtil.isInPath(java.lang.String, java.lang.String)'\n\n### How to Reproduce?\n\n1. Create a quarkus+maven project with the above pom.xml\r\n2. execute `mvn quarkus:build`\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17.0.11\n\n### Quarkus version or git rev\n\n3.12.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.7 (8b094c9513efc1b9ce2d952b3b9c8eaedaf8cbf0) Maven home: C:\\Users\\joh\\.m2\\wrapper\\dists\\apache-maven-3.9.7-bin\\3k9n615lchs6mp84v355m633uo\\apache-maven-3.9.7 Java version: 17.0.11, vendor: Eclipse Adoptium, runtime: C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.11.9-hotspot Default locale: de_DE, platform encoding: UTF-8 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\n\n### Additional information\n\nThe dependency `my.company:foobar-library` seems to be the problem. It has a transitive dependency on smallrye-config-common:3.3.3\r\nThis older version DOES NOT contain the `StringUtil::isInPath` method that is mentioned in the error. I just do not understand why the quarkus build would use this older version instead of the newer version that the dependency resolution arrived at.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41972/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41972/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

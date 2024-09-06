@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32359",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32359/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32359/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32359/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32359",
+  "id": 1651757395,
+  "node_id": "I_kwDOCFbutM5ic9FT",
+  "number": 32359,
+  "title": "@Blocking being ignored when accessing entity stream in a request filter",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-04-03T10:08:02Z",
+  "updated_at": "2023-04-03T17:11:08Z",
+  "closed_at": "2023-04-03T15:06:42Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nTrying to access the `ContainerRequestContext` entity stream from within a `ServerRequestFilter` fails even if the whole flow is annotated with `@Blocking`.\r\n\r\n### Expected behavior\r\n\r\nThe the blocking operation of parsing the request body as an entity stream should not fail when `@Blocking` is used.\r\n\r\n### Actual behavior\r\n\r\nThe request fails with the following errors\r\n```posh\r\n2023-04-03 12:56:21,844 ERROR [org.jbo.res.rea.ser.cor.RuntimeExceptionMapper] (vert.x-eventloop-thread-0) A blocking operation occurred on the IO thread. This likely means you need to use the @io.smallrye.common.annotation.Blocking annotation on the Resource method, class or javax.ws.rs.core.Application class.\r\n2023-04-03 12:56:21,848 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-0) HTTP Request to /hello failed, error id: 23f3890e-eda5-4455-9340-34ef39fff0cd-1: org.jboss.resteasy.reactive.common.core.BlockingNotAllowedException: Attempting a blocking read on io thread\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nExecute this test for the following resource\r\n```java\r\n    @Test\r\n    public void testHelloEndpoint() {\r\n        given()\r\n          .when()\r\n                .header(\"Content-Type\", \"application/json\")\r\n                .body(\"{\\\"name\\\": \\\"me\\\"}\")\r\n                .post(\"/hello\")\r\n          .then()\r\n             .statusCode(200)\r\n             .body(is(\"Hello from me\"));\r\n    }\r\n```\r\n```java\r\n@Blocking\r\n@Path(\"/hello\")\r\npublic class ExampleResource {\r\n\r\n    @ServerRequestFilter(preMatching = true)\r\n    public void filter(ContainerRequestContext requestContext) {\r\n        String body = new BufferedReader(new InputStreamReader(requestContext.getEntityStream()))\r\n                .lines().collect(Collectors.joining(\"\\n\"));\r\n        requestContext.setEntityStream(new ByteArrayInputStream(body.getBytes()));\r\n    }\r\n\r\n\r\n    @POST\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    @Consumes(MediaType.APPLICATION_JSON)\r\n    public Uni<String> hello(Map<String, String> body) {\r\n        return Uni.createFrom().item(\"Hello from %s\".formatted(body.get(\"name\")));\r\n    }\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux tymit-XPS-15-9500 5.19.0-38-generic #39~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Mar 17 21:16:15 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK 64-Bit Server VM Corretto-17.0.5.8.1 (build 17.0.5+8-LTS, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.5.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.5.1\r\n\r\n### Additional information\r\n\r\nRelated issues:\r\n\r\n1. https://github.com/quarkusio/quarkus/issues/30312\r\n2. https://github.com/quarkusio/quarkus/issues/17280",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32359/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32359/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

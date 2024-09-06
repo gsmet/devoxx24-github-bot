@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38965",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38965/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38965/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38965/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38965",
+  "id": 2149357133,
+  "node_id": "I_kwDOCFbutM6AHJZN",
+  "number": 38965,
+  "title": "GRPC server doesn't respond when running on the same server as HTTP and using TLS",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-02-22T15:40:22Z",
+  "updated_at": "2024-02-26T08:47:16Z",
+  "closed_at": "2024-02-26T08:46:08Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have an application, which serves both HTTP(s) and GRPC traffic and have two endpoints: \"api/http/\" and \"api/grpc\", the former responds directly and the latter returns data from GRPC server in the same application.\r\n\r\nWhen I run GRPC on a separate server (using legacy option `quarkus.grpc.server.use-separate-server=true`) the app works as expected, whenever I run GRPC with or without TLS.\r\nWhen I run GRPC on the same server as HTTP(s) without using TLS, it also works as expected.\r\nBut, when I run GRPC and HTTP(s) on the same server and use TLS for grpc, the server is not available to clients.\r\n\r\n### Expected behavior\r\n\r\nGRPC server is available\r\n\r\n### Actual behavior\r\n\r\nQuarkus client fails to connect with this exception:\r\n```\r\n2024-02-22 16:21:00,469 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-1) HTTP Request to /api/grpc/world failed, error id: 25a9a835-c112-4498-b0da-aa2a2d17f7ec-1: io.grpc.StatusRuntimeException: UNAVAILABLE\r\n\tat io.grpc.Status.asRuntimeException(Status.java:537)\r\n\tat io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:481)\r\n\tat io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)\r\n\tat io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)\r\n\tat io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)\r\n\tat io.quarkus.grpc.runtime.supports.IOThreadClientInterceptor$1$1.lambda$onClose$3(IOThreadClientInterceptor.java:70)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:276)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:258)\r\n\tat io.vertx.core.impl.ContextInternal.lambda$runOnContext$0(ContextInternal.java:56)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:566)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n```\r\nNetty client fails to connect with this one:\r\n```\r\njava.util.concurrent.ExecutionException: \r\nio.grpc.StatusRuntimeException: UNAVAILABLE: io exception\r\nChannel Pipeline: [SslHandler#0, ProtocolNegotiators$ClientTlsHandler#0, WriteBufferingAndExceptionHandler#0, DefaultChannelPipeline$TailContext#0]\r\n\tat com.google.common.util.concurrent.AbstractFuture.getDoneValue(AbstractFuture.java:594)\r\n\tat com.google.common.util.concurrent.AbstractFuture.get(AbstractFuture.java:573)\r\n\tat io.quarkus.ts.http.tls.TLSIT.grpcTLSServer(TLSIT.java:67)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1596)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1596)\r\nCaused by: io.grpc.StatusRuntimeException: UNAVAILABLE: io exception\r\nChannel Pipeline: [SslHandler#0, ProtocolNegotiators$ClientTlsHandler#0, WriteBufferingAndExceptionHandler#0, DefaultChannelPipeline$TailContext#0]\r\n\tat io.grpc.Status.asRuntimeException(Status.java:533)\r\n\tat io.grpc.stub.ClientCalls$UnaryStreamToFuture.onClose(ClientCalls.java:538)\r\n\tat io.grpc.internal.DelayedClientCall$DelayedListener$3.run(DelayedClientCall.java:489)\r\n\tat io.grpc.internal.DelayedClientCall$DelayedListener.delayOrExecute(DelayedClientCall.java:453)\r\n\tat io.grpc.internal.DelayedClientCall$DelayedListener.onClose(DelayedClientCall.java:486)\r\n\tat io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:574)\r\n\tat io.grpc.internal.ClientCallImpl.access$300(ClientCallImpl.java:72)\r\n\tat io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:742)\r\n\tat io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:723)\r\n\tat io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)\r\n\tat io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\nCaused by: io.netty.handler.ssl.NotSslRecordException: not an SSL/TLS record: 485454502f312e30203430302042616420526571756573740d0a636f6e74656e742d6c656e6774683a20300d0a0d0a\r\n\tat io.netty.handler.ssl.SslHandler.decodeJdkCompatible(SslHandler.java:1314)\r\n\tat io.netty.handler.ssl.SslHandler.decode(SslHandler.java:1387)\r\n\tat io.netty.handler.codec.ByteToMessageDecoder.decodeRemovalReentryProtection(ByteToMessageDecoder.java:529)\r\n\tat io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:468)\r\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:290)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1410)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:919)\r\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:788)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\t... 1 more\r\n\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. `git clone git@github.com:fedinskiy/reproducer.git -b grpc-tls-same-server`\r\n2. `cd reproducer`\r\n3. `mvn quarkus:dev -Dquarkus.grpc.clients.plain.port='${quarkus.http.port}' -Dquarkus.grpc.server.use-separate-server=false -Dquarkus.grpc.clients.plain.ssl.trust-store=tls/ca.pem -Dquarkus.grpc.server.ssl.certificate=tls/server.pem -Dquarkus.grpc.server.ssl.key=tls/server.key`\r\n4.  Open https://localhost:8443/api/http/world — it works\r\n5.  Open https://localhost:8443/api/grpc/world — there is an error on page and in quarkus logs\r\n\r\nEndpoint https://localhost:8443/api/grpc/world  is accessible, if you use one of the following commands in p. 3 instead:\r\n1. `mvn quarkus:dev -Dquarkus.grpc.clients.plain.port='${quarkus.grpc.server.port}' -Dquarkus.grpc.server.use-separate-server=true # separate server, no TLS`\r\n2. `mvn quarkus:dev -Dquarkus.grpc.clients.plain.port='${quarkus.http.port}' -Dquarkus.grpc.server.use-separate-server=false # same server, no TLS`\r\n3. `mvn quarkus:dev -Dquarkus.grpc.clients.plain.port='${quarkus.grpc.server.port}' -Dquarkus.grpc.server.use-separate-server=true -Dquarkus.grpc.clients.plain.ssl.trust-store=tls/ca.pem -Dquarkus.grpc.server.ssl.certificate=tls/server.pem -Dquarkus.grpc.server.ssl.key=tls/server.key # separate server, TLS`\r\n\r\nThe behaviour is the same if I remove both `quarkus.http.ssl.certificate.` options  from application.properties and access the endpoint over HTTP\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n6.7.3-200.fc39.x86_64\r\n\r\n### Output of `java -version`\r\n\r\nJava version: 21.0.1, vendor: Eclipse Adoptium\r\n\r\n### Quarkus version or git rev\r\n\r\n3,7,3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38965/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38965/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

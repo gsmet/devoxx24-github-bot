@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35250",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35250/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35250/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35250/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35250",
+  "id": 1840140804,
+  "node_id": "I_kwDOCFbutM5trlIE",
+  "number": 35250,
+  "title": "UnauthorizedException when running Hibernate Search Elasticsearch with OIDC ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1664142960,
+      "node_id": "MDU6TGFiZWwxNjY0MTQyOTYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-search",
+      "name": "area/hibernate-search",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Search / Elasticsearch"
+    },
+    {
+      "id": 2222769329,
+      "node_id": "MDU6TGFiZWwyMjIyNzY5MzI5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/elasticsearch",
+      "name": "area/elasticsearch",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-08-07T20:11:58Z",
+  "updated_at": "2023-08-08T14:22:27Z",
+  "closed_at": "2023-08-08T14:17:49Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm following this guide: https://quarkus.io/guides/hibernate-search-orm-elasticsearch and everything works as expected. \r\n\r\nAs soon as I try to add OIDC validation (quarkus-oidc) I get io.quarkus.security.UnauthorizedException while starting the dev profile.\r\n\r\n### Expected behavior\r\n\r\nRunning Quarkus OIDC does not affect quarkus-hibernate-search-orm-elasticsearch\r\n\r\n### Actual behavior\r\n\r\nI'm unable to start the application in dev mode.\r\n\r\n`2023-08-04 11:43:37,135 ERROR [io.qua.run.Application] (Quarkus Main Thread) Failed to start application (with profile [dev]): java.lang.RuntimeException: Failed to start quarkus\r\nat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\nat io.quarkus.runtime.Application.start(Application.java:101)\r\nat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\nat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\nat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\nat io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\nat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\nat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\nat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\nat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\nat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\nat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:104)\r\nat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: io.quarkus.security.UnauthorizedException`\r\n\r\n### How to Reproduce?\r\n\r\nFollow steps on https://quarkus.io/guides/hibernate-search-orm-elasticsearch.\r\n\r\nAfter validating that it is working without authentication, add to pom.xml\r\n\r\n`\r\n<dependency>\r\n   <groupId>io.quarkus</groupId>\r\n   <artifactId>quarkus-oidc</artifactId>\r\n</dependency>\r\n`\r\n\r\nAdd to application.properties\r\n\r\n%dev.quarkus.oidc.enabled=true\r\n%dev.quarkus.oidc.roles.source=userinfo\r\n%dev.quarkus.oidc.authentication.user-info-required=true\r\n%dev.quarkus.oidc.auth-server-url=XXX\r\n%dev.quarkus.oidc.client-id=XXX\r\nquarkus.oidc.roles.role-claim-path=XXX\r\n\r\nAnd the **&#64; Authenticated** annotation to a class\r\n\r\nI'm also running OpenSerach as a container on my machine, so I've added these configurations:\r\n\r\nquarkus.hibernate-search-orm.elasticsearch.version=opensearch:2.7.0\r\nquarkus.hibernate-search-orm.automatic-indexing.synchronization.strategy=sync\r\nhibernate-search-orm.elasticsearch.hosts=localhost:9200\r\nquarkus.elasticsearch.hosts=localhost:9200\r\nquarkus.elasticsearch.devservices.enabled=false\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMINGW64_NT-10.0-19045 WDX2VHZVL3 3.3.6-bec3d608-341.x86_64 2023-02-22 08:29 UTC x86_64 Msys\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.5\" 2022-10-18 LTS OpenJDK Runtime Environment Microsoft-6841604 (build 17.0.5+8-LTS)                   OpenJDK 64-Bit Server VM Microsoft-6841604 (build 17.0.5+8-LTS, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39) \r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35250/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35250/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

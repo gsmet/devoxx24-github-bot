@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22536",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22536/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22536/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22536/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22536",
+  "id": 1089656649,
+  "node_id": "I_kwDOCFbutM5A8tdJ",
+  "number": 22536,
+  "title": "Quarkus requires the public key to be present at build time, preventing it from using keys generated at runtime",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-12-28T06:56:41Z",
+  "updated_at": "2022-02-10T17:47:07Z",
+  "closed_at": "2022-02-10T17:46:54Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter we developed our application using the **SmallRye JWT** extension, I started to adapt the `application-prod.properties` file, to use environment variables, as I want to launch the application as a native image in a docker container.\r\n\r\nWe are using containers to make the application easy to configure and as adaptable as possible, to avoid having to build everything again whenever we change hosting provider or change some simple configuration.\r\n\r\nSo I changed the following lines in the `application-prod.properties` file:\r\n\r\n```\r\nsmallrye.jwt.sign.key.location=${APP_PRIVATE_KEY}\r\nmp.jwt.verify.publickey.location=${APP_PUBLIC_KEY}\r\n```\r\n\r\nSo that this way, regardless of the way and location we generate the cryptographic keys, we can start the application so that it reads the keys at runtime.\r\n\n\n### Expected behavior\n\nI expected that the application would build normally, but right at the stage of building the uber jar, the build failed, I tried to build just the uber jar, without the native image, and still the error happened.\r\n\r\nCommand I used to build in native image mode:\r\n```\r\nmvn clean package -Pnative -Dquarkus.native.container-build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-native-image:21.3-java17\r\n```\r\n\r\nCommand I used to build in uber jar mode:\r\n```\r\nmvn clean package -Dquarkus.package.type=uber-jar\r\n```\r\n\n\n### Actual behavior\n\nIn both cases, native or jar, the error was the same:\r\n\r\n```\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:2.6.1.Final:build (default) on project app: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR]         [error]: Build step io.quarkus.smallrye.jwt.deployment.SmallRyeJwtProcessor#registerNativeImageResources threw an exception: java.util.NoSuchElementException: SRCFG00011: Could not expand value APP_PUBLIC_KEY in property mp.jwt.verify.publickey.location\r\n[ERROR]         at io.smallrye.config.ExpressionConfigSourceInterceptor.lambda$getValue$0(ExpressionConfigSourceInterceptor.java:63)\r\n[ERROR]         at io.smallrye.common.expression.ExpressionNode.emit(ExpressionNode.java:22)\r\n[ERROR]         at io.smallrye.common.expression.Expression.evaluateException(Expression.java:56)\r\n[ERROR]         at io.smallrye.common.expression.Expression.evaluate(Expression.java:70)\r\n[ERROR]         at io.smallrye.config.ExpressionConfigSourceInterceptor.getValue(ExpressionConfigSourceInterceptor.java:56)\r\n[ERROR]         at io.smallrye.config.ExpressionConfigSourceInterceptor.getValue(ExpressionConfigSourceInterceptor.java:36)\r\n[ERROR]         at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n[ERROR]         at io.smallrye.config.PropertyNamesConfigSourceInterceptor.getValue(PropertyNamesConfigSourceInterceptor.java:61)\r\n[ERROR]         at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n[ERROR]         at io.smallrye.config.SmallRyeConfig.getConfigValue(SmallRyeConfig.java:305)\r\n[ERROR]         at io.smallrye.config.SmallRyeConfig.getValue(SmallRyeConfig.java:223)\r\n[ERROR]         at io.smallrye.config.SmallRyeConfig.getOptionalValue(SmallRyeConfig.java:322)\r\n[ERROR]         at io.quarkus.smallrye.jwt.deployment.SmallRyeJwtProcessor.registerNativeImageResources(SmallRyeJwtProcessor.java:121)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n[ERROR]         at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n[ERROR]         at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n[ERROR]         at io.quarkus.deployment.ExtensionLoader$2.execute(ExtensionLoader.java:887)\r\n[ERROR]         at io.quarkus.builder.BuildContext.run(BuildContext.java:277)\r\n[ERROR]         at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n[ERROR]         at java.base/java.lang.Thread.run(Thread.java:833)\r\n[ERROR]         at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n[ERROR] -> [Help 1]\r\n[ERROR]\r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR]\r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException\r\n[ERROR]\r\n[ERROR] After correcting the problems, you can resume the build with the command\r\n[ERROR]   mvn <args> -rf :app\r\n```\r\n\r\nThe error was caused because Quarkus was unable to expand the `${APP_PUBLIC_KEY}` environment variable at build time even though it is a runtime variable.\r\n\n\n### How to Reproduce?\n\nTo reproduce the problem, just create a simple Quarkus application in version 2.6.1.Final, with the extension `quarkus-smallrye-jwt`, and in `application.properties` or `application-prod.properties` define the normal properties of SmallRye JWT, like `quarkus.smallrye-jwt.enabled=true`, but in the `mp.jwt.verify.publickey.location` property provide an environment variable in the template `${var}`.\r\n\r\nQuarkus will try to expand it to take the public key location and include it in the native image, even if you are not building a native image but a uber-jar, because if you provide the location of a local key at build time, it will show this on the output in both cases:\r\n\r\n```\r\n[INFO] [io.quarkus.smallrye.jwt.deployment.SmallRyeJwtProcessor] Adding publicKey.pem to native image\r\n```\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [versão 10.0.19043.1415]\n\n### Output of `java -version`\n\nopenjdk 17.0.1 2021-10-19 OpenJDK Runtime Environment GraalVM CE 21.3.0 (build 17.0.1+12-jvmci-21.3-b05) OpenJDK 64-Bit Server VM GraalVM CE 21.3.0 (build 17.0.1+12-jvmci-21.3-b05, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\nQuarkus 2.6.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1\n\n### Additional information\n\nExploring the `io.quarkus.smallrye.jwt.deploymen.SmallRyeJwtProcessor` class, which appears in the log when it finds the key and adds it to the native image, specifically in the method that causes the error if it can't find the key at build time, the `registerNativeImageResources` method, I found this:\r\n```Java\r\n    /**\r\n     * If the configuration specified a deployment local key resource, register it in native mode\r\n     *\r\n     * @return NativeImageResourceBuildItem\r\n     */\r\n    @BuildStep\r\n    NativeImageResourceBuildItem registerNativeImageResources() {\r\n        final Config config = ConfigProvider.getConfig();\r\n        Optional<String> publicKeyLocationOpt = config.getOptionalValue(\"mp.jwt.verify.publickey.location\", String.class);\r\n        if (publicKeyLocationOpt.isPresent()) {\r\n            final String publicKeyLocation = publicKeyLocationOpt.get();\r\n            if (publicKeyLocation.indexOf(':') < 0 || publicKeyLocation.startsWith(\"classpath:\")) {\r\n                log.infof(\"Adding %s to native image\", publicKeyLocation);\r\n                return new NativeImageResourceBuildItem(publicKeyLocation);\r\n            }\r\n        }\r\n        return null;\r\n    }\r\n```\r\n\r\nAll this method does is look specifically for the `mp.jwt.verify.publickey.location` setting to include the public key in the native image at build time, it's the root of my problem.\r\n\r\nI really don't think it should exist , because if I have a local private key and public key pair to be included in the native image I'm still required to include the private key manually with:\r\n```\r\nquarkus.native.resources.includes=/path/to/privateKey.pem\r\n```\r\nBecause this method searches exclusively for the public key only, being useful only when another service is responsible for creating the tokens and I only need the public key.\r\n\r\nBut the problem is that it forces all other cases to have the public key at build time. This is not necessary as I tested it by removing the `mp.jwt.verify.publickey.location` from my `application-prod.properties`, and providing it only at the time of running the application with a command line argument `-Dmp.jwt.verify.publickey.location=/path/to/publicKey.pem`, doing that, it worked perfectly, and it loaded the public key at runtime, but it seems like a hack and not ideal.\r\n\r\nI suggest removing this method as it would be clearer that both keys (or just the public key if you don't have the private one locally) were added to the native image using `quarkus.native.resources.includes`, rather than just the public key being added by a secret method with unexpected behavior that was not documented at https://quarkus.io/guides/security-jwt. \r\n\r\nOr that at least there is a way to disable it for cases like this, and so that it doesn't become mandatory to have the public key at build time.\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22536/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22536/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

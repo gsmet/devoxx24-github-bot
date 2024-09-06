@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40693",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40693/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40693/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40693/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40693",
+  "id": 2302457368,
+  "node_id": "I_kwDOCFbutM6JPLYY",
+  "number": 40693,
+  "title": "Service not registering jandex indexed beans in multi-module project (gradle/kotlin)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-05-17T11:15:42Z",
+  "updated_at": "2024-05-17T12:23:45Z",
+  "closed_at": "2024-05-17T12:20:38Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nQuarkus doesn't seem to be honouring the jandex index when operating in a multi-module gradle project.\r\n\r\nI have a multi-module gradle build with a rest-module containing a rest resource and a ModuleService class marked with @Singleton - this module includes the gradle jandex plugin in its build file and correctly includes the /META-INF/jandex.idx file in the jar. The other module is called \"service\" and includes the rest-module as a dependency but when the service starts up the ExampleService bean tries to wire in the ModuleService which should be registered (I believe) with the CDI context via the jandex index file in the rest-module but it fails with:\r\n\r\n      Caused by: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type org.acme.ModuleService and qualifiers [@Default]\r\n\t  - injection target: parameter 'moduleService' of org.acme.service.ExampleService constructor\r\n\t  - declared on CLASS bean [types=[org.acme.service.ExampleService, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.service.ExampleService]\r\n\t  at io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:519)\r\n\t  at io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:638)\r\n\t  at io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:308)\r\n\t  ... 11 more\r\n\n\n### Expected behavior\n\nThe service should correctly manage the CDI beans from the rest-module and wire them into the service.\n\n### Actual behavior\n\nThe service is not seeing the beans described in the jandex index in the rest-module and is failing to start with a jakarta.enterprise.inject.UnsatisfiedResolutionException\r\n\r\n\n\n### How to Reproduce?\n\nThere is an example repo here: https://github.com/adamvelo/example-quarkus-multi-module\r\n(I will also attach the zip file)\r\n[example-quarkus-multi-module-main.zip](https://github.com/quarkusio/quarkus/files/15348201/example-quarkus-multi-module-main.zip)\r\n\n\n### Output of `uname -a` or `ver`\n\nDarwin Adams-MacBook-Pro.local 22.4.0 Darwin Kernel Version 22.4.0: Mon Mar  6 20:59:58 PST 2023; root:xnu-8796.101.5~3/RELEASE_ARM64_T6020 arm64\n\n### Output of `java -version`\n\nopenjdk version \"21.0.1\" 2023-10-17 LTS OpenJDK Runtime Environment Zulu21.30+15-CA (build 21.0.1+12-LTS) OpenJDK 64-Bit Server VM Zulu21.30+15-CA (build 21.0.1+12-LTS, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.10.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n------------------------------------------------------------ Gradle 8.5 ------------------------------------------------------------  Build time:   2023-11-29 14:08:57 UTC Revision:     28aca86a7180baa17117e0e5ba01d8ea9feca598  Kotlin:       1.9.20 Groovy:       3.0.17 Ant:          Apache Ant(TM) version 1.10.13 compiled on January 4 2023 JVM:          21.0.1 (Azul Systems, Inc. 21.0.1+12-LTS) OS:           Mac OS X 13.3.1 aarch64\n\n### Additional information\n\nAm I missing something here? Or should this work as is?\r\n\r\nThis is the ModuleService class in the rest-module:\r\n\r\n    package org.acme\r\n    import jakarta.inject.Singleton\r\n    @Singleton\r\n    class ModuleService {\r\n        fun hello() : String {\r\n            return \"Hello from the module\"\r\n        }\r\n    }\r\n\r\nAnd this is the ExampleService class in the service module:\r\n\r\n    package org.acme.service\r\n\r\n    import jakarta.inject.Singleton\r\n    import org.acme.ModuleService\r\n    \r\n    @Singleton\r\n    class ExampleService (val moduleService: ModuleService) {\r\n        fun helloFromModule() : String {\r\n            return moduleService.hello()\r\n        }\r\n    }",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40693/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40693/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

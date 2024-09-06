@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33200",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33200/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33200/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33200/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33200",
+  "id": 1700227122,
+  "node_id": "I_kwDOCFbutM5lV2gy",
+  "number": 33200,
+  "title": "OIDC: Constant 401 instead of new challenge when token expired",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-05-08T13:08:23Z",
+  "updated_at": "2023-05-18T16:38:43Z",
+  "closed_at": "2023-05-12T13:07:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello there, I have an application that is secured with a separate keycloak instance and a quarkus OIDC config that looks something like this:\r\n```\r\nquarkus.oidc.auth-server-url=https://mykeycloak.example.com/realms/myrealm\r\nquarkus.oidc.client-id=my-client-id\r\nquarkus.oidc.credentials.secret=12345678-abcd-dcba-4321-87654321\r\nquarkus.oidc.application-type=HYBRID\r\nquarkus.oidc.token-state-manager.split-tokens=true\r\n# quarkus uses http if accessed through a reverse proxy, because it detects being accessed\r\n# through http (by the reverse proxy), but we want the redirect uri to be https.\r\n%prod.quarkus.oidc.authentication.force-redirect-https-scheme=true\r\n```\r\n\r\nWe have a Single Page Application and want to implement the following use case:\r\n- User visits the site for first time, gets redirected to keycloak and logs in\r\n- User does stuff until token expires -> the frontend-side service call detects a 302 redirect to the keycloak, interprets is at \"session needs renewing\" and opens a popup for the user to log in again. If authentication succeeds within the popup, the original request can simply be repeated and the user can continue right where they left of.\r\n\r\n## the problem\r\n\r\nStarting with Quarkus 3.0, this is where some problems arise. This is the problematic behaviour I am experiencing:\r\n- The 302 redirect sets a unique state cookie, e.g. `set-cookie: q_auth_fe617509-b768-4b24-8ebc-bca61e1b992a=fe617509-b768-4b24-8ebc-bca61e1b992a; Max-Age=1800; Expires=Mon, 08 May 2023 12:30:24 GMT; Path=/; HTTPOnly`. However, since we experienced the redirect during some client-side service call, we cannot complete the challenge this way, therefore...\r\n- We open a popup to some static site, expecting quarkus to redirect the user to the keycloak login page in that window. Unfortunately from this point onwards, we **continuously get `401` errors until the state cookie expires or is manually deleted**.\r\n- Setting the log level to debug I can see the following happening:\r\n  ```\r\n  2023-05-08 10:25:56,012 DEBUG [io.qua.oid.run.CodeAuthenticationMechanism] (executor-thread-5) Starting an authentication challenge\r\n  2023-05-08 10:25:56,012 DEBUG [io.qua.oid.run.CodeAuthenticationMechanism] (executor-thread-5) Authentication request redirect_uri parameter: https://myservice.example.com/auth/login\r\n  2023-05-08 10:25:56,012 DEBUG [io.qua.oid.run.CodeAuthenticationMechanism] (executor-thread-5) q_auth_abe3141b-1977-49b3-a384-4c6481efa08b cookie 'max-age' parameter is set to 1800\r\n  2023-05-08 10:25:56,013 DEBUG [io.qua.oid.run.CodeAuthenticationMechanism] (executor-thread-5) Code flow redirect to: https://mykeycloak.example.com/realms/myrealm/protocol/openid-connect/auth?response_type=code&client_id=my-client-id&scope=openid&redirect_uri=https%3A%2F%2Fmyservice.example.com%2Fauth%2Flogin&state=abe3141b-1977-49b3-a384-4c6481efa08b\r\n  2023-05-08 10:25:56,351 DEBUG [io.qua.oid.run.DefaultTenantConfigResolver] (vert.x-eventloop-thread-1) Registered TenantResolver has not provided the configuration for tenant 'abe3141b-1977-49b3-a384-4c6481efa08b', using the default tenant\r\n  2023-05-08 10:25:56,352 DEBUG [io.qua.oid.run.CodeAuthenticationMechanism] (vert.x-eventloop-thread-1) State parameter can not be empty or multi-valued if the state cookie is present\r\n  2023-05-08 10:25:56,352 DEBUG [io.qua.ver.htt.run.sec.HttpSecurityRecorder] (vert.x-eventloop-thread-1) Authentication has failed, returning HTTP status 401\r\n  2023-05-08 10:25:56,352 DEBUG [io.ver.ext.web.RoutingContext] (vert.x-eventloop-thread-1) RoutingContext failure (500): io.quarkus.security.AuthenticationCompletionException\r\n  \tat io.quarkus.oidc.runtime.CodeAuthenticationMechanism.stateCookieIsMissing(CodeAuthenticationMechanism.java:245)\r\n  \tat io.quarkus.oidc.runtime.CodeAuthenticationMechanism.processRedirectFromOidc(CodeAuthenticationMechanism.java:154)\r\n  \tat io.quarkus.oidc.runtime.CodeAuthenticationMechanism.authenticate(CodeAuthenticationMechanism.java:117)\r\n  \tat io.quarkus.oidc.runtime.OidcAuthenticationMechanism$1.apply(OidcAuthenticationMechanism.java:50)\r\n  \tat io.quarkus.oidc.runtime.OidcAuthenticationMechanism$1.apply(OidcAuthenticationMechanism.java:44)\r\n  \tat io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n  \t...\r\n  ```\r\n\r\n## workaround\r\n\r\nSet `quarkus.oidc.authentication.redirect-path` to some dedicated path that is used by successful oidc redirects only. The path must then not be navigated to by any other means other than a successful redirect from the OIDC provider, because it will result in a 401 error.\r\n\r\nIn this configuration, setting [`quarkus.oidc.authentication.restore-path-after-redirect`](https://quarkus.io/guides/all-config#quarkus-oidc_quarkus.oidc.authentication.restore-path-after-redirect) to `true` is probably also desirable.\r\n\r\n## expected behaviour\r\n\r\nI did not expect my application to be stuck in 401 errors. There are probably many ways to fix this. If I had to spitball:\r\n- Always automatically start new challenges instead of aborting with 401 errors when the application is of type `web-app` or `hybrid`\r\n- Force users to configure a `quarkus.oidc.authentication.redirect-path` so only that path 401s by default, not the entire application\r\n- Don't assume a failed authentication purely by the presence of some state cookie, but use some other metric as well.  \r\nThis might be mainly a documentation problem, as the described workaround fully solves the problem.\r\n\r\n/cc @sberyozkin because you implemented https://github.com/quarkusio/quarkus/pull/31079, which introduced the `State parameter can not be empty or multi-valued if the state cookie is present` error I see in the debug logs.\r\n\r\nThanks in advance for taking a look! And sorry if I misunderstood the way OIDC works and this is just a layer 8 problem.\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.2.Final\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33200/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33200/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

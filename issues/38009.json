@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38009",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38009/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38009/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38009/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38009",
+  "id": 2064421079,
+  "node_id": "I_kwDOCFbutM57DJDX",
+  "number": 38009,
+  "title": "As a developer, I want Quarkus to configure its data source itself when it has been deployed to Heroku",
+  "labels": [
+    {
+      "id": 1553869078,
+      "node_id": "MDU6TGFiZWwxNTUzODY5MDc4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/extension-proposal",
+      "name": "kind/extension-proposal",
+      "color": "abfcbb",
+      "default": false,
+      "description": "Discuss and Propose new extensions"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-01-03T17:45:42Z",
+  "updated_at": "2024-01-08T10:28:45Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nOn the Quarkus website there is this [deploying to Heroku](https://quarkus.io/guides/deploying-to-heroku) guide which I have gone through in the last few days.\r\n\r\n> Since I encountered challenges because I used Podman instead of Docker to push container images to Heroku, I have already improved the guide: https://github.com/quarkusio/quarkus/pull/37976\r\n\r\nAnother challenge which I've encountered was configuring my application to work properly with the [managed (postgres) database service provided directly by Heroku](https://devcenter.heroku.com/articles/heroku-postgresql). That's what this issue is all about.\r\n\r\nHeroku has a how to [connecting to Heroku Postgres in Java](https://devcenter.heroku.com/articles/connecting-heroku-postgres#connecting-in-java), which mentions a `JDBC_DATABASE_URL` and a `DATABASE_URL` environment variable, which is set in each attached [dyno](https://www.heroku.com/dynos).\r\n\r\nThe `JDBC_DATABASE_URL` is unfortunately only set when following the [deploy the repository and build on Heroku](https://quarkus.io/guides/deploying-to-heroku#deploy-the-repository-and-build-on-heroku) variant of the Quarkus guide - deploying a (native) Quarkus application inside a container will give us only the `DATABASE_URL` (which contains user and password too, [see here](https://devcenter.heroku.com/articles/connecting-heroku-postgres#spring-java:~:text=When%20it%20isn%E2%80%99t%20possible%20to%20use%20the%20JDBC%20URL%20(usually%20because%20custom%20buildpack%20is%20being%20used)%2C%20you%20must%20use%20the%20DATABASE_URL%20environment%20URL%20to%20determine%20connection%20information.)), which is indeed not jdbc/java agnostic. [Heroku itself therefore suggests hard-coding the schema](https://devcenter.heroku.com/articles/connecting-heroku-postgres#spring-java:~:text=Due%20to%20this%20difference%2C%20you%20must%20hardcode%20the%20scheme%20to).\r\n\r\nI overcame this challenge by extracting db host and name, user and password from the `DATABASE_URL` and creating a JDBC DATABASE URL myself when building the application (using bash).\r\n\r\n```bash\r\n# Setting some variables because heroku has the db url only in invalid format\r\nJDBC_DATABASE_URL=$(heroku config --app \"${APP_NAME}\" | sed -b -e '/^DATABASE_URL/p' | tail -1)\r\nJDBC_DATABASE_URL=${JDBC_DATABASE_URL#*://}\r\nDATABASE_USER=${JDBC_DATABASE_URL%:*@*:*/*}\r\nDATABASE_PASSWORD=${JDBC_DATABASE_URL#*:}\r\nDATABASE_PASSWORD=${DATABASE_PASSWORD%@*:*/*}\r\nJDBC_DATABASE_URL=${JDBC_DATABASE_URL#*@}\r\nJDBC_DATABASE_URL=\"jdbc:postgresql://$JDBC_DATABASE_URL?sslmode=require\"\r\n\r\n./mvnw -P prod clean package\\\r\n      -Dquarkus.datasource.jdbc.url=\"$JDBC_DATABASE_URL\"\\\r\n      -Dquarkus.datasource.username=\"$DATABASE_USER\"\\\r\n      -Dquarkus.datasource.password=\"$DATABASE_PASSWORD\"\r\n```\r\n\r\nDoing this during build time was a totally valid workaround, until I thought about credential rotation. This is not only possible through the Heroku CLI ([documentation](https://devcenter.heroku.com/articles/heroku-postgresql-credentials#pg-credentials-rotate)) but is also done automatically by Heroku:\r\n![image](https://github.com/quarkusio/quarkus/assets/49238587/d832f46b-d527-47d9-b190-f8021b1ea16c)\r\nUnfortunately I couldn't find these information before in the Heroku Dev Center articles about the managed Postgres (submitted feedback there too).\r\n\r\nMy idea was now to configure the data source programatically inside a java class with `@IfBuildProfile(\"prod\")` annotation, but there is no documentation about programmatically data source configuration (Quarkus guide: [Configure data sources in Quarkus](https://quarkus.io/guides/datasource)) and I've found an open issue about this topic too: https://github.com/quarkusio/quarkus/issues/7019.\r\n\r\n### Implementation ideas\r\n\r\nMy idea would be a new Quarkus extension (`quarkus-heroku-deployment`) which does auto configuration for the data source (and other Heroku specific things like connecting to the managed [redis](https://devcenter.heroku.com/articles/connecting-heroku-redis#connecting-in-java) and [kafka](https://devcenter.heroku.com/articles/kafka-on-heroku#connecting-to-a-kafka-cluster) services) or at least an expansion of the guide to include these topics.\r\n\r\nAt the moment there is no extension which does things like deployment specific auto configuration (if https://code.quarkus.io/?extension-search=deploy is the correct query for it), so I don't know whether this is a valid use case for an extension.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38009/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38009/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

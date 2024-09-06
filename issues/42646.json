@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42646",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42646/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42646/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42646/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42646",
+  "id": 2475386897,
+  "node_id": "I_kwDOCFbutM6Ti2gR",
+  "number": 42646,
+  "title": "Quarkus REST: further support for record parameter containers",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-08-20T11:18:27Z",
+  "updated_at": "2024-08-21T04:54:40Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nDuring work on #42642 to support record bean params on the server, I've noted the following issues left to be done:\r\n\r\n- `@Context`, `@BeanParam`, `@MultipartForm`, `MultipartDataInput` are implied, but only as method parameters, not fields in resources or parameter container classes, I feel like we should change it so fields are treated the same as endpoint method parameters.\r\n- The docs say that `@BeanParam` is still required in order for OpenAPI to detect them, we should fix this.\r\n- Implicit parameter containers which implicit contain parameter containers are not automatically detected as such (due to above this can only happen for records). This is because auto-detection should run in a loop so that new parameter containers trigger a scan for classes that contain them.\r\n- REST client has parameter containers with no default constructor, the server wants to make beans out of them, but we can't because there's no default constructor, they are only useful for the client. Right now the server ignores them, but it would be better if we could have a different set of bean param containers: used by client, or server, so we can generate error messages when not used properly (client parameter containers with no default constructors are not usable by the server).\r\n- I don't think record parameter containers work for the REST client\r\n- `CustomResourceProducersGenerator` generates CDI producers for endpoints that have non-default constructors, but not bean params. Also, this constructor injection uses custom logic that is not the same as method parameter or bean param, so it appears to call `*ParamExtractor.extractParameter` (single only, no separator, not encoded, no default value, no converter, no support for multipart anything). This is wrong in any but the most trivial case.\r\n- We could replace `ClassInjectorTransformer` to use Gizmo (should be possible now, with the transformer support), or we could get rid of it entirely and convert all custom injection into CDI producers by adding the required logic to `CustomResourceProducersGenerator` (and fixing it). This feels like the best option IMO.\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42646/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42646/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

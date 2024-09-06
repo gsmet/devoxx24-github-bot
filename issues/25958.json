@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25958",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25958/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25958/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25958/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25958",
+  "id": 1260379900,
+  "node_id": "I_kwDOCFbutM5LH978",
+  "number": 25958,
+  "title": "Quarkus 2.9.x regression with Panache/Hibernate autoincrementing tables when upgrading from 2.8.3",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2022-06-03T21:06:00Z",
+  "updated_at": "2024-01-12T10:20:39Z",
+  "closed_at": "2022-06-13T10:34:54Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHibernate persistence seems to be setting the ID to an incorrect value when persisting a new object in 2.9.x (I've seen it in version 2.9.0-2.9.2 but finally had some time to create a repro sample).\r\nThe database is configured to autogenerate the ID, so Hibernate should not be setting it (leaving it null will let the DB autogenerate the ID).  It's also set to an incorrect value (1) which collides with data in the database.\r\n\r\nThis is different behavior from 2.8.3.\r\nI've attached a repro.  Run the only test in it and you'll see the error.  Downgrade to 2.8.3 and you won't see failure.\r\n\n\n### Expected behavior\n\nHibernate shouldn't be setting object IDs when inserting new objects into a table that has autoincrementing values.\r\n\n\n### Actual behavior\n\nYou'll see this in the logs:\r\n```\r\n****Count is 2\r\nHibernate: insert into Project (id, name, retentionMonths) values (default, ?, ?)\r\nJun 03, 2022 4:56:59 PM org.hibernate.engine.jdbc.spi.SqlExceptionHelper logExceptions\r\nWARN: SQL Error: 23505, SQLState: 23505\r\nJun 03, 2022 4:56:59 PM org.hibernate.engine.jdbc.spi.SqlExceptionHelper logExceptions\r\nERROR: Unique index or primary key violation: \"PRIMARY KEY ON PUBLIC.PROJECT(ID) ( /* key:1 */ CAST(1 AS BIGINT), 'initial-project', 60)\"; SQL statement:\r\ninsert into Project (id, name, retentionMonths) values (default, ?, ?) [23505-210]\r\n```\n\n### How to Reproduce?\n\nSee attached project.\r\nRun the  only test in the project using IntelliJ or do \"./gradlew check\" from the command line.\r\n[bugquarkusjpatest.zip](https://github.com/quarkusio/quarkus/files/8835703/bugquarkusjpatest.zip)\r\n\n\n### Output of `uname -a` or `ver`\n\nDarwin tw-mbp-keny 21.5.0 Darwin Kernel Version 21.5.0: Tue Apr 26 21:08:22 PDT 2022; root:xnu-8020.121.3~4/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nopenjdk version \"11.0.13\" 2021-10-19 OpenJDK Runtime Environment GraalVM CE 21.3.0 (build 11.0.13+7-jvmci-21.3-b05) OpenJDK 64-Bit Server VM GraalVM CE 21.3.0 (build 11.0.13+7-jvmci-21.3-b05, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n21.3.0\n\n### Quarkus version or git rev\n\n2.9.2-Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n ------------------------------------------------------------ Gradle 7.4.2 ------------------------------------------------------------  Build time:   2022-03-31 15:25:29 UTC Revision:     540473b8118064efcc264694cbcaa4b677f61041  Kotlin:       1.5.31 Groovy:       3.0.9 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          11.0.13 (GraalVM Community 11.0.13+7-jvmci-21.3-b05) OS:           Mac OS X 12.4 x86_64\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25958/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25958/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

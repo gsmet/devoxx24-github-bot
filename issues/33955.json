@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33955",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33955/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33955/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33955/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33955",
+  "id": 1751412789,
+  "node_id": "I_kwDOCFbutM5oZHA1",
+  "number": 33955,
+  "title": "Quarkus CXF and Amazon DynamoDB Extension does not work together - throws ChainBuildException",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-06-11T12:46:58Z",
+  "updated_at": "2023-06-12T10:48:14Z",
+  "closed_at": "2023-06-12T10:08:23Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHey, \r\n\r\nunfortunately I doesn't know where this issue belongs to. \r\n\r\nThe CXF and DynamoDB extension doesn't work together. As far I understand, both want to generate the same Bean in build phase. \r\n\r\nError Message: \r\n```sh\r\nCaused by: io.quarkus.builder.ChainBuildException: Cycle detected:\r\n\t\t   io.quarkiverse.cxf.deployment.CxfClientProcessor#generateClientProducers produced class io.quarkus.arc.deployment.GeneratedBeanBuildItem\r\n\t\tto io.quarkus.arc.deployment.BeanArchiveProcessor#build produced class io.quarkus.arc.deployment.BeanArchiveIndexBuildItem\r\n\t\tto io.quarkus.arc.deployment.ArcProcessor#initialize produced class io.quarkus.arc.deployment.ContextRegistrationPhaseBuildItem\r\n\t\tto io.quarkus.arc.deployment.ArcProcessor#registerBeans produced class io.quarkus.arc.deployment.BeanRegistrationPhaseBuildItem\r\n\t\tto io.quarkus.amazon.dynamodb.deployment.DynamodbProcessor#discover produced class io.quarkus.amazon.common.deployment.RequireAmazonClientBuildItem\r\n\t\tto io.quarkus.amazon.dynamodb.deployment.DynamodbProcessor#setup produced class io.quarkus.deployment.builditem.ExtensionSslNativeSupportBuildItem\r\n\t\tto io.quarkus.deployment.steps.NativeImageConfigBuildStep#build produced class io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem\r\n\t\tto io.quarkiverse.cxf.deployment.CxfClientProcessor#collectClients produced class io.quarkiverse.cxf.deployment.CxfClientBuildItem\r\n\t\tto io.quarkiverse.cxf.deployment.CxfClientProcessor#generateClientProducers\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:375)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheckProduce(BuildChainBuilder.java:348)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:379)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheckProduce(BuildChainBuilder.java:348)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:379)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheckProduce(BuildChainBuilder.java:348)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:379)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheckProduce(BuildChainBuilder.java:348)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:379)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheckProduce(BuildChainBuilder.java:348)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:379)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheckProduce(BuildChainBuilder.java:348)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:379)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheckProduce(BuildChainBuilder.java:348)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:379)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheckProduce(BuildChainBuilder.java:348)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:379)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheckProduce(BuildChainBuilder.java:348)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:379)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheckProduce(BuildChainBuilder.java:348)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:379)\r\n\tat io.quarkus.builder.BuildChainBuilder.cycleCheck(BuildChainBuilder.java:339)\r\n\tat io.quarkus.builder.BuildChainBuilder.build(BuildChainBuilder.java:249)\r\n\tat io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:142)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:331)\r\n\t... 47 more\r\n```\r\n\r\nPerhaps @ppalaga (from quarkus-cxf extension) or @scrocquesel (from amazon extension) could help?\r\n\n\n### Expected behavior\n\nBoth extensions should work with each other\n\n### Actual behavior\n\nDetail Message from ChainBuildException\r\n```sh\r\nCycle detected:\r\n\t\t   io.quarkiverse.cxf.deployment.CxfClientProcessor#generateClientProducers produced class io.quarkus.arc.deployment.GeneratedBeanBuildItem\r\n\t\tto io.quarkus.arc.deployment.BeanArchiveProcessor#build produced class io.quarkus.arc.deployment.BeanArchiveIndexBuildItem\r\n\t\tto io.quarkus.arc.deployment.ArcProcessor#initialize produced class io.quarkus.arc.deployment.ContextRegistrationPhaseBuildItem\r\n\t\tto io.quarkus.arc.deployment.ArcProcessor#registerBeans produced class io.quarkus.arc.deployment.BeanRegistrationPhaseBuildItem\r\n\t\tto io.quarkus.amazon.dynamodb.deployment.DynamodbProcessor#discover produced class io.quarkus.amazon.common.deployment.RequireAmazonClientBuildItem\r\n\t\tto io.quarkus.amazon.dynamodb.deployment.DynamodbProcessor#setup produced class io.quarkus.deployment.builditem.ExtensionSslNativeSupportBuildItem\r\n\t\tto io.quarkus.deployment.steps.NativeImageConfigBuildStep#build produced class io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem\r\n\t\tto io.quarkiverse.cxf.deployment.CxfClientProcessor#collectClients produced class io.quarkiverse.cxf.deployment.CxfClientBuildItem\r\n\t\tto io.quarkiverse.cxf.deployment.CxfClientProcessor#generateClientProducers\r\n```\n\n### How to Reproduce?\n\nReproducer: https://github.com/knuspertante/reproducer-cxf-dynamodb.git\r\n\r\n1. git clone https://github.com/knuspertante/reproducer-cxf-dynamodb.git\r\n2. cd reproducer-cxf-dynamodb\r\n3. ./mvnw clean verify\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment GraalVM CE 22.3.0 (build 19.0.1+10-jvmci-22.3-b08)\n\n### GraalVM version (if different from Java)\n\nOpenJDK Runtime Environment GraalVM CE 22.3.0 (build 19.0.1+10-jvmci-22.3-b08)\n\n### Quarkus version or git rev\n\n3.1.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.8.8\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33955/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33955/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

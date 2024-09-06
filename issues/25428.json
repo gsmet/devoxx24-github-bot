@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25428",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25428/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25428/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25428/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25428",
+  "id": 1228295123,
+  "node_id": "I_kwDOCFbutM5JNkvT",
+  "number": 25428,
+  "title": "Improve podman compatibility on M1 for build test suites which use fabric8 docker-maven-plugin",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-05-06T19:00:57Z",
+  "updated_at": "2022-06-24T10:36:55Z",
+  "closed_at": "2022-06-24T10:36:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nhttps://github.com/quarkusio/quarkus/pull/25339 improved podman compatibility in some of the test suites which use fabric8 containers for databases. However, I'm still seeing failures on Mac M1 with podman. \r\n\r\nOnce I worked out I needed to do `podman machine init -v $HOME:$HOME` for podman < 4.1, most of the issues I've been seeing relate to filesystem mounting and health checks. \r\n\r\n## Volume mounts \r\n\r\nThe ':Z' SELinux access label seems to cause problems on M1. I think this is related to https://github.com/containers/podman/issues/13631. (`src/main/java/io/quarkus/deployment/pkg/steps/NativeImageBuildLocalContainerRunner.java` also used :Z so I'm not sure why I didn't have to change anything there. )\r\n\r\n## Health checks \r\n\r\nThis is more troublesome. I'm struggling to get the docker maven plugin to successfully `<wait>` for mariadb to be up. I've tried a range of options. \r\n\r\nFor example, I could not find a wait of doing a <wait> (from http://dmp.fabric8.io/#build-healthcheck) that didn't treat the `<time>` as both a minimum and a maximum. Several of the options I tried always passed, even if the container wasn't ready, or always failed, even if the container was actually ready. \r\n\r\n## What about test containers?\r\n\r\nThe fabric8 plugin is not under super-active development, and we're starting to see some non-ideal behaviours.  Longer term, we probably want to move away from the fabric8 docker-maven-plugin to test containers, but last time we looked into it, the fabric8 plugin gave us more flexibility to do things like define a sophisticated health check for container readiness, or inject a volume into the container with config to speed up startup. \r\n\r\n\r\n\r\n\r\n\r\n\n\n### Expected behavior\n\nTests should pass cleanly with `TESTCONTAINERS_RYUK_DISABLED=\"true\" ./mvnw -Dquickly -DskipTests=false -Dstart-containers`\n\n### Actual behavior\n\n### SELinux access issues \r\n\r\n```\r\nholly@hcummins-mac quarkus % MYSQL_USER=hibernate_orm_test MYSQL_PASSWORD=hibernate_orm_test MYSQL_DATABASE=hibernate_orm_test MYSQL_RANDOM_ROOT_PASSWORD=true podman run --env MYSQL\\*  -v ./integration-tests/hibernate-orm-tenancy/connection-resolver/custom-mariadbconfig/:/etc/mysql/conf.d:Z docker.io/mariadb:10.7\r\nError: error preparing container 0c92a88aedfb270b2c2c81aa9e98b025170295b2f7e0a1b8ac42bd6492bd42b9 for attach: setxattr /Users/holly/Code/quarkus/myfork/quarkus/integration-tests/hibernate-orm-tenancy/connection-resolver/custom-mariadbconfig: operation not supported\r\n```\r\n\r\n### Health checks \r\n\r\nI'm seeing a range of problematic behaviours, which mostly involve waits reporting themselves as failed when they should be successful, or reporting as failed when they should be successful. \r\n\n\n### How to Reproduce?\n\n```\r\nTESTCONTAINERS_RYUK_DISABLED=\"true\" ./mvnw -Dquickly -DskipTests=false -Dstart-containers -f extensions/reactive-mysql-client/deployment \r\n```\r\non M1 without docker installed (only podman)\n\n### Output of `uname -a` or `ver`\n\nDarwin hcummins-mac 21.4.0 Darwin Kernel Version 21.4.0: Fri Mar 18 00:46:32 PDT 2022; root:xnu-8020.101.4~15/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25428/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25428/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

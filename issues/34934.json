@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34934",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34934/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34934/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34934/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34934",
+  "id": 1816892314,
+  "node_id": "I_kwDOCFbutM5sS5Oa",
+  "number": 34934,
+  "title": "ObjectMapper of @CustomSerialization has no effect",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-07-22T20:57:16Z",
+  "updated_at": "2023-07-24T11:15:02Z",
+  "closed_at": "2023-07-24T11:14:56Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a REST method with the @CustomSerialization annotation.\r\nAccording to the [documentation](https://quarkus.io/guides/resteasy-reactive#completely-customized-per-method-serialization) I have implemented the static class with the apply method. This method has an ObjectMapper as the first parameter.\r\n\r\nThe problem is the objectMapper has to be reinstanciate each time the method is called.\r\n\r\nConcretely :\r\n\r\nThe addMixIn call has no effect.\r\n\r\n```java\r\nreturn objectMapper.addMixIn(Buggy.class, NoTypes.class).writer();\r\n```\r\n\r\nI must do like this to customize the objectMapper : \r\n\r\n```java\r\nreturn new ObjectMapper().addMixIn(Buggy.class, NoTypes.class).writer();\r\n```\r\n\r\nThis is because somewhere else in the application I have this : \r\n\r\n```java\r\n@Inject\r\n    ObjectMapper mapper;\r\n\r\n    public void buggyServiceMethod() {\r\n\r\n        try {\r\n\r\n\r\n            Map<String, Buggy> complexBuggyMap = new HashMap<>();\r\n            complexBuggyMap.put(\"bug2\", new SimpleBug(\"bug3\"));\r\n            Buggy complexBug = new ComplexBug(new SimpleBug(\"simple bug\"), complexBuggyMap);\r\n\r\n            //The bug is here! As soon as I use the injected mapper to write a !!ComplexBug!!, the @CustomSerialization requires to instanciate a new ObjectMapper(). There is absolutely NO PROBLEM if instead of writing a ComplexeBug I write a SimpleBug, and this is why this bug is really tricky!\r\n            mapper.writeValueAsString(complexBug); //comment this line and the bug disappear\r\n            //If here I instanciate the ObjectMapper the the @CustomSerialization will work perfectely! => new ObjectMapper().writeValueAsString(complexBug);\r\n            //If I write a SimpleBug, the bug doesn't occur.\r\n            //Like this :\r\n            //mapper.writeValueAsString(new SimpleBug(\"bug1\")); //you can uncomment this line and you will see there is no problem to use the method object mapper parameter of the apply method\r\n            \r\n        } catch (JsonProcessingException e) {\r\n            throw new RuntimeException(e);\r\n        }\r\n    }\r\n```\r\n\r\nThe bug comes from my object model. I have an interface (Buggy) and two classes that implement it (SimpleBug and ComplexeBug)\r\n\r\nThere is no problem to use the objectMapper with the SimpleBug class. But if use the objectMapper with the ComplexeBug class then I need to reinstanciate the ObjectMapper each time for my MixIn to be applied\r\n\r\n```java\r\npublic static class MyBuggyClass implements BiFunction<ObjectMapper, Type, ObjectWriter> {\r\n\r\n        @Override\r\n        public ObjectWriter apply(ObjectMapper objectMapper, Type type) {\r\n\r\n            //The addMinxIn as no effect because an object mapper has been used somewhere else in the application to write a !ComplexeBug! -> no problem with SimpleBug!\r\n            return objectMapper.addMixIn(Buggy.class, NoTypes.class).writer();\r\n            //To apply the MixIn I must do this :\r\n            // return new ObjectMapper().addMixIn(Buggy.class, NoTypes.class).writer();\r\n            // Why do I need to instanciate a new ObjectMapper() ???\r\n        }\r\n    }\r\n```\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nI don't have to reinstanciate the ObjectMapper class each time I want to use it.\r\n\r\nThe MixIn has been correctly applied.\r\n\r\n```json\r\n{\r\n    \"bug2\": {\r\n        \"simpleBug\": {\r\n            \"name\": \"simple bug\"\r\n        },\r\n        \"bugs\": {\r\n            \"bug2\": {\r\n                \"name\": \"bug3\"\r\n            }\r\n        },\r\n        \"name\": \"simple bug\"\r\n    },\r\n    \"bug1\": {\r\n        \"name\": \"bug1\"\r\n    }\r\n}\r\n```\r\n\r\n### Actual behavior\r\n\r\nThe objectMapper parameter of the \r\n```java\r\n public ObjectWriter apply(ObjectMapper objectMapper, Type type)\r\n```\r\nseems to be corrupted or I don't know what's wrong with it.\r\n\r\nAs a result the MixIn has no effect. The \"class\" field should not be there\r\n\r\n```json\r\n{\r\n    \"bug2\": {\r\n        \"simpleBug\": {\r\n            \"class\": \"serialization.SimpleBug\",\r\n            \"name\": \"simple bug\"\r\n        },\r\n        \"bugs\": {\r\n            \"bug2\": {\r\n                \"class\": \"serialization.SimpleBug\",\r\n                \"name\": \"bug3\"\r\n            }\r\n        },\r\n        \"name\": \"simple bug\"\r\n    },\r\n    \"bug1\": {\r\n        \"name\": \"bug1\"\r\n    }\r\n}\r\n```\r\n\r\nI think the bug is tricky because of my object model. The SimpleBug class doesnt cause the bug. Only the ComplexeBug implementation. This is what I don t understand.\r\n\r\n### How to Reproduce?\r\n\r\n[bug.zip](https://github.com/quarkusio/quarkus/files/12137208/bug.zip)\r\n\r\nStart the application : \r\n\r\n1:  mvn compile quarkus:dev -Dquarkus.http.port=8085\r\n2: run that GET http method : http://localhost:8085/hello/bug\r\n\r\nThe response is buggy : \r\n```json\r\n{\r\n    \"bug2\": {\r\n        \"simpleBug\": {\r\n            \"class\": \"serialization.SimpleBug\",\r\n            \"name\": \"simple bug\"\r\n        },\r\n        \"bugs\": {\r\n            \"bug2\": {\r\n                \"class\": \"serialization.SimpleBug\",\r\n                \"name\": \"bug3\"\r\n            }\r\n        },\r\n        \"name\": \"simple bug\"\r\n    },\r\n    \"bug1\": {\r\n        \"name\": \"bug1\"\r\n    }\r\n}\r\n```\r\n\r\nThere is 3 ways to get around the bug : \r\n\r\n1 : \r\nIn BuggyService, replace the line 27 : \r\n```java\r\nmapper.writeValueAsString(complexBug);\r\n```\r\nby \r\n```java \r\nnew ObjectMapper().writeValueAsString(complexBug);\r\n```\r\n\r\n2: \r\nIn BugResource line 46, replace the line \r\n```java\r\nreturn objectMapper.addMixIn(Buggy.class, NoTypes.class).writer();\r\n```\r\nby\r\n```java\r\nreturn new ObjectMapper().addMixIn(Buggy.class, NoTypes.class).writer();\r\n```\r\n\r\n\r\n3 : \r\nIn BuggyService, replace the line 27 : \r\n```java\r\nmapper.writeValueAsString(complexBug);\r\n```\r\nby \r\n```java \r\nobjectMapper.writeValueAsString(new SimpleBug(\"bug\"));\r\n```\r\n\r\nThen run the http GET request : \r\n\r\n```json\r\n{\r\n    \"bug2\": {\r\n        \"simpleBug\": {\r\n            \"name\": \"simple bug\"\r\n        },\r\n        \"bugs\": {\r\n            \"bug2\": {\r\n                \"name\": \"bug3\"\r\n            }\r\n        },\r\n        \"name\": \"simple bug\"\r\n    },\r\n    \"bug1\": {\r\n        \"name\": \"bug1\"\r\n    }\r\n}\r\n```\r\n\r\nThe MixIn has been applied but none of these 3 workaround is acceptable.\r\nThe MixIn should be applied without the need to reinstanciate the ObjectMapper (1 and 2) and with both SimpleBug and ComplexeBug classes. (3)\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows 10\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17\" 2021-09-14 OpenJDK Runtime Environment (build 17+35-2724) OpenJDK 64-Bit Server VM (build 17+35-2724, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nN/A\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven home: C:\\dev\\apache-maven-3.8.2\r\n\r\n### Additional information\r\n\r\nI use lombok. May be you will need to install the plugin if you use and IDE",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34934/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34934/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

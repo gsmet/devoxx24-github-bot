@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31319",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31319/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31319/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31319/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31319",
+  "id": 1593437865,
+  "node_id": "I_kwDOCFbutM5e-e6p",
+  "number": 31319,
+  "title": "`quarkus create app` uses wrong platform when using `--extension`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1800003265,
+      "node_id": "MDU6TGFiZWwxODAwMDAzMjY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devtools",
+      "name": "area/devtools",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues/PR related to maven, gradle, platform and cli tooling/plugins"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-02-21T12:58:57Z",
+  "updated_at": "2023-02-23T14:09:27Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe have a custom Quarkus platform and we use `quarkus create app` to generate projects based on this platform. (We have a corresponding registry registered in the `~/.quarkus/config.yaml` file to achieve this.)\r\n\r\nWhen generating a new project without specifying any additional extensions (i.e. without adding the `-x` or `--extension` option), the project is generated as expected. But as soon as the `-x` option is added to add a specific extension, something unexpected happens: The generated project's `pom.xml` file refers to the Quarkus BOM rather than our platform's own BOM.\r\n\r\nThe reason appears to be that the logic in `CreateProjectCommandHandler` includes the Quarkus core extension origin, when determining the extension origins for the extensions to be added. This is by design as can be seen in the comment of the code: https://github.com/quarkusio/quarkus/blob/6cced964632d3a6b7710f73808906dbaa4f0f704/independent-projects/tools/devtools-common/src/main/java/io/quarkus/devtools/commands/handlers/CreateProjectCommandHandler.java#L205-L212\r\n\r\nOn line 100 in the following loop over the origins the main catalog is first set to our own catalog (based on the RHS of the `if` condition), which would be correct. On the second loop iteration the main catalog is then overwritten with the Quarkus core catalog (since the LHS of the `if` condition evaluates to `true`): https://github.com/quarkusio/quarkus/blob/6cced964632d3a6b7710f73808906dbaa4f0f704/independent-projects/tools/devtools-common/src/main/java/io/quarkus/devtools/commands/handlers/CreateProjectCommandHandler.java#L96-L105\r\n\r\nPlease also note that the extension which was specified via `--extension` is in fact in our own platform and not in the Quarkus platform. But even if it were part of the Quarkus core platform, I would still have expected that our own custom platform's BOM would have been used as the main catalog when generating the project.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31319/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31319/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

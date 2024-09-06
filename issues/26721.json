@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26721",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26721/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26721/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26721/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26721",
+  "id": 1304069525,
+  "node_id": "I_kwDOCFbutM5NuoWV",
+  "number": 26721,
+  "title": "RolesAllowed always giving 403 Forbidden",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-07-14T00:17:43Z",
+  "updated_at": "2022-07-14T12:00:43Z",
+  "closed_at": "2022-07-14T11:15:33Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI use an enum for the roles, and when I put the value in `@RolesAllowed`, when a user with the allowed roles tries to make a request, they receive a 403 error. I am using JWT authentication where the roles are one of the fields in the token. Each user can have a set of roles.\r\n\r\n### Expected behavior\r\n\r\nExecute the request if the role is allowed\r\n\r\n### Actual behavior\r\n\r\nHTTP 403 error is given\r\n\r\n### How to Reproduce?\r\n\r\nI am using Kotlin, `security-jpa`, `smallrye-resteasy-reactive` and `hibernate-reactive-panache` packages\r\n\r\nFor the user, I have the following structure:\r\n\r\n```Kotlin\r\n@Entity\r\n@UserDefinition\r\nclass User() {\r\n    constructor(name: String, email: String, password: String, roles: MutableSet<Role>) : this() {\r\n        this.name = name\r\n        this.email = email\r\n        this.password = password\r\n        this.roles = roles\r\n    }\r\n\r\n    @Id\r\n    @Username\r\n    lateinit var email: String\r\n\r\n    @Password\r\n    lateinit var password: String\r\n\r\n    lateinit var name: String\r\n\r\n    @Roles\r\n    @Enumerated(EnumType.STRING)\r\n    @ElementCollection(targetClass = Role::class, fetch = FetchType.EAGER)\r\n    lateinit var roles: MutableSet<Role>\r\n}\r\n```\r\n\r\nThe roles are as simple as \r\n```Kotlin\r\nconst val COMMERCIAL_ROLE = \"COMMERCIAL\"\r\nconst val UPLOADER_ROLE = \"UPLOADER\"\r\nconst val MANAGER_ROLE = \"MANAGER\"\r\nconst val ADMIN_ROLE = \"ADMIN\"\r\n\r\nenum class Role(@RolesValue val label: String) {\r\n        COMMERCIAL(COMMERCIAL_ROLE), // Regular user\r\n        UPLOADER(UPLOADER_ROLE),     // Can upload images\r\n        MANAGER(MANAGER_ROLE),       // Can add new users/clients\r\n        ADMIN(ADMIN_ROLE),           // Can attribute roles to users\r\n}\r\n```\r\n\r\nUsers are created as follows (using the enum):\r\n```Kotlin\r\nUser(\"Admin\", ADMIN_NAME, BcryptUtil.bcryptHash(ADMIN_PASS), mutableSetOf(Role.ADMIN))\r\n```\r\n\r\nAnd when protecting an endpoint, I use the string (which is the same as it is saved in the database):\r\n```Kotlin\r\n    @POST\r\n    @RolesAllowed(MANAGER_ROLE, ADMIN_ROLE)\r\n    fun registerClient(client: ClientDto): Uni<Response> {\r\n        return clientService.register(client)\r\n    }\r\n```\r\n\r\nIn the database, the `User_roles` table has the following:\r\n\r\n| User_email | roles |\r\n| ------------ | ------- |\r\n| admin      | ADMIN |\r\n\r\nBut if I login and try to access this endpoint, it just gives me a 403 error code\r\n\r\nThe JWT contains the following fields:\r\n\r\n```JSON\r\n{\r\n  \"iss\": \"https://localhost:8080\",\r\n  \"sub\": \"admin\",\r\n  \"roles\": [\r\n    \"ADMIN\"\r\n  ],\r\n  \"iat\": 1657757124,\r\n  \"exp\": 1657757424,\r\n  \"jti\": \"13bd5ec3-412a-44d3-9151-0f365699ad64\"\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux zirconium 5.18.9-zen1-1-zen #1 ZEN SMP PREEMPT_DYNAMIC Sat, 02 Jul 2022 21:03:08 +0000 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"18.0.1.1\" 2022-04-22\r\nOpenJDK Runtime Environment (build 18.0.1.1+2)\r\nOpenJDK 64-Bit Server VM (build 18.0.1.1+2, mixed mode)\r\n\r\n### Quarkus version or git rev\r\n\r\n2.10.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n```\r\n------------------------------------------------------------\r\nGradle 7.4.2\r\n------------------------------------------------------------\r\n\r\nBuild time:   2022-03-31 16:40:07 UTC\r\nRevision:     <unknown>\r\n\r\nKotlin:       1.5.31\r\nGroovy:       3.0.9\r\nAnt:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021\r\nJVM:          18.0.1.1 (Oracle Corporation 18.0.1.1+2)\r\nOS:           Linux 5.18.9-zen1-1-zen amd64\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26721/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26721/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

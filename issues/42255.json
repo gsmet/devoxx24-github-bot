@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42255",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42255/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42255/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42255/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42255",
+  "id": 2440885783,
+  "node_id": "I_kwDOCFbutM6RfPYX",
+  "number": 42255,
+  "title": "Microsoft Azure SQL Server Compatability with Quarkus 3.12.3",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2024-07-31T20:24:21Z",
+  "updated_at": "2024-08-26T13:45:45Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe are using Azure SQL Server in Azure Cloud, in which Microsoft manages the SQL server, and its versioning differs from that of the regular SQL Server; when I upgraded my project to the latest Quarkus 3.12.3, I saw the following error at startup.\r\n\r\nAdding quarkus.datasource.db-version=12.0.0 property works, but the Azure SQL server shouldn't have this issue.\r\n\r\n\r\nBelow is my version when I run this query \"Select @@version\"\r\nMicrosoft SQL Azure (RTM) - 12.0.2000.8 \r\n\tJun 19 2024 16:01:48 \r\n\tCopyright (C) 2022 Microsoft Corporation\r\n\r\nMy DB compatibility level is 160, which is the latest SQL server version.\r\n\r\n\r\nStartup Error\r\nCaused by: io.quarkus.runtime.configuration.ConfigurationException: Persistence unit '<default>' was configured to run with a database version of at least '13.0.0', but the actual version is '12.0.0'. Consider upgrading your database. Alternatively, rebuild your application with 'quarkus.datasource.db-version=12.0.0' (but this may disable some features and/or impact performance negatively).\r\n\r\n\r\n**Here are some notes from Microsoft**\r\n \r\nImp Note : The database engine version numbers for SQL Server and Azure SQL Database are not comparable with each other, and rather are internal build numbers for these separate products. The database engine for Azure SQL Database is based on the same code base as the SQL Server database engine. Most importantly, the database engine in Azure SQL Database always has the newest SQL database engine bits. Version 12 of Azure SQL Database is newer than version 15 of SQL Server.\r\n \r\n \r\nhttps://learn.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql-compatibility-level?view=sql-server-ver16\r\n \r\n \n\n### Expected behavior\n\nWe shouldn't have startup issue when using Azure SQL Database, Quarkus server server should start with adding quarkus.datasource.db-version=12.0.0\n\n### Actual behavior\n\nFailing with below error\r\n\r\nPersistence unit '<default>' was configured to run with a database version of at least '13.0.0', but the actual version is '12.0.0'. Consider upgrading your database. Alternatively, rebuild your application with 'quarkus.datasource.db-version=12.0.0' (but this may disable some features and/or impact performance negatively).\r\njava.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:113)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: jakarta.persistence.PersistenceException: [PersistenceUnit: <default>] Unable to build Hibernate SessionFactory\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.persistenceException(FastBootEntityManagerFactoryBuilder.java:129)\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:89)\r\n        at io.quarkus.hibernate.orm.runtime.FastBootHibernatePersistenceProvider.createEntityManagerFactory(FastBootHibernatePersistenceProvider.java:72)\r\n        at jakarta.persistence.Persistence.createEntityManagerFactory(Persistence.java:80)\r\n        at jakarta.persistence.Persistence.createEntityManagerFactory(Persistence.java:55)\r\n        at io.quarkus.hibernate.orm.runtime.JPAConfig$LazyPersistenceUnit.get(JPAConfig.java:154)\r\n        at io.quarkus.hibernate.orm.runtime.JPAConfig$1.run(JPAConfig.java:61)\r\n        ... 1 more\r\nCaused by: io.quarkus.runtime.configuration.ConfigurationException: Persistence unit '<default>' was configured to run with a database version of at least '13.0.0', but the actual version is '12.0.0'. Consider upgrading your database. Alternatively, rebuild your application with 'quarkus.datasource.db-version=12.0.0' (but this may disable some features and/or impact performance negatively).\r\n        at io.quarkus.hibernate.orm.runtime.service.QuarkusRuntimeInitDialectFactory.checkActualDbVersion(QuarkusRuntimeInitDialectFactory.java:70)\r\n        at io.quarkus.hibernate.orm.runtime.observers.QuarkusSessionFactoryObserverForDbVersionCheck.sessionFactoryCreated(QuarkusSessionFactoryObserverForDbVersionCheck.java:15)\r\n        at org.hibernate.internal.SessionFactoryObserverChain.sessionFactoryCreated(SessionFactoryObserverChain.java:35)\r\n        at org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:322)\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:87)\r\n        ... 6 more\r\n\n\n### How to Reproduce?\n\nUser Asure SQL with Quarkus 3.12.3\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42255/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42255/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

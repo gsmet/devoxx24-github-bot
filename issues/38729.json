@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38729",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38729/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38729/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38729/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38729",
+  "id": 2129819733,
+  "node_id": "I_kwDOCFbutM5-8nhV",
+  "number": 38729,
+  "title": "Programatically scheduled function via quartz not possible to disable if started in @PostConstruct of @Startup bean",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-02-12T10:20:49Z",
+  "updated_at": "2024-02-15T08:31:46Z",
+  "closed_at": "2024-02-12T10:44:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen using the quarkus-quartz extension and only having programatically scheduled functions that are started within the `@PostConstruct` of a `@Startup` bean the config `quarkus.scheduler.enabled=false` leads to an exception on startup.\n\n### Expected behavior\n\nNo exception and scheduler is disabled\n\n### Actual behavior\n\nQuarkus fails to start because with the following exception:\r\n`java.lang.IllegalStateException: Quartz scheduler is either explicitly disabled through quarkus.scheduler.enabled=false or no @Scheduled methods were found. If you only need to schedule a job programmatically you can force the start of the scheduler by setting 'quarkus.scheduler.start-mode=forced'.`\r\n\n\n### How to Reproduce?\n\n1. Init empty quarkus project with only dependency quarkus-quartz\r\n2. add `quarkus.scheduler.enabled=false` to application.properties\r\n3. Add a programatically scheduled method within a `@Startup` bean\r\ne.g.\r\n\r\n```\r\nimport io.quarkus.runtime.Startup;\r\nimport jakarta.annotation.PostConstruct;\r\nimport jakarta.enterprise.context.ApplicationScoped;\r\nimport jakarta.inject.Inject;\r\nimport org.quartz.Job;\r\nimport org.quartz.JobBuilder;\r\nimport org.quartz.JobDetail;\r\nimport org.quartz.JobExecutionContext;\r\nimport org.quartz.Scheduler;\r\nimport org.quartz.SchedulerException;\r\nimport org.quartz.SimpleScheduleBuilder;\r\nimport org.quartz.Trigger;\r\nimport org.quartz.TriggerBuilder;\r\n\r\nimport java.util.concurrent.atomic.AtomicInteger;\r\n\r\n@Startup\r\n@ApplicationScoped\r\npublic class CounterBean {\r\n    @Inject Scheduler scheduler;\r\n\r\n    private AtomicInteger counter = new AtomicInteger();\r\n\r\n    public int get() {\r\n        return counter.get();\r\n    }\r\n\r\n    void increment() {\r\n        counter.incrementAndGet();\r\n    }\r\n\r\n    @PostConstruct\r\n    void init() throws SchedulerException {\r\n        JobDetail job = JobBuilder.newJob(JobClass.class)\r\n                .withIdentity(\"programmatic\", \"default\")\r\n                .build();\r\n        Trigger trigger = TriggerBuilder.newTrigger()\r\n                .withIdentity(\"programmatic-trigger\", \"default\")\r\n                .startNow()\r\n                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(1).repeatForever())\r\n                .build();\r\n\r\n        scheduler.scheduleJob(job, trigger);\r\n    }\r\n\r\n    public static class JobClass implements Job {\r\n        @Inject CounterBean counterBean;\r\n\r\n        @Override public void execute(JobExecutionContext jobExecutionContext) {\r\n            System.out.println(\"programmatic schedule\");\r\n            counterBean.increment();\r\n        }\r\n    }\r\n}\r\n```\r\n\n\n### Output of `uname -a` or `ver`\n\nMINGW64_NT-10.0-19045 W62902 3.3.6-bec3d608-341.x86_64 2023-02-22 08:29 UTC x86_64 Msys\n\n### Output of `java -version`\n\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10)                   OpenJDK 64-Bit Server VM Temurin-17.0.6+10 (build 17.0.6+10, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.7.2 (but already in 2.16.12.Final)\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven 3.8.6\n\n### Additional information\n\nDoes not happen with quarkus scheduler, only with quartz.\r\nNot tested why, but with quarkus 2.16.12.Final everything works with `quarkus.scheduler.enabled=true`, in 3.7.2 this also seems to fail without the `quarkus.scheduler.start-mode=forced`.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38729/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38729/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

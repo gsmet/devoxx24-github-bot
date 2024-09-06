@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25644",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25644/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25644/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25644/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25644",
+  "id": 1239621423,
+  "node_id": "I_kwDOCFbutM5J4x8v",
+  "number": 25644,
+  "title": "Panache Reactive: Also provide singleResultOptional() for ansynchronous PanacheQueries",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-05-18T08:37:18Z",
+  "updated_at": "2022-07-15T13:53:57Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nI wanted to port existing code in a project which uses Panache repositories to use reactive Panache repositories.\r\n\r\nWhen writing synchronous Panache queries I have the option to fetch the result via the `singleResultOptional()` method.\r\nI use this when I know I only expect max. 1 result, but also could find no result for my query, e.g. when I search for an object with a specific unique identifier.\r\n\r\nUnfortunately the reactive Panache query doesn't provide the `singleResultOptional()` fetch method. Only `singleResult()` and `firstResult()` are available.\r\n\r\n`singleResult()` would throw a `NoResultException` when no row was returned for my query, but I expect so sometimes find no results for my query.  \r\n`firstResult()` would not throw a `NonUniqueResultException` if 2 ore more rows were found for my query, but I would like to see an exception being throws, if my query were to return more than 1 result.\r\n\r\nI would prefer there being an option like with synchronous queries, that will throw a `NonUniqueResultException` if 2 or more rows are returned, but return an `Optional` or `null` when no result was found.\r\n\r\n### Implementation ideas\r\n\r\nCurrently the `CommonPanacheQueryImpl` uses Hibernate Mutiny queries to execute it's queries.  \r\nFor the Panache query fetch option `singleResult()` Munity's `getSingleResult()` will be called, which will both throw the `NoResultException` and `NonUniqueResultException` that are expected for the Panache `singleResult()`.\r\n\r\nFor an `singleResultOptional()` fetch method Munity's `getSingleResultOrNull()` could be used, which will not throw a `NoResultException` (but return `null` instead), and still will throw a `NonUniqueResultException` if 2 or more rows are returned by the query.  \r\nThe return value can be returned as-is, when `singleResultOptional()` should return `null` when no row was found or the result can be wrapped in an `Optional.ofNullable()` to have the same signature as the method of a synchronous Panache query. \r\n\r\nAlternatively `singleResultOptional()` can be implemented analog to the synchronous `singleResultOptional()`, which executes the query with a `maxResults` limit of 2 and checks that only 1 result was actually found, throwing a `NonUniqueResultException` otherwise. ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25644/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25644/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

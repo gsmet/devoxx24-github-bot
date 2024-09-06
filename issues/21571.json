@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21571",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21571/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21571/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21571/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21571",
+  "id": 1058571810,
+  "node_id": "I_kwDOCFbutM4_GIYi",
+  "number": 21571,
+  "title": "JWT Authorization skipped for POST with body",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 26,
+  "created_at": "2021-11-19T14:10:53Z",
+  "updated_at": "2021-11-22T13:57:42Z",
+  "closed_at": "2021-11-22T13:41:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe JWT authorization is skipped on an endpoint with a body.\r\n\r\n```\r\n    @POST\r\n    @Path(\"/secured/bugged\")\r\n    @RolesAllowed({\"User\"})\r\n    public Response helloSecured(MyRequest req) {\r\n        System.out.println(\"You shouldn't be here\");\r\n        System.out.println(req);\r\n        return Response.ok(\"{\\\"message\\\":\\\"you shouldn't be here\\\"}\").build();\r\n    }\r\n    \r\n    private static class MyRequest {\r\n        public String name;\r\n    }\r\n```\r\n\r\n```\r\n$ curl -X POST -H \"Content-Type: application/json\" -i http://localhost:8080/hello/secured/bugged\r\nHTTP/1.1 200 OK\r\nContent-Type: application/json\r\ncontent-length: 35\r\n```\r\n\r\nWithout a body, it works correctly:\r\n\r\n```\r\n    @POST\r\n    @Path(\"/secured/works\")\r\n    @RolesAllowed({\"User\"})\r\n    public Response helloSecured() {\r\n        return Response.ok().build();\r\n    }\r\n```\r\n\r\n```\r\n$ curl -X POST -i http://localhost:8080/hello/secured/works\r\nHTTP/1.1 401 Unauthorized\r\nwww-authenticate: Bearer\r\ncontent-length: 0\r\n\r\n```\n\n### Expected behavior\n\nIt should return a 401 and doesn't allows access to the method\n\n### Actual behavior\n\nIt returns a 200 and continues into the endpoint method\n\n### How to Reproduce?\n\n```\r\n$ git clone git@github.com:Eldelshell/jwt-bug.git\r\n$ cd jwt-bug\r\n$ mvn clean install\r\n$ mvn quarkus:dev\r\n```\r\n...in another terminal...\r\n```\r\n$ curl -X POST -H \"Content-Type: application/json\" -i http://localhost:8080/hello/secured/bugged\r\n```\n\n### Output of `uname -a` or `ver`\n\nx86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.7\" 2020-04-14\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.4.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.6.3\n\n### Additional information\n\nWhen calling an endpoint without a body argument the logs show:\r\n\r\n```\r\n2021-11-19 14:13:14,990 DEBUG [io.sma.jwt.auth] (vert.x-eventloop-thread-12) SRJWT06000: tokenHeaderName = Authorization\r\n2021-11-19 14:13:14,990 DEBUG [io.sma.jwt.auth] (vert.x-eventloop-thread-12) SRJWT06005: Authorization header was null\r\n2021-11-19 14:13:15,011 DEBUG [io.qua.res.runtime] (executor-thread-0) Create constructor: public io.quarkus.resteasy.runtime.SecurityContextFilter()\r\n2021-11-19 14:13:15,013 DEBUG [org.jbo.res.res.i18n] (executor-thread-0) RESTEASY002315: PathInfo: /hello/secured/works\r\n```\r\n\r\nWhen calling the conflicting endpoint:\r\n\r\n```\r\n2021-11-19 14:13:53,516 DEBUG [io.sma.jwt.auth] (vert.x-eventloop-thread-0) SRJWT06000: tokenHeaderName = Authorization\r\n2021-11-19 14:13:53,518 DEBUG [io.sma.jwt.auth] (vert.x-eventloop-thread-0) SRJWT06005: Authorization header was null\r\n2021-11-19 14:13:53,522 DEBUG [org.jbo.res.res.i18n] (executor-thread-0) RESTEASY002315: PathInfo: /hello/secured/bugged\r\n2021-11-19 14:13:53,525 DEBUG [org.jbo.res.res.i18n] (executor-thread-0) Interceptor Context: org.jboss.resteasy.core.interception.jaxrs.ServerReaderInterceptorContext,  Method : proceed\r\n2021-11-19 14:13:53,528 DEBUG [org.jbo.res.res.i18n] (executor-thread-0) MessageBodyReader: org.jboss.resteasy.core.providerfactory.SortedKey\r\n2021-11-19 14:13:53,528 DEBUG [org.jbo.res.res.i18n] (executor-thread-0) MessageBodyReader: org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider\r\n2021-11-19 14:13:53,529 DEBUG [org.jbo.res.res.i18n] (executor-thread-0) Provider : org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider,  Method : readFrom\r\nYou shouldn't be here\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21571/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21571/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

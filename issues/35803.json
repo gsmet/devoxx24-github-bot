@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35803",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35803/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35803/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35803/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35803",
+  "id": 1885961051,
+  "node_id": "I_kwDOCFbutM5waXtb",
+  "number": 35803,
+  "title": "Native executable compiled with GraalVM fails to subscribe to Google Pub/Sub topic",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-09-07T14:00:39Z",
+  "updated_at": "2023-09-08T08:46:30Z",
+  "closed_at": "2023-09-08T08:44:54Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI create a new Google Pub/Sub project for Quarkus following exactly the tutorial available on https://docs.quarkiverse.io/quarkus-google-cloud-services/main/pubsub.html using 3.2.0 Final as quarkus version. The only small difference was in the subscription name, because I already had one and therefore, I just used it like\r\n`ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId, pubSubSubscription);`\r\nRunning the project on quarkus works like a charm, the subscriber works and messages are sent/received to/from the Pub/Sub subscription.\r\nMy problem comes when I try to build a native executable. I downloaded and installed Oracle GraalVM 20.0.2+9.1 and tried to build a native image. \r\n`mvnw --no-transfer-progress -f pom.xml -Pnative clean package -DskipTest`\r\nDue to following bug in GraalVM https://github.com/oracle/graal/issues/5868, I had to implement following workaround https://github.com/apache/camel-quarkus/issues/5006#issuecomment-1612648062\r\nProbably precisely because of that GraalVM bug, Google Pub/Sub rejects the subscriber request with invalid argument error.\r\nIs this really just a bug of GraalVM and I have to wait for the fix? Is there any different method/framework else I can use in order to make a PubSub subscriber working under Quarkus with a native build?\n\n### Expected behavior\n\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2023-09-07 15:56:42,364 INFO  [io.quarkus] (Quarkus Main Thread) pubsub-quickstart 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.2.0.Final) started in 2.860s. Listening on: http://localhost:8080\r\n2023-09-07 15:56:42,367 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2023-09-07 15:56:42,367 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, google-cloud-pubsub, resteasy-reactive, resteasy-reactive-jackson, smallrye-context-propagation, vertx]\r\n2023-09-07 15:59:36,450 INFO  [org.acm.PubSubResource] (executor-thread-1) Created subscriber\r\n2023-09-07 15:59:36,704 INFO  [org.acm.PubSubResource] (executor-thread-1) Subscriber running\n\n### Actual behavior\n\nC:\\source\\pubsub-quickstart\\target>pubsub-quickstart-1.0.0-SNAPSHOT-runner.exe\r\n__  ____  __  _____   ___  __ ____  ______\r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2023-09-07 15:40:38,096 INFO  [io.quarkus] (main) pubsub-quickstart 1.0.0-SNAPSHOT native (powered by Quarkus 3.2.0.Final) started in 0.086s. Listening on: http://0.0.0.0:8080\r\n2023-09-07 15:40:38,099 INFO  [io.quarkus] (main) Installed features: [cdi, google-cloud-pubsub, resteasy-reactive, resteasy-reactive-jackson, smallrye-context-propagation, vertx]\r\n2023-09-07 15:46:19,031 INFO  [org.acm.PubSubResource] (executor-thread-1) Created subscriber\r\n2023-09-07 15:46:19,051 INFO  [org.acm.PubSubResource] (executor-thread-1) Subscriber running\r\n2023-09-07 15:46:19,591 SEVERE [com.goo.clo.pub.v1.StreamingSubscriberConnection] (Subscriber-SE-1-0) terminated streaming with exception: com.google.api.gax.rpc.InvalidArgumentException: com.google.api.gax.rpc.InvalidArgumentException: io.grpc.StatusRuntimeException: INVALID_ARGUMENT: Request contains an invalid argument.\r\n        at com.google.api.gax.rpc.ApiExceptionFactory.createException(ApiExceptionFactory.java:92)\r\n        at com.google.api.gax.rpc.ApiExceptionFactory.createException(ApiExceptionFactory.java:41)\r\n        at com.google.cloud.pubsub.v1.StreamingSubscriberConnection$1.onFailure(StreamingSubscriberConnection.java:340)\n\n### How to Reproduce?\n\n1. Follow the tutorial https://docs.quarkiverse.io/quarkus-google-cloud-services/main/pubsub.html and check the project works\r\n2. Install Oracle GraalVM 20.0.2+9.1 and build an executable\r\n3. Try to run the executable\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\njava 20.0.1 2023-04-18\n\n### GraalVM version (if different from Java)\n\n20.0.2+9.1\n\n### Quarkus version or git rev\n\n3.2.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmvnw --no-transfer-progress -f pom.xml -Pnative clean package -DskipTest\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35803/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35803/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

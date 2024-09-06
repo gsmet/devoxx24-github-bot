@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34074",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34074/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34074/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34074/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34074",
+  "id": 1759440212,
+  "node_id": "I_kwDOCFbutM5o3u1U",
+  "number": 34074,
+  "title": "SecurityIdentity.getPrincipal will fail due to blocking when used with @TestSecurity & @RunOnVertxContext",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-06-15T19:40:19Z",
+  "updated_at": "2023-06-15T22:28:51Z",
+  "closed_at": "2023-06-15T22:28:51Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIf a test is annotated with @QuarkusTest, @TestSecurity & @RunOnVertxContext, and injected with SecurityIdentity, calling getPrincipal on the injected identity will fail due to attempting to block in a Vertx context.\r\n\r\n\r\n\n\n### Expected behavior\n\nSecurityIdentity.getPrincipal returns a principal\n\n### Actual behavior\n\nSecurityIdentity.getPrincipal throws an exception\n\n### How to Reproduce?\n\nRun the following test (this test can also be found as part of this project https://github.com/allertonm/quarkus-coroutine-interceptor-example/blob/main/src/test/kotlin/com/example/FooTest.kt)\r\n\r\n```\r\npackage com.example\r\n\r\nimport io.quarkus.security.identity.SecurityIdentity\r\nimport io.quarkus.test.junit.QuarkusTest\r\nimport io.quarkus.test.security.TestSecurity\r\nimport io.quarkus.test.vertx.RunOnVertxContext\r\nimport io.quarkus.test.vertx.UniAsserter\r\nimport jakarta.inject.Inject\r\nimport org.junit.jupiter.api.Test\r\n\r\n@QuarkusTest\r\n@RunOnVertxContext\r\n@TestSecurity(user = \"helmut\")\r\nclass FooTest {\r\n    @Inject\r\n    lateinit var securityIdentity: SecurityIdentity\r\n\r\n    @Test\r\n    fun test(asserter: UniAsserter) {\r\n        val principal1 = securityIdentity.principal\r\n        println(principal1.name)\r\n        asserter.execute {\r\n            val principal2 = securityIdentity.principal\r\n            println(principal2.name)\r\n        }\r\n        println(\"Hello\")\r\n    }\r\n}\r\n```\r\n\r\nRunning this test will throw the following exception\r\n\r\n```\r\nThe current thread cannot be blocked: vert.x-eventloop-thread-2\r\njava.lang.IllegalStateException: The current thread cannot be blocked: vert.x-eventloop-thread-2\r\n\tat io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:30)\r\n\tat io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n\tat io.smallrye.mutiny.groups.UniAwait.indefinitely(UniAwait.java:46)\r\n\tat io.quarkus.security.runtime.SecurityIdentityAssociation.getIdentity(SecurityIdentityAssociation.java:77)\r\n\tat io.quarkus.test.security.DelegateSecurityIdentityAssociation_ClientProxy.getIdentity(Unknown Source)\r\n\tat io.quarkus.test.security.TestIdentityAssociation.getIdentity(TestIdentityAssociation.java:72)\r\n\tat io.quarkus.test.security.TestIdentityAssociation_ClientProxy.getIdentity(Unknown Source)\r\n\tat io.quarkus.security.runtime.SecurityIdentityProxy.getPrincipal(SecurityIdentityProxy.java:24)\r\n\tat io.quarkus.security.runtime.SecurityIdentityProxy_ClientProxy.getPrincipal(Unknown Source)\r\n\tat com.example.FooTest.test(FooTest.kt:20)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.test.vertx.RunOnVertxContextTestMethodInvoker$RunTestMethodOnContextHandler.doRun(RunOnVertxContextTestMethodInvoker.java:149)\r\n\tat io.quarkus.test.vertx.RunOnVertxContextTestMethodInvoker$RunTestMethodOnContextHandler.handle(RunOnVertxContextTestMethodInvoker.java:138)\r\n\tat io.quarkus.test.vertx.RunOnVertxContextTestMethodInvoker$RunTestMethodOnContextHandler.handle(RunOnVertxContextTestMethodInvoker.java:109)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\n\n### Output of `uname -a` or `ver`\n\nDarwin M-L10KJGH6 22.5.0 Darwin Kernel Version 22.5.0: Mon Apr 24 20:51:50 PDT 2023; root:xnu-8796.121.2~5/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 LTS OpenJDK Runtime Environment Corretto-17.0.7.7.1 (build 17.0.7+7-LTS) OpenJDK 64-Bit Server VM Corretto-17.0.7.7.1 (build 17.0.7+7-LTS, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.1.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34074/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34074/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27354",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27354/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27354/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27354/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27354",
+  "id": 1342802661,
+  "node_id": "I_kwDOCFbutM5QCYrl",
+  "number": 27354,
+  "title": "can't inject @RequestScoped bean in ResteasyReactiveClientResponseFilter - javax.enterprise.context.ContextNotActiveException",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 22,
+  "created_at": "2022-08-18T09:09:46Z",
+  "updated_at": "2023-06-02T11:40:42Z",
+  "closed_at": "2022-10-18T15:09:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nOn Quarkus resteasy reactive with a reactive rest client to make an external HTTP call.\r\n\r\nIt seems that the requestContext is not active when using a ResteasyReactiveClientResponseFilter \r\n\r\nI made a simple project to reproduce this issue :  \r\nhttps://github.com/npoirey/quarkus_bugreport_reactiveclientfilter\r\n\r\nInjecting a RequestScopedBeam works on a ResteasyReactiveClientRequestFilter but fails on a ResteasyReactiveClientResponseFilter \r\n\r\nA similar bug was reported and fixed for the non reactive quarkus http client : https://github.com/quarkusio/quarkus/issues/8538\r\nbut this doesn't work on the reactive version\n\n### Expected behavior\n\nmy 2 filters should work and print in console \r\n```\r\nMyRequestFilter\r\n1\r\nMyResponseFilter\r\n1\r\n```\n\n### Actual behavior\n\ninjecting the bean works in the request filter but fail with stacktrace on the response filter:\r\n\r\n```\r\nMyRequestFilter\r\n1\r\nMyResponseFilter\r\n2022-08-18 10:58:51,006 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-0) HTTP Request to /hello failed, error id: b683fec2-0839-4c3b-92dc-bbfb8c314c87-1: javax.enterprise.context.ContextNotActiveException: RequestScoped context was not active when trying to obtain a bean instance for a client proxy of CLASS bean [class=org.acme.MyRequestScopedBean, id=4c0d454954d7fcba5081c8479a45d86d4c28035e]\r\n\t- you can activate the request context for a specific method using the @ActivateRequestContext interceptor binding\r\n\tat io.quarkus.arc.impl.ClientProxies.getDelegate(ClientProxies.java:53)\r\n\tat org.acme.MyRequestScopedBean_ClientProxy.arc$delegate(Unknown Source)\r\n\tat org.acme.MyRequestScopedBean_ClientProxy.getCounter(Unknown Source)\r\n\tat org.acme.MyResponseFilter.filter(MyResponseFilter.java:18)\r\n\tat org.acme.MyResponseFilter_Subclass.filter$$superforward1(Unknown Source)\r\n\tat org.acme.MyResponseFilter_Subclass$$function$$4.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:53)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:51)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:40)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat org.acme.MyResponseFilter_Subclass.filter(Unknown Source)\r\n\tat org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientResponseFilter.filter(ResteasyReactiveClientResponseFilter.java:10)\r\n\tat org.acme.MyResponseFilter_Subclass.filter$$superforward1(Unknown Source)\r\n\tat org.acme.MyResponseFilter_Subclass$$function$$3.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:53)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:51)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:40)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat org.acme.MyResponseFilter_Subclass.filter(Unknown Source)\r\n\tat org.jboss.resteasy.reactive.client.handlers.ClientResponseFilterRestHandler.handle(ClientResponseFilterRestHandler.java:20)\r\n\tat org.jboss.resteasy.reactive.client.handlers.ClientResponseFilterRestHandler.handle(ClientResponseFilterRestHandler.java:9)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.invokeHandler(AbstractResteasyReactiveContext.java:218)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:140)\r\n\tat org.jboss.resteasy.reactive.client.impl.RestClientRequestContext$1.lambda$execute$0(RestClientRequestContext.java:276)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:500)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n```\n\n### How to Reproduce?\n\nstart the example project at https://github.com/npoirey/quarkus_bugreport_reactiveclientfilter\r\n\r\nnavigate to localhost:8080/hello\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.11.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63) Maven home: C:\\Users\\npoirey\\.m2\\wrapper\\dists\\apache-maven-3.8.6-bin\\67568434\\apache-maven-3.8.6   Java version: 11.0.15, vendor: Eclipse Adoptium, runtime: C:\\sources\\products\\OpenJDK11U_11.0.15_10 Default locale: en_US, platform encoding: Cp1252 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27354/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27354/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

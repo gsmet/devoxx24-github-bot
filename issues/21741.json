@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21741",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21741/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21741/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21741/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21741",
+  "id": 1064649122,
+  "node_id": "I_kwDOCFbutM4_dUGi",
+  "number": 21741,
+  "title": "JAVA AZURE Module client creation fails using Quarkus native binary (Graavlvm) ",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2021-11-26T15:55:47Z",
+  "updated_at": "2021-12-02T13:38:13Z",
+  "closed_at": "2021-12-02T13:38:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nCreation of module client using JAVA Microsoft Azure sdk with Quarkus native binary fails . Below is the code snippet\r\n\r\n```\r\n ModuleClient moduleSenderClient = ModuleClient.createFromEnvironment(IotHubClientProtocol.AMQPS);\r\n moduleSenderClient.open();\r\n```\r\n\r\nNOTE the same code works when using a JVM based binary.\r\n\r\nBelow is the exception trace:\r\n\r\n```\r\n2021-10-06T23:05:27.304627ZCaused by: java.lang.RuntimeException: Could not load platform constants for ProtocolFamily\r\n2021-10-06T23:05:27.304636Z at jnr.constants.platform.ConstantResolver.getConstants(ConstantResolver.java:227)\r\n2021-10-06T23:05:27.304644Z at jnr.constants.platform.ConstantResolver.lookupAndCacheConstant(ConstantResolver.java:128)\r\n2021-10-06T23:05:27.304651Z at jnr.constants.platform.ConstantResolver.getConstant(ConstantResolver.java:116)\r\n2021-10-06T23:05:27.304676Z at jnr.constants.platform.ConstantResolver.longValue(ConstantResolver.java:179)\r\n2021-10-06T23:05:27.304684Z at jnr.constants.platform.ProtocolFamily.intValue(ProtocolFamily.java:48)\r\n2021-10-06T23:05:27.304691Z at jnr.unixsocket.SockAddrUnix.setFamily(SockAddrUnix.java:55)\r\n2021-10-06T23:05:27.304699Z at jnr.unixsocket.UnixSocketAddress.<init>(UnixSocketAddress.java:48)\r\n2021-10-06T23:05:27.304733Z at com.microsoft.azure.sdk.iot.device.hsm.HttpsHsmClient.sendHttpRequestUsingUnixSocket.connect(HttpsHsmClient.java:238)\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\nModule client should be created and opened successfully.\r\n\r\n### Actual behavior\r\n\r\nModule client creation fails with below error;\r\n\r\n```\r\n2021-10-06T23:05:27.304627ZCaused by: java.lang.RuntimeException: Could not load platform constants for ProtocolFamily\r\n2021-10-06T23:05:27.304636Z at jnr.constants.platform.ConstantResolver.getConstants(ConstantResolver.java:227)\r\n2021-10-06T23:05:27.304644Z at jnr.constants.platform.ConstantResolver.lookupAndCacheConstant(ConstantResolver.java:128)\r\n2021-10-06T23:05:27.304651Z at jnr.constants.platform.ConstantResolver.getConstant(ConstantResolver.java:116)\r\n2021-10-06T23:05:27.304676Z at jnr.constants.platform.ConstantResolver.longValue(ConstantResolver.java:179)\r\n2021-10-06T23:05:27.304684Z at jnr.constants.platform.ProtocolFamily.intValue(ProtocolFamily.java:48)\r\n2021-10-06T23:05:27.304691Z at jnr.unixsocket.SockAddrUnix.setFamily(SockAddrUnix.java:55)\r\n2021-10-06T23:05:27.304699Z at jnr.unixsocket.UnixSocketAddress.<init>(UnixSocketAddress.java:48)\r\n2021-10-06T23:05:27.304733Z at com.microsoft.azure.sdk.iot.device.hsm.HttpsHsmClient.sendHttpRequestUsingUnixSocket.connect(HttpsHsmClient.java:238)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nhttps://github.com/prashantg077/quarkusBugsReproducersPras\r\n\r\nDownload & unzip the project . \r\nImport maven project.\r\n\r\nAlso , there will be a Dockerfile.jvm for JVM binary and Dockerfile.native for native binary.\r\n\r\nBuild the image using Dockerfile.native file.\r\n\r\nStart the project.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n11\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21741/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21741/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34161",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34161/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34161/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34161/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34161",
+  "id": 1765317362,
+  "node_id": "I_kwDOCFbutM5pOJry",
+  "number": 34161,
+  "title": "Improve GraalVM/Mandrel version detection",
+  "labels": [
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2023-06-20T12:36:18Z",
+  "updated_at": "2023-10-04T12:25:48Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "At the moment, we are parsing the output of `native-image --version` to determine the GraalVM/Mandrel version. This is brittle and needs to be adjusted.\r\n\r\n~~Note that we need to adjust things before the next minor version of GraalVM because the new format introduced in 23.0 forces the 23.0 version, which won't be true when 23.1 is released.~~ @jerboaa corrected me on this, my mistake.\r\n\r\nIn the GraalVM distribution, there is a `release` file at the root containing some properties with versions:\r\n```\r\nIMPLEMENTOR=\"Oracle Corporation\"\r\nJAVA_VERSION=\"17.0.7\"\r\nJAVA_VERSION_DATE=\"2023-04-18\"\r\nLIBC=\"gnu\"\r\nMODULES=\"java.base java.logging java.management jdk.internal.vm.ci java.compiler java.instrument jdk.jfr jdk.unsupported org.graalvm.sdk java.datatransfer java.xml java.prefs java.desktop java.transaction.xa java.sql jdk.management org.graalvm.truffle jdk.internal.vm.compiler com.oracle.graal.graal_enterprise com.oracle.svm.extraimage_enterprise java.security.sasl java.naming java.rmi java.management.rmi java.net.http java.scripting java.security.jgss java.sql.rowset java.xml.crypto java.se java.smartcardio jdk.accessibility jdk.internal.jvmstat jdk.attach jdk.charsets jdk.compiler jdk.crypto.ec jdk.crypto.cryptoki jdk.dynalink jdk.internal.ed jdk.editpad jdk.hotspot.agent jdk.httpserver jdk.incubator.foreign jdk.incubator.vector jdk.internal.le jdk.internal.opt jdk.internal.vm.compiler.management jdk.internal.vm.compiler.truffle.jfr jdk.jartool jdk.javadoc jdk.jcmd jdk.management.agent jdk.jconsole jdk.jdeps jdk.jdwp.agent jdk.jdi jdk.jlink jdk.jpackage jdk.jshell jdk.jsobject jdk.jstatd jdk.localedata jdk.management.jfr jdk.naming.dns jdk.naming.rmi jdk.net jdk.nio.mapmode jdk.random jdk.sctp jdk.security.auth jdk.security.jgss jdk.unsupported.desktop jdk.xml.dom jdk.zipfs org.graalvm.extraimage.builder org.graalvm.js.scriptengine org.graalvm.locator\"\r\nOS_ARCH=\"x86_64\"\r\nOS_NAME=\"Linux\"\r\nSOURCE=\".:git:8ed58a0062e6 open:git:64e1e8a15e62 labsjdk-builder:6fdba7be9f6310a40fce95618f0a2195d0cbf183 compiler:f9ef31f0c872872f7008ae771540f3020223414c graal-enterprise:4d30240e899ca78e72314883702155c0ffd28030 graal-js:940f9a35184ed498c66f156bd9f7adc99a3cec97 graal-microservices:4d30240e899ca78e72314883702155c0ffd28030 java-benchmarks:f9ef31f0c872872f7008ae771540f3020223414c regex:f9ef31f0c872872f7008ae771540f3020223414c sdk:f9ef31f0c872872f7008ae771540f3020223414c substratevm:f9ef31f0c872872f7008ae771540f3020223414c substratevm-enterprise:4d30240e899ca78e72314883702155c0ffd28030 substratevm-enterprise-gcs:c55803e351323c2e16a4689700cb152afbe114eb tools:f9ef31f0c872872f7008ae771540f3020223414c tools-enterprise:4d30240e899ca78e72314883702155c0ffd28030 truffle:f9ef31f0c872872f7008ae771540f3020223414c vm:f9ef31f0c872872f7008ae771540f3020223414c vm-enterprise:4d30240e899ca78e72314883702155c0ffd28030\"\r\nGRAALVM_VERSION=\"23.0.0\"\r\nCOMMIT_INFO={\"compiler\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090907, \"commit.rev\": \"f9ef31f0c872872f7008ae771540f3020223414c\"}, \"graal-enterprise\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090953, \"commit.rev\": \"4d30240e899ca78e72314883702155c0ffd28030\"}, \"graal-js\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090643, \"commit.rev\": \"940f9a35184ed498c66f156bd9f7adc99a3cec97\"}, \"graal-microservices\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090953, \"commit.rev\": \"4d30240e899ca78e72314883702155c0ffd28030\"}, \"java-benchmarks\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090907, \"commit.rev\": \"f9ef31f0c872872f7008ae771540f3020223414c\"}, \"regex\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090907, \"commit.rev\": \"f9ef31f0c872872f7008ae771540f3020223414c\"}, \"sdk\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090907, \"commit.rev\": \"f9ef31f0c872872f7008ae771540f3020223414c\"}, \"substratevm\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090907, \"commit.rev\": \"f9ef31f0c872872f7008ae771540f3020223414c\"}, \"substratevm-enterprise\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090953, \"commit.rev\": \"4d30240e899ca78e72314883702155c0ffd28030\"}, \"substratevm-enterprise-gcs\": {\"commit.committer\": \"Christian Haeubl <christian.haeubl@oracle.com>\", \"commit.committer-ts\": 1674227214, \"commit.rev\": \"c55803e351323c2e16a4689700cb152afbe114eb\"}, \"tools\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090907, \"commit.rev\": \"f9ef31f0c872872f7008ae771540f3020223414c\"}, \"tools-enterprise\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090953, \"commit.rev\": \"4d30240e899ca78e72314883702155c0ffd28030\"}, \"truffle\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090907, \"commit.rev\": \"f9ef31f0c872872f7008ae771540f3020223414c\"}, \"vm\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090907, \"commit.rev\": \"f9ef31f0c872872f7008ae771540f3020223414c\"}, \"vm-enterprise\": {\"commit.committer\": \"Gilles Duboscq <gilles.m.duboscq@oracle.com>\", \"commit.committer-ts\": 1686090953, \"commit.rev\": \"4d30240e899ca78e72314883702155c0ffd28030\"}}\r\ncomponent_catalog=\"rest://gds.oracle.com/api/20220101/|uln://linux-update.oracle.com/rpc/api/?linux=generic_linux_x86_64_graalvm_jdk17&macos=macos_64_graalvm_jdk17&windows=windows_64_graalvm_jdk17|https://www.graalvm.org/component-catalog/v2/graal-updater-ee-component-catalog-java17.properties\"\r\n```\r\n\r\nWhat is unsure is if they will continue to populate the `GRAALVM_VERSION` property now that they switched to using the JDK version scheme but I suppose we won't know that before the next GraalVM release.\r\n\r\n@zakkak @Karm @jerboaa @galderz  could any of you add a comment with the Mandrel output for it? Also do you have any idea how it will evolve in the future and if it's a good idea to use this file?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34161/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34161/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

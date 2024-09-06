@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32672",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32672/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32672/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32672/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32672",
+  "id": 1669989784,
+  "node_id": "I_kwDOCFbutM5jigWY",
+  "number": 32672,
+  "title": "Cache API: gap analysis for rate limiting",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-04-16T14:17:15Z",
+  "updated_at": "2023-04-18T13:37:44Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nI am thinking of ways to leverage quarkus caching layer for the [rate limiter extension](https://github.com/quarkiverse/quarkus-bucket4j)\r\n\r\n**Rational**\r\nBucket4J, the underlying library for the rate limiter support a multitude of backend (infinispan, ignite, redis ...)\r\nInstead of creating one extension addon for each one of them, I was thinking of creating a custom adapter based on quarkus cache, so that the rate limiter support whatever backend the cache support.\r\n\r\n**Expiration**\r\nThe first blocker for this is that the expiration for this use case is typically based on the time needed for refilling the bucket.\r\n\r\n**Replace value**\r\nThe second blocker is that this would requires an atomic put / compute method to replace an entry\r\n\r\n### Implementation ideas\r\n\r\nsolution 1)\r\n\r\nsimply allow to set the expiry when updating an element in the cache\r\n(it seems this is not supported by caffeine)\r\n\r\nsolution 2)\r\n\r\nallow to provide a cache wide Expiry policy which compute the expiration based on the payload as it is already possible in caffeine\r\n\r\n```\r\n    public CaffeineProxyManager(Caffeine<? super K, ? super RemoteBucketState> builder, Duration keepAfterRefillDuration, ClientSideConfig clientSideConfig) {\r\n        super(clientSideConfig);\r\n        this.cache = builder\r\n            .expireAfter(new Expiry<K, RemoteBucketState>() {\r\n                @Override\r\n                public long expireAfterCreate(K key, RemoteBucketState bucketState, long currentTime) {\r\n                    long currentTimeNanos = getCurrentTime(clientSideConfig);\r\n                    long nanosToFullRefill = bucketState.calculateFullRefillingTime(currentTimeNanos);\r\n                    return nanosToFullRefill + keepAfterRefillDuration.toNanos();\r\n                }\r\n\r\n                @Override\r\n                public long expireAfterUpdate(K key, RemoteBucketState bucketState, long currentTime, long currentDuration) {\r\n                    long currentTimeNanos = getCurrentTime(clientSideConfig);\r\n                    long nanosToFullRefill = bucketState.calculateFullRefillingTime(currentTimeNanos);\r\n                    return nanosToFullRefill + keepAfterRefillDuration.toNanos();\r\n                }\r\n\r\n                @Override\r\n                public long expireAfterRead(K key, RemoteBucketState bucketState, long currentTime, long currentDuration) {\r\n                    long currentTimeNanos = getCurrentTime(clientSideConfig);\r\n                    long nanosToFullRefill = bucketState.calculateFullRefillingTime(currentTimeNanos);\r\n                    return nanosToFullRefill + keepAfterRefillDuration.toNanos();\r\n                }\r\n            })\r\n            .build();\r\n    }\r\n```\r\nThis way depending of the backend we could either set a cache wide policy (suitable for caffeine) or leverage the policy to compute the expiration before updating an item and send it to the backend.\r\n\r\n\r\nFor reference this is the [current bucket4J adapter for caffeine](https://github.com/bucket4j/bucket4j/blob/master/bucket4j-caffeine/src/main/java/io/github/bucket4j/caffeine/CaffeineProxyManager.java)\r\n\r\nand [the one for redis](https://github.com/bucket4j/bucket4j/blob/master/bucket4j-redis/src/main/java/io/github/bucket4j/redis/jedis/cas/JedisBasedProxyManager.java)\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32672/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32672/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

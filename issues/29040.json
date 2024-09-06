@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29040",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29040/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29040/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29040/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29040",
+  "id": 1434767830,
+  "node_id": "I_kwDOCFbutM5VhNHW",
+  "number": 29040,
+  "title": "Sporadic «The current thread cannot be blocked» in graphql",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-11-03T14:35:27Z",
+  "updated_at": "2023-02-13T21:57:37Z",
+  "closed_at": "2023-02-13T21:55:42Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe are experiencing sporadic instances of \r\n```\r\njava.lang.IllegalStateException: The current thread cannot be blocked: vert.x-eventloop-thread-0\r\n\tat io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:30)\r\n\tat io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n\tat io.smallrye.mutiny.groups.UniAwait.indefinitely(UniAwait.java:46)\r\n\tat io.quarkus.security.runtime.SecurityIdentityAssociation.getIdentity(SecurityIdentityAssociation.java:77)\r\n\tat io.quarkus.security.runtime.SecurityIdentityAssociation_ClientProxy.getIdentity(Unknown Source)\r\n        ...\r\n```\r\nin our graphql-application. \r\n\r\nThe first code path getting this is \r\n\r\n```java\r\npublic class LoggingEventingService implements EventingService {\r\n    @Override\r\n    public void afterExecute(Context context) {\r\n       var user = getUser();\r\n       // logging and something here...\r\n    }\r\n    private User getUser() {\r\n        return Optional.ofNullable(CDI.current().select(SecurityIdentity.class))\r\n                .map(Provider::get)\r\n                .map(SecurityIdentity::getPrincipal) // Here IllegalStateException is thrown\r\n                .map(User::from)\r\n                .orElseGet(() -> new UnknownUser());\r\n    }\r\n}\r\n```\r\n\r\nIn another application I moved `getUser` to `beforeExecute`, I think in relation to [issue 1455](https://github.com/smallrye/smallrye-graphql/issues/1455) but cannot find an explicit reference to it.\r\n\r\nThe other instance looks like \r\n```java\r\npublic class Service {\r\n    SecurityIdentity securityIdentity;\r\n    @Query\r\n    public OurUser innloggetBruker() {\r\n        return new OurUser(securityIdentity.getPrincipal());\r\n    }\r\n\r\n    public Uni<Something> something(@Source OurUser ou) {\r\n        return somerepo.getTokenForUser(ou.id())\r\n            .flatMap(token -> checkToken(token, innloggetBruker.id()));\r\n    }\r\n\r\n   private Uni<Something> checkToken(Token t, String userId) {\r\n     return securityIdentity.hasRole(\"admin\") ? something(...) : somethingElse(...); // Here IllegalStateException is thrown\r\n  }\r\n}\r\n```\r\n\r\nMost calls involving these paths execute successfully, only a few invocations fail.\r\n\r\n[Complete stacktraces](https://github.com/quarkusio/quarkus/files/9930142/stacktrace.txt)\n\n### Expected behavior\n\nNo instances of  java.lang.IllegalStateException: The current thread cannot be blocked.\n\n### Actual behavior\n\nSporadic  java.lang.IllegalStateException: The current thread cannot be blocked\n\n### How to Reproduce?\n\nSorry, have not managed to create a reproducer.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.13.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29040/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29040/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

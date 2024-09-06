@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22834",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22834/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22834/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22834/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22834",
+  "id": 1100274289,
+  "node_id": "I_kwDOCFbutM5BlNpx",
+  "number": 22834,
+  "title": "\"Enlisted connection used without active transaction\" during committing transactions with active async threads",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1273042002,
+      "node_id": "MDU6TGFiZWwxMjczMDQyMDAy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive",
+      "name": "area/reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2022-01-12T12:18:29Z",
+  "updated_at": "2022-10-31T07:19:24Z",
+  "closed_at": "2022-10-31T07:19:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi guys!\r\nI've found out recently that not all of my transactions are committed. The small investigation led me to believe there is a problem in the commit transaction process: when some of the async processing is not finished yet using CompletableStage/CompletableFuture, the transaction fails with the message \"Error trying to transactionCommit local transaction: Enlisted connection used without active transaction\". \r\nI've attached a small reproducer for you with a simple test to check this behavior.\r\n\r\nI know it's better to finish all async execution before committing the transaction. But there are cases when it's not under developer control. For example, in my project I have code like this:\r\n\r\n```\r\n@Transaction(REQUIRES_NEW)\r\npublic Optional<Integer> someMethod() {\r\n\tCompletableFuture<SomeResponse> timedResponse = new CompletableFuture<>();\r\n        try {\r\n            timedResponse = restClient.makeRequest().toCompletableFuture();\r\n            SomeResponse response = timedResponse.get(TIMEOUT_CONST, MILLISECONDS);\r\n\r\n            repository.persist(new Entity(response.getId));\r\n            return Optional.of(response.getId());\r\n        } catch (Exception ex) {\r\n            try {\r\n                // cancel rest request future if not completed yet\r\n                timedResponse.cancel(true);\r\n            } catch (Exception ignored) {}\r\n            return Optional.empty();\r\n        }\r\n}\r\n```\r\n\r\nIt's just some pseudo-code example of how hard it is to control async execution here.\r\nAnd from time to time I receive 500 exception during rest request (that is OK and expected). But the problem is that there are cases when I receive a warning \"commiting with 2 threads active!\" and right after this exception \"Enlisted connection used without active transaction\".\r\nPlease see the reproducer.\r\n\r\n### Expected behavior\r\n\r\nThe transaction is committed with a warning may be but without exception.\r\n\r\n### Actual behavior\r\n\r\nThe transaction is not committed with warning and exception \"Error trying to transactionCommit local transaction: Enlisted connection used without active transaction\"\r\n\r\n### How to Reproduce?\r\n\r\n[transaction_commit_fail.zip](https://github.com/quarkusio/quarkus/files/7854468/transaction_commit_fail.zip)\r\n\r\n1. Run TransactionCommitTest.test()\r\n2. Check that transaction is not committed and there is an exception in logs\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava version \"11.0.12\" 2021-07-20 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.6.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22834/reactions",
+    "total_count": 4,
+    "+1": 4,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22834/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

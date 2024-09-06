@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35280",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35280/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35280/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35280/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35280",
+  "id": 1842903775,
+  "node_id": "I_kwDOCFbutM5t2Hrf",
+  "number": 35280,
+  "title": "Zip filesystems consume a lot of memory on bootstrap",
+  "labels": [
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1520022286,
+      "node_id": "MDU6TGFiZWwxNTIwMDIyMjg2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/bootstrap",
+      "name": "area/bootstrap",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 26,
+  "created_at": "2023-08-09T10:05:38Z",
+  "updated_at": "2023-08-18T11:02:35Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "In dev mode, when bootstrapping the application, the Zip filesystems opened for the jar archives during bootstrap are consuming a lot of memory because they are keeping a `byte[]` header around.\r\n\r\nI'm not completely sure at which stage of the execution I'm at and if it's normal to have all these file systems open. But in any case, the fact that we are keeping a large `byte[]` around is problematic.\r\n\r\nFor reference:\r\n```\r\n    // Reads zip file central directory. Returns the file position of first\r\n    // CEN header, otherwise returns -1 if an error occurred. If zip->msg != NULL\r\n    // then the error was a zip format error and zip->msg has the error text.\r\n    // Always pass in -1 for knownTotal; it's used for a recursive call.\r\n    private byte[] initCEN() throws IOException {\r\n```\r\n\r\nAnd even more because we apparently keep several copies of them opened.\r\n\r\nFor the `groovy` jar, we end up with 2 instances of this byte array:\r\n\r\n![Screenshot from 2023-08-09 11-23-06](https://github.com/quarkusio/quarkus/assets/1279749/d49697db-0142-418c-969f-840e31df0ccf)\r\nand\r\n![Screenshot from 2023-08-09 11-49-44](https://github.com/quarkusio/quarkus/assets/1279749/b3951ffb-3c6c-4464-918b-0ac913a36e5f)\r\n\r\nFor the `quarkus-bootstrap-gradle-resolver` jar, it's even worse, it looks like we have 5 of them:\r\n\r\n![Screenshot from 2023-08-09 11-57-40](https://github.com/quarkusio/quarkus/assets/1279749/6808a454-621d-48cc-8575-1ea150c116d3)\r\n![Screenshot from 2023-08-09 11-57-51](https://github.com/quarkusio/quarkus/assets/1279749/39f21f3b-bb03-4bd6-bf5b-45c6afcf21d1)\r\n![Screenshot from 2023-08-09 11-58-02](https://github.com/quarkusio/quarkus/assets/1279749/b26958fd-07ef-484f-ae95-d22ee9b29b47)\r\n![Screenshot from 2023-08-09 11-58-11](https://github.com/quarkusio/quarkus/assets/1279749/29ed30fd-a830-4ba7-97fc-3f95cf18eb2e)\r\n![Screenshot from 2023-08-09 11-58-24](https://github.com/quarkusio/quarkus/assets/1279749/0103dfc6-330d-4912-b60a-f4abae856a10)\r\n\r\nI can't upload the dump file but I can make it available if people are interested.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35280/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35280/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

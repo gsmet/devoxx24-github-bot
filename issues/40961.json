@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40961",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40961/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40961/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40961/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40961",
+  "id": 2333428562,
+  "node_id": "I_kwDOCFbutM6LFUtS",
+  "number": 40961,
+  "title": "UnsatisfiedResolutionException with basic extension using Gradle and Kotlin",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2024-06-04T12:37:56Z",
+  "updated_at": "2024-06-08T15:46:33Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm trying to create a very simple Quarkus Extension using Gradle and Kotlin.\r\n\r\nThe extension is basic and just offer a CDI bean.\r\n```kotlin\r\nclass ExtensionProcessor {\r\n  @BuildStep\r\n  fun feature(): FeatureBuildItem {\r\n    return FeatureBuildItem(FEATURE)\r\n  }\r\n\r\n  @BuildStep\r\n  fun registerBeans(): AdditionalBeanBuildItem {\r\n    return AdditionalBeanBuildItem.builder()\r\n      .addBeanClass(ExampleService::class.java)\r\n      .build()\r\n  }\r\n\r\n  companion object {\r\n    private const val FEATURE = \"example-extension\"\r\n  }\r\n}\r\n```\r\n\r\nBuilding the project, I get a \r\n```\r\njakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type com.example.ExampleService and qualifiers [@Default]\r\n      \t- injection target: parameter 'exampleService' of com.example.application.ExampleResource constructor\r\n      \t- declared on CLASS bean [types=[com.example.application.ExampleResource, java.lang.Object], qualifiers=[@Default, @Any], target=com.example.application.ExampleResource]\r\n```\r\n\r\nIt works when I use Gradle + Java but not with Gradle + Kotlin. \r\n\r\n### How to Reproduce?\r\n\r\nI've created a sample repo to reproduce the error:\r\nhttps://github.com/cthiebault/quarkus-gradle-kotlin-extension\r\n\r\n- branch [maven-java](https://github.com/cthiebault/quarkus-gradle-kotlin-extension) (Maven + Java) builds fine\r\n  ```shell\r\n  git checkout maven\r\n  ./mvnw clean package \r\n  ```\r\n- branch [gradle-java](https://github.com/cthiebault/quarkus-gradle-kotlin-extension/tree/gradle-java) (Gradle + Java) builds fine\r\n  ```shell\r\n  git checkout gradle\r\n  ./gradlew build \r\n  ```\r\n- branch [gradle-kotlin](https://github.com/cthiebault/quarkus-gradle-kotlin-extension/tree/gradle-kotlin) \r\n  (Gradle + Kotlin) fails with the following error:\r\n  ```shell\r\n  git checkout gradle-kotlin\r\n  ./gradlew build\r\n  \r\n  > There was a failure while executing work items\r\n    > A failure occurred while executing io.quarkus.gradle.tasks.worker.BuildWorker\r\n      > io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        \t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: jakarta.enterprise.inject.spi.DeploymentException: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type com.example.ExampleService and qualifiers [@Default]\r\n        \t- injection target: parameter 'exampleService' of com.example.application.ExampleResource constructor\r\n        \t- declared on CLASS bean [types=[com.example.application.ExampleResource, java.lang.Object], qualifiers=[@Default, @Any], target=com.example.application.ExampleResource]\r\n        \tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1529)\r\n        \tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:332)\r\n        \tat io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:166)\r\n        \tat io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:488)\r\n        \tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n        \tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n        \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n        \tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n        \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n        \tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n        \tat org.jboss.threads.JBossThread.run(JBossThread.java:483)\r\n        Caused by: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type com.example.ExampleService and qualifiers [@Default]\r\n        \t- injection target: parameter 'exampleService' of com.example.application.ExampleResource constructor\r\n        \t- declared on CLASS bean [types=[com.example.application.ExampleResource, java.lang.Object], qualifiers=[@Default, @Any], target=com.example.application.ExampleResource]\r\n        \tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:519)\r\n        \tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:642)\r\n        \tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:317)\r\n        \t... 12 more\r\n    ```\r\n\r\n### Output of `java -version`\r\n\r\n21.0.2\r\n\r\n### Quarkus version or git rev\r\n\r\n3.11.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.6\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40961/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40961/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

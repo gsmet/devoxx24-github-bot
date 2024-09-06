@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20377",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20377/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20377/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20377/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20377",
+  "id": 1006161698,
+  "node_id": "I_kwDOCFbutM47-M8i",
+  "number": 20377,
+  "title": "Hibernate Validator: annotations on type parameters of nested classes are ignored (at least for value extractors)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1305687763,
+      "node_id": "MDU6TGFiZWwxMzA1Njg3NzYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-validator",
+      "name": "area/hibernate-validator",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Validator"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-09-24T07:19:58Z",
+  "updated_at": "2022-01-07T14:55:48Z",
+  "closed_at": "2022-01-07T14:55:47Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen nested classes are involved, Hibernate Validator seems unable to detect annotations on type parameters of those classes, e.g. `NestedContainerType<@NotBlank String>` or `implements ValueExtractor<NestedContainerType<@ExtractedValue ?>>`\r\n\r\nMoving the classes to the top-level fixes the problem.\r\n\r\n### Expected behavior\r\n\r\nWhen I declare a container type as a nested type, e.g. like this:\r\n\r\n```\r\npublic class NestedContainerTypeCustomValueExtractorTest {\r\n\r\n    // ...\r\n\r\n    public static class NestedContainerType<T> {\r\n\r\n        public T value;\r\n\r\n    }\r\n\r\n    @Singleton\r\n    public static class NestedContainerClassValueExtractor\r\n            implements ValueExtractor<NestedContainerType<@ExtractedValue ?>> {\r\n\r\n        @Override\r\n        public void extractValues(NestedContainerType<?> originalValue, ValueReceiver receiver) {\r\n            receiver.value(\"someName\", originalValue.value);\r\n        }\r\n    }\r\n\r\n}\r\n```\r\n\r\n... then I expect Hibernate Validator to detect the `@ExtractedValue` annotation on the custom value extractor.\r\n\r\n### Actual behavior\r\n\r\nException on startup, suggesting that Hibernate Validator does not see the `@ExtractedValue` annotation:\r\n\r\n```\r\njava.lang.ExceptionInInitializerError\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Class.java:398)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl.run(StartupActionImpl.java:215)\r\n        at io.quarkus.test.QuarkusUnitTest.beforeAll(QuarkusUnitTest.java:509)\r\n        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeBeforeAllCallbacks$10(ClassBasedTestDescriptor.java:381)\r\n        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeBeforeAllCallbacks(ClassBasedTestDescriptor.java:381)\r\n        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:205)\r\n        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:80)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:148)\r\n        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)\r\n        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)\r\n        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)\r\n        at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)\r\n        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)\r\n        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)\r\n        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)\r\n        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)\r\n        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)\r\n        at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)\r\n        at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)\r\n        at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:107)\r\n        at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)\r\n        at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)\r\n        at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)\r\n        at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)\r\n        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)\r\n        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:86)\r\n        at org.junit.platform.launcher.core.DefaultLauncherSession$DelegatingLauncher.execute(DefaultLauncherSession.java:86)\r\n        at org.junit.platform.launcher.core.SessionPerRequestLauncher.execute(SessionPerRequestLauncher.java:53)\r\n        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:188)\r\n        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:154)\r\n        at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:128)\r\n        at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:428)\r\n        at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)\r\n        at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:562)\r\n        at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:548)\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(ApplicationImpl.zig:236)\r\n        ... 46 more\r\nCaused by: javax.validation.valueextraction.ValueExtractorDefinitionException: HV000203: Value extractor type io.quarkus.hibernate.validator.test.valueextractor.NestedContainerTypeCustomValueExtractorTest$NestedContainerClassValueExtractor fails to declare the extracted type parameter using @ExtractedValue.\r\n        at org.hibernate.validator.internal.engine.valueextraction.ValueExtractorDescriptor.getExtractedTypeParameter(ValueExtractorDescriptor.java:108)\r\n        at org.hibernate.validator.internal.engine.valueextraction.ValueExtractorDescriptor.<init>(ValueExtractorDescriptor.java:49)\r\n        at org.hibernate.validator.internal.engine.AbstractConfigurationImpl.addValueExtractor(AbstractConfigurationImpl.java:271)\r\n        at org.hibernate.validator.internal.engine.AbstractConfigurationImpl.addValueExtractor(AbstractConfigurationImpl.java:80)\r\n        at io.quarkus.hibernate.validator.runtime.HibernateValidatorRecorder$2.created(HibernateValidatorRecorder.java:143)\r\n        at io.quarkus.arc.runtime.ArcRecorder.initBeanContainer(ArcRecorder.java:70)\r\n        at io.quarkus.deployment.steps.ArcProcessor$generateResources-1025303321.deploy_0(ArcProcessor$generateResources-1025303321.zig:128)\r\n        at io.quarkus.deployment.steps.ArcProcessor$generateResources-1025303321.deploy(ArcProcessor$generateResources-1025303321.zig:40)\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(ApplicationImpl.zig:194)\r\n        ... 46 more\r\n```\r\n\r\nNot this is not limited to `@ExtractedValue` or value extractors; if you don't declare a custom value extractor for the custom container type, constraint annotations on the extracted value (e.g. `NestedContainerType<@NotBlank String>`) will be ignored as well, instead of triggering an exception as expected because the value extractor cannot be found.\r\n\r\n### How to Reproduce?\r\n\r\nI'm going to add a disabled test as part of the PR for #20347. Look for `NestedContainerTypeCustomValueExtractorTest` in the codebase.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n```\r\nopenjdk version \"11.0.12\" 2021-07-20\r\nOpenJDK Runtime Environment Temurin-11.0.12+7 (build 11.0.12+7)\r\nOpenJDK 64-Bit Server VM Temurin-11.0.12+7 (build 11.0.12+7, mixed mode)\r\n```\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nN/A (using JVM mode)\r\n\r\n### Quarkus version or git rev\r\n\r\n2.3.0.CR1, f0aba85\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n```\r\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d)\r\nMaven home: /home/yrodiere/tools/sdkman/candidates/maven/current\r\nJava version: 11.0.12, vendor: Eclipse Foundation, runtime: /home/yrodiere/tools/java/jdk-11.0.12+7\r\nDefault locale: en_US, platform encoding: UTF-8\r\nOS name: \"linux\", version: \"5.13.6-200.fc34.x86_64\", arch: \"amd64\", family: \"unix\"\r\n```\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20377/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20377/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

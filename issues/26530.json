@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26530",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26530/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26530/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26530/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26530",
+  "id": 1292442957,
+  "node_id": "I_kwDOCFbutM5NCR1N",
+  "number": 26530,
+  "title": "Mutiny had to drop the following exception: (RECIPIENT_FAILURE,8191)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955124662,
+      "node_id": "MDU6TGFiZWwyOTU1MTI0NjYy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-sql-clients",
+      "name": "area/reactive-sql-clients",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-07-03T23:05:53Z",
+  "updated_at": "2022-07-06T12:16:45Z",
+  "closed_at": "2022-07-06T12:16:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMutiny throws an exception after persist about 1110 Reactive Panache Entity object in the Oracle database.\r\n\r\nThe same application works fine with Reactive Postgresql, the problem occurs with Oracle only.\r\n\r\nThis is the Reactive Panache Entity:\r\n\r\n```java\r\n@Entity\r\n@Table(name = \"AUDIT_TRACKING\")\r\npublic class Audit extends PanacheEntity{\r\n\r\n\tprivate static final Logger LOG = Logger.getLogger(Audit.class);\r\n\t\r\n\t@Column(name = \"TRANSACTION_NAME\")\r\n\tprivate String transactionName;\r\n\t\r\n\t@Column(name = \"TRANSACTION_URL\")\r\n\tprivate String transactionUrl;\r\n\r\n\tpublic String getTransactionName() {\r\n\t\treturn transactionName;\r\n\t}\r\n\r\n\tpublic void setTransactionName(String transactionName) {\r\n\t\tthis.transactionName = transactionName;\r\n\t}\r\n\r\n\tpublic String getTransactionUrl() {\r\n\t\treturn transactionUrl;\r\n\t}\r\n\r\n\tpublic void setTransactionUrl(String transactionUrl) {\r\n\t\tthis.transactionUrl = transactionUrl;\r\n\t}\r\n}\r\n```\r\n\r\nThe application is a Reactive Rest Jackson endpoint, and post an object in an Event Bus.\r\n\r\n```java\r\n@ApplicationScoped\r\n@Path(\"/audit\")\r\npublic class AuditResource {\r\n\r\n\tprivate static final Logger LOG = Logger.getLogger(AuditResource.class);\r\n\r\n\t@Inject\r\n\tEventBus bus;\r\n\r\n\t@POST\r\n\t@Path(\"/v1/audit-trail\")\r\n\t@Produces(MediaType.APPLICATION_JSON)\r\n\tpublic Uni<Void> createTrail() {\r\n\r\n\t\tAudit audit = new Audit();\r\n\t\taudit.setTransactionName(\"ACCOUNT BALANCE\");\r\n\t\taudit.setTransactionUrl(\"http://localhost:...\");\r\n\r\n\t\tbus.requestAndForget(\"AUDIT_BUS\", audit);\r\n\r\n\t\treturn Uni.createFrom().nullItem();\r\n\t}\r\n}\r\n```\r\n\r\nThe Event Bus consumer persists the object in the Oracle database using Panache Reactive - Oracle Reactive Stack.\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class AuditService {\r\nLogger log = Logger.getLogger(AuditService.class);\r\n\tprivate static AtomicLong counter = new AtomicLong();\r\n\t@ConsumeEvent(\"AUDIT_BUS\")\r\n\t@ReactiveTransactional\r\n\tpublic Uni<Void> saveTrail(Audit audit) {\r\n\t\tlog.info(\"### [TRAIL RECORDING] COUNTER: \" + counter.incrementAndGet());\r\n\t\treturn Audit.persist(audit);\t\t\t\t\r\n\t}\r\n}\r\n```\r\n\r\nAfter about more or less 1110 messages posted in the EventBus, the application throws this exception:\r\n\r\n`Mutiny had to drop the following exception: (RECIPIENT_FAILURE,8191) Error : 1000, Position : 0, Sql = SET TRANSACTION ISOLATION LEVEL READ COMMITTED, OriginalSql = SET TRANSACTION ISOLATION LEVEL READ COMMITTED, Error Msg = ORA-01000: maximum open cursors exceeded`\r\n\r\n**application.properties:**\r\n```properties\r\nquarkus.datasource.db-kind=oracle\r\nquarkus.datasource.username=THEDATABASE\r\nquarkus.datasource.password=thepassword\r\nquarkus.datasource.reactive.url=oracle:thin:@127.0.0.1:1521/orclpdb\r\nquarkus.hibernate-orm.database.generation = update\r\n```\r\n\r\n- Operating System: Windows 11\r\n- JDK version: RedHat Open JDK (java-11-openjdk-11.0.15.9-4)\r\n- Quarkus Version: 2.10.1.Final\r\n\r\n**pom.xml dependencies:**\r\n\r\n```xml\r\n<dependency>\r\n\t<groupId>io.quarkus</groupId>\r\n\t<artifactId>quarkus-vertx</artifactId>\r\n</dependency>\r\n\r\n<dependency>\r\n\t<groupId>io.quarkus</groupId>\r\n\t<artifactId>quarkus-arc</artifactId>\r\n</dependency>\r\n\r\n<dependency>\r\n\t<groupId>io.quarkus</groupId>\r\n\t<artifactId>quarkus-narayana-jta</artifactId>\r\n</dependency>\r\n\r\n<dependency>\r\n\t<groupId>io.quarkus</groupId>\r\n\t<artifactId>quarkus-resteasy-reactive-jackson</artifactId>\r\n</dependency>\r\n\r\n<dependency>\r\n\t<groupId>io.quarkus</groupId>\r\n\t<artifactId>quarkus-rest-client-reactive-jackson</artifactId>\r\n</dependency>\r\n\r\n<dependency>\r\n\t<groupId>io.quarkus</groupId>\r\n\t<artifactId>quarkus-hibernate-validator</artifactId>\r\n</dependency>\r\n\r\n<dependency>\r\n\t<groupId>io.quarkus</groupId>\r\n\t<artifactId>quarkus-hibernate-reactive</artifactId>\r\n</dependency>\r\n\r\n<dependency>\r\n\t<groupId>io.quarkus</groupId>\r\n\t<artifactId>quarkus-hibernate-reactive-panache</artifactId>\r\n</dependency>\r\n\r\n<dependency>\r\n\t<groupId>io.quarkus</groupId>\r\n\t<artifactId>quarkus-reactive-oracle-client</artifactId>\r\n</dependency>\r\n\r\n<dependency>\r\n\t<groupId>io.quarkus</groupId>\r\n\t<artifactId>quarkus-junit5</artifactId>\r\n\t<scope>test</scope>\r\n</dependency>\r\n\r\n<dependency>\r\n\t<groupId>io.rest-assured</groupId>\r\n\t<artifactId>rest-assured</artifactId>\r\n\t<scope>test</scope>\r\n</dependency>\r\n```\r\n\r\nThis is the error log:\r\n\r\n```posh\r\n2022-07-03 18:41:52,594 INFO  [org.acm.aud.ser.AuditService] (vert.x-eventloop-thread-0) ### [TRAIL RECORDING] COUNTER: 1115\r\n2022-07-03 18:41:54,202 INFO  [org.acm.aud.ser.AuditService] (vert.x-eventloop-thread-0) ### [TRAIL RECORDING] COUNTER: 1116\r\n2022-07-03 18:41:55,974 INFO  [org.acm.aud.ser.AuditService] (vert.x-eventloop-thread-0) ### [TRAIL RECORDING] COUNTER: 1117\r\n2022-07-03 18:41:57,753 ERROR [io.qua.mut.run.MutinyInfrastructure] (vert.x-eventloop-thread-4) Mutiny had to drop the following exception: (RECIPIENT_FAILURE,8191) Error : 1000, Position : 0, Sql = SET TRANSACTION ISOLATION LEVEL READ COMMITTED, OriginalSql = SET TRANSACTION ISOLATION LEVEL READ COMMITTED, Error Msg = ORA-01000: maximum open cursors exceeded\r\n\r\n\tat io.vertx.core.eventbus.Message.fail(Message.java:141)\r\n\tat io.quarkus.vertx.runtime.EventConsumerInvoker$RequestActivatedConsumer.accept(EventConsumerInvoker.java:115)\r\n\tat io.quarkus.vertx.runtime.EventConsumerInvoker$RequestActivatedConsumer.accept(EventConsumerInvoker.java:91)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualBiConsumer.accept(SlowContextualBiConsumer.java:21)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:859)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:837)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:506)\r\n\tat java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2088)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualConsumer.accept(SlowContextualConsumer.java:21)\r\n\tat io.smallrye.mutiny.helpers.UniCallbackSubscriber.onFailure(UniCallbackSubscriber.java:65)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onFailure(UniOperatorProcessor.java:54)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemOrFailureConsume$UniOnItemOrFailureConsumeProcessor.onFailure(UniOnItemOrFailureConsume.java:46)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onFailure(UniOperatorProcessor.java:54)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage$CompletionStageUniSubscription.forwardResult(UniCreateFromCompletionStage.java:58)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:859)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:837)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:506)\r\n\tat java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2088)\r\n\tat io.vertx.core.Future.lambda$toCompletionStage$2(Future.java:362)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onFailure(FutureImpl.java:153)\r\n\tat io.vertx.core.impl.future.FutureImpl$ListenerArray.onFailure(FutureImpl.java:268)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitFailure$1(FutureBase.java:69)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n\r\n```\r\n\r\n### Expected behavior\r\n\r\nThe Quarkus save objects in the database in a reactive manner infinitely.\r\n\r\n### Actual behavior\r\n\r\nQuarkus Mutiny throws an exception after persist about 1110 Reactive Panache Entity object in the Oracle database.\r\n\r\n### How to Reproduce?\r\n\r\n1. Clone the project at https://github.com/Swe77/reactiveoracle.git\r\n2. Configure the application.properties with the Oracle Database data.\r\n4. Configure the jmeter to make about 2000 calls in one thread to the endpoint http://localhost:8080/audit/v1/audit-trail\r\n5. The Jmeter test is in the link [https://github.com/Swe77/reactiveoracle/blob/main/REACTIVE_APP_TEST.jmx](https://github.com/Swe77/reactiveoracle/blob/main/REACTIVE_APP_TEST.jmx)\r\n6. Watch logs and jmeter Summary Report tab.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows 11\r\n\r\n### Output of `java -version`\r\n\r\nJDK version: RedHat Open JDK (java-11-openjdk-11.0.15.9-4) (it is configured in Eclipse)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.10.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\neclipse embedded maven (3.8.4)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26530/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26530/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

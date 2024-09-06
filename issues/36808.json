@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36808",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36808/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36808/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36808/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36808",
+  "id": 1971229432,
+  "node_id": "I_kwDOCFbutM51fpL4",
+  "number": 36808,
+  "title": "Gradle Build Cache fails to restore lambda function.zip native executable",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-10-31T20:14:38Z",
+  "updated_at": "2024-03-07T16:19:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n`./gradlew build --build-cache` caches `quarkusBuild` task, but does not restore native `function.zip` output, resulting in a build that does not work (native build outputs nothing)\r\n\r\n\n\n### Expected behavior\n\nWhen running `./gradlew build --build-cache`, I would expect gradle to either restore everything that was cached and result in a short build with the correct outputs, or to run tasks that weren't able to be cached, resulting in the correct outputs. \r\n\n\n### Actual behavior\n\nTesting locally and in CI using the steps detailed in the [gradle docs](https://docs.gradle.org/current/userguide/build_cache_debugging.html#finding_problems).\r\n\r\nI build the project (with the build cache flag enabled), it runs the native graalvm build using docker. \r\nI then run a clean to wipe the build directory\r\nI then rerun the exact same command as the initial build. \r\n\r\nI would expect to see the `function.zip` populate in the `build` directory, but nothing populates there. Looking at the log, gradle is marking the `quarkusBuild` task as `FROM CACHE` which is fine since I didn't change anything, but it _should_ be restoring the function.zip then. But if it can't restore the `function.zip` (per [this PR](https://github.com/quarkusio/quarkus/pull/31166), this is on purpose) then it should _not mark the task as up to date_. It is causing complete failure in our CI, since gradle refuses to run the `quarkusBuild` task, but is also refusing to restore the zip we need to actually deploy. \r\n\t\n\n### How to Reproduce?\n\nYou can reproduce this with any brand new amazon-lambda project, but here is an attached one just in case you don't want to build a new one. \r\n\r\n[quarkus-bug-oct-31-2023.zip](https://github.com/quarkusio/quarkus/files/13220980/quarkus-bug-oct-31-2023.zip)\r\n\r\nSteps:\r\n1. run `./gradlew build -Dquarkus.package.type=native -Dquarkus.native.container-build=true --build-cache`\r\n2. verify that `function.zip` is in the `build` folder\r\n3. run `./gradlew clean --quiet` and verify `build` folder is gone\r\n4. run `./gradlew build -Dquarkus.package.type=native -Dquarkus.native.container-build=true --build-cache`\r\n5. `function.zip` will not be present, `quarkusBuild` will be marked as `UP TO DATE` even though the outputs are incorrect. \n\n### Output of `uname -a` or `ver`\n\nDarwin SR-MB-502963 22.6.0 Darwin Kernel Version 22.6.0: Fri Sep 15 13:41:28 PDT 2023; root:xnu-8796.141.3.700.8~1/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"18\" 2022-03-22 OpenJDK Runtime Environment (build 18+36-2087) OpenJDK 64-Bit Server VM (build 18+36-2087, mixed mode, sharing)\n\n### Mandrel or GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\nboth 2.16.4 and 3.5.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.3\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36808/reactions",
+    "total_count": 2,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36808/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

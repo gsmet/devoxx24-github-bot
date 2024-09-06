@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31766",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31766/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31766/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31766/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31766",
+  "id": 1619108858,
+  "node_id": "I_kwDOCFbutM5ggaP6",
+  "number": 31766,
+  "title": "Ignoring existing 'persistence.xml' files do not ignore all executions",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-03-10T14:54:33Z",
+  "updated_at": "2023-10-13T09:52:49Z",
+  "closed_at": "2023-10-13T08:59:48Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nRelated to: **Quarkus 3.0.0.Alpha5 and Hibernate ORM 6**\r\n\r\nWhen I use config property `quarkus.hibernate-orm.persistence-xml.ignore` or System property `SKIP_PARSE_PERSISTENCE_XML` for ignore evaluation of `persistence.xml` files, there's a particular build step which still processes them. It means these `persistence.xml` files are not completely ignored, and IMHO, they should be.\r\n\r\nLog shown even when the config property or the system property is set to true:\r\n```\r\n[ERROR] Failed to execute goal io.quarkus:quarkus-maven-plugin:3.0.0.Alpha2:build (default) on project keycloak-quarkus-server-app: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR]         [error]: Build step io.quarkus.hibernate.orm.deployment.HibernateOrmProcessor#configurationDescriptorBuilding threw an exception: io.quarkus.runtime.configuration.ConfigurationException: A legacy persistence.xml file is present in the classpath, but Hibernate ORM is also configured through the Quarkus config file.\r\n[ERROR] Legacy persistence.xml files and Quarkus configuration cannot be used at the same time.\r\n[ERROR] To ignore persistence.xml files, set the configuration property 'quarkus.hibernate-orm.persistence-xml.ignore' to 'true'.\r\n[ERROR] To use persistence.xml files, remove all 'quarkus.hibernate-orm.*' properties from the Quarkus config file.true\r\n[ERROR]         at io.quarkus.hibernate.orm.deployment.HibernateOrmProcessor.handleHibernateORMWithNoPersistenceXml(HibernateOrmProcessor.java:892)\r\n[ERROR]         at io.quarkus.hibernate.orm.deployment.HibernateOrmProcessor.configurationDescriptorBuilding(HibernateOrmProcessor.java:415)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n[ERROR]         at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n[ERROR]         at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n[ERROR]         at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n[ERROR]         at io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n[ERROR]         at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n[ERROR]         at java.base/java.lang.Thread.run(Thread.java:833)\r\n[ERROR]         at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n[ERROR] -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n\r\n```\n\n### Expected behavior\n\nEvaluation of 'persistence.xml' files should be ignored after setting mentioned properties.\n\n### Actual behavior\n\nEvaluation of 'persistence.xml' files IS NOT ignored after setting mentioned properties.\n\n### How to Reproduce?\n\n1. Add `persistence.xml` file to your application\r\n2. Also set config property in `application.properties` related to the Hibernate ORM (`quarkus.hibernate-orm.*`)\r\n3. Set config property (`quarkus.hibernate-orm.persistence-xml.ignore=true`) system property (`-DSKIP_PARSE_PERSISTENCE_XML=true`)\r\n4. Reaugment the server\n\n### Output of `uname -a` or `ver`\n\nLinux fedora 6.1.14-200.fc37.x86_64 #1 SMP PREEMPT_DYNAMIC Sun Feb 26 00:13:26 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk 17.0.6 2023-01-17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.0.Alpha5\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31766/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31766/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

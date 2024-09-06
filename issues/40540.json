@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40540",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40540/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40540/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40540/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40540",
+  "id": 2288363063,
+  "node_id": "I_kwDOCFbutM6IZaY3",
+  "number": 40540,
+  "title": "QuarkusConfigFactory not a subtype when using Uni",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-05-09T20:00:56Z",
+  "updated_at": "2024-05-17T11:04:55Z",
+  "closed_at": "2024-05-17T11:04:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen combining unis I intermittently get the following exception `java.util.ServiceConfigurationError: io.smallrye.config.SmallRyeConfigFactory: io.quarkus.runtime.configuration.QuarkusConfigFactory not a subtype`\r\n\r\nIt's shown up a few times in different places in my code, so I'm not sure if I'm using Mutiny wrong or it's a bug in quarkus.\r\n\r\nThis is the code block throwing the error. postProcessor.processStats is a kotlin coroutine being turned into a Uni, but I've had this issue show up on \"native\" Unis\r\n```\r\n    fun computeStats(jobId: String): Uni<Boolean> {\r\n        return Uni.combine().all().unis<Int>(\r\n            computeAndStoreTrips(jobId),\r\n            computeAndStoreHaulCycles(jobId),\r\n            postProcessor.processStats(jobId) // throwing here\r\n        ).with { true }\r\n    }\r\n```\r\n\r\n### Expected behavior\r\n\r\nI wouldn't expect it to fail with this specific error. If it's the way I'm using Mutiny I would expect a more specific error message. But this looks like a class loader issue?\r\n\r\n### Actual behavior\r\n\r\nFails 1 in 5 times with the following error\r\n```2024-05-09 13:35:56,991 ERROR [com.str.mes.rea.pro.MessageListener$init$1$2] (ForkJoinPool.commonPool-worker-92) Failed processing message: java.util.ServiceConfigurationError: io.smallrye.config.SmallRyeConfigFactory: io.quarkus.runtime.configuration.QuarkusConfigFactory not a subtype\r\n        at java.base/java.util.ServiceLoader.fail(ServiceLoader.java:593)\r\n        at java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNextService(ServiceLoader.java:1244)\r\n        at java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNext(ServiceLoader.java:1273)\r\n        at java.base/java.util.ServiceLoader$2.hasNext(ServiceLoader.java:1309)\r\n        at java.base/java.util.ServiceLoader$3.hasNext(ServiceLoader.java:1393)\r\n        at io.smallrye.config.SmallRyeConfigProviderResolver.getFactoryFor(SmallRyeConfigProviderResolver.java:102)\r\n        at io.smallrye.config.SmallRyeConfigProviderResolver.getConfig(SmallRyeConfigProviderResolver.java:78)\r\n        at org.eclipse.microprofile.config.ConfigProvider.getConfig(ConfigProvider.java:101)\r\n        at io.smallrye.config.inject.ConfigProducer.getConfig(ConfigProducer.java:45)\r\n        at io.smallrye.config.inject.ConfigProducer.getIntegerValue(ConfigProducer.java:66)\r\n        at io.smallrye.config.inject.ConfigProducer_Subclass.getIntegerValue$$superforward(Unknown Source)\r\n        at io.smallrye.config.inject.ConfigProducer_Subclass$$function$$7.apply(Unknown Source)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:73)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:62)\r\n        at io.quarkus.arc.runtime.ConfigStaticInitCheckInterceptor.aroundInvoke(ConfigStaticInitCheckInterceptor.java:47)\r\n        at io.quarkus.arc.runtime.ConfigStaticInitCheckInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n        at io.smallrye.config.inject.ConfigProducer_Subclass.getIntegerValue(Unknown Source)\r\n        at io.smallrye.config.inject.ConfigProducer_ProducerMethod_getIntegerValue_dhQE7qVWDdkn-iwoTirb1GnLaWs_Bean.doCreate(Unknown Source)\r\n        at io.smallrye.config.inject.ConfigProducer_ProducerMethod_getIntegerValue_dhQE7qVWDdkn-iwoTirb1GnLaWs_Bean.create(Unknown Source)\r\n        at io.smallrye.config.inject.ConfigProducer_ProducerMethod_getIntegerValue_dhQE7qVWDdkn-iwoTirb1GnLaWs_Bean.get(Unknown Source)\r\n        at io.smallrye.config.inject.ConfigProducer_ProducerMethod_getIntegerValue_dhQE7qVWDdkn-iwoTirb1GnLaWs_Bean.get(Unknown Source)\r\n        at io.quarkus.arc.impl.CurrentInjectionPointProvider.get(CurrentInjectionPointProvider.java:48)\r\n        at com.stream.config.ConcurrencyProperties_Bean.doCreate(Unknown Source)\r\n        at com.stream.config.ConcurrencyProperties_Bean.create(Unknown Source)\r\n        at com.stream.config.ConcurrencyProperties_Bean.create(Unknown Source)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:119)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:38)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:35)\r\n        at io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.c72(Unknown Source)\r\n        at io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.computeIfAbsent(Unknown Source)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:35)\r\n        at io.quarkus.arc.impl.ClientProxies.getApplicationScopedDelegate(ClientProxies.java:21)\r\n        at com.stream.config.ConcurrencyProperties_ClientProxy.arc$delegate(Unknown Source)\r\n        at com.stream.config.ConcurrencyProperties_ClientProxy.getThreads(Unknown Source)\r\n        at com.stream.stat.PostProcessor.<init>(PostProcessor.kt:39)\r\n        at com.stream.stat.PostProcessor_Bean.doCreate(Unknown Source)\r\n        at com.stream.stat.PostProcessor_Bean.create(Unknown Source)\r\n        at com.stream.stat.PostProcessor_Bean.create(Unknown Source)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:119)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:38)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:35)\r\n        at io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.c3(Unknown Source)\r\n        at io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.computeIfAbsent(Unknown Source)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:35)\r\n        at io.quarkus.arc.impl.ClientProxies.getApplicationScopedDelegate(ClientProxies.java:21)\r\n        at com.stream.stat.PostProcessor_ClientProxy.arc$delegate(Unknown Source)\r\n        at com.stream.stat.PostProcessor_ClientProxy.processStats(Unknown Source)\r\n        at com.stream.messaging.reactive.processor.postprocess.PostProcessor.computeStats(PostProcessor.kt:144)\r\n        at com.stream.messaging.reactive.processor.postprocess.PostProcessor$process$1.invoke(PostProcessor.kt:48)\r\n        at com.stream.messaging.reactive.processor.postprocess.PostProcessor$process$1.invoke(PostProcessor.kt:48)\r\n        at com.stream.messaging.reactive.processor.postprocess.PostProcessor.process$lambda$0(PostProcessor.kt:48)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.performInnerSubscription(UniOnItemTransformToUni.java:68)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:57)\r\n        at io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onItem(UniOperatorProcessor.java:47)\r\n        at io.smallrye.mutiny.operators.uni.UniLogger$UniLoggerProcessor.onItem(UniLogger.java:54)\r\n        at io.smallrye.mutiny.operators.uni.UniAndCombination$AndSupervisor.computeAndFireTheOutcome(UniAndCombination.java:151)\r\n        at io.smallrye.mutiny.operators.uni.UniAndCombination$AndSupervisor.check(UniAndCombination.java:130)\r\n        at io.smallrye.mutiny.operators.uni.UniAndCombination$UniHandler.onItem(UniAndCombination.java:220)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:60)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:60)\r\n        at io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage$CompletionStageUniSubscription.forwardResult(UniCreateFromCompletionStage.java:63)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:863)\r\n        at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:841)\r\n        at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n        at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1773)\r\n        at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.exec(CompletableFuture.java:1760)\r\n        at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\r\n        at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)\r\n        at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)\r\n        at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)\r\n        at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nI'm unable to reproduce it consistently\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux SS00260 6.5.0-28-generic #29-Ubuntu SMP PREEMPT_DYNAMIC Thu Mar 28 23:46:48 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\n-> % java -version \r\nopenjdk version \"17.0.5\" 2022-10-18 LTS\r\nOpenJDK Runtime Environment GraalVM 22.3.0 (build 17.0.5+8-LTS)\r\nOpenJDK 64-Bit Server VM GraalVM 22.3.0 (build 17.0.5+8-LTS, mixed mode, sharing)\r\n\r\n\r\n### Quarkus version or git rev\r\n\r\n3.10.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\nMaven home: /opt/apache-maven-3.8.6\r\nJava version: 17.0.5, vendor: BellSoft, runtime: /home/sharrison/.sdkman/candidates/java/22.3.r17-nik\r\nDefault locale: en_US, platform encoding: UTF-8\r\nOS name: \"linux\", version: \"6.5.0-28-generic\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40540/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40540/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

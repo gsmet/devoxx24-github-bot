@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34777",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34777/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34777/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34777/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34777",
+  "id": 1806400418,
+  "node_id": "I_kwDOCFbutM5rq3ui",
+  "number": 34777,
+  "title": "[Rest Client Reactvie] Content Negotiation for Text/Plain",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-07-16T02:16:42Z",
+  "updated_at": "2023-07-19T13:25:50Z",
+  "closed_at": "2023-07-18T03:52:09Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have defined the following method in rest client interface.\r\n\r\n```java\r\n@Path(\"count\")\r\n@GET\r\n@Produces(MediaType.TEXT_PLAIN)\r\nUni<Long> countAllPosts(@QueryParam(\"q\") String q);\r\n```\r\n\r\nAnd in a test I used Wiremock to serve the response.\r\n\r\n```java\r\n@Test\r\nvoid countAllPosts() throws Throwable {\r\n    var url = \"/posts/count?q=\";\r\n    stubFor(\r\n            get(url)\r\n                    //.withHeader(\"Accept\", containing(\"text/plain\"))\r\n                    .willReturn(\r\n                            aResponse()\r\n                                    .withHeader(\"Content-Type\", \"text/plain\")\r\n                                    .withBody(\"10\")\r\n                                    .withStatus(200)\r\n                    )\r\n    );\r\n\r\n    var count = VertxContextSupport.subscribeAndAwait(() ->\r\n            client.countAllPosts(\"\")\r\n                    .onItem().invoke(c -> LOGGER.log(Level.INFO, \"count is: \" + c))\r\n                    .onFailure().invoke(error -> LOGGER.log(Level.INFO, \"error: \" + error.getMessage()))\r\n    );\r\n\r\n    assertThat(count).isEqualTo(10L);\r\n\r\n    verify(\r\n            getRequestedFor(urlEqualTo(url))\r\n                    .withHeader(\"Accept\", containing(\"text/plain\"))// it is text/plain;charset=UTF-8\r\n    );\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\nThe produces type(text/plain) in rest client should match request header `Accept: text/plain` firstly.\r\n\r\n**The classic rest client is working as expected.**, check https://github.com/hantsy/quarkus-sandbox/blob/master/restclient-kotlin/src/test/kotlin/com/example/PostResourceClientTest.kt#L80\r\n\r\n### Actual behavior\r\n\r\nBut the WireMock request header `Accept` must include a `charset=UTF8`to  match the request from the rest client request.\r\n\r\n### How to Reproduce?\r\n\r\n1. clone https://github.com/hantsy/quarkus-sandbox/tree/master/restclient-reactive\r\n2. Modify the above `containing` to `equalTo`\r\n3. run `PostResourceClientTest`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows 10 Pro\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nnot used \r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.0.Final`\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34777/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34777/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

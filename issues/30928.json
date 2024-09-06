@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30928",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30928/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30928/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30928/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30928",
+  "id": 1572849600,
+  "node_id": "I_kwDOCFbutM5dv8fA",
+  "number": 30928,
+  "title": "Deleting static resources in DEV mode causes cache consistency bugs",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-02-06T16:06:19Z",
+  "updated_at": "2023-02-07T13:26:28Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nStatic resources are served with `StaticHandler` from Vert.x, which sometimes need to be loaded from the QuarkusClassLoader or from the classpath. This is accomplished via `FileResolverImpl` which uses a `FileCache` to extract things from zips/jars, but also copy directories and their contents to a cache folder under `/tmp/vertx-cache`.\r\n\r\nUnder some circumstances, it is possible to trigger caching a folder such as `META-INF/resources` containing `a.txt` and `b.txt`, then using `QuarkusDevModeTest.deleteResourceFile` to delete `a.txt` and the cache doesn't see it, so it will keep serving it.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n```java\r\npackage io.quarkiverse.web.assets.sass.test;\r\n\r\nimport java.net.URL;\r\n\r\nimport org.hamcrest.Matchers;\r\nimport org.jboss.shrinkwrap.api.ShrinkWrap;\r\nimport org.jboss.shrinkwrap.api.asset.StringAsset;\r\nimport org.jboss.shrinkwrap.api.spec.JavaArchive;\r\nimport org.junit.jupiter.api.Test;\r\nimport org.junit.jupiter.api.extension.RegisterExtension;\r\n\r\nimport io.quarkus.test.QuarkusDevModeTest;\r\nimport io.quarkus.test.common.http.TestHTTPResource;\r\nimport io.restassured.RestAssured;\r\n\r\npublic class SassDevModeTest {\r\n\r\n    @RegisterExtension\r\n    static final QuarkusDevModeTest config = new QuarkusDevModeTest()\r\n            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)\r\n                    .addAsManifestResource(new StringAsset(\"foo\"),\r\n                            \"resources/a.txt\"));\r\n\r\n    @TestHTTPResource\r\n    URL url;\r\n\r\n    @Test\r\n    public void testStaticDeletion() {\r\n        config.addResourceFile(\"META-INF/resources/b.txt\", \"foo\");\r\n        RestAssured\r\n        .when()\r\n        .get(\"/b.txt\").then()\r\n        .statusCode(200);\r\n        config.deleteResourceFile(\"META-INF/resources/a.txt\");\r\n        RestAssured\r\n                .when()\r\n                .get(\"/a.txt\").then()\r\n                .statusCode(404);\r\n    }\r\n}\r\n```\r\n\r\nThis causes:\r\n\r\n```\r\n2023-02-06 17:04:05,431 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-1) HTTP Request to /a.txt failed, error id: 9afbaf14-7249-40ea-a8f2-f3c8de90b141-1: io.vertx.core.VertxException: Invalid resource: META-INF/resources/b.txt\r\n\tat io.vertx.core.file.impl.FileResolverImpl.unpackFromFileURL(FileResolverImpl.java:269)\r\n\tat io.vertx.core.file.impl.FileResolverImpl.unpackUrlResource(FileResolverImpl.java:237)\r\n\tat io.vertx.core.file.impl.FileResolverImpl.resolveFile(FileResolverImpl.java:162)\r\n\tat io.vertx.core.impl.VertxImpl.resolveFile(VertxImpl.java:803)\r\n\tat io.vertx.core.file.impl.FileSystemImpl$20.perform(FileSystemImpl.java:1135)\r\n\tat io.vertx.core.file.impl.FileSystemImpl$20.perform(FileSystemImpl.java:1133)\r\n\tat io.vertx.core.file.impl.FileSystemImpl$BlockingAction.handle(FileSystemImpl.java:1174)\r\n\tat io.vertx.core.file.impl.FileSystemImpl$BlockingAction.handle(FileSystemImpl.java:1156)\r\n\tat io.vertx.core.impl.ContextBase.lambda$null$0(ContextBase.java:137)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\tat io.vertx.core.impl.ContextBase.lambda$executeBlocking$1(ContextBase.java:135)\r\n\tat io.vertx.core.impl.TaskQueue.run(TaskQueue.java:76)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\nWhich is a bit weird, but caused by adding `b.txt` and deleting `a.txt`. I've seen other symptoms of this bug, this is not the most common. The most common is keeping on serving a file after we've deleted it. But this is all due to the `FileCache` not being reset in DEV/TEST modes after the FS has changed, when no full reload has happened.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30928/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30928/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

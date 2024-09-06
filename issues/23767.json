@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23767",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23767/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23767/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23767/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23767",
+  "id": 1140293088,
+  "node_id": "I_kwDOCFbutM5D933g",
+  "number": 23767,
+  "title": "zero-config devservice with hibernate set to `drop-and-create` does not create tables",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-02-16T16:40:46Z",
+  "updated_at": "2022-03-01T17:25:41Z",
+  "closed_at": "2022-02-17T07:39:11Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am trying to get the most minimal setup working in which a zero-config devservice gets populated by hibernate. When configuring [`quarkus.hibernate-orm.database.generation`](https://quarkus.io/guides/hibernate-orm#quarkus-hibernate-orm_quarkus.hibernate-orm.database.generation) to `drop-and-create` I expected hibernate to automatically create a table `MyEntity`. Instead, I get this log at startup:\r\n\r\n```\r\n2022-02-16 17:34:22,226 INFO  [io.qua.dat.dep.dev.DevServicesDatasourceProcessor] (build-5) Dev Services for the default datasource (postgresql) started.\r\n__  ____  __  _____   ___  __ ____  ______\r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2022-02-16 17:34:22,751 WARN  [org.hib.eng.jdb.spi.SqlExceptionHelper] (JPA Startup Thread: <default>) SQL Warning Code: 0, SQLState: 00000\r\n2022-02-16 17:34:22,752 WARN  [org.hib.eng.jdb.spi.SqlExceptionHelper] (JPA Startup Thread: <default>) table \"myentity\" does not exist, skipping\r\n2022-02-16 17:34:22,753 WARN  [org.hib.eng.jdb.spi.SqlExceptionHelper] (JPA Startup Thread: <default>) SQL Warning Code: 0, SQLState: 00000\r\n2022-02-16 17:34:22,753 WARN  [org.hib.eng.jdb.spi.SqlExceptionHelper] (JPA Startup Thread: <default>) sequence \"hibernate_sequence\" does not exist, skipping\r\n2022-02-16 17:34:22,766 INFO  [io.quarkus] (Quarkus Main Thread) code-with-quarkus 1.0.0-SNAPSHOT on JVM (powered by Quarkus 2.7.1.Final) started in 3.337s.\r\n2022-02-16 17:34:22,767 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2022-02-16 17:34:22,767 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [agroal, cdi, hibernate-orm, jdbc-postgresql, narayana-jta, smallrye-context-propagation]\r\n```\r\n\r\nEspecially the `table \"myentity\" does not exist, skipping` looks suspicious to me.\r\n\r\nAnd while Quarkus and therefore the devservice's postgres docker image are still running I can connect to the database on `localhost:5432` with username `quarkus` and password `quarkus` and can see that no table was created. Is it possible I am connecting with the wrong user?\r\n\r\n### Expected behavior\r\n\r\nI can see the tables in the database after Quarkus has booted up.\r\n\r\n### Actual behavior\r\n\r\nNo tables were created, or I don't know how to see them.\r\n\r\n### How to Reproduce?\r\n\r\n- Create a new Quarkus project with the `quarkus-hibernate-orm` and `quarkus-jdbc-postgresql` extensions: https://code.quarkus.io/?j=17&e=hibernate-orm&e=jdbc-postgresql\r\n  Using default settings the project will contain example code, notably a JPA entity `MyEntity`.\r\n- Ensure the configuration contains:\r\n  ```\r\n  quarkus.hibernate-orm.database.generation=drop-and-create\r\n  quarkus.hibernate-orm.database.default-schema=public\r\n  quarkus.datasource.devservices.port=5432\r\n  ```\r\n- run `./mvnw compile quarkus:dev`\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux NB01277 5.10.16.3-microsoft-standard-WSL2 #1 SMP Fri Apr 2 22:23:49 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.1 2021-10-19 OpenJDK Runtime Environment Temurin-17.0.1+12 (build 17.0.1+12) OpenJDK 64-Bit Server VM Temurin-17.0.1+12 (build 17.0.1+12, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23767/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23767/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

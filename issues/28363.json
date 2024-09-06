@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28363",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28363/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28363/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28363/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28363",
+  "id": 1395302200,
+  "node_id": "I_kwDOCFbutM5TKp84",
+  "number": 28363,
+  "title": "Can't use custom java.util.Date ParamConverterProvider when using Quarkus-Renarde",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-10-03T20:37:33Z",
+  "updated_at": "2022-10-11T08:43:48Z",
+  "closed_at": "2022-10-04T08:31:21Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI submitted an issue with that project as well and am just posting here because I thought I saw @FroMage and others in this repo as well.\r\n\r\nThis is the issue I posted: https://github.com/quarkiverse/quarkus-renarde/issues/65\r\n\r\nIt looks like Renarde's custom `java.util.Date` `ParamConverterProvider` implementation prevents the one I wrote from being used and I can't use any Date fields in my beans using the `@BeanParam` annotation because I want to group all my HTML FORM fields in a POJO and not list them all out in my method signature.\r\n\r\n### Expected behavior\r\n\r\nMy custom provider should be registered and find all instances of `.java.util.Date` fields in my POJO\r\n\r\n### Actual behavior\r\n\r\nMy instance is registered but NONE of the `java.util.Date` fields are passed to the instance, only the Strings, Booleans, etc are passed to the providers `getInstance()` method.\r\n\r\n### How to Reproduce?\r\n\r\nI downloaded the `rr-paramconverter.zip` from this issue which lead me down this path.\r\nhttps://github.com/quarkusio/quarkus/issues/21664\r\n\r\nI then simply added a print statement in the JavaTimeParamConverterProvider class to print out ANY `rawType` being passed to it on Quarkus startup.\r\n\r\n```java\r\n@Provider\r\npublic class JavaTimeParamConverterProvider implements ParamConverterProvider {\r\n\r\n    @Override\r\n    public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {\r\n      System.out.println(\"Checking type: \" + rawType);\r\n      \r\n        if (rawType.isAssignableFrom(LocalDate.class)) {\r\n            return (ParamConverter<T>) new LocalDateParamConverter();\r\n        }\r\n\r\n        if (rawType.isAssignableFrom(LocalTime.class)) {\r\n            return (ParamConverter<T>) new LocalTimeParamConverter();\r\n        }\r\n\r\n        if (rawType.isAssignableFrom(LocalDateTime.class)) {\r\n            return (ParamConverter<T>) new LocalDateTimeParamConverter();\r\n        }\r\n\r\n        if (rawType.isAssignableFrom(OffsetDateTime.class)) {\r\n            return (ParamConverter<T>) new OffsetDateTimeParamConverter();\r\n        }\r\n        return null;\r\n    }\r\n\r\n}\r\n```\r\n\r\nI also modified the `FilterData` class to add a Date field.\r\n\r\n```java\r\npublic class FilterData {\r\n\r\n    @QueryParam(\"creationDateTimeTo\")\r\n    private LocalDateTime creationDateTimeTo;\r\n\r\n    @FormParam(\"expireData\")\r\n    private Date expireDate;\r\n\r\n    public void setExpireDate(Date date) {\r\n      this.expireDate = date;\r\n    }\r\n\r\n    public Date getExpireDate() {\r\n      return expireDate;\r\n    }\r\n\r\n    public LocalDateTime getCreationDateTimeTo() {\r\n        return creationDateTimeTo;\r\n    }\r\n\r\n    public void setCreationDateTimeTo(LocalDateTime creationDateTimeTo) {\r\n        this.creationDateTimeTo = creationDateTimeTo;\r\n    }\r\n}\r\n```\r\n\r\nAfter modifying the file, do a `mvn clean quarkus:dev` and watch the console. \r\n\r\nWITHOUT the dependency for Renarde, the console prints that the provider is being passed a `java.util.Date`\r\n\r\n```\r\nChecking type: class java.time.LocalDateTime\r\nChecking type: class java.util.Date\r\n```\r\n\r\nNow, add in the latest Renarde version and run again, and you'll see that `java.util.Date` no longer is being passed into the provider.\r\n\r\n```\r\n<dependency>\r\n      <groupId>io.quarkiverse.renarde</groupId>\r\n      <artifactId>quarkus-renarde</artifactId>\r\n      <version>1.0.3</version>\r\n    </dependency>\r\n```\r\n\r\n```\r\nChecking type: class java.time.LocalDateTime\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin mars.local 21.6.0 Darwin Kernel Version 21.6.0: Mon Aug 22 20:19:52 PDT 2022; root:xnu-8020.140.49~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.4.1\" 2022-08-12 OpenJDK Runtime Environment Temurin-17.0.4.1+1 (build 17.0.4.1+1) OpenJDK 64-Bit Server VM Temurin-17.0.4.1+1 (build 17.0.4.1+1, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28363/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28363/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

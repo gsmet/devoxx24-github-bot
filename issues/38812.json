@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38812",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38812/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38812/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38812/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38812",
+  "id": 2138047347,
+  "node_id": "I_kwDOCFbutM5_cANz",
+  "number": 38812,
+  "title": "Support periodic TLS certificate reload for the reactive rest client",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-02-16T07:43:54Z",
+  "updated_at": "2024-02-16T07:43:59Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nThe reactive rest client does not support the periodic reload of the TLS certificates:\r\n\r\n- trust store\r\n- key and certificate (when used with mTLS)\r\n\r\nThis issue is about adding that support.\r\n\r\n\r\nAt the moment, this is somewhat blocked by #38811 \n\n### Implementation ideas\n\n- A reloadPeriod config item should be added to `io.quarkus.restclient.config.RestClientsConfig` and `io.quarkus.restclient.config.RestClientConfig` (even if it would only be supported in the reactive rest client)\r\n\r\n```java\r\n /**\r\n     * The period after which the TLS certificate should be reloaded.\r\n     * This requires TLS to be configured.\r\n     * <p>\r\n     * Truststore, keystore, and certificate files should be configured for this to work.\r\n     */\r\n    @ConfigItem\r\n    public Optional<Duration> reloadPeriod;\r\n```\r\n\r\n- Extend the `RestClientBuilder` with:\r\n\r\n```java\r\n /**\r\n     * The period after which the TLS certificate should be reloaded.\r\n     * This requires TLS to be configured.\r\n     * <p>\r\n     * Truststore, keystore, and certificate files should be configured for this to work.\r\n     */\r\n    QuarkusRestClientBuilder reloadPeriod(Duration duration);\r\n```\r\n\r\n- The implementation is just adding a new field to the `QuarkusRestClientBuilderImpl` impl and the following method:\r\n\r\n```java\r\n @Override\r\n    public QuarkusRestClientBuilder reloadPeriod(Duration duration) {\r\n        proxy.reloadPeriod(duration);\r\n        return this;\r\n    }\r\n```\r\n\r\n- Extend the Rest client builder and ClientBuilderImpl impl with the same field and the following method:\r\n\r\n```java\r\npublic RestClientBuilderImpl reloadPeriod(Duration reloadPeriod) {\r\n        this.reloadPeriod = reloadPeriod;\r\n        return this;\r\n    }\r\n```\r\n\r\n- The ClientBuilderImpl must also pass the duration as properties:\r\n\r\n```java\r\n        configuration.getProperties().put(RELOAD_PERIOD, reloadPeriod);\r\n```\r\n\r\nThe `RELOAD_PERIOD` must be defined in `QuarkusRestClientProperties`:\r\n\r\n```java\r\n /**\r\n     * The duration after which the REST Client TLS certificates are reloaded.\r\n     */\r\n    public static final String RELOAD_PERIOD = \"io.quarkus.rest.client.reload-period\";\r\n```\r\n\r\n- In `RestClientCDIDelegateBuilder` add the logic to configure the reload period:\r\n\r\n```java\r\noneOf(clientConfigByClassName().reloadPeriod,\r\n                clientConfigByConfigKey().reloadPeriod, configRoot.reloadPeriod)\r\n                .ifPresent(builder::reloadPeriod);\r\n```\r\n\r\nNow the reloadlogic must be added to `ClientImpl`.\r\nReloading the certificates is done by calling the `updateSSLOptions` method. \r\nNote that we need to rebuild new `SSLOptions` and reload the content from the configured path (truststores, key files, certificates file). \r\n\r\n```java\r\n Duration reloadPeriod = (Duration) configuration.getProperty(RELOAD_PERIOD);\r\n        if (reloadPeriod != null) {\r\n            this.reloadTask = vertx.get().setPeriodic(reloadPeriod.toMillis(), id -> {\r\n               1. Rebuild the SSL Options - must be done on a worker thread (executeBlocking) because of the loading of the files\r\n               2. If there is a change (using the .equals method) invoke the `updateSSLOptions` method           \r\n        }\r\n```\r\n\r\n- in the close method, the reloadTask must be cancelled:\r\n\r\n```java\r\nif (reloadTask != -1) { vertx.cancelTimer(reloadTask); }\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38812/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38812/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

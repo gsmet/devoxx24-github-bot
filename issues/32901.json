@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32901",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32901/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32901/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32901/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32901",
+  "id": 1684615668,
+  "node_id": "I_kwDOCFbutM5kaTH0",
+  "number": 32901,
+  "title": "MongoDB SRV Record not resolved inside WebSocket OnMessage method",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1696394231,
+      "node_id": "MDU6TGFiZWwxNjk2Mzk0MjMx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/undertow-websockets",
+      "name": "area/undertow-websockets",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2748318141,
+      "node_id": "MDU6TGFiZWwyNzQ4MzE4MTQx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/websockets",
+      "name": "area/websockets",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-04-26T09:16:53Z",
+  "updated_at": "2024-08-26T06:18:06Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThis is the follow-up of the investigation/discussion here : \r\n#31971\r\n\r\nThe issue is that MongoDB SRV records are not resolved properly ... in some cases.\r\n\r\nI have been investigating this issue for weeks now, and finally I discovered it is related to WebSocket only, not Rest endpoints, and this is why other quarkus devs couldn't reproduce it. Also when I run \"quarkus dev\", locally everything works. The issue is triggered only on my remote Okteto Kubernetes environment.\r\n\r\nThis is the current state of my investigation : \r\n\r\n| | Inside Rest Resource | Inside WebSocket OnMessage |\r\n| --- | --- | --- |\r\n| quarkus dev | works | works |\r\n| K8s (Okteto) JVM | works | error (*) |\r\n| K8s (Okteto) Native | works | error (*) |\r\n\r\n(*) Failed looking up SRV record / io.smallrye.mutiny.TimeoutException\r\n\r\nI managend to identify the real culprit and created a small reproducer.\r\n\r\nAlso I quote @cescoffier reply : \r\n\r\n> Ok, that's interesting! I may have an idea. onMessage at the moment is not invoked on a duplicated context. I can see a few > reasons why this could affect the DNS resolution.\r\n\r\n### Expected behavior\r\n\r\nMongoDB SRV records should be resolved normally\r\n\r\n### Actual behavior\r\n\r\nMongoDB SRV records are not resolved : \r\n\r\n```\r\n2023-03-31 12:28:00.87 UTCchat-5bbc5746fc-9g6dzchat12:28:00 INFO traceId=, parentId=, spanId=, sampled= [co.te.we.ChatSocket_Subclass] (vert.x-eventloop-thread-0) 34.27.203.79\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat12:28:30 INFO traceId=, parentId=, spanId=, sampled= [co.te.co.AuditedInterceptor] (vert.x-eventloop-thread-0) alessandro.moscatelli called method: publish\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat12:28:30 INFO traceId=, parentId=, spanId=, sampled= [or.mo.dr.cluster] (cluster-ClusterId{value='6426d1d0c11d2a13b94ccbaa', description='null'}-srv-quarkus.uvyzu7h.mongodb.net) Exception while resolving SRV records: com.mongodb.MongoConfigurationException: Failed looking up SRV record for '_mongodb._tcp.quarkus.uvyzu7h.mongodb.net'.\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at com.mongodb.internal.dns.DefaultDnsResolver.resolveHostFromSrvRecords(DefaultDnsResolver.java:92)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at com.mongodb.internal.connection.DefaultDnsSrvRecordMonitor$DnsSrvRecordMonitorRunnable.run(DefaultDnsSrvRecordMonitor.java:80)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at java.base@17.0.6/java.lang.Thread.run(Thread.java:833)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at org.graalvm.nativeimage.builder/com.oracle.svm.core.thread.PlatformThreads.threadStartRoutine(PlatformThreads.java:775)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at org.graalvm.nativeimage.builder/com.oracle.svm.core.posix.thread.PosixPlatformThreads.pthreadStartRoutine(PosixPlatformThreads.java:203)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchatCaused by: com.mongodb.MongoConfigurationException: Unable to look up SRV record for host _mongodb._tcp.quarkus.uvyzu7h.mongodb.net\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at io.quarkus.mongodb.runtime.dns.MongoDnsClient.resolveSrvRequest(MongoDnsClient.java:152)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at io.quarkus.mongodb.runtime.dns.MongoDnsClient.getResourceRecordData(MongoDnsClient.java:104)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at com.mongodb.internal.dns.DefaultDnsResolver.resolveHostFromSrvRecords(DefaultDnsResolver.java:74)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat ... 4 more\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchatCaused by: io.smallrye.mutiny.TimeoutException\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:64)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat at io.quarkus.mongodb.runtime.dns.MongoDnsClient.resolveSrvRequest(MongoDnsClient.java:138)\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat ... 6 more\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat\r\n2023-03-31 12:28:30.88 UTCchat-5bbc5746fc-9g6dzchat12:28:30 INFO traceId=, parentId=, spanId=, sampled= [or.mo.dr.cluster] (vert.x-eventloop-thread-0) No server chosen by com.mongodb.client.internal.MongoClientDelegate$$Lambda$2a9a67aed79fbe983935f57d61b3ec1607afa5d6@33c8af87 from cluster description ClusterDescription{type=REPLICA_SET, srvResolutionException=com.mongodb.MongoConfigurationException: Failed looking up SRV record for '_mongodb._tcp.quarkus.uvyzu7h.mongodb.net'., connectionMode=MULTIPLE, serverDescriptions=[]}. Waiting for 30000 ms before timing out\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nhttps://github.com/amoscatelli/quarkus-test\r\n\r\nThese are the env variables I set to build and deploy to Okteto Kubernetes :\r\n\r\n```\r\nQUARKUS_PACKAGE_TYPE=native\r\nTESTCONTAINERS_RYUK_DISABLED=true\r\nQUARKUS_CONTAINER_IMAGE_REGISTRY=registry.cloud.okteto.net\r\nQUARKUS_KUBERNETES_DEPLOY=true\r\nQUARKUS_KUBERNETES_INGRESS_EXPOSE=true\r\nQUARKUS_KUBERNETES_INGRESS_HOST=amoscatelli.cloud.okteto.net\r\nQUARKUS_KUBERNETES_REPLICAS=1\r\nQUARKUS_CONTAINER_IMAGE_BUILD=true\r\nQUARKUS_CONTAINER_IMAGE_PUSH=true\r\nQUARKUS_CONTAINER_IMAGE_GROUP=amoscatelli\r\nQUARKUS_CONTAINER_IMAGE_USERNAME=amoscatelli\r\nQUARKUS_CONTAINER_IMAGE_PASSWORD=\r\nQUARKUS_NATIVE_CONTAINER_BUILD=true\r\nQUARKUS_KUBERNETES_ENV_CONFIGMAPS=mongodb\r\nquarkus.kubernetes.env.mapping.quarkus-mongodb-connection-string.from-configmap=mongodb\r\nquarkus.kubernetes.env.mapping.quarkus-mongodb-connection-string.with-key=url\r\nQUARKUS_KUBERNETES_ENV_SECRETS=mongodb\r\nquarkus.kubernetes.env.mapping.quarkus-mongodb-credentials-username.from-secret=mongodb\r\nquarkus.kubernetes.env.mapping.quarkus-mongodb-credentials-username.with-key=username\r\nquarkus.kubernetes.env.mapping.quarkus-mongodb-credentials-password.from-secret=mongodb\r\nquarkus.kubernetes.env.mapping.quarkus-mongodb-credentials-password.with-key=password \r\n```\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32901/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32901/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

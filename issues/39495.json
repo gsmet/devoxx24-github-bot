@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39495",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39495/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39495/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39495/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39495",
+  "id": 2189415338,
+  "node_id": "I_kwDOCFbutM6Cf9Oq",
+  "number": 39495,
+  "title": "Swagger UI unresponsive with big data model in native build",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1688349292,
+      "node_id": "MDU6TGFiZWwxNjg4MzQ5Mjky",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/swagger-ui",
+      "name": "area/swagger-ui",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-03-15T20:27:11Z",
+  "updated_at": "2024-03-18T10:34:53Z",
+  "closed_at": "2024-03-18T10:34:53Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nSwagger UI gets completely unusable in native mode when dealing with big data model ( a lot of classes with a lot of nested properties), but the same code works just fine in JVM mode.\r\n\r\nAfter quite some debugging different components the issue turned out to be that `swagger-core` defines several mix-ins to strip most of the properties from the openapi specification it creates.\r\nhttps://github.com/swagger-api/swagger-core/blob/3fcc473c33c56f306902853a451020926ad691ea/modules/swagger-core/src/main/java/io/swagger/v3/core/util/ObjectMapperFactory.java#L244\r\n\r\nDuring native build those classes apparently get erased by the compiler as they are abstract without any children and not references anywhere else.\r\n\r\nThe result is that the openapi json gets polluted with all those properties and the result size in my case is 402KB (vs 156KB for the same model in JVM mode) - mostly because of the `jsonSchema` map in the `Componnet.Schema` field.\r\n\r\nThis leads to the UI hanging and throwing out of memory errors in the browser, while trying to parse the model\r\n\r\nThe swagger-ui extension should register those mixins for reflections to allow the openapi json be reduced in size also for native images.\n\n### Expected behavior\n\nThe fields ignored via MixIns to be removed from the openapi json \n\n### Actual behavior\n\nAll fields from the OpenAPI specification are serialized in the openapi json\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nany\n\n### Output of `java -version`\n\njava version \"21\" 2023-09-19\n\n### Mandrel or GraalVM version (if different from Java)\n\nJava(TM) SE Runtime Environment Oracle GraalVM 21+35.1 (build 21+35-jvmci-23.1-b15)\n\n### Quarkus version or git rev\n\n3.8.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39495/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39495/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

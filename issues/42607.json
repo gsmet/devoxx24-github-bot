@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42607",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42607/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42607/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42607/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42607",
+  "id": 2471194794,
+  "node_id": "I_kwDOCFbutM6TS3Cq",
+  "number": 42607,
+  "title": "MQTT reactive stream transformer fails to process events due to lack of requests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-08-16T23:55:20Z",
+  "updated_at": "2024-08-30T23:44:40Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nApparently, Quarkus 3.13.0 (through one of its transitive dependencies) broke MQTT reactive messaging processors of the form:\r\n```java\r\n@Incoming(\"source\")\r\n@Outgoing(\"sink\")\r\nMulti<String> process(Multi<String> source) {\r\n    return source;\r\n}\r\n ```\r\n One of the stream subscribers installed by Quarkus requests only 16 items (this is a hardcoded value in one of the Mutiny's operators: https://github.com/smallrye/smallrye-mutiny/blob/main/implementation/src/main/java/io/smallrye/mutiny/operators/multi/MultiEmitOnOp.java#L89) from source and therefore it runs into backpressure issue if the source emits items quicker, before another batch of items is requested. Before, i.e., in Quarkus 3.12.3, the number of items requested was set to `Long.MAX_VALUE`.\r\n\r\nChanging the `buffer-size` setting does not seem to influence this behaviour. Neither does controlling the demand with Mutiny's `paceDemand()` operator.\r\n\r\nThe root cause probably pertains to one of Quarkus's dependencies, with `io.smallrye.reactive:smallrye-reactive-messaging` being logically the first suspect. However, I’ve tried forcing a downgraded version of this library to no avail. Debugging reactive streams is notoriously tricky...\r\n\r\n### Expected behavior\r\n\r\nThe reproducer code works fine without runtime errors.\r\n\r\n### Actual behavior\r\n\r\nThe code may fail with `SRMSG17105: Unable to establish a connection with the MQTT broker: io.smallrye.mutiny.subscription.BackPressureFailure: Could not emit item downstream due to lack of requests`. Note that the issue is not deterministic, it may depend on how threads interleave and the number of available cores, I guess.\r\n\r\n### How to Reproduce?\r\n\r\nBuild&run the following project: https://github.com/kdurnoga/mqtt-report.\r\n\r\nThe project features a dummy generator that produces events in batches of 17 (this number corresponds to the number of items requested by Mutiny, mentioned above) every second. You may experiment with lower values (I get backpressure errors with numbers as low as 5), but with 17 you should run into this issue fairly quickly.\r\n\r\nIf you downgrade to Quarkus 3.12.3 the code should run fine.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.19045.4780]\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 21.0.3 2024-04-16 LTS\r\n\r\n### Quarkus version or git rev\r\n\r\n3.13.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42607/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42607/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

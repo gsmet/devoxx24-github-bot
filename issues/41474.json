@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41474",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41474/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41474/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41474/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41474",
+  "id": 2375547854,
+  "node_id": "I_kwDOCFbutM6Nl_vO",
+  "number": 41474,
+  "title": "UserAgent header is not set after service is running",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2024-06-26T14:38:51Z",
+  "updated_at": "2024-06-27T07:21:48Z",
+  "closed_at": "2024-06-27T07:21:41Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nConsider the following class which is used as an endpoint method parameter\r\n```java\r\nclass SampleRequest {\r\n    // Getters and Setters\r\n    @PathParam(\"name\")\r\n    var name: String? = null\r\n\r\n    @HeaderParam(\"Locale\")\r\n    var locale: String? = null\r\n\r\n    @HeaderParam(HttpHeaders.USER_AGENT)\r\n    val userAgent: String? = null\r\n}\r\n```\r\nHere is the endpoint\r\n```java\r\n@Path(\"/hello\")\r\nclass GreetingResource {\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    fun hello(sampleRequest: SampleRequest): String {\r\n        return \"Hello RESTEasy ${sampleRequest.userAgent}\"\r\n\r\n    }\r\n}\r\n```\r\n\r\nwhen you hit `http://localhost:8080/hello` you will get `400`. If you open the log on DEBUG level you will see the following exception\r\n\r\n```java\r\n2024-06-26 16:17:13,446 DEBUG [WebApplicationException] (executor-thread-1) Application failed the request: jakarta.ws.rs.BadRequestException: HTTP 400 Bad Request\r\n\tat org.acme.SampleRequest.__quarkus_rest_inject(SampleRequest.kt)\r\n\tat org.jboss.resteasy.reactive.server.core.parameters.InjectParamExtractor.extractParameter(InjectParamExtractor.java:26)\r\n\tat org.jboss.resteasy.reactive.server.handlers.ParameterHandler.handle(ParameterHandler.java:45)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:137)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:599)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:11)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:11)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.IllegalAccessError: Update to non-static final field org.acme.SampleRequest.userAgent attempted from a different method (__quarkus_rest_inject) than the initializer method <init> \r\n\t... 13 more\r\n\r\n```\r\n\n\n### Expected behavior\n\nSet `User-Agent` header into `SampleRequest.userAgent` \r\n\n\n### Actual behavior\n\nReturn `400` http status with following exception (open DEBUG log) \r\n```java\r\n2024-06-26 16:17:13,446 DEBUG [WebApplicationException] (executor-thread-1) Application failed the request: jakarta.ws.rs.BadRequestException: HTTP 400 Bad Request\r\n\tat org.acme.SampleRequest.__quarkus_rest_inject(SampleRequest.kt)\r\n\tat org.jboss.resteasy.reactive.server.core.parameters.InjectParamExtractor.extractParameter(InjectParamExtractor.java:26)\r\n\tat org.jboss.resteasy.reactive.server.handlers.ParameterHandler.handle(ParameterHandler.java:45)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:137)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:599)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:11)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:11)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.IllegalAccessError: Update to non-static final field org.acme.SampleRequest.userAgent attempted from a different method (__quarkus_rest_inject) than the initializer method <init> \r\n\t... 13 more\r\n\r\n```\r\n\n\n### How to Reproduce?\n\n1- Run the Quarkus service `mvn clean quarkus:dev`\r\n2- Hit the endpoint `http://localhost:8080/hello`\r\n3- You will get `400` http status code and if you open the log you will see the exception\r\n4- Change the header name on `@HeaderParam(HttpHeaders.USER_AGENT) val userAgent: String? = null` to some other headers like `Content-Type` while the service is still running (`@HeaderParam(\"Content-Type\") val userAgent: String? = null`)\r\n5- hit the `http://localhost:8080/hello`\r\n6- You will get `200` http status \r\n7- Change the header name again to `@HeaderParam(HttpHeaders.USER_AGENT) val userAgent: String? = null`\r\n8- This time you won't get `400` and exception. \n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### Quarkus version or git rev\n\n3.11.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41474/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41474/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

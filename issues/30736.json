@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30736",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30736/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30736/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30736/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30736",
+  "id": 1563860981,
+  "node_id": "I_kwDOCFbutM5dNp_1",
+  "number": 30736,
+  "title": "Vert.X clearing out Logging MDC",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-01-31T08:20:25Z",
+  "updated_at": "2023-04-12T09:18:34Z",
+  "closed_at": "2023-04-12T09:18:34Z",
+  "active_lock_reason": null,
+  "body": "I have problem since I upgraded Quarkus version from `2.10.4.Final` to `2.11.1.Final`. When I debug on `2.10.4.Final` version, `org.jboss.logmanager.ThreadLocalMDC` is used as MDCProvider but with `2.11.1.Final` and above versions, `io.quarkus.vertx.core.runtime.VertxMDC` is used as MDCProvider (https://github.com/quarkusio/quarkus/commit/65e153635589d6876a3eea175a80fdf4dcc3b09b#diff-99bb6be11b1e4b85ac938b26fbadf0ff1d58e23d88ab481ea5882df75ab3c18eR247). I use Uni to make parallel rest calls and eventually I clear the thread's MDC context but VertxMDC gets all MDC context and clears it. After uni calls, I lost my MDC info and logs are printed without MDC context.\r\n\r\n```\r\nUni.createFrom().item(() -> DO_REST_CALL_HERE)\r\n                .withContext((uni, ctx) -> {\r\n                    ctx.keys().forEach(k -> MDC.put(k, ctx.get(k)));\r\n                    return uni;\r\n                }).eventually(MDC::clear).runSubscriptionOn(executor);\r\n```\r\n\r\nSame problem mentioned in https://github.com/quarkusio/quarkus/discussions/27254#discussion-4297726 as well.  Do you have any suggestion to solve this issue?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30736/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30736/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

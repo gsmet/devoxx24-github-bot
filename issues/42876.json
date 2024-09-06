@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42876",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42876/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42876/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42876/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42876",
+  "id": 2495159490,
+  "node_id": "I_kwDOCFbutM6UuRzC",
+  "number": 42876,
+  "title": "Confusing vale output from Fluff.yml",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1218486975,
+      "node_id": "MDU6TGFiZWwxMjE4NDg2OTc1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/documentation",
+      "name": "area/documentation",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1304471709,
+      "node_id": "MDU6TGFiZWwxMzA0NDcxNzA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/infra",
+      "name": "area/infra",
+      "color": "c2e2f9",
+      "default": false,
+      "description": "internal and infrastructure related issues"
+    },
+    {
+      "id": 1710069947,
+      "node_id": "MDU6TGFiZWwxNzEwMDY5OTQ3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/housekeeping",
+      "name": "area/housekeeping",
+      "color": "d1d86a",
+      "default": false,
+      "description": "Issue type for generalized tasks not related to bugs or enhancements"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-08-29T17:39:07Z",
+  "updated_at": "2024-08-30T12:18:18Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "\r\nI tried to fix this, but couldn't figure out the best solution. That may be why we have the problem!\r\n\r\nThe `Fluff.yml` vale rule is extending `substitution`, but it's not actually a substitution rule - the things in the `swap` list aren't suggested before-and-after, they're problematic tokens and then explanations of what a user might want to do. \r\n\r\n```\r\nextends: substitution\r\nmessage: \"Depending on the context, consider using '%s' rather than '%s'.\"\r\nswap:\r\n  in order to: \"Be concise: use 'to' rather than\"\r\n  needs? to: \"Rewrite the sentence, or use 'must', instead of\"\r\n  note that: \"Be concise: rewrite the sentence to not use\"\r\n  recommend: \"using more direct instructions\"\r\n  respectively: \"Rewrite the sentence to be more precise, instead of using\"\r\n```\r\n\r\nBecause of this, the messages for this rule come out as nonsense. For example, \r\n\r\n```\r\n[vale] reported by reviewdog 🐶\r\n[Quarkus.Fluff] Depending on the context, consider using 'Be concise: rewrite the sentence to not use' rather than 'note that'.\r\n```\r\n\r\nThe raw message makes a bit more sense, but it's still pretty confusing:\r\n\r\n```\r\nRaw Output:\r\n{\"message\": \"[Quarkus.Fluff] Depending on the context, consider using 'Be concise: rewrite the sentence to not use' rather than 'note that'.\", \"location\": {\"path\": \"docs/src/main/asciidoc/extension-maturity-model.adoc\", \"range\": {\"start\": {\"line\": 25, \"column\": 6}}}, \"severity\": \"INFO\"}\r\n```\r\n\r\nOne possible fix is to split the `Fluff.yml` rule into a whole bunch of individual [`existence`](https://vale.sh/docs/topics/styles/#existence) rules. If we wanted to have some grouping, we could make a `fluff` super-rule and extend it.\r\n\r\nAlternatively, the message could be written so that the `after` was just a sentence on its own, but that's a bit of an abuse of the `swap` data. But it would be a faster fix, and keep all of the rules grouped in one file.  \r\n\r\nWhat do you think, @michelle-purcell and @ebullient?\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42876/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42876/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

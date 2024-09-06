@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23815",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23815/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23815/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23815/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23815",
+  "id": 1144877809,
+  "node_id": "I_kwDOCFbutM5EPXLx",
+  "number": 23815,
+  "title": "Hibernate Reactive Panache incorrect column values for insertion w/ Reactive Oracle Client",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2022-02-20T00:07:50Z",
+  "updated_at": "2022-02-22T12:55:23Z",
+  "closed_at": "2022-02-22T12:55:23Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am experiencing a very strange error when I attempt to insert a 36 character String into a VARCHAR2(36) column in my Oracle database. I am generating a UUID gen4 from the application and converting it to a String before insertion into that column (I have also tested this with a random String value) but it is complaining that the value is absurdly too large in length somehow and throws this error: \r\n\r\n`org.hibernate.HibernateException: io.vertx.core.VertxException: [SQL INCLUDES EXPRESSIONS ADDED BY THE ORACLE JDBC DRIVER],Error : 12899, Position : 133, Sql = insert into SOME_TABLE_NAME (CREAT_TS, INTR_PYMT_ID, LOAD_FAIL_RSN_TX, UNIQUE_FAIL_TRANS_CT_NO, TRANS_DTL_TX) values (:1 , :2 , :3 , :4 , :5 ) RETURNING ROWID INTO :6 , OriginalSql = insert into SOME_TABLE_NAME (CREAT_TS, INTR_PYMT_ID, LOAD_FAIL_RSN_TX, UNIQUE_FAIL_TRANS_CT_NO, TRANS_DTL_TX) values (?, ?, ?, ?, ?) RETURNING ROWID INTO ?, Error Msg = ORA-12899: value too large for column \\\"SCHEMA\\\".\\\"SOME_TABLE_NAME\\\".\\\"UNIQUE_FAIL_TRANS_CT_NO\\\" (actual: 5596, maximum: 36)\\n`\r\n\r\nI am very confused as to how this is even possible when I can indeed confirm that I am inserting only 36 characters and even tested with a random String of <= 36 characters and still the same error. I am able to insert into this table just fine if I use SqlDeveloper.\r\n\r\nThis is how my Entity for the table is designed:\r\n\r\n```\r\n@Entity\r\n@Cacheable\r\n@Table(name = \"SOME_TABLE_NAME\")\r\nclass SomeTableEntityClass : PanacheEntityBase() {\r\n    @Id\r\n    @Column(name = \"UNIQUE_FAIL_TRANS_CT_NO\", length = 36)\r\n    lateinit var uniqueTransactionIdentifier: String\r\n\r\n    @Column(name = \"INTR_PYMT_ID\")\r\n    lateinit var internalPaymentIdentifier: String\r\n\r\n    @Column(name = \"CREAT_TS\")\r\n    lateinit var createTimestamp: LocalDateTime\r\n\r\n    @Lob\r\n    @Column(name = \"TRANS_DTL_TX\")\r\n    lateinit var transactionDetail: String\r\n\r\n    @Column(name = \"LOAD_FAIL_RSN_TX\", length = 500)\r\n    lateinit var transactionFailureReason: String\r\n}\r\n```\r\n\r\nAm I doing something wrong here?\r\n\r\n### Expected behavior\r\n\r\nFor the record to insert with the correct value(s).\r\n\r\n### Actual behavior\r\n\r\n`org.hibernate.HibernateException: io.vertx.core.VertxException: [SQL INCLUDES EXPRESSIONS ADDED BY THE ORACLE JDBC DRIVER],Error : 12899, Position : 133, Sql = insert into SOME_TABLE_NAME (CREAT_TS, INTR_PYMT_ID, LOAD_FAIL_RSN_TX, UNIQUE_FAIL_TRANS_CT_NO, TRANS_DTL_TX) values (:1 , :2 , :3 , :4 , :5 ) RETURNING ROWID INTO :6 , OriginalSql = insert into SOME_TABLE_NAME (CREAT_TS, INTR_PYMT_ID, LOAD_FAIL_RSN_TX, UNIQUE_FAIL_TRANS_CT_NO, TRANS_DTL_TX) values (?, ?, ?, ?, ?) RETURNING ROWID INTO ?, Error Msg = ORA-12899: value too large for column \\\"SCHEMA\\\".\\\"SOME_TABLE_NAME\\\".\\\"UNIQUE_FAIL_TRANS_CT_NO\\\" (actual: 5596, maximum: 36)\\n`\r\n\r\n### How to Reproduce?\r\n\r\nFeel free to use a reproducer I made for this (mostly finished): https://github.com/LazaroR94/hibernate-reproducer\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin C02FW4DDMD6R 20.5.0 Darwin Kernel Version 20.5.0: Sat May  8 05:10:33 PDT 2021; root:xnu-7195.121.3~9/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nJava 11.0.12\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.3.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23815/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23815/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

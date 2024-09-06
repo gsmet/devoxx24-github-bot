@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20523",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20523/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20523/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20523/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20523",
+  "id": 1015298212,
+  "node_id": "I_kwDOCFbutM48hDik",
+  "number": 20523,
+  "title": "Quarkus can not change the content-type of the response depending on accept header using reactive routes",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2021-10-04T15:06:05Z",
+  "updated_at": "2021-10-11T23:12:36Z",
+  "closed_at": "2021-10-11T23:12:36Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAccording to the Reactive Route page in Quarkus documentation website, it is possible to send Accept header to set the Content-Type of a response. \r\n\r\nI'm sending `-H 'Accept: application/xml'` by curl to a Quarkus project with Reactive Routes enabled but I always get the response in JSON format and with Content-Type equals to application/json.\n\n### Expected behavior\n\nQuarkus should change the Content-Type format depending on the Accept header.\n\n### Actual behavior\n\nQuarkus always returns the response in JSON format with Content-Type: application/json header.\n\n### How to Reproduce?\n\n1. Create the following class:\r\n\r\n```java\r\npackage com.serrodcal;\r\n\r\nimport io.quarkus.vertx.web.Route;\r\nimport io.smallrye.mutiny.Uni;\r\n\r\nimport javax.enterprise.context.ApplicationScoped;\r\nimport java.util.Arrays;\r\nimport java.util.List;\r\n\r\n@ApplicationScoped\r\npublic class PersonResource {\r\n\r\n    @Route(path = \"person\", methods = Route.HttpMethod.GET)\r\n    public Uni<List<Person>> findAll() {\r\n        List<Person> personList = Arrays.asList(new Person(\"Sergio\"), new Person(\"Pepe\"));\r\n        return Uni.createFrom().item(personList);\r\n    }\r\n\r\n    public static class Person {\r\n\r\n        private String name;\r\n\r\n        public Person(String name) {\r\n            this.name = name;\r\n        }\r\n\r\n        public String getName() { return this.name; }\r\n\r\n    }\r\n\r\n}\r\n```\r\n\r\n2. Then, send the following curls request:\r\n\r\n```shell script\r\n$ curl http://localhost:8080/person -w '\\n' -i\r\nHTTP/1.1 200 OK\r\nContent-Type: application/json\r\ncontent-length: 35\r\n\r\n[{\"name\":\"Sergio\"},{\"name\":\"Pepe\"}]\r\n$ curl http://localhost:8080/person -w '\\n' -i -H 'Accept: application/xml'\r\nHTTP/1.1 200 OK\r\nContent-Type: application/json\r\ncontent-length: 35\r\n\r\n[{\"name\":\"Sergio\"},{\"name\":\"Pepe\"}]\r\n$ curl http://localhost:8080/person -w '\\n' -i -H 'Accept: text/plain'\r\nHTTP/1.1 200 OK\r\nContent-Type: application/json\r\ncontent-length: 35\r\n\r\n[{\"name\":\"Sergio\"},{\"name\":\"Pepe\"}]\r\n$ curl http://localhost:8080/person -w '\\n' -i -H 'Accept: text/html'\r\nHTTP/1.1 200 OK\r\nContent-Type: application/json\r\ncontent-length: 35\r\n\r\n[{\"name\":\"Sergio\"},{\"name\":\"Pepe\"}]\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin MacBook-Pro-de-Sergio-2016.local 20.6.0 Darwin Kernel Version 20.6.0: Mon Aug 30 06:12:21 PDT 2021; root:xnu-7195.141.6~3/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08) OpenJDK 64-Bit Server VM GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.2.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d) Maven home: /Users/serrodcal/.m2/wrapper/dists/apache-maven-3.8.1-bin/2l5mhf2pq2clrde7f7qp1rdt5m/apache-maven-3.8.1 Java version: 11.0.12, vendor: GraalVM Community, runtime: /Library/Java/JavaVirtualMachines/graalvm-ce-java11-21.2.0/Contents/Home Default locale: es_ES, platform encoding: UTF-8 OS name: \"mac os x\", version: \"11.5\", arch: \"x86_64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20523/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20523/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

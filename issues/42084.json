@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42084",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42084/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42084/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42084/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42084",
+  "id": 2425226514,
+  "node_id": "I_kwDOCFbutM6QjgUS",
+  "number": 42084,
+  "title": "Quarkus exits without showing thrown exception when using `-H:ThrowMissingRegistrationErrors=`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-07-23T13:29:13Z",
+  "updated_at": "2024-08-27T15:20:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n$title\r\n\r\nRelates to https://github.com/quarkusio/quarkus/issues/41995\n\n### Expected behavior\n\nWhen a `MissingRegistrationError` exception is thrown it should be shown on the console output (or logs), e.g. something like:\r\n\r\n```\r\ncom.oracle.svm.core.jdk.resources.MissingResourceRegistrationError: The program tried to access the resource at path application.properties without it being registered as reachable. Add it to the resource metadata to solve this problem. See https://www.graalvm.org/latest/reference-manual/native-image/metadata/#resources-and-resource-bundles for help\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk.resources.MissingResourceRegistrationUtils.missingResource(MissingResourceRegistrationUtils.java:41)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk.Resources.createURLs(Resources.java:460)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk.Resources.createURLs(Resources.java:428)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk.ResourcesHelper.nameToResourceListURLs(ResourcesHelper.java:115)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk.ResourcesHelper.nameToResourceEnumerationURLs(ResourcesHelper.java:124)\r\n\tat java.base@21.0.4/java.lang.ClassLoader.getResources(ClassLoader.java:99)\r\n\tat io.smallrye.common.classloader.ClassPathUtils.consumeAsPaths(ClassPathUtils.java:84)\r\n\tat io.smallrye.config.AbstractLocationConfigSourceLoader.tryClassPath(AbstractLocationConfigSourceLoader.java:141)\r\n\tat io.smallrye.config.AbstractLocationConfigSourceLoader.loadConfigSources(AbstractLocationConfigSourceLoader.java:104)\r\n\tat io.smallrye.config.AbstractLocationConfigSourceLoader.loadConfigSources(AbstractLocationConfigSourceLoader.java:87)\r\n\tat io.smallrye.config.PropertiesConfigSourceLoader$InClassPath.getConfigSources(PropertiesConfigSourceLoader.java:47)\r\n\tat io.smallrye.config.PropertiesConfigSourceLoader.inClassPath(PropertiesConfigSourceLoader.java:33)\r\n\tat io.smallrye.config.SmallRyeConfigBuilder.getPropertiesSources(SmallRyeConfigBuilder.java:217)\r\n\tat io.smallrye.config.SmallRyeConfigBuilder.getDefaultSources(SmallRyeConfigBuilder.java:200)\r\n\tat io.smallrye.config.SmallRyeConfig$ConfigSources.buildSources(SmallRyeConfig.java:841)\r\n\tat io.smallrye.config.SmallRyeConfig$ConfigSources.<init>(SmallRyeConfig.java:770)\r\n\tat io.smallrye.config.SmallRyeConfig.<init>(SmallRyeConfig.java:85)\r\n\tat io.smallrye.config.SmallRyeConfigBuilder.build(SmallRyeConfigBuilder.java:736)\r\n\tat io.quarkus.runtime.generated.Config.readConfig(Unknown Source)\r\n\tat io.quarkus.runtime.generated.Config.createRunTimeConfig(Unknown Source)\r\n\tat io.quarkus.deployment.steps.RuntimeConfigSetup.deploy(Unknown Source)\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base@21.0.4/java.lang.invoke.LambdaForm$DMH/sa346b79c.invokeStaticInit(LambdaForm$DMH)\r\n```\n\n### Actual behavior\n\nThe native executable exits without printing anything.\n\n### How to Reproduce?\n\n```\r\n./mvnw -Dnative -pl integration-tests/picocli-native -Dnative.surefire.skip -Dformat.skip -Dno-descriptor-tests clean verify -Dquarkus.native.additional-build-args=-H:ThrowMissingRegistrationErrors=\r\n./integration-tests/picocli-native/target/quarkus-integration-test-picocli-native-999-SNAPSHOT-runner -h\r\n```\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\nFedora 40\n\n### Output of `java -version`\n\n21.0.4+7\n\n### Mandrel or GraalVM version (if different from Java)\n\nMandrel-23.1.4.0-Final\n\n### Quarkus version or git rev\n\ne1e133fa419fbf2338f2b55eb49d69bb5eae3622\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.8 (36645f6c9b5079805ea5009217e36f2cffd34256)\n\n### Additional information\n\nIt looks like this is related to how Quarkus handles exceptions in https://github.com/quarkusio/quarkus/blob/e1987aa21da30b292e85bb5432fdaf6609ae4f9f/core/runtime/src/main/java/io/quarkus/runtime/ApplicationLifecycleManager.java#L197\r\n\r\nThe exception is thrown too early and Quarkus has not yet set up logging. The exception however is not `ConfigurationException` or `ConfigValidationException` so it's not handled specially and results in the observed behavior.\r\n\r\nI believe there should be a way to check if the configuration is completed (or at least if logging is properly setup) regardless of the exception type so that Quarkus could still show exceptions, not matching the ones above, thrown during the configuration stage.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42084/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42084/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

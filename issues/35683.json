@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35683",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35683/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35683/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35683/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35683",
+  "id": 1877343253,
+  "node_id": "I_kwDOCFbutM5v5fwV",
+  "number": 35683,
+  "title": "grpc-java does not seem to be supported",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2023-09-01T12:32:46Z",
+  "updated_at": "2023-09-18T12:58:48Z",
+  "closed_at": "2023-09-01T13:00:54Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm trying to create a Quarkus extension for the Java SDK of the NoSQL database Couchbase, and hitting several issues.  One of them is that a dependency we're using, GRPC, does not seem to be supported out-of-the-box, either by upstream patches or by Quarkus substitutions. \r\n\r\nI'm hitting several \"classes that should be initialized at run time got initialized during image building\" issues during the native build.  I'll focus on just one of them here:\r\n\r\n```\r\ncom.oracle.svm.core.util.UserError$UserException: Classes that should be initialized at run time got initialized during image building:\r\n io.netty.channel.epoll.Epoll the class was requested to be initialized at run time (from feature io.quarkus.runner.Feature.beforeAnalysis with 'Epoll.class'). io.grpc.netty.NettyChannelBuilder caused initialization of this class with the following trace:\r\n        at io.netty.channel.epoll.Epoll.<clinit>([http://Epoll.java:31](https://protect-usb.mimecast.com/s/HqzrC6Ypy8hrBBxXImO6QV?domain=epoll.java))\r\n        at java.lang.Class.forName0(Unknown Source)\r\n        at java.lang.Class.forName(Class.java:375)\r\n        at io.grpc.netty.Utils.isEpollAvailable(Utils.java:299)\r\n        at io.grpc.netty.Utils.<clinit>([http://Utils.java:115](https://protect-usb.mimecast.com/s/54hgC7Dqz3tAJJ9LTNjLKh?domain=utils.java))\r\n        at io.grpc.netty.NettyChannelBuilder.<clinit>([http://NettyChannelBuilder.java:84](https://protect-usb.mimecast.com/s/1RvWC5AoxyiZDDOAuO0eH2?domain=nettychannelbuilder.java))\r\n```\r\n\r\nI can see from the -H:+PrintClassInitialization output that io.netty.channel.epoll.Epol has indeed been selected to run at runtime, correctly, I think by the Quarkus patches in NettySubsitution.java:\r\n\r\n`io.netty.channel.epoll.Epoll, RUN_TIME, from feature io.quarkus.runner.Feature.beforeAnalysis with 'Epoll.class'`\r\n\r\nSo the issue appears to be that `io.grpc.netty.NettyChannelBuilder` is being initialised at runtime when it should be at build time instead.\r\n\r\nI could add a `new RuntimeInitializedClassBuildItem(\"io.grpc.netty.NettyChannelBuilder\");` for this to my extension.  But it feels that I must be going off-piste, if I'm adding patches for a popular library - and this is just one of several issues I've having against GRPC+Quarkus.  It makes me think I must be doing something wrong.  And I'm concerned about the maintenance burden of trying to keep native compatibility against GRPC from my extension.\r\n\r\nI have been in email contact with @cescoffier on this.  He's pointed me at https://github.com/quarkusio/quarkus/tree/main/extensions/grpc-common, which doesn't seem to contain a patch for this specific problem.  He also mentioned that Quarkus tries to avoid grpc-java, and uses Vert.x instead.  But this isn't an option for us - the SDK needs to be able to use the GRPC protocol that the server uses.\r\n\r\nSo, opening this ticket to see if a wider audience might have some other ideas.\r\n\r\nI'm hoping I'm just missing something, and that GRPC - a major and popular protocol - is in fact supported out-of-the-box by Quarkus.\n\n### Expected behavior\n\nGRPC to be supported out-of-the-box.\n\n### Actual behavior\n\nHitting numerous issues trying to reach a native compilation with GRPC.\n\n### How to Reproduce?\n\nThis would be non-trivial to provide, particularly as I've had to make a lot of local changes to the Couchbase SDK to get this far.  Please let me know if it would help and I'll see what I can do.\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [Version 10.0.22621.2134]\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 LTS\n\n### GraalVM version (if different from Java)\n\nnative-image GraalVM 22.3.2 Java 17 CE (Java Version 17.0.7+7-jvmci-22.3-b18), and on WSL2 with CE 20.0.2+9.1 (build 20.0.2+9-jvmci-23.0-b15)\n\n### Quarkus version or git rev\n\n3.2.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.8.8\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35683/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35683/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

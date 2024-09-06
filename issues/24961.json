@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24961",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24961/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24961/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24961/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24961",
+  "id": 1205436280,
+  "node_id": "I_kwDOCFbutM5H2X94",
+  "number": 24961,
+  "title": "No bean found in case of @LookupIfProperty + @Priority annotations",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-04-15T09:37:54Z",
+  "updated_at": "2022-04-28T10:43:19Z",
+  "closed_at": "2022-04-28T10:43:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have 2 configurations:\r\n\r\n```java\r\n@Singleton\r\npublic class ProviderConfiguration {\r\n    @Singleton\r\n    @Unremovable\r\n    @LookupIfProperty(name = \"type\", stringValue = \"one\", lookupIfMissing = true)\r\n    public Provider providerOne() {\r\n        return new ProviderOne();\r\n    }\r\n\r\n    @Singleton\r\n    @Unremovable\r\n    @LookupIfProperty(name = \"type\", stringValue = \"two\")\r\n    public Provider providerTwo() {\r\n        return new ProviderTwo();\r\n    }\r\n}\r\n```\r\n```java\r\n@Singleton\r\npublic class AdditionalProviderConfiguration {\r\n\r\n    @Singleton\r\n    @Unremovable\r\n    @Alternative\r\n    @Priority(0)\r\n    @LookupIfProperty(name = \"type\", stringValue = \"one\", lookupIfMissing = true)\r\n    public Provider providerThree() {\r\n        return new ProviderThree();\r\n    }\r\n}\r\n```\r\n\r\nAccording to these configurations and property value I want to use different beans of type `Provider`. All three providers (`ProviderOne`, `ProviderTwo` and `ProviderThree` implement the same interface `Provider`).  I select the bean using the following code:\r\n```\r\nProvider provider = Arc.container().select(Provider.class).get();\r\n```\r\nBut when property `type` is `two`, I get an exception (see Actual behavior).\r\n\r\n### Expected behavior\r\n\r\n- when `AdditionalProviderConfiguration` doesn't exist and property `type` is `one`, `ProviderOne` bean is selected\r\n- when `AdditionalProviderConfiguration` exists and property `type` is `one`, `ProviderThree` bean is selected\r\n- when `AdditionalProviderConfiguration` exists and `type` is `two`, `ProviderTwo` bean is selected\r\n\r\n### Actual behavior\r\n\r\n- when `AdditionalProviderConfiguration` doesn't exist and property `type` is `one`, `ProviderOne` bean is selected - **As expected**\r\n- when `AdditionalProviderConfiguration` exists and property `type` is `one`, `ProviderThree` bean is selected - **As expected**\r\n- when `AdditionalProviderConfiguration` exists and `type` is `two`, the following exception:\r\n```\r\njavax.enterprise.inject.UnsatisfiedResolutionException: No bean found for required type [interface com.test.Provider] and qualifiers [[]]\r\n\tat io.quarkus.arc.impl.InstanceImpl.bean(InstanceImpl.java:188)\r\n\tat io.quarkus.arc.impl.InstanceImpl.getInternal(InstanceImpl.java:209)\r\n\tat io.quarkus.arc.impl.InstanceImpl.get(InstanceImpl.java:95)\r\n\tat com.test.GreetingResource.hello(GreetingResource.java:19)\r\n\tat com.test.GreetingResource_Subclass.hello$$superforward1(Unknown Source)\r\n\tat com.test.GreetingResource_Subclass$$function$$1.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat com.test.GreetingResource_Subclass.hello(Unknown Source)\r\n\tat com.test.GreetingResource$quarkusrestinvoker$hello_e747664148511e1e5212d3e0f4b40d45c56ab8a1.invoke(Unknown Source)\r\n\tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n\tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:7)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:141)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$13.runWith(VertxCoreRecorder.java:545)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:834)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n\"11.0.6\" 2020-01-14 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.8.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.6.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24961/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24961/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

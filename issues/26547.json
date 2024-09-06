@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26547",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26547/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26547/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26547/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26547",
+  "id": 1293247933,
+  "node_id": "I_kwDOCFbutM5NFWW9",
+  "number": 26547,
+  "title": "Default Interceptor Priority should not be 0",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-07-04T14:25:29Z",
+  "updated_at": "2022-07-11T08:26:19Z",
+  "closed_at": "2022-07-11T08:26:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nInterceptors and decorators that do not declare a `@Priority` themselves are assigned a priority by Quarkus and an info is printed to the log during the build, but according to the log message, the default priority is 0. This gives interceptors and decorators without any priority an unexpectedly important position in the interceptor chain, because `0 == Interceptor.Priority.PLATFORM_BEFORE`. One would expect that the default priority is something like 2500, i.e. `Interceptor.Priority.APPLICATION+500`\n\n### Expected behavior\n\nThe default priority should be in the range 2000-2999.\n\n### Actual behavior\n\n```\r\n2022-07-04 16:10:36,795 INFO  [io.qua.arc.pro.Interceptors] (build-51) The interceptor com.example.MyInterceptor does not declare any @Priority. It will be assigned a default priority value of 0.\r\n2022-07-04 16:10:36,797 INFO  [io.qua.arc.pro.Decorators] (build-51) The decorator com.example.MyDecorator does not declare any @Priority. It will be assigned a default priority value of 0.\r\n```\n\n### How to Reproduce?\n\nUse the following small application:\r\n\r\n```\r\n@Decorator\r\npublic abstract class MyDecorator implements MyInterface {\r\n\r\n    @Inject\r\n    @Delegate\r\n    MyService delegate;\r\n}\r\n\r\n\r\n@Interceptor\r\n@MyInterceptorBinding\r\npublic class MyInterceptor {\r\n\r\n    @AroundInvoke\r\n    Object aroundInvoke(InvocationContext context) throws Exception {\r\n        return context.proceed();\r\n    }\r\n}\r\n\r\n\r\npublic interface MyInterface {\r\n    String sayHello();\r\n}\r\n\r\n@ApplicationScoped\r\n@Unremovable\r\npublic class MyService implements MyInterface {\r\n\r\n    @Override\r\n    @MyInterceptorBinding\r\n    public String sayHello(){\r\n        return \"Hello World\";\r\n    }\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.10.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d) Maven home: C:\\Users\\joh\\.m2\\wrapper\\dists\\apache-maven-3.8.1-bin\\2l5mhf2pq2clrde7f7qp1rdt5m\\apache-maven-3.8.1 Java version: 11.0.11, vendor: AdoptOpenJDK, runtime: C:\\Program Files\\AdoptOpenJDK\\jdk-11.0.11.9-hotspot       Default locale: de_DE, platform encoding: Cp1252 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26547/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26547/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

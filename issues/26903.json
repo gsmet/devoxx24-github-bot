@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26903",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26903/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26903/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26903/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26903",
+  "id": 1315703615,
+  "node_id": "I_kwDOCFbutM5ObAs_",
+  "number": 26903,
+  "title": "RESTEasy Reactive - Improve documentation around mutiny and reactive",
+  "labels": [
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1710069947,
+      "node_id": "MDU6TGFiZWwxNzEwMDY5OTQ3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/housekeeping",
+      "name": "area/housekeeping",
+      "color": "d1d86a",
+      "default": false,
+      "description": "Issue type for generalized tasks not related to bugs or enhancements"
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-07-23T17:05:47Z",
+  "updated_at": "2023-01-23T07:35:00Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nI've seen people get confused, thinking that using Mutiny will automatically push blocking work to worker threads.\r\nSee for example: https://stackoverflow.com/questions/71754982/quarkus-mutiny-and-imperitave-vs-reactive.\r\n\r\nI've also fallen into this trap. First, I wanted to demonstrate that using Mutiny automatically shoves blocking calls into a separate worker thread pool:\r\n\r\n```java\r\nreturn Uni\r\n  .createFrom()\r\n  .nullItem()\r\n  .onItem()\r\n  .delayIt()\r\n  .by(Duration.ofSeconds(5))\r\n  .onItem()\r\n  .transform(o -> doExpensiveWork());\r\n```\r\n\r\nIn the logs - it looks great! The work is done in a separate thread pool. Ok, now I decide this works well and remove the `delayIt()` to get it ready for production:\r\n\r\n```java\r\nreturn Uni\r\n  .createFrom()\r\n  .nullItem()\r\n  .onItem()\r\n  .transform(o -> doExpensiveWork());\r\n```\r\nonly to notice that all of the work continues to happen on the `vert.x-event-loop-thread-0`. Everything slows to a crawl.\r\n\r\nThis happens because internally, onDelay switches the stream to using `Infrastructure.getDefaultWorkerPool()`. \r\n```java\r\n    @CheckReturnValue\r\n    public UniOnItemDelay<T> delayIt() {\r\n        return new UniOnItemDelay<>(upstream, null);\r\n    }\r\n```\r\n```java\r\n    /**\r\n     * Creates a new {@code UniOnItemDelay} instance.\r\n     *\r\n     * @param upstream the upstream uni\r\n     * @param executor the executor, can be {@code null}, if {@code null} used the default worker executor.\r\n     */\r\n    public UniOnItemDelay(Uni<T> upstream, ScheduledExecutorService executor) {\r\n        this.upstream = upstream;\r\n        this.executor = executor == null ? Infrastructure.getDefaultWorkerPool() : executor;\r\n    }\r\n```\r\nIt's only visible in the code - I couldn't find it documented anywhere that the `onDelay()` switches the stream to a different thread pool  `.call()`, `.invoke()`, .`transform()` etc happen on the same thread. \r\n\r\nOnly after reading these comments inside StackOverflow did everything click: \r\n<img width=\"673\" alt=\"image\" src=\"https://user-images.githubusercontent.com/4895027/180615277-47a28687-d4ae-4542-b44d-19063942beb8.png\"> \r\n(from https://stackoverflow.com/questions/71754982/quarkus-mutiny-and-imperitave-vs-reactive)\r\nAfter seeing that, I saw the `.emitOn()` and `.runSubscriptionOn()` methods where i can orchestrate the async calls to separate thread pools.\r\n\r\n\r\nRelatedly, using `i/o thread` and `worker thread` has been confusing to me. When seeing `i/o thread`, I think that this is a thread where I/O happens. Instead, it's actually the vertx event loop thread where such blocking I/O shouldn't happen. For example, this is a screenshot from the documentation:\r\n<img width=\"899\" alt=\"image\" src=\"https://user-images.githubusercontent.com/4895027/180615311-87cbbbd6-8333-4905-b847-e6420b2ba378.png\">\r\n\r\nIt's much more clear to me if we write it as:\r\n![image](https://user-images.githubusercontent.com/4895027/180615319-6df401eb-6678-46b8-930e-3d33178e7ef0.png)\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26903/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26903/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37142",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37142/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37142/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37142/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37142",
+  "id": 1996603379,
+  "node_id": "I_kwDOCFbutM53Ab_z",
+  "number": 37142,
+  "title": "Kubernetes client native integration test OOMs (GC overhead limit reached) with -Xmx5g",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2023-11-16T11:02:10Z",
+  "updated_at": "2024-03-27T12:41:12Z",
+  "closed_at": "2024-03-27T12:41:11Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nSince today in mandrel CI, the kubernetest-client native integration test OOMs with a GraalVM master build:\r\n\r\n```\r\n[INFO] --- quarkus:999-SNAPSHOT:build (default) @ quarkus-integration-test-kubernetes-client ---\r\nWarning:  [io.quarkus.deployment.steps.NativeImageAllowIncompleteClasspathAggregateStep] The following extensions have required native-image to allow run-time resolution of classes: {quarkus-kubernetes-client}. This is a global requirement which might have unexpected effects on other extensions as well, and is a hint of the library needing some additional refactoring to better support GraalVM native-image. In the case of 3rd party dependencies and/or proprietary code there is not much we can do - please ask for support to your library vendor. If you incur in any problem with other Quarkus extensions, please try reproducing the problem without these extensions first.\r\nWarning:  [io.quarkus.deployment.steps.ReflectiveHierarchyStep] Unable to properly register the hierarchy of the following classes for reflection as they are not in the Jandex index:\r\n\t- io.fabric8.openshift.api.model.operator.v1.GenerationStatus (source: JacksonProcessor > io.fabric8.kubernetes.api.model.ValidationSchema)\r\n\t- io.fabric8.openshift.api.model.operator.v1.OperatorCondition (source: JacksonProcessor > io.fabric8.kubernetes.api.model.ValidationSchema)\r\nConsider adding them to the index either by creating a Jandex index for your dependency via the Maven plugin, an empty META-INF/beans.xml or quarkus.index-dependency properties.\r\n[INFO] [io.quarkus.deployment.pkg.steps.JarResultBuildStep] Building native image source jar: /home/runner/work/mandrel/mandrel/quarkus/integration-tests/kubernetes-client/target/quarkus-integration-test-kubernetes-client-999-SNAPSHOT-native-image-source-jar/quarkus-integration-test-kubernetes-client-999-SNAPSHOT-runner.jar\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildStep] Building native image from /home/runner/work/mandrel/mandrel/quarkus/integration-tests/kubernetes-client/target/quarkus-integration-test-kubernetes-client-999-SNAPSHOT-native-image-source-jar/quarkus-integration-test-kubernetes-client-999-SNAPSHOT-runner.jar\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildStep] Running Quarkus native-image plugin on GRAALVM 24.0-dev JDK 22+22-jvmci-b01\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] /home/runner/work/mandrel/mandrel/graalvm-home/bin/native-image -J-Djava.util.logging.manager=org.jboss.logmanager.LogManager -J-Dsun.nio.ch.maxUpdateArraySize=100 -J-Dlogging.initial-configurator.min-level=500 -J-Dvertx.logger-delegate-factory-class-name=io.quarkus.vertx.core.runtime.VertxLogDelegateFactory -J-Dvertx.disableDnsResolver=true -J-Dio.netty.leakDetection.level=DISABLED -J-Dio.netty.allocator.maxOrder=3 -J-Duser.language=en -J-Duser.country=US -J-Dfile.encoding=UTF-8 --features=io.quarkus.runner.Feature,io.quarkus.runtime.graal.DisableLoggingFeature -J--add-exports=java.security.jgss/sun.security.krb5=ALL-UNNAMED -J--add-opens=java.base/java.text=ALL-UNNAMED -J--add-opens=java.base/java.io=ALL-UNNAMED -J--add-opens=java.base/java.lang.invoke=ALL-UNNAMED -J--add-opens=java.base/java.util=ALL-UNNAMED -H:+UnlockExperimentalVMOptions -H:BuildOutputJSONFile=quarkus-integration-test-kubernetes-client-999-SNAPSHOT-runner-build-output-stats.json -H:-UnlockExperimentalVMOptions -H:+UnlockExperimentalVMOptions -H:+AllowFoldMethods -H:-UnlockExperimentalVMOptions -J-Djava.awt.headless=true --no-fallback -H:+UnlockExperimentalVMOptions -H:+ReportExceptionStackTraces -H:-UnlockExperimentalVMOptions -J-Xmx5g -H:-AddAllCharsets --enable-url-protocols=http,https -H:NativeLinkerOption=-no-pie --enable-monitoring=heapdump -H:+UnlockExperimentalVMOptions -H:-UseServiceLoaderFeature -H:-UnlockExperimentalVMOptions -J--add-exports=org.graalvm.nativeimage/org.graalvm.nativeimage.impl=ALL-UNNAMED --exclude-config io\\.netty\\.netty-codec /META-INF/native-image/io\\.netty/netty-codec/generated/handlers/reflect-config\\.json --exclude-config io\\.netty\\.netty-handler /META-INF/native-image/io\\.netty/netty-handler/generated/handlers/reflect-config\\.json quarkus-integration-test-kubernetes-client-999-SNAPSHOT-runner -jar quarkus-integration-test-kubernetes-client-999-SNAPSHOT-runner.jar\r\nWarning: The option '-H:ReflectionConfigurationResources=META-INF/native-image/io.netty/netty-transport/reflection-config.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.\r\nWarning: Please re-evaluate whether any experimental option is required, and either remove or unlock it. The build output lists all active experimental options, including where they come from and possible alternatives. If you think an experimental option should be considered as stable, please file an issue.\r\n========================================================================================================================\r\nGraalVM Native Image: Generating 'quarkus-integration-test-kubernetes-client-999-SNAPSHOT-runner' (executable)...\r\n========================================================================================================================\r\nFor detailed information and explanations on the build output, visit:\r\nhttps://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/BuildOutput.md\r\n------------------------------------------------------------------------------------------------------------------------\r\n[1/8] Initializing...                                                                                    (9.8s @ 0.28GB)\r\n Java version: 22+22, vendor version: GraalVM CE 22-dev+22.1\r\n Graal compiler: optimization level: 2, target machine: x86-64-v3\r\n C compiler: gcc (linux, x86_64, 11.4.0)\r\n Garbage collector: Serial GC (max heap size: 80% of RAM)\r\n 4 user-specific feature(s):\r\n - com.oracle.svm.thirdparty.gson.GsonFeature\r\n - io.quarkus.runner.Feature: Auto-generated class by Quarkus from the existing extensions\r\n - io.quarkus.runtime.graal.DisableLoggingFeature: Disables INFO logging during the analysis phase\r\n - org.eclipse.angus.activation.nativeimage.AngusActivationFeature\r\n------------------------------------------------------------------------------------------------------------------------\r\n 4 experimental option(s) unlocked:\r\n - '-H:+AllowFoldMethods' (origin(s): command line)\r\n - '-H:BuildOutputJSONFile' (origin(s): command line)\r\n - '-H:-UseServiceLoaderFeature' (origin(s): command line)\r\n - '-H:ReflectionConfigurationResources': Use a reflect-config.json in your META-INF/native-image/<groupID>/<artifactID> directory instead. (origin(s): 'META-INF/native-image/io.netty/netty-transport/native-image.properties' in 'file:///home/runner/work/mandrel/mandrel/quarkus/integration-tests/kubernetes-client/target/quarkus-integration-test-kubernetes-client-999-SNAPSHOT-native-image-source-jar/lib/io.netty.netty-transport-4.1.100.Final.jar')\r\n------------------------------------------------------------------------------------------------------------------------\r\nBuild resources:\r\n - 4.44GB of memory (28.5% of 15.61GB system memory, set via '-Xmx5g')\r\n - 4 thread(s) (100.0% of 4 available processor(s), determined at start)\r\nos.name\r\n[2/8] Performing analysis...  [******]                                                                 (283.1s @ 3.83GB)\r\n   27,338 reachable types   (92.9% of   29,417 total)\r\n   58,060 reachable fields  (79.6% of   72,964 total)\r\n  277,512 reachable methods (82.6% of  335,942 total)\r\n   16,468 types, 34,206 fields, and 163,562 methods registered for reflection\r\n       61 types,    61 fields, and    55 methods registered for JNI access\r\n        4 native libraries: dl, pthread, rt, z\r\nTerminating due to java.lang.OutOfMemoryError: GC overhead limit exceeded\r\nThe Native Image build process ran out of memory.\r\nPlease make sure your build system has more memory available.\r\n[INFO] \r\n```\r\nSee:\r\nhttps://github.com/graalvm/mandrel/actions/runs/6885132117/job/18729490442#step:12:207\r\n\r\nIt looks like the types reached and methods reached have increased significantly from a run that last worked 2 days ago here:\r\nhttps://github.com/graalvm/mandrel/actions/runs/6885132117/job/18729490442#step:12:207\r\n\r\n\r\nThe specifics are as follows:\r\n\r\n**GOOD**\r\n```\r\n    18,450 reachable types   (74.8% of   24,659 total)\r\n   36,922 reachable fields  (71.3% of   51,784 total)\r\n  132,466 reachable methods (66.7% of  198,694 total)\r\n    7,534 types,   779 fields, and 43,505 methods registered for reflection\r\n       61 types,    61 fields, and    55 methods registered for JNI access\r\n```\r\n\r\n**BAD**\r\n```\r\n   27,338 reachable types   (92.9% of   29,417 total)\r\n   58,060 reachable fields  (79.6% of   72,964 total)\r\n  277,512 reachable methods (82.6% of  335,942 total)\r\n   16,468 types, 34,206 fields, and 163,562 methods registered for reflection\r\n       61 types,    61 fields, and    55 methods registered for JNI access\r\n```\r\n\r\nWas there a change recently which could have caused this?\r\n\r\nIt's also concerning that we now see this (not in the passing test):\r\n\r\n```\r\n Warning:  [io.quarkus.deployment.steps.NativeImageAllowIncompleteClasspathAggregateStep] The following extensions have required native-image to allow run-time resolution of classes: {quarkus-kubernetes-client}. This is a global requirement which might have unexpected effects on other extensions as well, and is a hint of the library needing some additional refactoring to better support GraalVM native-image. In the case of 3rd party dependencies and/or proprietary code there is not much we can do - please ask for support to your library vendor. If you incur in any problem with other Quarkus extensions, please try reproducing the problem without these extensions first.\r\nWarning:  [io.quarkus.deployment.steps.ReflectiveHierarchyStep] Unable to properly register the hierarchy of the following classes for reflection as they are not in the Jandex index:\r\n\t- io.fabric8.openshift.api.model.operator.v1.GenerationStatus (source: JacksonProcessor > io.fabric8.kubernetes.api.model.ValidationSchema)\r\n\t- io.fabric8.openshift.api.model.operator.v1.OperatorCondition (source: JacksonProcessor > io.fabric8.kubernetes.api.model.ValidationSchema)\r\nConsider adding them to the index either by creating a Jandex index for your dependency via the Maven plugin, an empty META-INF/beans.xml or quarkus.index-dependency properties.\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37142/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37142/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

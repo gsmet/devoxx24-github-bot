@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36015",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36015/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36015/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36015/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36015",
+  "id": 1903300102,
+  "node_id": "I_kwDOCFbutM5xcg4G",
+  "number": 36015,
+  "title": "Not possible to use SecurityIdentity in HttpServerMetricsTagsContributor",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031886,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxODg2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/metrics",
+      "name": "area/metrics",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2023-09-19T16:02:41Z",
+  "updated_at": "2023-09-20T12:00:42Z",
+  "closed_at": "2023-09-20T11:56:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using `HttpServerMetricsTagsContributor` to provide extra tags for http metrics, it is not possible to get hold of `SecurityIdentity` as the request context is no longer active (or looks like that) and fails with `java.lang.IllegalStateException: The current thread cannot be blocked: vert.x-eventloop-thread-1`. \r\n\r\n### Expected behavior\r\n\r\nIt should be possible to use SecurityIdentity to add information into the metrics such as tenant id and similar.\r\n\r\n### Actual behavior\r\n\r\nFails with `java.lang.IllegalStateException: The current thread cannot be blocked: vert.x-eventloop-thread-1` while trying to access the identity which might be too early terminated as the request was authenticated.\r\n\r\n### How to Reproduce?\r\n\r\nImplement `HttpServerMetricsTagsContributor` that injects the security identity and retrieves principal and attribute from it.\r\n\r\n````\r\n@ApplicationScoped\r\npublic class SampleHttpServerMetricsTagsContributor implements HttpServerMetricsTagsContributor {\r\n\r\n    @Inject\r\n    SecurityIdentity identity;\r\n\r\n    @ActivateRequestContext\r\n    public Tags contribute(Context context) {\r\n        List<Tag> tags = new ArrayList<>();\r\n            if (!identity.isAnonymous()) {\r\n\r\n            tags = Arrays.asList(\r\n                    Tag.of(\"tenantId\", identity.getPrincipal().getName()),\r\n                    Tag.of(\"tenantName\", identity.getAttribute(\"tenantName\")));\r\n\r\n            }\r\n        return Tags.of(tags);\r\n    }\r\n}\r\n\r\n````\r\n\r\nMake any request to http endpoint so metics are recorded.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin 22.6.0 Darwin Kernel Version 22.6.0\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.2\" 2022-01-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.3.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\napache-maven-3.8.4\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36015/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36015/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34387",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34387/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34387/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34387/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34387",
+  "id": 1779089031,
+  "node_id": "I_kwDOCFbutM5qCr6H",
+  "number": 34387,
+  "title": "io.quarkus.logging.Log and @InjectMock fails on Native Image Testing with @QuarkusIntegrationTest",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-06-28T14:33:23Z",
+  "updated_at": "2023-06-30T16:20:39Z",
+  "closed_at": "2023-06-30T06:23:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen testing with `@QuarkusIntegrationTest`, some test fail.\r\n\r\n\"Quarkus magic\" for io.quarkus.logging.Log seems to fail only when it is defined in @QuarkusTest class. It works fine on regular beans (`@ApplicationScoped`). It fails on both `prod` and `test` native build/run profiles.\r\n\r\nCode fragment:\r\n```java\r\n@InjectMock\r\nBookingService service;\r\n```\r\n\r\nCommand:\r\n`mvnw verify -Pnative -Dquarkus.profile=test -Dquarkus.test.native-image-profile=test`\r\n\r\n### Expected behavior\r\n\r\nAll tests should have the same result as test run on Java\r\n\r\n### Actual behavior\r\n\r\nLog:\r\n```\r\n[ERROR] Errors:\r\n[ERROR]   BookingResourceTestIT>BookingResourceTest.shouldResponseAvailableHoursWhenRequestWithGoodBooking:139 » NullPointer Cannot invoke \"com.ibm.viabcp.booking.service.BookingService.obtenerHorariosDisponibles(com.ibm.viabcp.booking.dto.HourAvailableRequest)\" because \"this.service\" is null\r\n[ERROR]   BookingResourceTestIT>BookingResourceTest.shouldResponseCalendarWhenRequestWithGoodBooking:101 » NullPointer Cannot invoke \"com.ibm.viabcp.booking.service.BookingService.obtenerCalendarView(com.ibm.viabcp.booking.dto.CalendarRequest)\" because \"this.service\" is null\r\n[ERROR]   BookingResourceTestIT>BookingResourceTest.shouldResponseRecordAppointmentWhenRequestWithGoodBooking:189 » NullPointer Cannot invoke \"com.ibm.viabcp.booking.service.BookingService.registrarCita(com.ibm.viabcp.booking.dto.AppointmentRequest)\" because \"this.service\" is null\r\n[ERROR]   BookingResourceTestIT>BookingResourceTest.shouldResponseStaffWhenRequestWithGoodBooking:65 » NullPointer Cannot invoke \"com.ibm.viabcp.booking.service.BookingService.obtenerStaff(com.ibm.viabcp.booking.dto.BookingRequest)\" because \"this.service\" is null\r\n[ERROR]   BookingServiceTestIT>BookingServiceTest.setup:115 » UnsupportedOperation Using io.quarkus.logging.Log is only possible with Quarkus bytecode transformation\r\n[ERROR]   BookingServiceTestIT>BookingServiceTest.setup:115 » UnsupportedOperation Using io.quarkus.logging.Log is only possible with Quarkus bytecode transformation\r\n[ERROR]   BookingServiceTestIT>BookingServiceTest.setup:115 » UnsupportedOperation Using io.quarkus.logging.Log is only possible with Quarkus bytecode transformation\r\n[ERROR]   BookingServiceTestIT>BookingServiceTest.setup:115 » UnsupportedOperation Using io.quarkus.logging.Log is only possible with Quarkus bytecode transformation\r\n[ERROR]   BookingServiceTestIT>BookingServiceTest.setup:115 » UnsupportedOperation Using io.quarkus.logging.Log is only possible with Quarkus bytecode transformation\r\n[ERROR]   BookingServiceTestIT>BookingServiceTest.setup:115 » UnsupportedOperation Using io.quarkus.logging.Log is only possible with Quarkus bytecode transformation\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Create project with `@InjectMock` and `io.quarkus.logging.Log` inside `@QuarkusTest` class\r\n2. Execute tests `mvnw verify -Pnative -Dquarkus.profile=test -Dquarkus.test.native-image-profile=test`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n GraalVM 22.3.2 Java 17 CE (Java Version 17.0.7+7-jvmci-22.3-b18)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n GraalVM 22.3.2\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.7.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.8\r\n\r\n### Additional information\r\n\r\n- OS: Windows 11\r\n- Command run inside `x64 Native Tools Command Prompt for VS 2022`\r\n```\r\n[1/7] Initializing...                                                                                   (12.4s @ 0.13GB)\r\n Version info: 'GraalVM 22.3.2 Java 17 CE'\r\n Java version info: '17.0.7+7-jvmci-22.3-b18'\r\n C compiler: cl.exe (microsoft, x64, 19.36.32532)\r\n Garbage collector: Serial GC\r\n 3 user-specific feature(s)\r\n - io.quarkus.runner.Feature: Auto-generated class by Quarkus from the existing extensions\r\n - io.quarkus.runtime.graal.DisableLoggingFeature: Disables INFO logging during the analysis phase for the [org.jboss.threads] categories\r\n - io.quarkus.runtime.graal.ResourcesFeature: Register each line in META-INF/quarkus-native-resources.txt as a resource on Substrate VM\r\n```\r\nRelated: \r\n- https://quarkus.io/guides/building-native-image#profiles\r\n- https://github.com/quarkusio/quarkus/issues/34385",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34387/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34387/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

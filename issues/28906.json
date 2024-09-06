@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28906",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28906/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28906/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28906/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28906",
+  "id": 1427278189,
+  "node_id": "I_kwDOCFbutM5VEolt",
+  "number": 28906,
+  "title": "JBeret blocks Quarkus startup on Java 17",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-10-28T13:37:27Z",
+  "updated_at": "2022-11-02T10:19:16Z",
+  "closed_at": "2022-11-02T06:47:05Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe are currently upgrading from Quarkus 2.7.2 to 2.13.3 and the services which make use of JBeret fail to boot because of an IllegalAccessException to the JDK-internal java.lang.AbstractStringBuilder.\r\n\r\nAlready in 2.7.2, when we migrated to Java 17, we had to setup Quarkus to launch with an additional JVM parameter top open up the jdk package `java.security` due to JBeret. With 2.13.3 an additional package from java.base module was needed: `java.util.zip`.\r\n\r\nUsually this is enough for the JDK to allow access. But in this case the BatchBeanProducer from JBeret is, for whatever reason, trying to access `java.lang.AbstractStringBuilder`.\r\nSince I could not find any reference to this class in the JBeret repo, I must assume that this behaviour is caused by Quarkus bootstrap magic.\r\n\r\n### Expected behavior\r\n\r\nGiven all required JDK packages are open for reflection, the startup should succeed.\r\n\r\n### Actual behavior\r\n\r\n```\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n\t... 17 more\r\nCaused by: java.lang.IllegalAccessError: failed to access class java.lang.AbstractStringBuilder from class org.jberet.creation.BatchBeanProducer_ProducerMethod_getStringBuffer_63eee896f20ad1cf56dde6a254b221caf7ed9cbc_Bean (java.lang.AbstractStringBuilder is in module java.base of loader 'bootstrap'; org.jberet.creation.BatchBeanProducer_ProducerMethod_getStringBuffer_63eee896f20ad1cf56dde6a254b221caf7ed9cbc_Bean is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @1cbbffcd)\r\n\tat org.jberet.creation.BatchBeanProducer_ProducerMethod_getStringBuffer_63eee896f20ad1cf56dde6a254b221caf7ed9cbc_Bean.<init>(Unknown Source)\r\n\tat io.quarkus.arc.setup.Default_ComponentsProvider.addBeans13(Unknown Source)\r\n\tat io.quarkus.arc.setup.Default_ComponentsProvider.getComponents(Unknown Source)\r\n\tat io.quarkus.arc.impl.ArcContainerImpl.<init>(ArcContainerImpl.java:127)\r\n\tat io.quarkus.arc.Arc.initialize(Arc.java:31)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.initContainer(ArcRecorder.java:43)\r\n\tat io.quarkus.deployment.steps.ArcProcessor$generateResources1337887788.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.ArcProcessor$generateResources1337887788.deploy(Unknown Source)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nSetup Quarkus Application together with JBeret Batch Framework\r\n\r\nStart with add-opens JVM-Parameter\r\n`--add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.1\" 2021-10-19 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.1\r\n\r\n### Additional information\r\n\r\nI also tried opening up `java.base/java.lang` (which contains the AbstractStringBuilder) to the **unnamed-module**, but this did not work. ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28906/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28906/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

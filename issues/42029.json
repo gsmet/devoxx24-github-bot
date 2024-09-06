@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42029",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42029/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42029/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42029/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42029",
+  "id": 2422217618,
+  "node_id": "I_kwDOCFbutM6QYBuS",
+  "number": 42029,
+  "title": "Newer versions of rest-client-jackson start getting NoStackTraceTimeoutException after several hours of running while ignore retry parameters",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-07-22T08:02:30Z",
+  "updated_at": "2024-07-22T08:02:36Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have an application, which retrieves data every several minutes from https://api.github.com/graphql using json client. When the app uses the latest 3.x versions, all these requests start failing with NoStackTraceTimeoutException after 30-50 hours after start up. When the app uses 3.8.5, it doesn't encounter this problem.\r\n\r\nThe client is annotated with `@Retry(delay = 2, delayUnit = SECONDS)`, but this seems to be ignored, since the error is logged in two bursts with 10 second intervals, like this: \r\n2024-07-20 19:09:00,910 \r\n2024-07-20 19:09:00,960\r\n2024-07-20 19:19:00,838\r\n2024-07-20 19:19:01,077\r\n2024-07-20 19:29:01,043\r\n2024-07-20 19:29:01,050\r\n2024-07-20 19:39:01,051\r\n2024-07-20 19:39:01,333\r\n\r\n\r\nThe application is run in Openshift. When the app is restarted by scaling to 0 and back, it runs without problems for another day.\n\n### Expected behavior\n\nThe requests do not start to fail with timeouts and use retry options for retries\n\n### Actual behavior\n\nThe app was started at 2024-07-19 08:36:51,772. There was several errors in the logs (eg 502 bad gateway), then there was this:\r\n```\r\n2024-07-20 18:39:01,614 ERROR [io.qua.sch.com.run.StatusEmitterInvoker] (executor-thread-404) Error occurred while executing task for trigger IntervalTrigger [id=1_io.quarkus.activity.GitHubOpenPrQueueService#updateOpenPrQueueInOrganization, interval=600000]: java.util.concurrent.CompletionException: jakarta.ws.rs.ProcessingException: The timeout of 30000 ms has been exceeded when getting a connection to api.github.com:443\r\n\tat java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:332)\r\n\tat java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:347)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:874)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenCompleteStage(CompletableFuture.java:887)\r\n\tat java.base/java.util.concurrent.CompletableFuture.whenComplete(CompletableFuture.java:2325)\r\n\tat java.base/java.util.concurrent.CompletableFuture$MinimalStage.whenComplete(CompletableFuture.java:2902)\r\n\tat io.quarkus.scheduler.common.runtime.DefaultInvoker.invoke(DefaultInvoker.java:24)\r\n\tat io.quarkus.scheduler.common.runtime.StatusEmitterInvoker.invoke(StatusEmitterInvoker.java:35)\r\n\tat io.quarkus.scheduler.runtime.SimpleScheduler$ScheduledTask.doInvoke(SimpleScheduler.java:463)\r\n\tat io.quarkus.scheduler.runtime.SimpleScheduler$ScheduledTask$2.call(SimpleScheduler.java:445)\r\n\tat io.quarkus.scheduler.runtime.SimpleScheduler$ScheduledTask$2.call(SimpleScheduler.java:442)\r\n\tat io.vertx.core.impl.ContextImpl.lambda$executeBlocking$0(ContextImpl.java:178)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:279)\r\n\tat io.vertx.core.impl.ContextImpl.lambda$internalExecuteBlocking$2(ContextImpl.java:210)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:604)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1495)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:11)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:11)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:840)\r\nCaused by: jakarta.ws.rs.ProcessingException: The timeout of 30000 ms has been exceeded when getting a connection to api.github.com:443\r\n\tat org.jboss.resteasy.reactive.client.impl.InvocationBuilderImpl.unwrap(InvocationBuilderImpl.java:212)\r\n\tat org.jboss.resteasy.reactive.client.impl.InvocationBuilderImpl.method(InvocationBuilderImpl.java:328)\r\n\tat io.quarkus.activity.graphql.GraphQLClient$$QuarkusRestClientInterface.graphql(Unknown Source)\r\n\tat io.quarkus.activity.graphql.GraphQLClient$$CDIWrapper.graphql(Unknown Source)\r\n\tat io.quarkus.activity.graphql.GraphQLClient$$CDIWrapper_Subclass.graphql$$superforward(Unknown Source)\r\n\tat io.quarkus.activity.graphql.GraphQLClient$$CDIWrapper_Subclass$$function$$1.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:73)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:62)\r\n\tat io.smallrye.faulttolerance.FaultToleranceInterceptor.lambda$syncFlow$3(FaultToleranceInterceptor.java:258)\r\n\tat io.smallrye.faulttolerance.core.InvocationContext.call(InvocationContext.java:19)\r\n\tat io.smallrye.faulttolerance.core.Invocation.apply(Invocation.java:29)\r\n\tat io.smallrye.faulttolerance.core.retry.Retry.doApply(Retry.java:92)\r\n\tat io.smallrye.faulttolerance.core.retry.Retry.apply(Retry.java:46)\r\n\tat io.smallrye.faulttolerance.FaultToleranceInterceptor.syncFlow(FaultToleranceInterceptor.java:260)\r\n\tat io.smallrye.faulttolerance.FaultToleranceInterceptor.intercept(FaultToleranceInterceptor.java:187)\r\n\tat io.smallrye.faulttolerance.FaultToleranceInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n\tat io.quarkus.activity.graphql.GraphQLClient$$CDIWrapper_Subclass.graphql(Unknown Source)\r\n\tat io.quarkus.activity.graphql.GraphQLClient$$CDIWrapper_ClientProxy.graphql(Unknown Source)\r\n\tat io.quarkus.activity.github.GitHubService.getOpenPrQueueInOrganization(GitHubService.java:175)\r\n\tat io.quarkus.activity.github.GitHubService_ClientProxy.getOpenPrQueueInOrganization(Unknown Source)\r\n\tat io.quarkus.activity.GitHubOpenPrQueueService.buildOpenPrQueueInOrganization(GitHubOpenPrQueueService.java:47)\r\n\tat io.quarkus.activity.GitHubOpenPrQueueService.updateOpenPrQueueInOrganization(GitHubOpenPrQueueService.java:29)\r\n\tat io.quarkus.activity.GitHubOpenPrQueueService_ClientProxy.updateOpenPrQueueInOrganization(Unknown Source)\r\n\tat io.quarkus.activity.GitHubOpenPrQueueService_ScheduledInvoker_updateOpenPrQueueInOrganization_e5d168e0f7b339244f388e8ce1217ce6aabfb5e7.invokeBean(Unknown Source)\r\n\t... 16 more\r\nCaused by: io.vertx.core.impl.NoStackTraceTimeoutException: The timeout of 30000 ms has been exceeded when getting a connection to api.github.com:443\r\n```\r\nAnd then, starting from `2024-07-20 18:49:00,900` and `2024-07-20 18:49:01,256` there are two of these error in the logs every 10 seconds for the next two (at the time of writing) days.\r\n\n\n### How to Reproduce?\n\n1. `git clone -b reproducer/latest git@github.com:fedinskiy/gh-activity.git`\r\n2. Create `.env` file with the following content: `ACTIVITY_TOKEN=${an API token for github}`\r\n3. Start it locally with `mvn quarkus:dev`\r\nFor openshift:\r\n2. Create an Openshift secret with the following content:\r\n```\r\napiVersion: v1\r\nkind: Secret\r\nmetadata:\r\n  name: gh-activity-token\r\nstringData:\r\n  ACTIVITY_TOKEN: your_token\r\n```\r\n3. Deploy the app: `mvn clean package -Dquarkus.openshift.deploy=true -Dquarkus.openshift.env.vars.\"activity-logins\"=fedinskiy `\r\n\n\n### Output of `uname -a` or `ver`\n\n4.18.0-553.5.1.el8_10.x86_64\n\n### Output of `java -version`\n\n17.0.7, vendor: Red Hat, Inc.\n\n### Quarkus version or git rev\n\n 3.12.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\n\n### Additional information\n\n```\r\n$ oc version\r\nClient Version: 4.15.0-202404030309.p0.g62c4d45.assembly.stream.el8-62c4d45\r\nKustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3\r\nKubernetes Version: v1.27.6+d54805\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42029/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42029/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

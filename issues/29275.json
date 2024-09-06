@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29275",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29275/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29275/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29275/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29275",
+  "id": 1449722583,
+  "node_id": "I_kwDOCFbutM5WaQLX",
+  "number": 29275,
+  "title": "Native image in 2.13 not compatible with epsilon GC",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-11-15T12:42:19Z",
+  "updated_at": "2022-11-18T09:24:34Z",
+  "closed_at": "2022-11-18T09:24:34Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nPrior to https://github.com/quarkusio/quarkus/pull/28295 (i.e., 2.14) Quarkus unconditionally passes `-H:InitialCollectionPolicy=com.oracle.svm.core.genscavenge.CollectionPolicy$BySpaceAndTime` to `native-image`, but this option is only available when using the SerialGC.\r\n\r\n\n\n### Expected behavior\n\nUsing `-Dquarkus.native.additional-build-args=--gc=epsilon` should not fail the build.\r\n\n\n### Actual behavior\n\nUsing `-Dquarkus.native.additional-build-args=--gc=epsilon` results in:\r\n\r\n```\r\nError: ImageSingletons do not contain key com.oracle.svm.core.heap.Heap\r\ncom.oracle.svm.core.util.UserError$UserException: ImageSingletons do not contain key com.oracle.svm.core.heap.Heap\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:73)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.ImageSingletonsSupportImpl$HostedManagement.doLookup(ImageSingletonsSupportImpl.java:117)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.ImageSingletonsSupportImpl.lookup(ImageSingletonsSupportImpl.java:44)\r\n\tat org.graalvm.sdk/org.graalvm.nativeimage.ImageSingletons.lookup(ImageSingletons.java:86)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.heap.Heap.getHeap(Heap.java:51)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.genscavenge.SerialGCOptions.serialGCOnly(SerialGCOptions.java:113)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.option.HostedOptionKey.validate(HostedOptionKey.java:103)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.option.ValidateImageBuildOptionsFeature.validate(ValidateImageBuildOptionsFeature.java:52)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.option.ValidateImageBuildOptionsFeature.afterRegistration(ValidateImageBuildOptionsFeature.java:44)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.lambda$setupNativeImage$14(NativeImageGenerator.java:854)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.FeatureHandler.forEachFeature(FeatureHandler.java:85)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.setupNativeImage(NativeImageGenerator.java:854)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:575)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:535)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:403)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:580)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:128)\r\n```\n\n### How to Reproduce?\n\n```\r\nwget \"https://code.quarkus.io/d?S=io.quarkus.platform%3A2.13&cn=code.quarkus.io\" -O code.zip\r\nunzip code.zip\r\ncd code-with-quarkus\r\n./mvnw install -Dnative -DskipTests -Dquarkus.native.container-build=true -Dquarkus.native.additional-build-args=--gc=epsilon\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n22.3.0\n\n### Quarkus version or git rev\n\n2.13.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29275/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29275/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

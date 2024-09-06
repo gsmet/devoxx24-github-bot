@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23916",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23916/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23916/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23916/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23916",
+  "id": 1148276307,
+  "node_id": "I_kwDOCFbutM5EcU5T",
+  "number": 23916,
+  "title": "Not able to connect to Apicurio dev service when running integration tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2022-02-23T15:59:04Z",
+  "updated_at": "2024-04-05T06:12:12Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have an application which listens for events on Kafka and processes them. This application also uses an Apicurio schema registry. This application has integration tests which use a `QuarkusTestResourceLifecycleManager` to create a `KafkaProducer` to \"drop\" events onto the Kafka topic for the application to consume in the tests. The Kafka broker & Apicurio schema registry are started/provided by Dev Services.\r\n\r\nhttps://github.com/quarkusio/quarkus-super-heroes/blob/main/event-statistics/src/test/java/io/quarkus/sample/superheroes/statistics/KafkaProducerResource.java is the class, and https://github.com/quarkusio/quarkus-super-heroes/tree/main/event-statistics is the application. The test resource class is reading the `mp.messaging.connector.smallrye-kafka.apicurio.registry.url` property provided by the Apicurio dev services and setting it's value as the `SerdeConfig.REGISTRY_URL` in the `KafkaProducer` config.\r\n\r\nWhen running the integration tests against a containerized JVM version of the application (i.e. when running `./mvnw clean verify -Dquarkus.container-image.build=true`) the `KafkaProducer` doesn't appear to be able to communicate with the Apicurio schema registry.\r\n\r\n### Expected behavior\r\n\r\nI would expect that my integration test should be able to interact with the Apicurio schema registry started by dev services.\r\n\r\n### Actual behavior\r\n\r\nWhen I try to run the IT tests I can see in the logs that it is starting the container and specifying the network:\r\n\r\n```shell\r\nExecuting \"docker run --name quarkus-integration-test-hcIks --rm -p 64917:64917 -p 8444:8444 --net=66250d06c4a45a0142a4600e9df09ed472fd8692f0be2d7a319495bb8ff486d9 --env QUARKUS_HTTP_PORT=64917 --env QUARKUS_HTTP_SSL_PORT=8444 --env TEST_URL=http://0.0.0.0:0 --env KAFKA_BOOTSTRAP_SERVERS=PLAINTEXT://kafka-mYSzY:29092,OUTSIDE://localhost:49158 --env MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_APICURIO_REGISTRY_URL=http://kafka-Wm7Ac:8080/apis/registry/v2 quay.io/quarkus-super-heroes/event-statistics:java11-latest\"\r\n```\r\n\r\nMy question is - how do I use that `containerNetworkId` in the construction of the `KafkaProducer`, specifically in the `SerdeConfig.REGISTRY_URL` pointing to the apicurio registry? It doesn't appear that the apicurio instance is exposed outside of the container network. The tests fail with:\r\n\r\n```shell\r\n[ERROR] io.quarkus.sample.superheroes.statistics.endpoint.WebSocketsIT.testScenarios  Time elapsed: 10.983 s  <<< ERROR!\r\njava.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.UnknownHostException: Failed to resolve 'kafka-Wm7Ac' after 3 queries \r\n        at event.statistics@1.0/io.quarkus.sample.superheroes.statistics.endpoint.WebSocketsIT.testScenarios(WebSocketsIT.java:81)\r\nCaused by: java.util.concurrent.ExecutionException: java.net.UnknownHostException: Failed to resolve 'kafka-Wm7Ac' after 3 queries \r\n        at event.statistics@1.0/io.quarkus.sample.superheroes.statistics.endpoint.WebSocketsIT.testScenarios(WebSocketsIT.java:81)\r\nCaused by: java.net.UnknownHostException: Failed to resolve 'kafka-Wm7Ac' after 3 queries \r\n```\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin edeandre-mac 21.3.0 Darwin Kernel Version 21.3.0: Wed Jan  5 21:37:58 PST 2022; root:xnu-8019.80.24~20/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.2.Final (but has been nagging me for a few releases now)\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n```\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\r\nMaven home: /Users/edeandre/.m2/wrapper/dists/apache-maven-3.8.4-bin/52ccbt68d252mdldqsfsn03jlf/apache-maven-3.8.4\r\nJava version: 11.0.2, vendor: Oracle Corporation, runtime: /Users/edeandre/.sdkman/candidates/java/11.0.2-open\r\nDefault locale: en_US, platform encoding: UTF-8\r\nOS name: \"mac os x\", version: \"10.16\", arch: \"x86_64\", family: \"mac\"\r\n```\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23916/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23916/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

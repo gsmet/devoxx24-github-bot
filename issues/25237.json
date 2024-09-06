@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25237",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25237/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25237/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25237/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25237",
+  "id": 1219298307,
+  "node_id": "I_kwDOCFbutM5IrQQD",
+  "number": 25237,
+  "title": "ContextNotActiveException when access database to sample prometheus gauge ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2022-04-28T21:08:49Z",
+  "updated_at": "2022-05-16T10:20:02Z",
+  "closed_at": "2022-05-16T10:19:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen building a prometheus gauge via micrometer to count database entities no metric is collected. \r\nAlso the exception `ContextNotActiveException` is logged when endpoint `/q/metrics` is called.\r\n\r\nIt seem that prometheus endpoint is not handled correctly with an active context.\r\n\r\nThis makes it hard to collect custom gauges based on data of a panache repository.\r\n\r\nExample gauge:\r\n```java\r\n@ApplicationScoped\r\n@Startup\r\npublic class MetricsCollector {\r\n\r\n    private final MeterRegistry registry;\r\n\r\n    private final MyRepository myRepository;\r\n\r\n    public MetricsCollector(MeterRegistry registry, MyRepository myRepository) {\r\n        this.registry = registry;\r\n        this.myRepository = myRepository;\r\n        Gauge.builder(\"my-gauge\", myRepository::count).register(registry);\r\n    }\r\n}\r\n```\r\n\r\n\r\n```\r\n2022-04-28 22:15:18,757 WARN  [io.mic.cor.ins.int.DefaultGauge] (vert.x-worker-thread-0) Failed to apply the value function for the gauge 'my-gauge'. Note that subsequent logs will be logged at debug level.: javax.enterprise.context.ContextNotActiveException\r\n\tat io.quarkus.arc.impl.ClientProxies.getDelegate(ClientProxies.java:46)\r\n\tat io.quarkus.hibernate.orm.runtime.RequestScopedSessionHolder_ClientProxy.arc$delegate(Unknown Source)\r\n```\n\n### Expected behavior\n\nFor every prometheus scape should return the current count of `myRepository`\n\n### Actual behavior\n\nStacktrace:\r\n```\r\n2022-04-28 22:15:18,757 WARN  [io.mic.cor.ins.int.DefaultGauge] (vert.x-worker-thread-0) Failed to apply the value function for the gauge 'my-gauge'. Note that subsequent logs will be logged at debug level.: javax.enterprise.context.ContextNotActiveException\r\n\tat io.quarkus.arc.impl.ClientProxies.getDelegate(ClientProxies.java:46)\r\n\tat io.quarkus.hibernate.orm.runtime.RequestScopedSessionHolder_ClientProxy.arc$delegate(Unknown Source)\r\n\tat io.quarkus.hibernate.orm.runtime.RequestScopedSessionHolder_ClientProxy.getOrCreateSession(Unknown Source)\r\n\tat io.quarkus.hibernate.orm.runtime.session.TransactionScopedSession.acquireSession(TransactionScopedSession.java:104)\r\n\tat io.quarkus.hibernate.orm.runtime.session.TransactionScopedSession.createQuery(TransactionScopedSession.java:344)\r\n\tat io.quarkus.hibernate.orm.runtime.session.ForwardingSession.createQuery(ForwardingSession.java:168)\r\n\tat io.quarkus.hibernate.orm.runtime.session.ForwardingSession.createQuery(ForwardingSession.java:47)\r\n\tat org.hibernate.Session_5b93bee577ae2f8d76647de04cfab36afbf52958_Synthetic_ClientProxy.createQuery(Unknown Source)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.AbstractJpaOperations.count(AbstractJpaOperations.java:318)\r\n\tat com.example.MyRepository.count(MyRepository.java)\r\n\tat com.example.MyRepository_Subclass.count$$superforward1(Unknown Source)\r\n\tat com.example.MyRepository_Subclass$$function$$36.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:51)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat com.example.MyRepository_Subclass.count(Unknown Source)\r\n\tat com.example.MyRepository_ClientProxy.count(Unknown Source)\r\n\tat io.micrometer.core.instrument.Gauge.lambda$builder$0(Gauge.java:58)\r\n\tat io.micrometer.core.instrument.StrongReferenceGaugeFunction.applyAsDouble(StrongReferenceGaugeFunction.java:47)\r\n\tat io.micrometer.core.instrument.internal.DefaultGauge.value(DefaultGauge.java:53)\r\n\tat io.micrometer.prometheus.PrometheusMeterRegistry.lambda$newGauge$5(PrometheusMeterRegistry.java:280)\r\n\tat io.micrometer.prometheus.MicrometerCollector.collect(MicrometerCollector.java:70)\r\n\tat io.prometheus.client.Collector.collect(Collector.java:46)\r\n\tat io.prometheus.client.CollectorRegistry$MetricFamilySamplesEnumeration.findNextElement(CollectorRegistry.java:197)\r\n\tat io.prometheus.client.CollectorRegistry$MetricFamilySamplesEnumeration.nextElement(CollectorRegistry.java:212)\r\n\tat io.prometheus.client.CollectorRegistry$MetricFamilySamplesEnumeration.nextElement(CollectorRegistry.java:152)\r\n\tat io.prometheus.client.exporter.common.TextFormat.write004(TextFormat.java:71)\r\n\tat io.prometheus.client.exporter.common.TextFormat.writeFormat(TextFormat.java:53)\r\n\tat io.micrometer.prometheus.PrometheusMeterRegistry.scrape(PrometheusMeterRegistry.java:134)\r\n\tat io.micrometer.prometheus.PrometheusMeterRegistry.scrape(PrometheusMeterRegistry.java:130)\r\n\tat io.micrometer.prometheus.PrometheusMeterRegistry.scrape(PrometheusMeterRegistry.java:101)\r\n\tat io.micrometer.prometheus.PrometheusMeterRegistry.scrape(PrometheusMeterRegistry.java:87)\r\n\tat io.quarkus.micrometer.runtime.export.handlers.PrometheusHandler.handle(PrometheusHandler.java:35)\r\n\tat io.quarkus.micrometer.runtime.export.handlers.PrometheusHandler.handle(PrometheusHandler.java:16)\r\n\tat io.vertx.ext.web.impl.BlockingHandlerDecorator.lambda$handle$0(BlockingHandlerDecorator.java:48)\r\n\tat io.vertx.core.impl.ContextImpl.lambda$null$0(ContextImpl.java:159)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.ContextImpl.lambda$executeBlocking$1(ContextImpl.java:157)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\nPrometheus metric output:\r\n```\r\n# HELP my_gauge  \r\n# TYPE my_gauge gauge\r\nmy_gauge NaN\r\n```\n\n### How to Reproduce?\n\n```\r\ngit clone https://github.com/hendrikstill/quarkus-prometheus-example\r\ncd quarkus-prometheus-example\r\n./mvnw quarkus:dev\r\n\r\ncurl http://localhost:8080/q/metrics\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin xxx 21.4.0 Darwin Kernel Version 21.4.0: Fri Mar 18 00:46:32 PDT 2022; root:xnu-8020.101.4~15/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk 17.0.2 2022-01-18 OpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8) OpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.8.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Maven home: /Users/xxx/.m2/wrapper/dists/apache-maven-3.8.4-bin/52ccbt68d252mdldqsfsn03jlf/apache-maven-3.8.4 Java version: 17.0.2, vendor: Eclipse Adoptium, runtime: /Users/xxx/Library/Java/JavaVirtualMachines/temurin-17.0.2/Contents/Home Default locale: de_DE, platform encoding: UTF-8 OS name: \"mac os x\", version: \"12.3.1\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25237/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25237/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

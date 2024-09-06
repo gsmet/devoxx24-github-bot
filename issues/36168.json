@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36168",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36168/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36168/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36168/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36168",
+  "id": 1913608126,
+  "node_id": "I_kwDOCFbutM5yD1e-",
+  "number": 36168,
+  "title": "Support new Hibernate 6.3 syntax for type-safe queries",
+  "labels": [
+    {
+      "id": 1166853192,
+      "node_id": "MDU6TGFiZWwxMTY2ODUzMTky",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/release/noteworthy-feature",
+      "name": "release/noteworthy-feature",
+      "color": "f9b6f8",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1274891213,
+      "node_id": "MDU6TGFiZWwxMjc0ODkxMjEz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/new-feature",
+      "name": "kind/new-feature",
+      "color": "c5def5",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-09-26T14:11:43Z",
+  "updated_at": "2024-08-29T13:39:28Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nHibernate 6.3 comes with experimental support for mapping HQL/SQL queries to methods, as well as _finder_ methods, whose HQL can be inferred from the method signature.\r\n\r\n## Hibernate 6.3 Examples\r\n\r\n```java\r\ninterface BookRepository {\r\n @HQL(\"from Book where author = :author and language = :language\")\r\n public List<Book> findBooks1(String author, String language);\r\n\r\n // the same, as inferred from the parameters and return type\r\n @Find\r\n public List<Book> findBooks2(String author, String language);\r\n}\r\n```\r\n\r\nThis will use Java compiler plugins (aka APT) to generate a `BookRepository_` class with the implementation of the methods, as well as type-check the query and verify that all parameters exist and are of the right type at compile-time.\r\n\r\nHere is an example of the generate code (when placed in the entity, so mixed with the entity metamodel):\r\n\r\n```java\r\n@StaticMetamodel(Book.class)\r\n@Generated(\"org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor\")\r\npublic abstract class Book_ extends io.quarkus.hibernate.orm.panache.PanacheEntity_ {\r\n\r\n\tpublic static final String AUTHOR = \"author\";\r\n\tpublic static final String LANGUAGE = \"language\";\r\n\tstatic final String FIND_BOOKS1_String_String = \"from Book where author = :author and language = :language\";\r\n\r\n\tpublic static volatile SingularAttribute<Book, String> author;\r\n\tpublic static volatile SingularAttribute<Book, String> language;\r\n\tpublic static volatile EntityType<Book> class_;\r\n\t\r\n\tpublic static List<Book> findBooks2(@Nonnull EntityManager entityManager, String author, String language) {\r\n\t\tvar builder = entityManager.getEntityManagerFactory().getCriteriaBuilder();\r\n\t\tvar query = builder.createQuery(Book.class);\r\n\t\tvar entity = query.from(Book.class);\r\n\t\tquery.where(\r\n\t\t\t\tauthor==null\r\n\t\t\t\t\t? entity.get(Book_.author).isNull()\r\n\t\t\t\t\t: builder.equal(entity.get(Book_.author), author), \r\n\t\t\t\tlanguage==null\r\n\t\t\t\t\t? entity.get(Book_.language).isNull()\r\n\t\t\t\t\t: builder.equal(entity.get(Book_.language), language)\r\n\t\t);\r\n\t\treturn entityManager.createQuery(query).getResultList();\r\n\t}\r\n\t\r\n\tpublic static List<Book> findBooks1(@Nonnull EntityManager entityManager, String author, String language) {\r\n\t\treturn entityManager.createQuery(FIND_BOOKS1_String_String, Book.class)\r\n\t\t\t\t.setParameter(\"author\", author)\r\n\t\t\t\t.setParameter(\"language\", language)\r\n\t\t\t\t.getResultList();\r\n\t}\r\n}\r\n```\r\n\r\nAs you can see, this needs an `EntityManager`, which is not convenient, but also defines type-safe references to the attributes as `String` or `SingularAttribute` objects.\r\n\r\n## Current Hibernate ORM with Panache examples\r\n\r\nThe previous queries can currently be written as in Hibernate ORM with Panache as:\r\n\r\n```java\r\n@Entity\r\npublic class Book extends PanacheEntity {\r\n // …\r\n\r\n public static List<Book> findBooks(String author, String language){\r\n  return list(\"author = ?1 and language = ?2\", author, language);\r\n }\r\n}\r\n```\r\n\r\nThis isn't necessarily more verbose, but it is not type-safe, and it's really hard to check the HQL at build-time (though we've had some success in the past).\r\n\r\n## Proposal\r\n\r\nWe would like to add support for the new type-safe queries to Panache entities and repositories, in addition to the current API, as follows:\r\n\r\n```java\r\npublic class BookRepository extends PanacheRepository<Book> {\r\n @HQL(\"from Book where author = :author and language = :language\")\r\n public native List<Book> findBooks1(String author, String language);\r\n\r\n // the same, as inferred from the parameters and return type\r\n @Find\r\n public native List<Book> findBooks2(String author, String language);\r\n}\r\n\r\n@Entity\r\npublic class Book extends PanacheEntity {\r\n // …\r\n\r\n @HQL(\"from Book where author = :author and language = :language\")\r\n public static native List<Book> findBooks1(String author, String language);\r\n\r\n // the same, as inferred from the parameters and return type\r\n @Find\r\n public static native List<Book> findBooks2(String author, String language);\r\n}\r\n```\r\n\r\nAs usual, we have to use the `native` trick to allow non-abstract classes to have generated method bodies. These methods will be `static native` for entities, and `native` for repositories.\r\n\r\nThese generated methods will be type-safe, and their implementation will forward to the generates `Book_` and `BookRepository_` classes.\r\n\r\n## Challenges\r\n\r\nThere are quite a number of challenges and questions to solve in order to support this, including:\r\n\r\n- Quarkus DEV mode does not run APT processors #1502\r\n    - ✔ for Maven, supports `annotationProcessorPaths` and `annotationProcessors`, as well as generate the sources in the `target/generated-sources/annotations` folder (previously `target/classes`).\r\n    - For Gradle\r\n- Make ORM extension automatically run the Hibernate metamodel generator #29068\r\n    - I can do it, using a variant of `CodeGen` but IDEs will not be able to understand that they have to run APT, which does not matter for IJ, but does for Eclipse. I need to ask our Tools people.\r\n- Adapt Hibernate metamodel generator for Panache entities, repositories\r\n    - ✔ Done\r\n- We have duplicate `Order`/`Page` classes\r\n- There is some duplication between `PanacheQuery`, `TypedQuery`, `SelectionQuery`\r\n- Projection support is different between Hibernate and Panache\r\n- What do we do for MongoDB?\r\n- The current query generator supports also `StatelessSession`, for which we've no real support in Panache\r\n- Documentation needs to be adapted\r\n- @gavinking mentionned adding support for other types of methods, such as for insert/delete/persist, in line with the new Jakarta Data proposal\r\n\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36168/reactions",
+    "total_count": 6,
+    "+1": 5,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 1,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36168/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

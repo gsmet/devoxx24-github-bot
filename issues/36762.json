@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36762",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36762/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36762/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36762/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36762",
+  "id": 1966769817,
+  "node_id": "I_kwDOCFbutM51OoaZ",
+  "number": 36762,
+  "title": "MockMailbox does not work",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    },
+    {
+      "id": 2955096556,
+      "node_id": "MDU6TGFiZWwyOTU1MDk2NTU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mailer",
+      "name": "area/mailer",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-10-28T23:25:49Z",
+  "updated_at": "2023-11-23T17:34:12Z",
+  "closed_at": "2023-11-23T17:34:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe following code works fine in dev but not in testing.\r\nI have the following class which sends type safe qute emails (`MailTemplateInstance`):\r\n\r\n```java\r\nclass AuthService {\r\n public void sendVerificationEmail(String email, String token) {\r\n          AdminEmailTemplates\r\n                .invite(token)\r\n                .to(email)\r\n                .send();\r\n }\r\n}\r\n```\r\n\r\n```java\r\n@CheckedTemplate(basePath = \"emails\", defaultName = CheckedTemplate.HYPHENATED_ELEMENT_NAME)\r\npublic class AdminEmailTemplates {\r\n    public static native MailTemplate.MailTemplateInstance invite(String token);\r\n}\r\n```\r\n\r\nWhen i run the following test it fails with `Expected size: 1 but was: 0 in: []`\r\nIf i do not use the `AdminEmailTemplates` but use the `Mailer` or the `ReactiveMailer` it works fine.\r\n\r\n```java\r\nclass Test {\r\n\r\n    @Inject\r\n    AuthService authService;\r\n\r\n\r\n    @Test\r\n    public void testEmail() throws Exception {\r\n        var email = \"info@iana.org\";\r\n\r\n        authService.sendVerificationEmail(email);\r\n\r\n        List<Mail> sent = mockMailbox.getMailsSentTo(email);\r\n        assertThat(sent).hasSize(1);\r\n        \r\n   }\r\n}\r\n```\r\n\r\nAlso if i change\r\n```java\r\n          AdminEmailTemplates\r\n                .invite(token)\r\n                .to(email)\r\n                .send();\r\n```\r\n\r\nwith \r\n\r\n```java\r\nAdminEmailTemplates\r\n                .invite(token)\r\n                .to(email)\r\n                .send()\r\n                .await()\r\n                .atMost(Duration.ofSeconds(10))\r\n```\r\ni get the following error `java.lang.IllegalStateException: No RESTEasy Reactive request in progress` (only in testing, in dev works fine)\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36762/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36762/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

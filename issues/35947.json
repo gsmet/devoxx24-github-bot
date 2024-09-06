@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35947",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35947/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35947/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35947/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35947",
+  "id": 1897536838,
+  "node_id": "I_kwDOCFbutM5xGh1G",
+  "number": 35947,
+  "title": "OIDC - Keycloak: Aborting login screen and random expired tokens results in bad cookie and broken web app",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-09-15T00:58:24Z",
+  "updated_at": "2023-09-15T13:24:31Z",
+  "closed_at": "2023-09-15T13:24:31Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a demo web application that I'm trying to get working with OIDC (Keycloak) to handle the authentication of users, etc.\r\n\r\nI am using the Quarkus-Faces demo application and modified it to work with Keycloak (Dev Services).\r\n\r\nEverything works fine until you abort the log in page and instead of entering your username/password you click the back button on the browser to return to the unsecure page.\r\n\r\nOnce you try to click on any secured links, instead of being asked to log in again, the website is broken with blank pages and 401s and a cookie called `q_auth_` is written to the browser.\r\n\r\nThe only way to fix the issue is to delete that cookie and then I am asked to log in properly.\r\n\r\nClosing the browser doesn't fix it either.. \r\n\r\nThis also happens at random times when Quarkus has trouble talking to Keycloak behind the scenes, or I've even seen it when the tokens expire and you attempt to access the secure links again. This is very random but it took me a long time to narrow it down to that one cookie.\r\n\r\nI've attached a reproducer to this ticket.\r\n\r\nTo Test:\r\n\r\n1. Unzip project\r\n2. `mvn clean package`\r\n3. `mvn quarkus:dev`\r\n4. Go to `http://localhost:8081`\r\n5. You should see the Primesfaces demo page (this page is not secured)\r\n6. Click on any link on the side menu (these are secured)\r\n7. You will be asked to login into keycloak\r\n8. Use `bob:bob`\r\n9. You will be brought to the page link you clicked\r\n10. You  should now see a LOGOUT button at the top right\r\n11. Click it and you will be properly logged out of Quarkus and Keycloak and brought back to the main page\r\n12. Try to access a menu link again\r\n13. Instead of logging in, click the back button on the browser\r\n14. Look at your cookies and you will see a cookie called `q_auth_` with some characters in the name\r\n15. Try to access any secured link again and site will fail with a blank screen and 401 in the Network traffic\r\n16. Delete the cookie \r\n17. You can now access the website again\r\n\r\nProject Files:\r\n[quarkus-faces-bad-cookie-oidc.zip](https://github.com/quarkusio/quarkus/files/12614534/quarkus-faces-bad-cookie-oidc.zip)\r\n\r\nScreen shots:\r\n\r\n1. Dashboard\r\n\r\n<img width=\"1870\" alt=\"Screenshot 2023-09-14 at 8 40 39 PM\" src=\"https://github.com/quarkusio/quarkus/assets/5183186/2265ad3d-85ce-4908-b9a9-d049446b76ed\">\r\n\r\n2. Cookies AFTER logging into Keycloak\r\n<img width=\"1870\" alt=\"Screenshot 2023-09-14 at 8 41 04 PM\" src=\"https://github.com/quarkusio/quarkus/assets/5183186/4747820c-62d3-47ea-8103-c58663e82b21\">\r\n\r\n3. Logging out and aborting the login screen - Cookies AFTER aborting login screen (clicking back button)\r\n<img width=\"1870\" alt=\"Screenshot 2023-09-14 at 8 41 30 PM\" src=\"https://github.com/quarkusio/quarkus/assets/5183186/34ea1e48-34e2-4a99-95cd-5aaa4808a422\">\r\n\r\n4. Trying to access secured link after aborting login\r\n<img width=\"1870\" alt=\"Screenshot 2023-09-14 at 8 41 50 PM\" src=\"https://github.com/quarkusio/quarkus/assets/5183186/82cbe1a8-7efb-44de-aea8-f593aabc6d8c\">\r\n\r\n\r\n### Expected behavior\r\n\r\nI would expect that if I abort the login process I would be able to restart it again.\r\n\r\nAlso, if my tokens expire and that cookie is created I shouldn't have to clean out my browser to fix it.\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.3.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35947/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35947/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

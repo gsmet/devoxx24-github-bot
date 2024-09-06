@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23715",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23715/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23715/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23715/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23715",
+  "id": 1138540282,
+  "node_id": "I_kwDOCFbutM5D3L76",
+  "number": 23715,
+  "title": "@GET method with request body throws BlockingNotAllowedException when using RestEasy Reactive",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-02-15T11:12:40Z",
+  "updated_at": "2022-02-21T15:13:57Z",
+  "closed_at": "2022-02-21T15:13:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nDefine a `@GET` endpoint which receives a body when using RestEasy Reactive returns HTTP 500 due `BlockingNotAllowedException`. Works with RestEasy non-reactive.\r\n\r\nIt seems that even using `quarkus-resteasy-reactive-jackson` the body parsing is always a blocking operation.\r\n\r\n### Expected behavior\r\n\r\nFinish the operation without errors.\r\n\r\n### Actual behavior\r\n\r\nDefine a `@GET` endpoint which receives a body when using RestEasy Reactive throws `BlockingNotAllowedException`:\r\n\r\n```\r\n{\r\n\"details\": \"Error id 84497e11-973c-4646-8eb0-6892966771dd-2, org.jboss.resteasy.reactive.common.core.BlockingNotAllowedException: Attempting a blocking read on io thread\",\r\n    \"stack\": \"org.jboss.resteasy.reactive.common.core.BlockingNotAllowedException: Attempting a blocking read on io thread\\n\\tat org.jboss.resteasy.reactive.server.vertx....\"\r\n}\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Add the `quarkus-resteasy-reactive-jackson` dependency in pom.xml:\r\n\r\n<img width=\"428\" alt=\"image\" src=\"https://user-images.githubusercontent.com/10871439/154047988-324c7ee1-743f-4bee-be96-1220dac83abe.png\">\r\n\r\n2. Define a `@GET` endpoint which receives some information in request body (I used `text/plain` but the same happens with `application/json`):\r\n\r\n<img width=\"291\" alt=\"image\" src=\"https://user-images.githubusercontent.com/10871439/154047893-1084360b-7abb-475f-b1c2-321af29b6248.png\">\r\n\r\n3. Start the application and perform a request:\r\n\r\n<img width=\"1245\" alt=\"image\" src=\"https://user-images.githubusercontent.com/10871439/154048157-bef9a72e-cd7e-4cf1-b88d-0b8104f77876.png\">\r\n\r\nNote: Just changing `quarkus-resteasy-reactive-jackson` to `quarkus-resteasy-jackson` without any further change solves the problem:\r\n\r\n<img width=\"1247\" alt=\"image\" src=\"https://user-images.githubusercontent.com/10871439/154048328-efb6d5e2-cd49-4995-8bbf-3bdc51e66065.png\">\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kernel Version 21.3.0: root:xnu-8019.80.24~20/RELEASE_ARM64_T8101 arm64\r\n\r\n### Output of `java -version`\r\n\r\njava 17.0.2 2022-01-18 LTS Java(TM) SE Runtime Environment (build 17.0.2+8-LTS-86) Java HotSpot(TM) 64-Bit Server VM (build 17.0.2+8-LTS-86, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nopenjdk 11.0.14 2022-01-18 OpenJDK Runtime Environment GraalVM CE 22.0.0.2 (build 11.0.14+9-jvmci-22.0-b05) OpenJDK 64-Bit Server VM GraalVM CE 22.0.0.2 (build 11.0.14+9-jvmci-22.0-b05, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) OS name: \"mac os x\", version: \"12.2.1\", arch: \"aarch64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\n```posh\r\n2022-02-15 11:05:52,225 ERROR [org.jbo.res.rea.ser.cor.RuntimeExceptionMapper] (vert.x-eventloop-thread-11) A blocking operation occurred on the IO thread. This likely means you need to annotate com.example.ExampleResource#hello(class java.lang.String) with @io.smallrye.common.annotation.Blocking. Alternatively you can annotate the class com.example.ExampleResource to make every method on the class blocking, or annotate your sub class of the javax.ws.rs.core.Application class to make the whole application blocking\r\n2022-02-15 11:05:52,232 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-11) HTTP Request to /hello failed, error id: 532a8a1e-ea8b-45c8-a353-407e497d682c-1: org.jboss.resteasy.reactive.common.core.BlockingNotAllowedException: Attempting a blocking read on io thread\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream$VertxBlockingInput.readBlocking(VertxInputStream.java:242)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream.readIntoBuffer(VertxInputStream.java:120)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream.read(VertxInputStream.java:82)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream.read(VertxInputStream.java:70)\r\n\tat org.jboss.resteasy.reactive.common.providers.serialisers.PrimitiveBodyHandler.readFrom(PrimitiveBodyHandler.java:21)\r\n\tat org.jboss.resteasy.reactive.server.providers.serialisers.ServerStringMessageBodyHandler.readFrom(ServerStringMessageBodyHandler.java:37)\r\n\tat org.jboss.resteasy.reactive.server.providers.serialisers.ServerStringMessageBodyHandler.readFrom(ServerStringMessageBodyHandler.java:14)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RequestDeserializeHandler.readFrom(RequestDeserializeHandler.java:108)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RequestDeserializeHandler.handle(RequestDeserializeHandler.java:68)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RequestDeserializeHandler.handle(RequestDeserializeHandler.java:25)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:141)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:49)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:17)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:7)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1212)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:163)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:67)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:55)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1212)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:126)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n\tat io.vertx.ext.web.handler.impl.StaticHandlerImpl.lambda$sendStatic$1(StaticHandlerImpl.java:274)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n\r\n2022-02-15 11:05:52,238 ERROR [org.jbo.res.rea.com.cor.AbstractResteasyReactiveContext] (vert.x-eventloop-thread-11) Request failed: org.jboss.resteasy.reactive.common.core.BlockingNotAllowedException: Attempting a blocking read on io thread\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream$VertxBlockingInput.readBlocking(VertxInputStream.java:242)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream.readIntoBuffer(VertxInputStream.java:120)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream.read(VertxInputStream.java:82)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream.read(VertxInputStream.java:70)\r\n\tat org.jboss.resteasy.reactive.common.providers.serialisers.PrimitiveBodyHandler.readFrom(PrimitiveBodyHandler.java:21)\r\n\tat org.jboss.resteasy.reactive.server.providers.serialisers.ServerStringMessageBodyHandler.readFrom(ServerStringMessageBodyHandler.java:37)\r\n\tat org.jboss.resteasy.reactive.server.providers.serialisers.ServerStringMessageBodyHandler.readFrom(ServerStringMessageBodyHandler.java:14)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RequestDeserializeHandler.readFrom(RequestDeserializeHandler.java:108)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RequestDeserializeHandler.handle(RequestDeserializeHandler.java:68)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RequestDeserializeHandler.handle(RequestDeserializeHandler.java:25)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:141)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:49)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:17)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:7)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1212)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:163)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:67)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:55)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1212)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:126)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n\tat io.vertx.ext.web.handler.impl.StaticHandlerImpl.lambda$sendStatic$1(StaticHandlerImpl.java:274)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23715/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23715/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

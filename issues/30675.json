@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30675",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30675/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30675/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30675/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30675",
+  "id": 1560619188,
+  "node_id": "I_kwDOCFbutM5dBSi0",
+  "number": 30675,
+  "title": "@Blocking does not work as expected with @PostConstruct",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-01-28T01:17:14Z",
+  "updated_at": "2023-01-30T08:59:49Z",
+  "closed_at": "2023-01-30T08:59:49Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using `@Blocking` on `@PostConstruct` method, it is expected that should work.\r\nBut, it does not work when the class is used in a route of `Uni<>`.\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class BlockingInitResource {\r\n  static class Data {\r\n    public Data(String s) {\r\n      this.s = s;\r\n    }\r\n\r\n    String s;\r\n  }\r\n\r\n  Uni<Data> initData() {\r\n    return Uni.createFrom().item(new Data(\"hello\"));\r\n  }\r\n\r\n  Data data = null;\r\n\r\n  public Data getData() {\r\n    return data;\r\n  }\r\n\r\n  @PostConstruct\r\n  @Blocking\r\n  public void init() {\r\n    initData().onItem().transform(new Function<Data, Void>() {\r\n      @Override\r\n      public Void apply(Data d) {\r\n        data = d;\r\n        return null;\r\n      }\r\n    }).await().indefinitely();\r\n  }\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\nQuarkus allow the blocking operation and can handle it smartly.\r\n\r\n\r\n### Actual behavior\r\n\r\nRequest failed: java.lang.IllegalStateException: The current thread cannot be blocked: vert.x-eventloop-thread-0\r\n\r\n### How to Reproduce?\r\n\r\nhttps://github.com/jie-huang/quarkus-blocking\r\n\r\nRun `quarkus dev`, then run `curl http://localhost:8080/hello2`\r\n\r\nIf you run `curl http://localhost:8080/hello1` first, it works.\r\nIf you run `curl http://localhost:8080/hello2` first, it fails.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin sd-lmc-1a8902 21.6.0 Darwin Kernel Version 21.6.0: Mon Dec 19 20:46:01 PST 2022; root:xnu-8020.240.18~2/RELEASE_ARM64_T8101 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 18 2022-03-22 OpenJDK Runtime Environment (build 18+36-2087) OpenJDK 64-Bit Server VM (build 18+36-2087, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.12.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.5\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30675/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30675/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

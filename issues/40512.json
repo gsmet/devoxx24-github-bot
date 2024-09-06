@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40512",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40512/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40512/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40512/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40512",
+  "id": 2284079056,
+  "node_id": "I_kwDOCFbutM6IJEfQ",
+  "number": 40512,
+  "title": "Quarkus 3.10.0 doesnt support flyway with Postgresql 16",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1897325810,
+      "node_id": "MDU6TGFiZWwxODk3MzI1ODEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/flyway",
+      "name": "area/flyway",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-05-07T19:33:33Z",
+  "updated_at": "2024-05-07T19:38:34Z",
+  "closed_at": "2024-05-07T19:38:34Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nQuarkus 3.10.0 comes with flyway 10.10.0, which should support Postgresql 16 as such support was introduced in 10.1.0\r\nhttps://documentation.red-gate.com/flyway/release-notes-and-older-versions/release-notes-for-flyway-engine\r\n\r\nWhen running only with:\r\n```\r\n    <quarkus.platform.version>3.10.0</quarkus.platform.version>\r\n...\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-flyway</artifactId>\r\n    </dependency>\r\n```\r\n\r\nQuarkus crashes on start up with:\r\n```\r\n2024-05-07 19:20:52,512 ERROR [io.qua.run.Application] (main) Failed to start application (with profile [prod]): java.lang.RuntimeException: Failed to start quarkus\r\n     at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n     at io.quarkus.runtime.Application.start(Application.java:101)\r\n     at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n     at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n     at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n     at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n     at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n     at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n     at java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n     at io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:62)\r\n     at io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:33)\r\nCaused by: org.flywaydb.core.api.FlywayException: Unsupported Database: PostgreSQL 16.1\r\n     at org.flywaydb.core.internal.database.DatabaseTypeRegister.getDatabaseTypeForConnection(DatabaseTypeRegister.java:105)\r\n     at org.flywaydb.core.internal.jdbc.JdbcConnectionFactory.<init>(JdbcConnectionFactory.java:73)\r\n     at org.flywaydb.core.FlywayExecutor.execute(FlywayExecutor.java:134)\r\n     at org.flywaydb.core.Flyway.migrate(Flyway.java:147)\r\n     at io.quarkus.flyway.runtime.FlywayRecorder.doStartActions(FlywayRecorder.java:136)\r\n     at io.quarkus.deployment.steps.FlywayProcessor$startActions2099152139.deploy_0(Unknown Source)\r\n     at io.quarkus.deployment.steps.FlywayProcessor$startActions2099152139.deploy(Unknown Source)\r\n     ... 11 more\r\n```\r\n\r\nBut when I add the same version of flyway postgres library:\r\n\r\n```\r\n    <dependency>\r\n      <groupId>org.flywaydb</groupId>\r\n      <artifactId>flyway-database-postgresql</artifactId>\r\n      <version>10.10.0</version>\r\n      <scope>runtime</scope>\r\n    </dependency>\r\n```\r\n\r\nso the dependency tree is:\r\n\r\n```\r\n❯ mvn dependency:tree | grep flyway\r\n[INFO] +- io.quarkus:quarkus-flyway:jar:3.10.0:compile\r\n[INFO] |  +- org.flywaydb:flyway-core:jar:10.10.0:compile\r\n[INFO] +- org.flywaydb:flyway-database-postgresql:jar:10.10.0:runtime\r\n```\r\n\r\nEverything is working again.\r\n\r\nLooks like it's linked to a poor communication from flyway side: https://github.com/flyway/flyway/issues/3819\r\n\r\nI think quarkus should come with flyway postgres module, but maybe you decided against it for some reason? ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40512/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40512/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

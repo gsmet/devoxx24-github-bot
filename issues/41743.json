@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41743",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41743/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41743/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41743/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41743",
+  "id": 2394061079,
+  "node_id": "I_kwDOCFbutM6OsnkX",
+  "number": 41743,
+  "title": "TCKs - `QuarkusTestNgCallbacks.invokeTestNgAfterClasses` executed using a class loader that has been closed",
+  "labels": [
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-07-07T13:40:23Z",
+  "updated_at": "2024-07-09T12:39:44Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "> [!NOTE]\r\n> This is part of my efforts to improve our CL infrastructure and is related to this PR: https://github.com/quarkusio/quarkus/pull/41608 .\r\n> In this PR, I throw an exception when we access a closed CL to identify issues. At some point, I hope it could be the default behavior as it could allow us to catch some issues early. For now, we are unfortunately not there yet.\r\n\r\nWhen running CI with this PR ^ applied, I get a lot of TCK failures similar to:\r\n\r\n```\r\n2024-07-06T09:31:19.4409078Z Caused by: java.lang.IllegalStateException: Class loader QuarkusClassLoader:Quarkus Base Runtime ClassLoader: TEST@513b83f0 has been closed and may not be accessed anymore\r\n2024-07-06T09:31:19.4409805Z \tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.ensureOpen(QuarkusClassLoader.java:743)\r\n2024-07-06T09:31:19.4410497Z \tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:507)\r\n2024-07-06T09:31:19.4411310Z \tat io.quarkus.arquillian.QuarkusTestNgCallbacks.invokeTestNgAfterClasses(QuarkusTestNgCallbacks.java:47)\r\n```\r\n\r\nThis issue is that the test instances are instantiated using the base runtime of the started Quarkus app and by the time we try to execute the after classes callback, the application is stopped and the base runtime class loader is closed.\r\n\r\nI'm not entirely sure there is a way to work around this problem but still from a design point of view it seems inappropriate to load classes from a closed class loader.\r\n\r\nI would be interested in feedback from @mkouba @Ladicek and @manovotn .",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41743/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41743/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

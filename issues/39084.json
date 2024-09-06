@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39084",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39084/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39084/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39084/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39084",
+  "id": 2161055022,
+  "node_id": "I_kwDOCFbutM6AzxUu",
+  "number": 39084,
+  "title": "OOMs and performance degradation after updating quarkus from 3.6.8 to 3.7.1 due to changed default jvm flags. ",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2024-02-29T11:39:54Z",
+  "updated_at": "2024-03-13T08:07:51Z",
+  "closed_at": "2024-03-13T07:23:28Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter we migrated from quarkus `3.6.8` to `3.7.1`, we experienced a lot of OOMs in our production environment. It did not affect all of our applications but especially those that have an unstable load pattern (e.g. experiencing load peaks at a certain time of the day). \r\n\r\nWe experienced these problems in the past as well (~1 year ago) and found out that these OOMs were caused by the resizing of the committed heap. To address this issue we added the `-XX:InitialRAMPercentage` jvm flag and kinda forced the jvm to occupy a larger amount of the available heap per default. \r\n\r\nRegretfully this flag dos not work any more in the `3.7.1` version. As you can see in the following screenshot (`3.6.1` and `3.7.1`next to each other),  the jvm only commits to a very small portion of the available heap: \r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/1176370/d610846f-2403-4ca6-b350-b8b41c4a0878)\r\n\r\nFurther investigation revealed that the default jvm flags for the newer version have been changed: \r\n\r\n**3.7.1**\r\n```\r\n-XX:MaxRAMPercentage=80.0\r\n-XX:+UseParallelGC\r\n-XX:MinHeapFreeRatio=10\r\n-XX:MaxHeapFreeRatio=20\r\n-XX:GCTimeRatio=4\r\n-XX:AdaptiveSizePolicyWeight=90\r\n-XX:+ExitOnOutOfMemoryError\r\n```\r\n**3.6.8**\r\n```\r\n```\r\n\r\nI also discussed this issue with @geoand and @jmtd in zulip: https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/JVM.20flag.20changes.20from.203.2E6.2E8.20to.203.2E7.2E3.3F/near/423765621\r\n\r\nImho, these settings are too invasive to be used as a default. If these settings are considered as a good default for the vast majority of the quarkus users, it would be nice to have them documented somewhere (preferably also in the migration guide) and to offer an option to turn these on or off. \r\n\r\n\n\n### Expected behavior\n\nThere are no pre-set jvm flags provided as before. \n\n### Actual behavior\n\nThe following jvm flags are set with 3.7.1 and onwards: \r\n```\r\n-XX:MaxRAMPercentage=80.0\r\n-XX:+UseParallelGC\r\n-XX:MinHeapFreeRatio=10\r\n-XX:MaxHeapFreeRatio=20\r\n-XX:GCTimeRatio=4\r\n-XX:AdaptiveSizePolicyWeight=90\r\n-XX:+ExitOnOutOfMemoryError\r\n```\n\n### How to Reproduce?\n\n1. Clone https://github.com/u6f6o/jvm-flag-changes\r\n2. `git checkout quarkus-3.6.8`\r\n3. `./gradlew clean build -Dquarkus.container-image.build=true && cd build && docker run $(cat jib-image.id)`\r\n4. Check the log line starting with `INFO  [org.acm.GreetingResource] (main) JVM flags:`\r\n5. Apply steps 2 - 4 for the branch quarkus-3.7.1 \n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n------------------------------------------------------------ Gradle 8.5 ------------------------------------------------------------  Build time:   2023-11-29 14:08:57 UTC Revision:     28aca86a7180baa17117e0e5ba01d8ea9feca598  Kotlin:       1.9.20 Groovy:       3.0.17 Ant:          Apache Ant(TM) version 1.10.13 compiled on January 4 2023 JVM:          17.0.9 (Homebrew 17.0.9+0) OS:           Mac OS X 12.6 aarch64\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39084/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39084/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29296",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29296/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29296/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29296/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29296",
+  "id": 1451215234,
+  "node_id": "I_kwDOCFbutM5Wf8mC",
+  "number": 29296,
+  "title": "Unable to @Override delete methods from PanacheRepositoryBase in an interface",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-11-16T09:27:12Z",
+  "updated_at": "2022-11-17T11:07:04Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen I create a repository extending `PanacheRepositoryBase` I want to override the `#deleteAll()` method in my application.  \r\nThis works, when I have a repository directly implementing `PanacheRepositoryBase`, but not when I place another interface inbetween the repository for my entity and `PanacheRepositoryBase`.\n\n### Expected behavior\n\n```java\r\n@Table(name = \"T_MY_ENTITY\")\r\n@Entity\r\npublic class MyEntity {\r\n    @Id\r\n    int entityId = 1;\r\n\r\n    int entityValue = 2;\r\n}\r\n```\r\n\r\n```java\r\npublic interface DontDeleteRepo<E, I> extends PanacheRepositoryBase<E, I> {\r\n    String PROHIBIT_DELETE_MESSAGE = \"You shall not delete!\";\r\n\r\n    @Override\r\n    default long deleteAll() {\r\n        throw new UnsupportedOperationException(PROHIBIT_DELETE_MESSAGE);\r\n    }\r\n}\r\n```\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class MyEntityRepoWithInterface implements DontDeleteRepo<MyEntity, Long> {\r\n\r\n}\r\n```\r\n\r\nI would expect the overridden `#deleteAll()` method to throw the `UnsupportedOperationException(PROHIBIT_DELETE_MESSAGE)`.\r\n\r\n```java\r\n@QuarkusTest\r\n@TestTransaction\r\nclass MyEntityRepoWithInterfaceTest {\r\n    @Inject\r\n    MyEntityRepoWithInterface repo;\r\n\r\n    @Test\r\n    void deleteAll() {\r\n        assertThatThrownBy(() -> repo.deleteAll())\r\n                .isInstanceOf(UnsupportedOperationException.class)\r\n                .hasMessage(PROHIBIT_DELETE_MESSAGE);\r\n    }\r\n}\r\n```\n\n### Actual behavior\n\nThe `UnsupportedOperationException(PROHIBIT_DELETE_MESSAGE)` is not thrown and the delete action is executed.\n\n### How to Reproduce?\n\nI prepared tests that show the problem at [https://github.com/sacnoth/PanacheOverride/](https://github.com/sacnoth/PanacheOverride/).\r\n\r\nYou an also see there that the issue only exists when an interface like the `DontDeleteRepo` is between the implementing repository `MyEntityRepoWithInterface` and `PanacheRepositoryBase`.\r\n\r\nIf the `#deleteAll()` method is directly overridden in the implementing repository, as is in the `MyEntityRepoOverride` repository, the `MyEntityRepoOverrideTest` shows that it works as I would expect.\n\n### Output of `uname -a` or `ver`\n\nWindows 10\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Temurin-17+35 (build 17+35)\n\n### GraalVM version (if different from Java)\n\nnone\n\n### Quarkus version or git rev\n\n2.14.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4\n\n### Additional information\n\nI don't know if other methods besides the `#deleteAll()` are also affected, as I didn't test those.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29296/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29296/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

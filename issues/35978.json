@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35978",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35978/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35978/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35978/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35978",
+  "id": 1900416106,
+  "node_id": "I_kwDOCFbutM5xRgxq",
+  "number": 35978,
+  "title": "Panache#count() should be stateless ",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-09-18T08:21:15Z",
+  "updated_at": "2023-10-03T11:26:38Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen calling the count method on the PanacheEntity, the call is made with dirty checking (~statefull).\r\n\r\nThis results in unnecessary and unexpected extra SQL calls. And also causes errors, because we have an auditlog which is triggered via a db trigger, because it receives an insert & update record at the same time, which causes not uniqueness error on the primary keys.\r\n\r\nSee below for an example.\r\n\r\n### Expected behavior\r\n\r\nThe count call should be stateless, not resulting in an extra update call.\r\n\r\nExpected sql calls should be:\r\n\r\n```sql\r\nselect count ....\r\ninsert into ...\r\n```\r\n\r\n### Actual behavior\r\n\r\nThis results in the following queries:\r\n\r\n```sql\r\nselect count ....\r\ninsert into ...\r\nupdate entity set (all the fields) where id = ...\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n```java\r\n    @Transactional\r\n    public MyEntityDto save(MyEntityDto dto) {\r\n        var entityExists = MyEntity.count(\"name = ?1\", dto.name) > 0;\r\n\r\n        if (entityExists) {\r\n            throw new WebApplicationException(\"Entity(name=%s) already exists\".formatted(dto.name), 400);\r\n        }\r\n\r\n        var entity = Mapper.mapToEntity(dto);\r\n        entity.persist();\r\n        Log.infof(\"Entity(name=%s) created\", entity.name);\r\n\r\n        return Mapper.mapToDto(entity);\r\n    }\r\n\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nwindows 10\r\n\r\n### Output of `java -version`\r\n\r\nJDK 17 Temurin\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.6.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.x\r\n\r\n### Additional information\r\n\r\nA quick fix is by replacing the count with find:\r\n\r\n```java        \r\n var entityExists = MyEntity.find(\"name = ?1\", dto.name)\r\n                            .withHint(HINT_READONLY, true)\r\n                            .count() > 0;\r\n```\r\n\r\nIt would be nice if the count() method was by default stateless (= with HINT_READONLY = true)",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35978/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35978/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

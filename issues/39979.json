@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39979",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39979/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39979/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39979/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39979",
+  "id": 2234573797,
+  "node_id": "I_kwDOCFbutM6FMOPl",
+  "number": 39979,
+  "title": "Resteasy Reactive: Ignore JAX-RS Resource method field thanks to custom logic",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-04-10T01:23:55Z",
+  "updated_at": "2024-04-30T09:09:56Z",
+  "closed_at": "2024-04-30T09:09:37Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nIn order to provide an augmentation of JAX-RS API, it would be nice if we could ignore a field as it was an un-annotated fields: so “field” variable result would be the result of evaluation of custom predicate/service defined by user, [here](https://github.com/quarkusio/quarkus/blob/83648b18c34e64e13999601dd85d3ad1f1e7041f/independent-projects/resteasy-reactive/common/processor/src/main/java/org/jboss/resteasy/reactive/common/processor/EndpointIndexer.java#L1320) the snippet I'm referring\r\n\r\n```\r\n//un-annotated field\r\n//just ignore it\r\nif (field) {\r\n    return builder;\r\n}\r\n```\r\n\r\nWhy this? This is my use case:\r\n\r\nI’ll try to define new kind of API built on top of JAX-RS. These API allow to inject inside the signature of JAX-RS resource method, some entities provided by some logic under the hood before actual invocation of method.\r\n\r\nWhy not a `@Context` as alternative to define custom field?  Because these API are part of set of new API that have a specific semantic with respect JAX-RS, so it is a high level specification that don’t needs JAX-RS. \r\n\r\nTo go in depth of my domain use case, the new framework I’m designing provides APIs to design chatbot. Every chatbot needs to define a set of intents. Every intent matches a specific REST routing, but needs injection of some chatbot context entities. \r\n\r\nThese APIs are an orthogonal specification with respect JAX-RS, but the implementation chosen is using JAX-RS baseline to inherits features that we need to guarantees the expected behavior, so `@Context` would be not acceptable as alternative.\r\n\r\nChatbot is new kind of interface that combines some features inherited by REST API definition (like using same http protocols) and some new add-on concepts.\r\n\r\nThis feature allows to enrich JAX-RS layer and will fix this current problem\r\n```\r\n\r\n    @Intent\r\n    @Path(\"/reservations\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    @POST\r\n    public Response reserve(@Referred ReservationRequest request, @Prompt String prompt){\r\n        return Response.ok().build();\r\n    }\r\n```\r\n\r\nThis kind of method throws \"Resource method \" + info + \" can only have a single body parameter\" exception because \"field\" is constant to false and the builder set \r\n\r\n\r\n```\r\nbuilder.setName(sourceName);\r\nbuilder.setType(ParameterType.BODY);\r\n```\r\n\r\nSo the type it will be not null and throws exception because there is more then one field.\n\n### Implementation ideas\n\nTo implement this feature\r\n\r\n```\r\nextractParameterInfo(currentClassInfo, actualEndpointInfo, currentMethodInfo,\r\n                            existingConverters, additionalReaders,\r\n                            anns, paramType, errorLocation, false, hasRuntimeConverters, pathParameters,\r\n                            currentMethodInfo.parameterName(i),\r\n                            consumes,\r\n                            methodContext);\r\n```\r\n\r\n\"field\" param is constant to false, so I would like to replace it with a function result, adding a predicate like this\r\n`private Predicate<Map<DotName, AnnotationInstance>> skipMethodParameter = null;`. I see that is done only for reactive rest client purpose with respect NotBody annotation. This predicate will be init during build phase of deployment processor with a custom bean defined by user. Then I could use a custom definition to decide how to skip a field as it was a un-unnotated field",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39979/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39979/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

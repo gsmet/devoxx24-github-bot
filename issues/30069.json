@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30069",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30069/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30069/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30069/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30069",
+  "id": 1510126829,
+  "node_id": "I_kwDOCFbutM5aArTt",
+  "number": 30069,
+  "title": "2.15.1.Final : java.lang.ClassNotFoundException: jakarta.inject.Singleton (jersey, 3rd party)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-12-24T15:32:39Z",
+  "updated_at": "2022-12-27T17:54:31Z",
+  "closed_at": "2022-12-27T17:54:28Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello\r\n\r\nTrying to use the official Mattermost client https://mattermost.com/marketplace/api-v4-client-for-java/ , https://github.com/maruTA-bis5/mattermost4j, client creation throws at (1)\r\n\r\nCode is https://github.com/maruTA-bis5/mattermost4j/blob/master/mattermost4j-core/src/main/java/net/bis5/mattermost/client4/MattermostClient.java#L200\r\n\r\nI understand https://github.com/maruTA-bis5/mattermost4j/issues/308 exists, referring to RESTeasy at https://github.com/maruTA-bis5/mattermost4j/issues/481#issuecomment-1162415200\r\n\r\nI attempted the following imports, to no luck\r\n\r\n```\r\n    implementation(\"jakarta.inject:jakarta.inject-api:1.0.3\")\r\n    implementation(\"jakarta.activation:jakarta.activation-api:2.1.0\")\r\n```\r\nQ: how could I import the `jakarta.inject` namespace into Quarkus ?\r\n\r\n(1)\r\n```\r\n2022-12-24 16:14:26,957 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-0) HTTP Request to /matter failed, error id: d794560c-0064-49c2-bddc-55514f160a17-1: java.lang.NoClassDefFoundError: jakarta/inject/Singleton\r\n\tat org.glassfish.jersey.model.ContractProvider$Builder.<clinit>(ContractProvider.java:67)\r\n\tat org.glassfish.jersey.model.ContractProvider.builder(ContractProvider.java:49)\r\n\tat org.glassfish.jersey.model.internal.ComponentBag.modelFor(ComponentBag.java:522)\r\n\tat org.glassfish.jersey.model.internal.ComponentBag.lambda$registerModel$10(ComponentBag.java:454)\r\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:292)\r\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:274)\r\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:205)\r\n\tat org.glassfish.jersey.model.internal.ComponentBag.registerModel(ComponentBag.java:446)\r\n\tat org.glassfish.jersey.model.internal.ComponentBag.register(ComponentBag.java:357)\r\n\tat org.glassfish.jersey.model.internal.CommonConfig.register(CommonConfig.java:463)\r\n\tat org.glassfish.jersey.client.ClientConfig$State.register(ClientConfig.java:223)\r\n\tat org.glassfish.jersey.client.ClientConfig.register(ClientConfig.java:613)\r\n\tat org.glassfish.jersey.client.JerseyClientBuilder.register(JerseyClientBuilder.java:244)\r\n\tat org.glassfish.jersey.client.JerseyClientBuilder.register(JerseyClientBuilder.java:48)\r\n\tat net.bis5.mattermost.client4.MattermostClient.buildClient(MattermostClient.java:201)\r\n\tat net.bis5.mattermost.client4.MattermostClient.<init>(MattermostClient.java:272)\r\n\tat net.bis5.mattermost.client4.MattermostClient$MattermostClientBuilder.build(MattermostClient.java:245)\r\n\r\n```\n\n### Expected behavior\n\nClass `jakarta.inject.Singleton` is found on the classpath\n\n### Actual behavior\n\nCaused by: java.lang.ClassNotFoundException: jakarta.inject.Singleton\r\n\tat java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)\r\n\tat java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:502)\n\n### How to Reproduce?\n\n1. sdk i quarkus\r\n2. import the lib `implementation(\"net.bis5.mattermost4j:mattermost4j-core:0.25.0\")`\r\n3. create a client to get the Exception\r\n```\r\n        var client: MattermostClient\r\n        client = MattermostClient.builder()\r\n            .url(\"http://localhost:8065\")\r\n            .logLevel(Level.INFO)\r\n            .ignoreUnknownProperties()\r\n            .build()\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\npowered by Quarkus 2.15.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30069/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30069/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

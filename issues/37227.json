@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37227",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37227/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37227/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37227/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37227",
+  "id": 2002637993,
+  "node_id": "I_kwDOCFbutM53XdSp",
+  "number": 37227,
+  "title": "Version check interprets port as version number for image-name of dev-services",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-11-20T17:02:19Z",
+  "updated_at": "2023-11-21T03:51:21Z",
+  "closed_at": "2023-11-21T03:51:21Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe company uses its own registry. Several registries are provided under different ports, which is why the port must be specified. \r\nIf a port with a colon is specified in the image name, the port is interpreted as a version number and a version mismatch occurs.\r\nTo validate the version number, Quarkus uses [Testcontainers](https://github.com/testcontainers/testcontainers-java).\r\nThe image name is split at the first colon, and the second substring is interpreted as the version number.\r\n```\r\npublic DockerImageName(String fullImageName) {\r\n        this.rawName = fullImageName;\r\n        final int slashIndex = fullImageName.indexOf('/');\r\n\r\n        String remoteName;\r\n        if (\r\n            slashIndex == -1 ||\r\n            (\r\n                !fullImageName.substring(0, slashIndex).contains(\".\") &&\r\n                !fullImageName.substring(0, slashIndex).contains(\":\") &&\r\n                !fullImageName.substring(0, slashIndex).equals(\"localhost\")\r\n            )\r\n        ) {\r\n            registry = \"\";\r\n            remoteName = fullImageName;\r\n        } else {\r\n            registry = fullImageName.substring(0, slashIndex);\r\n            remoteName = fullImageName.substring(slashIndex + 1);\r\n        }\r\n\r\n        if (remoteName.contains(\"@sha256:\")) {\r\n            repository = remoteName.split(\"@sha256:\")[0];\r\n            versioning = new Sha256Versioning(remoteName.split(\"@sha256:\")[1]);\r\n        } else if (remoteName.contains(\":\")) {\r\n            repository = remoteName.split(\":\")[0];\r\n            versioning = new TagVersioning(remoteName.split(\":\")[1]);\r\n        } else {\r\n            repository = remoteName;\r\n            versioning = Versioning.ANY;\r\n        }\r\n\r\n        compatibleSubstituteFor = null;\r\n    }\r\n\r\n```\r\n[Source](https://github.com/testcontainers/testcontainers-java/blob/696481e3dd345b9cc313dcc36c3553ab18562cd7/core/src/main/java/org/testcontainers/utility/DockerImageName.java#L92)\n\n### Expected behavior\n\nVersion number is correctly identified.\n\n### Actual behavior\n\nThe version number is wrongly identified, causing a version mismatch error.\n\n### How to Reproduce?\n\nUse a registry with port in the image name.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37227/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37227/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

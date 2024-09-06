@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22004",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22004/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22004/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22004/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22004",
+  "id": 1073642034,
+  "node_id": "I_kwDOCFbutM4__noy",
+  "number": 22004,
+  "title": "Can't Map exception thrown by MpJwtValidator::createSecurityIdentity",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2021-12-07T18:25:58Z",
+  "updated_at": "2021-12-07T19:55:56Z",
+  "closed_at": "2021-12-07T19:55:56Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI am attempting to catch all errors related to authorization, in order to redirect web ui users towards a login page, For many exceptions, this has worked fine, but when a token has expired the following error is thrown:\r\n\r\nhttps://github.com/quarkusio/quarkus/blob/main/extensions/smallrye-jwt/runtime/src/main/java/io/quarkus/smallrye/jwt/runtime/auth/MpJwtValidator.java#L78\r\n\r\nWhich I cannot seem to catch/map no matter what I try to do:\r\n\r\nMapper to catch the error:\r\n\r\n```\r\n@Slf4j\r\n@Provider\r\npublic class AuthenticationFailedExceptionMapper extends UiNotAuthorizedExceptionMapper<AuthenticationFailedException> {\r\n\r\n}\r\n```\r\n\r\nMapper superclass, as there are different errors thrown in differing auth cases:\r\n```\r\n\r\n@Slf4j\r\npublic abstract class UiNotAuthorizedExceptionMapper<E extends Throwable> implements ExceptionMapper<E> {\r\n    protected static boolean isUiEndpoint(URI uri) {\r\n        String path = uri.getPath();\r\n\r\n        return !path.startsWith(\"/api\") &&\r\n                !path.startsWith(\"/q/\") &&\r\n                !path.startsWith(\"/openapi\");\r\n    }\r\n\r\n    @Context\r\n    UriInfo crc;\r\n\r\n    @Context\r\n    JsonWebToken jsonWebToken;\r\n\r\n//    @Context\r\n//    @CookieParam(\"jwt\")\r\n//    Map<String, Cookie> authCookies;\r\n\r\n    public Response toResponse(E e) {\r\n        log.warn(\"User not authorized to access: {} - {}/{}\", crc.getRequestUri(), e.getClass().getName(), e.getMessage());\r\n\r\n//        log.info(\"Cookie: {}\", authCookies);\r\n        URI uri = this.crc.getRequestUri();\r\n        if (isUiEndpoint(uri)) {\r\n            return Response.seeOther( //seeOther = 303 redirect\r\n                            UriBuilder.fromUri(\"/\")\r\n                                    .queryParam(\"messageHeading\", \"Unauthorized\")\r\n                                    .queryParam(\"message\", \"Please login to access this page.\")\r\n                                    .queryParam(\"messageType\", \"danger\")\r\n                                    .queryParam(\"returnPath\", uri.getPath() + (uri.getQuery() == null ? \"\" : \"?\" + uri.getQuery()))\r\n                                    .build()\r\n                    )//build the URL where you want to redirect\r\n//                    .entity(\"Not authorized\")//entity is not required\r\n                    .cookie(\r\n                            new NewCookie(\r\n                                    new Cookie(\r\n                                            ConfigProvider.getConfig().getValue(\"mp.jwt.token.cookie\", String.class),\r\n                                            \"\",\r\n                                            \"/\",\r\n                                            ConfigProvider.getConfig().getValue(\"runningInfo.hostnamePort\", String.class)\r\n                                    ),\r\n                                    \"To clear out the auth cookie\",\r\n                                    0,\r\n                                    false\r\n                            )\r\n                    )\r\n                    .build();\r\n        }\r\n        log.info(\"Erring exception for url that wasn't in ui\");\r\n        return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage() + e.toString()).build();\r\n    }\r\n```\r\n\r\n\n\n### Expected behavior\n\nThe mapper given above should be able to catch the error thrown when tokens expire (and other errors)\n\n### Actual behavior\n\nThe error is not caught by the mapper\n\n### How to Reproduce?\n\nRepository: https://github.com/Epic-Breakfast-Productions/OpenQuarterMaster/tree/main/software/open-qm-base-station\r\n\r\nWill need to run `./gradlew build publishToMavenLocal` for this dir to have dependency built: https://github.com/Epic-Breakfast-Productions/OpenQuarterMaster/tree/main/software/libs/open-qm-core\r\n\r\nWill need a running instance of Mongodb to connect to\r\n\r\nIn the base station quarkus project, set `mp.jwt.expiration.default` to something small (10 seconds works), and `quarkus.mongodb.connection-string` to how to connect to your mongo instance (defaults to `mongodb://localhost:27017`)\r\n\r\nRun server, open web ui ( http://localhost:8080 ). Create account (a local account to your instance) and login.\r\n\r\nWait for token to expire.\r\n\r\nRefresh when token expired, see blank screen instead of being redirected to login screen\n\n### Output of `uname -a` or `ver`\n\nLinux GeneralDevBox 5.11.0-41-generic #45~20.04.1-Ubuntu SMP Wed Nov 10 10:20:10 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.11\" 2021-04-20 OpenJDK Runtime Environment (build 11.0.11+9-Ubuntu-0ubuntu2.20.04) OpenJDK 64-Bit Server VM (build 11.0.11+9-Ubuntu-0ubuntu2.20.04, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.5.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.3\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22004/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22004/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38138",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38138/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38138/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38138/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38138",
+  "id": 2076102070,
+  "node_id": "I_kwDOCFbutM57vs22",
+  "number": 38138,
+  "title": "Allow to preconfigure dev services container for Kubernetes",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-01-11T09:07:14Z",
+  "updated_at": "2024-01-24T14:33:29Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nWe have a Kubernetes Operator implemented with Java Operator SDK and Quarkus.\r\n\r\nFor integration tests, we leverage dev services for Kubernetes provided by Quarkus:\r\n\r\n```yaml\r\n  kubernetes-client:\r\n    devservices:\r\n      enabled: true\r\n      flavor: k3s\r\n      override-kubeconfig: true\r\n```\r\n\r\nUnder the hood, a K3S Kubernetes distribution is provisioned and used for test purposes.\r\n\r\nWhat do we lack from this setup is an ability to test `ValidatingWebhookConfiguration` resource from Kubernetes. We want to add a validation webhook to one of the resources that the Operator reconciles, therefore we expose a validation endpoint that is later called by Kubernetes API Server when a resource is changed.\r\n\r\nThe problem is that it is not possible to test this scenario with the current implementation, because there is no way to call the service from within Kubernetes docker container:\r\n\r\n```\r\nwebhook: Kubernetes container --port: 8444--> Quarkus application \r\n```\r\n\r\nI was able to test this scenario when I explicitly created a container and enabled `accessToHost`:\r\n\r\n```kotlin\r\nK3sContainer()\r\n            .withAccessToHost(true)\r\n            .apply { start() }\r\n```\r\n\r\nThen I had to expose port, like below, and a call started to work:\r\n\r\n```kotlin\r\nTestcontainers.exposeHostPorts(8444)\r\n```\r\n\r\nTo sum up, I am wondering if it is possible to expose a property, for example:\r\n\r\n```yaml\r\n  kubernetes-client:\r\n    devservices:\r\n      accessToHost: true / false # new property\r\n```\r\n\r\nWhat do you think?\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38138/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38138/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

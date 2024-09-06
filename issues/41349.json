@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41349",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41349/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41349/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41349/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41349",
+  "id": 2366150638,
+  "node_id": "I_kwDOCFbutM6NCJfu",
+  "number": 41349,
+  "title": "Quarkus from 3.11 cannot load RestClient generated classes in Kotlin CoroutineScope",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2024-06-21T09:42:08Z",
+  "updated_at": "2024-07-05T06:42:13Z",
+  "closed_at": "2024-07-05T06:42:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe issue is the same as described in [this closed ticket](https://github.com/quarkusio/quarkus/issues/40245) for Quarkus 3.9. This time I prepared a small project based on [Quarkus documentation for the rest clients](https://quarkus.io/guides/rest-client).\r\n\r\nIn short, Quarkus uses a different class loader in Kotlin CoroutineScope which results in some generated classes being missing.\r\n\r\n### Expected behavior\r\n\r\nQuarkus uses the same class loader inside a coroutine scope as outside while working with generated rest clients.\r\nSo code like this does not throw errors:\r\n```kotlin\r\n    suspend fun getExtensions(id: String?) : List<Extension>{\r\n        return withContext(Dispatchers.IO) {\r\n            extensionsService.getByIdAsUni(id)\r\n        }.awaitSuspending().toList()\r\n    }\r\n```\r\nsee full example [here](https://github.com/Sic4Parvis9Magna/quarkus-rest-client-issue/blob/6b8150dea1660538281f89e366cd864159902f51/src/main/kotlin/CoService.kt#L19C1-L25C6)\r\n\r\nExpected response:\r\n![expected-behavior](https://github.com/quarkusio/quarkus/assets/36820151/ce4f7a02-4d7e-4544-b52d-e7c92a5562ad)\r\n\r\n### Actual behavior\r\n\r\nQuarkus uses **not** the same class loader inside a coroutine scope as outside while working with generated rest clients.\r\n```\r\noutside classloader: Quarkus Runtime ClassLoader: DEV for rest-client-quickstart-1.0.0-SNAPSHOT restart no:0\r\ninside classloader: Quarkus Base Runtime ClassLoader: DEV for rest-client-quickstart-1.0.0-SNAPSHOT\r\n```\r\n\r\nError response:\r\n![actual-behaviour](https://github.com/quarkusio/quarkus/assets/36820151/4f619bee-5d39-45d9-af73-9c2d39ab9900)\r\n\r\n\r\n\r\n### How to Reproduce?\r\n\r\nThe example below is based on [these docs](https://quarkus.io/guides/rest-client) but translated to Kotlin.\r\n1. clone an example project\r\n`git clone https://github.com/Sic4Parvis9Magna/quarkus-rest-client-issue.git`\r\n2. run the project\r\n` mvn compile quarkus:dev `\r\n3. Use Postman collection from [here](https://github.com/Sic4Parvis9Magna/quarkus-rest-client-issue/blob/main/postman/quarkus%20rest%20client%20issue.postman_collection.json)\r\n4. execute `Get extension co` request and see the missing class in error response\r\n5. execute other requests to see rest client is working\r\n6. to fix the \"broken\" request you need to uncomment lines 20 & 22 [here](https://github.com/Sic4Parvis9Magna/quarkus-rest-client-issue/blob/main/src/main/kotlin/CoService.kt) this fix was suggested in the original issue\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava version \"21.0.1\" 2023-10-17 LTS\r\n\r\n### Quarkus version or git rev\r\n\r\n3.11.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\r\n\r\n### Additional information\r\n\r\nThis issue is a follow-up on what was raised earlier for 3.9 as the solution is kinda unclear.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41349/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41349/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

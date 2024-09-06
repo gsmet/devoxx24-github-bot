@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42873",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42873/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42873/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42873/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42873",
+  "id": 2494958942,
+  "node_id": "I_kwDOCFbutM6Utg1e",
+  "number": 42873,
+  "title": "Quarkus 3.11: RxJava2 call raises NPE",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-08-29T16:01:15Z",
+  "updated_at": "2024-08-30T13:20:12Z",
+  "closed_at": "2024-08-30T12:16:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI need to use RxJava2 API in a Quarkus 3.11 REST service. For some reason, I cannot use anything else like Mutiny, etc.\r\nThe only Maven dependency I found is `org.jboss.rest-easy:resteasy-rxjava2`. I didn't find anything like `io.quarkus:quarkus-rest-rxjava2`.\r\nIn an integration test I'm calling the service with a REST client. Since I'm using ` resteasy-rxjava2` I need to use `quarkus-resteasy-client` as well such that to avoid mixing.\r\nBut doing that i get the following exception:\r\n\r\n    2024-08-29 17:34:11,682 INFO  [io.quarkus] (main) quarkus-rxjava2-issue 1.0-SNAPSHOT on JVM (powered by Quarkus 3.11.0) started in 1.740s. Listening on: http://localhost:8081\r\n    2024-08-29 17:34:11,684 INFO  [io.quarkus] (main) Profile test activated. \r\n    2024-08-29 17:34:11,684 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-client, smallrye-context-propagation, vertx]\r\n    jakarta.ws.rs.ProcessingException: java.lang.NullPointerException: Cannot invoke  \"org.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.getMethod()\" because the return value of \"org.jboss.resteasy.client.jaxrs.internal.ClientInvocation.getClientInvoker()\" is null \n\n### Expected behavior\n\nI expect that everything works without exception but I'm not sure whether the mentioned artifacts and extensions are the correct ones.\n\n### Actual behavior\n\nThe following exception is raised:\r\n\r\n    2024-08-29 17:34:11,682 INFO  [io.quarkus] (main) quarkus-rxjava2-issue 1.0-SNAPSHOT on JVM (powered by Quarkus 3.11.0) started in 1.740s. Listening on: http://localhost:8081\r\n    2024-08-29 17:34:11,684 INFO  [io.quarkus] (main) Profile test activated. \r\n    2024-08-29 17:34:11,684 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-client, smallrye-context-propagation, vertx]\r\n    jakarta.ws.rs.ProcessingException: java.lang.NullPointerException: Cannot invoke  \"org.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.getMethod()\" because the return value of \"org.jboss.resteasy.client.jaxrs.internal.ClientInvocation.getClientInvoker()\" is null \n\n### How to Reproduce?\n\n    $ git clone https://github.com/nicolasduminil/quarkus-rxjava2-issue.git\r\n    $ cd quarkus-rxjava2-issue\r\n    $ mvn package\r\n    $ java -jar target/quarkus-app/quarkus-run.jar\r\n\r\nIn a different terminal:\r\n\r\n    $ cd quarkus-rxjava2-issue\r\n    $ $ mvn -Dbase_uri/mp-rest/url=http://localhost:8080 failsafe:integration-test\r\n    [INFO] Scanning for projects...\r\n    [INFO] \r\n    [INFO] ---------< fr.simplex-software.workshop:quarkus-rxjava2-issue >---------\r\n    [INFO] Building quarkus-rxjava2-issue 1.0-SNAPSHOT\r\n    [INFO]   from pom.xml\r\n    [INFO] --------------------------------[ jar ]---------------------------------\r\n    [INFO] \r\n    [INFO] --- failsafe:3.2.5:integration-test (default-cli) @ quarkus-rxjava2-issue ---\r\n    [INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider\r\n    [INFO] \r\n    [INFO] -------------------------------------------------------\r\n    [INFO]  T E S T S\r\n    [INFO] -------------------------------------------------------\r\n    [INFO] Running fr.simplex_software.workshop.tests.TimeResourceIT\r\n    2024-08-29 17:58:50,646 INFO  [io.quarkus] (main) quarkus-rxjava2-issue 1.0-SNAPSHOT on JVM (powered by Quarkus 3.11.0) started in 1.714s. Listening on: http://localhost:8081\r\n    2024-08-29 17:58:50,648 INFO  [io.quarkus] (main) Profile test activated. \r\n    2024-08-29 17:58:50,648 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy, resteasy-client, smallrye-context-propagation, vertx]\r\n    jakarta.ws.rs.ProcessingException: java.lang.NullPointerException: Cannot invoke \"org.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.getMethod()\" because the return value of \"org.jboss.resteasy.client.jaxrs.internal.ClientInvocation.getClientInvoker()\" is null\n\n### Output of `uname -a` or `ver`\n\nLinux nicolas-XPS-15-9570 5.15.0-119-generic #129-Ubuntu SMP Fri Aug 2 19:25:20 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\njava version \"21.0.3\" 2024-04-16 LTS Java(TM) SE Runtime Environment (build 21.0.3+7-LTS-152) Java HotSpot(TM) 64-Bit Server VM (build 21.0.3+7-LTS-152, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.11.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546) Maven home: /opt/apache-maven-3.9.5 Java version: 21.0.3, vendor: Oracle Corporation, runtime: /usr/lib/jvm/jdk-21-oracle-x64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.0-119-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\nN/A",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42873/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42873/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

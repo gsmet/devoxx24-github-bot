@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35028",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35028/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35028/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35028/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35028",
+  "id": 1822377993,
+  "node_id": "I_kwDOCFbutM5sn0gJ",
+  "number": 35028,
+  "title": "Dev UI v2 does not use custom pages when changing deployment module path location",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2715669984,
+      "node_id": "MDU6TGFiZWwyNzE1NjY5OTg0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/dev-ui",
+      "name": "area/dev-ui",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-07-26T13:04:40Z",
+  "updated_at": "2023-07-28T01:00:42Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI am creating an extension for my Quarkus project, and I have an issue where the BuildStep of creating the Dev UI cards and pages is executed but the result is not displayed.\r\n\r\nThis happens when I change the deployment artifactID to something which is not following Quarkus convention (`<runtime>-deployment`).\n\n### Expected behavior\n\nDevUI should display the custom card and its content\r\n![image](https://github.com/quarkusio/quarkus/assets/10145351/3ec239d7-32ec-4589-bc5d-0ecf4208d9c7)\r\n\n\n### Actual behavior\n\nDevUI only display the generated default card\r\n![image](https://github.com/quarkusio/quarkus/assets/10145351/8cc3c1e4-dba0-4f40-a6f7-b74721d6c813)\r\n\n\n### How to Reproduce?\n\nSteps to reproduce the issue :\r\n1- Create an extension `mvn io.quarkus.platform:quarkus-maven-plugin:3.2.2.Final:create-extension -N -DgroupId=com.example -DextensionId=hello-extension`\r\n\r\n2- Configure DevUI for the extension\r\n\r\n2-1 Add `vertx-http-dev-ui-spi` to `deployment/pom.xml`\r\n\r\n<details>\r\n<summary>Details</summary>\r\n\r\n```xml\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-vertx-http-dev-ui-spi</artifactId>\r\n</dependency>\r\n```\r\n\r\n</details>\r\n\r\n2-2 Add the DevUIProcessor method : \r\n\r\n<details>\r\n<summary>Details</summary>\r\n\r\n```java\r\n@BuildStep(onlyIf = IsDevelopment.class)\r\n    void createJokes(BuildProducer<CardPageBuildItem> cardsProducer,\r\n                     BuildProducer<MenuPageBuildItem> menuProducer,\r\n                     BuildProducer<FooterPageBuildItem> footerProducer) {\r\n\r\n        // Cards\r\n\r\n        CardPageBuildItem cardPageBuildItem = new CardPageBuildItem();\r\n\r\n\r\n        cardPageBuildItem.addPage(Page.rawDataPageBuilder(\"Raw data\")\r\n                                      .icon(\"font-awesome-brands:js\")\r\n                                      .buildTimeDataKey(\"jokes\"));\r\n\r\n        cardPageBuildItem.addPage(Page.tableDataPageBuilder(\"Table data\")\r\n                                      .icon(\"font-awesome-solid:table\")\r\n                                      .showColumn(\"timestamp\")\r\n                                      .showColumn(\"user\")\r\n                                      .showColumn(\"fullJoke\")\r\n                                      .buildTimeDataKey(\"jokes\"));\r\n\r\n        cardPageBuildItem.addPage(Page.quteDataPageBuilder(\"Qute data\")\r\n                                      .icon(\"font-awesome-solid:q\")\r\n                                      .templateLink(\"qute-jokes-template.html\"));\r\n\r\n        cardPageBuildItem.addPage(Page.webComponentPageBuilder()\r\n                                      .icon(\"font-awesome-brands:vaadin\")\r\n                                      .componentLink(\"qwc-jokes-vaadin.js\"));\r\n\r\n        cardPageBuildItem.addPage(Page.webComponentPageBuilder()\r\n                                      .icon(\"font-awesome-solid:chart-pie\")\r\n                                      .componentLink(\"qwc-jokes-chart.js\"));\r\n\r\n        cardPageBuildItem.addPage(Page.webComponentPageBuilder()\r\n                                      .icon(\"font-awesome-solid:cubes\")\r\n                                      .componentLink(\"qwc-jokes-web-components.js\"));\r\n\r\n        cardsProducer.produce(cardPageBuildItem);\r\n\r\n        // Menu\r\n\r\n        MenuPageBuildItem menuPageBuildItem = new MenuPageBuildItem();\r\n\r\n        menuPageBuildItem.addPage(Page.webComponentPageBuilder()\r\n                                      .icon(\"font-awesome-regular:face-grin-tongue-wink\")\r\n                                      .title(\"One Joke\")\r\n                                      .componentLink(\"qwc-jokes-menu.js\"));\r\n\r\n        menuPageBuildItem.addPage(Page.webComponentPageBuilder()\r\n                                      .title(\"Jokes\")\r\n                                      .icon(\"font-awesome-solid:cubes\")\r\n                                      .componentLink(\"qwc-jokes-web-components.js\"));\r\n\r\n        menuProducer.produce(menuPageBuildItem);\r\n\r\n        // Footer\r\n\r\n        FooterPageBuildItem footerPageBuildItem = new FooterPageBuildItem();\r\n\r\n        footerPageBuildItem.addPage(Page.webComponentPageBuilder()\r\n                                        .icon(\"font-awesome-regular:face-grin-tongue-wink\")\r\n                                        .title(\"Joke Log\")\r\n                                        .componentLink(\"qwc-jokes-log.js\"));\r\n\r\n        footerProducer.produce(footerPageBuildItem);\r\n\r\n    }\r\n```\r\n\r\n</details>\r\n3- Test the extension the see the correct behavior.  \r\nDevUI show the custom card.\r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/10145351/3ec239d7-32ec-4589-bc5d-0ecf4208d9c7)\r\n\r\n4- Rename the artifactId in `deployment/pom.xml`  by adding `-test`\r\n```xml\r\n<artifactId>hello-extension-test-deployment</artifactId>\r\n```\r\n\r\n5- Update the deployment configuration in `runtime/pom.xml`  in consequences\r\n```xml\r\n<configuration>\r\n    <deployment>${project.groupId}:${project.artifactId}-test-deployment:${project.version}</deployment>\r\n</configuration>\r\n```\r\n\r\n6- Test again. The DevUI only shows the generated card.\r\n![image](https://github.com/quarkusio/quarkus/assets/10145351/8cc3c1e4-dba0-4f40-a6f7-b74721d6c813)\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux 5.10.16.3-microsoft-standard-WSL2 and NixOS 23.11 (unstable)\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6\n\n### Additional information\n\nI am ready to contribute in order to resolve this issue but I will need some help to debug beceause I am new to Quarkus",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35028/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35028/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

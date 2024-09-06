@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29374",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29374/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29374/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29374/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29374",
+  "id": 1457544548,
+  "node_id": "I_kwDOCFbutM5W4F1k",
+  "number": 29374,
+  "title": "OpenTelemetry: 'Failed to export spans' of ignored endpoints, on Kubernetes if otel-collector container starts after Quarkus container",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2022-11-21T08:45:36Z",
+  "updated_at": "2023-07-04T09:52:02Z",
+  "closed_at": "2023-07-04T09:51:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a Quarkus 2.14.1 service running on Kubernetes in a pod with an otel-collector. The Quarkus service connects to this otel-collector correctly.\r\n\r\nIn some cases, the otel-collector container may start after the Quarkus container has started. Every time Kubernetes probes Quarkus at `q/health/live` and `q/health/ready`, Quarkus tries to export spans to the otel-collector, despite `q/` endpoints being ignored (see [Quarkus doc](https://quarkus.io/guides/opentelemetry#quarkus-opentelemetry_quarkus.opentelemetry.tracer.suppress-non-application-uris), we have not changed the default `true` setting, or provide any custom samplers, and we do not see traces for these endpoints in Jaeger, suggesting that it does work), resulting in the following error:\r\n\r\n```\r\nSEVERE [io.ope.exp.int.grp.OkHttpGrpcExporter] (OkHttp http://localhost:4317/...) {} Failed to export spans. The request could not be executed. Full error message: Failed to connect to localhost/0:0:0:0:0:0:0:1:4317\r\n```\r\n\r\nAfter the otel-collector starts, the issue resolves itself.\r\n\r\nAs a workaround, we have to use a startUp probe on the service container that waits for the otel-collector container to have started, to prevent health check calls on the service container producing the error.\r\n\r\n### Expected behavior\r\n\r\nNo `Failed to export spans` error messages when calls to ignored `q/` are made.\r\n\r\n### Actual behavior\r\n\r\n```\r\nSEVERE [io.ope.exp.int.grp.OkHttpGrpcExporter] (OkHttp http://localhost:4317/...) {} Failed to export spans. The request could not be executed. Full error message: Failed to connect to localhost/0:0:0:0:0:0:0:1:4317\r\n```\r\n\r\nis logged when calls to `q/health/live` and `q/health/ready` are made when otel-collector has yet to start.\r\n\r\n### How to Reproduce?\r\n\r\nUsing Quarkus 2.14.1 with dependencies:\r\n\r\n```\r\n'io.quarkus:quarkus-opentelemetry'\r\n'io.opentelemetry.instrumentation:opentelemetry-jdbc'\r\n'io.quarkus:quarkus-smallrye-health'\r\n```\r\n\r\nand configuration\r\n\r\n```\r\nquarkus.opentelemetry.propagators=tracecontext,baggage,jaeger\r\nquarkus.opentelemetry.tracer.exporter.otlp.endpoint=http://localhost:4317\r\n```\r\n\r\n1. Start the Quarkus service. Do _not_  start an otel-collector on localhost:4317, simulating that an otel-collector container has not yet started.\r\n2. Call `q/health/live` and `q/health/ready`\r\n3. Observe the following log statement: `SEVERE [io.ope.exp.int.grp.OkHttpGrpcExporter] (OkHttp http://localhost:4317/...) {} Failed to export spans. The request could not be executed. Full error message: Failed to connect to localhost/0:0:0:0:0:0:0:1:4317`\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.19044.2130]\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.15\" 2022-04-19 OpenJDK Runtime Environment Temurin-11.0.15+10 (build 11.0.15+10) OpenJDK 64-Bit Server VM Temurin-11.0.15+10 (build 11.0.15+10, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n------------------------------------------------------------ Gradle 7.2 ------------------------------------------------------------  Build time:   2021-08-17 09:59:03 UTC Revision:     a773786b58bb28710e3dc96c4d1a7063628952ad  Kotlin:       1.5.21 Groovy:       3.0.8 Ant:          Apache Ant(TM) version 1.10.9 compiled on September 27 2020 JVM:          11.0.15 (Eclipse Adoptium 11.0.15+10) OS:           Windows 10 10.0 amd64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29374/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29374/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

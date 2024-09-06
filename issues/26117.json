@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26117",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26117/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26117/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26117/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26117",
+  "id": 1270768636,
+  "node_id": "I_kwDOCFbutM5LvmP8",
+  "number": 26117,
+  "title": "Informer is unable to deserialize Kubernetes resource in native mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2022-06-14T12:57:14Z",
+  "updated_at": "2022-09-09T07:37:38Z",
+  "closed_at": "2022-09-09T07:37:37Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWould appreciate help figuring out https://github.com/quarkiverse/quarkus-operator-sdk/issues/359. It seems that some resources (not even sure which) are not properly deserialized, resulting in an NPE downstream (the observed exception).\r\n/cc @iocanel @manusa \r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nSee: https://github.com/quarkiverse/quarkus-operator-sdk/issues/359#issuecomment-1151126745\r\n- Clone repo at: https://github.com/cdmikechen/Operator-Dependent-Test\r\n- Change property https://github.com/cdmikechen/Operator-Dependent-Test/blob/test-native-run/src/main/resources/application.properties#L5 to `true`\r\n- Compile natively: `mvn package -Dnative`\r\n- Connect to your favorite Kubernetes cluster\r\n- Launch the app: `./target/bigdata-operator-1.0.0-SNAPSHOT-runner`\r\n- You should observe a whole bunch of exceptions: \r\n```java\r\n2022-06-14 14:03:08,741 ERROR [io.fab.kub.cli.inf.cac.SharedProcessor] (main) Failed invoking io.javaoperatorsdk.operator.processing.event.source.informer.InformerEventSource@7e6f916d event handler: null: java.lang.NullPointerException\r\n        at io.javaoperatorsdk.operator.processing.event.ResourceID.fromFirstOwnerReference(ResourceID.java:17)\r\n        at io.javaoperatorsdk.operator.processing.event.source.informer.Mappers.lambda$fromOwnerReference$0(Mappers.java:35)\r\n        at io.javaoperatorsdk.operator.processing.event.source.informer.PrimaryToSecondaryIndex.onAddOrUpdate(PrimaryToSecondaryIndex.java:20)\r\n        at io.javaoperatorsdk.operator.processing.event.source.informer.InformerEventSource.onAdd(InformerEventSource.java:98)\r\n        at io.javaoperatorsdk.operator.processing.event.source.informer.InformerEventSource.onAdd(InformerEventSource.java:66)\r\n        at io.fabric8.kubernetes.client.informers.cache.ProcessorListener$AddNotification.handle(ProcessorListener.java:96)\r\n        at io.fabric8.kubernetes.client.informers.cache.ProcessorListener.add(ProcessorListener.java:47)\r\n        at io.fabric8.kubernetes.client.informers.cache.SharedProcessor.lambda$distribute$0(SharedProcessor.java:79)\r\n        at io.fabric8.kubernetes.client.informers.cache.SharedProcessor.lambda$distribute$1(SharedProcessor.java:101)\r\n        at io.fabric8.kubernetes.client.utils.SerialExecutor.lambda$execute$0(SerialExecutor.java:40)\r\n        at io.fabric8.kubernetes.client.utils.SerialExecutor.scheduleNext(SerialExecutor.java:52)\r\n        at io.fabric8.kubernetes.client.utils.SerialExecutor.execute(SerialExecutor.java:46)\r\n        at io.fabric8.kubernetes.client.informers.cache.SharedProcessor.distribute(SharedProcessor.java:98)\r\n        at io.fabric8.kubernetes.client.informers.cache.SharedProcessor.distribute(SharedProcessor.java:79)\r\n        at io.fabric8.kubernetes.client.informers.cache.ProcessorStore.update(ProcessorStore.java:50)\r\n        at io.fabric8.kubernetes.client.informers.cache.ProcessorStore.update(ProcessorStore.java:28)\r\n        at io.fabric8.kubernetes.client.informers.cache.Reflector.lambda$listSyncAndWatch$0(Reflector.java:85)\r\n        at java.util.ArrayList.forEach(ArrayList.java:1511)\r\n        at io.fabric8.kubernetes.client.informers.cache.Reflector.listSyncAndWatch(Reflector.java:82)\r\n        at io.fabric8.kubernetes.client.informers.impl.DefaultSharedIndexInformer.run(DefaultSharedIndexInformer.java:146)\r\n        at io.javaoperatorsdk.operator.processing.event.source.informer.InformerWrapper.start(InformerWrapper.java:36)\r\n        at java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183)\r\n        at java.util.concurrent.ConcurrentHashMap$ValueSpliterator.forEachRemaining(ConcurrentHashMap.java:3612)\r\n        at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\r\n        at java.util.stream.ForEachOps$ForEachTask.compute(ForEachOps.java:290)\r\n        at java.util.concurrent.CountedCompleter.exec(CountedCompleter.java:754)\r\n        at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\r\n        at java.util.concurrent.ForkJoinTask.invoke(ForkJoinTask.java:686)\r\n        at java.util.stream.ForEachOps$ForEachOp.evaluateParallel(ForEachOps.java:159)\r\n        at java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateParallel(ForEachOps.java:173)\r\n        at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:233)\r\n        at java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\r\n        at java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:765)\r\n        at io.javaoperatorsdk.operator.processing.event.source.informer.InformerManager.start(InformerManager.java:44)\r\n        at io.javaoperatorsdk.operator.processing.event.source.informer.ManagedInformerEventSource.start(ManagedInformerEventSource.java:75)\r\n        at io.javaoperatorsdk.operator.processing.event.NamedEventSource.start(NamedEventSource.java:20)\r\n        at io.javaoperatorsdk.operator.processing.event.EventSourceManager.start(EventSourceManager.java:68)\r\n        at io.javaoperatorsdk.operator.processing.Controller.start(Controller.java:305)\r\n        at java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183)\r\n        at java.util.HashMap$ValueSpliterator.forEachRemaining(HashMap.java:1779)\r\n        at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\r\n        at java.util.stream.ForEachOps$ForEachTask.compute(ForEachOps.java:290)\r\n        at java.util.concurrent.CountedCompleter.exec(CountedCompleter.java:754)\r\n        at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\r\n        at java.util.concurrent.ForkJoinTask.invoke(ForkJoinTask.java:686)\r\n        at java.util.stream.ForEachOps$ForEachOp.evaluateParallel(ForEachOps.java:159)\r\n        at java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateParallel(ForEachOps.java:173)\r\n        at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:233)\r\n        at java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\r\n        at java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:765)\r\n        at io.javaoperatorsdk.operator.Operator$ControllerManager.start(Operator.java:219)\r\n        at io.javaoperatorsdk.operator.Operator.start(Operator.java:100)\r\n        at io.quarkiverse.operatorsdk.runtime.AppEventListener.onStartup(AppEventListener.java:26)\r\n        at io.quarkiverse.operatorsdk.runtime.AppEventListener_Observer_onStartup_9c5d3dd7eff7dbe02976f59f48aec5b70eb9c99f.notify(Unknown Source)\r\n        at io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:323)\r\n        at io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:305)\r\n        at io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:73)\r\n        at io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:130)\r\n        at io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:99)\r\n        at io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy(Unknown Source)\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:103)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n```\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26117/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26117/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

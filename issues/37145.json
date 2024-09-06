@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37145",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37145/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37145/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37145/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37145",
+  "id": 1997034214,
+  "node_id": "I_kwDOCFbutM53CFLm",
+  "number": 37145,
+  "title": "@JsonView annotation ignored for sub-resources",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-11-16T14:47:26Z",
+  "updated_at": "2023-11-20T14:48:22Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "\r\n[code-with-quarkus.zip](https://github.com/quarkusio/quarkus/files/13394099/code-with-quarkus.zip)\r\n### Describe the bug\r\n\r\nWe want to use `@JsonView` to to selectively hide/show fields for different scenarios.\r\n\r\nIt works for the simple scenario of adding it to a top-level Resource. **But the same code fails if the endpoint is in a sub-resource.**\r\n\r\n## Example\r\n\r\nBasic User class where we want to hide the `password` field in the JSON response except for Private.\r\n\r\n```\r\npublic class User {\r\n\r\n    private String name;\r\n\r\n    // hide the password except for Private view\r\n    @JsonView(Views.Private.class)\r\n    private String password;\r\n\r\n    // getters/setters\r\n}\r\n```\r\n\r\nThe Views are identical to https://quarkus.io/guides/resteasy-reactive#jsonview-support\r\n```\r\npublic class Views {\r\n    public static class Public {}\r\n    public static class Private extends Public {}\r\n}\r\n```\r\n\r\nCreate a simple endpoint at the top-level and it works fine.\r\n\r\n```\r\n@GET\r\n@JsonView(Views.Public.class)\r\npublic User hello() {\r\n    User user = new User();\r\n    user.setName(\"John\");\r\n    user.setPassword(\"password\");\r\n    return user;\r\n}\r\n```\r\n\r\n```\r\nhttp://localhost:8080/hello\r\n{\"name\":\"John\"}\r\n```\r\n\r\n### Bug Scenario - using `@JsonView` in Sub-Resource\r\n\r\nNow create another class `BugResource` with the same code and in `GreetingResource` add a method to return the sub-resource:\r\n\r\n```\r\n@Path(\"/bug\")\r\npublic BugResource getBugResource() {\r\n    return resourceContext.getResource(BugResource.class);\r\n}\r\n```\r\n\r\n\r\n```\r\n@ApplicationScoped\r\n@Unremovable\r\npublic class BugResource {\r\n\r\n    @GET\r\n    @JsonView(Views.Public.class)\r\n    public User hello() {\r\n        User user = new User();\r\n        user.setName(\"John\");\r\n        user.setPassword(\"password\");\r\n        return user;\r\n    }\r\n}\r\n```\r\n\r\n```\r\nhttp://localhost:8080/hello/bug\r\n{\"name\":\"John\",\"password\":\"password\"}\r\n```\r\n\r\n### Temporary workaround\r\n\r\nOur current workaround is to inject ObjectMapper and manually serialize to a String but it gets pretty ugly as we add `@JsonView` to more endpoints:\r\n\r\n```\r\n@Inject\r\nObjectMapper objectMapper;\r\n    \r\n// endpoint must now return a String instead of User\r\npublic String bug() throws JsonProcessingException {\r\n        User user = new User();\r\n        user.setName(\"John\");\r\n        user.setPassword(\"password\");\r\n        return objectMapper.writerWithView(Views.Public.class)\r\n                .writeValueAsString(user);\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\n`@JsonView` annotation on endpoints should work regardless if endpoint is top-level resource or sub-resource.\r\n\r\n### Actual behavior\r\n\r\n`@JsonView` annotation does not work in sub-resources.\r\n\r\n### How to Reproduce?\r\n\r\n1. Generate code-with-quarkus project using Quarkus CLI\r\n2. Add `quarkus-resteasy-reactive-jackson` dependency to pom.xml\r\n3. Modify GreetingResource to return a sub-resource:\r\n\r\n```\r\n@Path(\"/bug\")\r\npublic BugResource getBugResource() {\r\n    return resourceContext.getResource(BugResource.class);\r\n}\r\n```\r\n\r\n4. In the sub-resource, add a simple `@GET` endpoint with a `@JsonView` annotation.\r\n\r\n```\r\n    @GET\r\n    @JsonView(Views.Public.class)\r\n    public User hello() {\r\n        User user = new User();\r\n        user.setName(\"John\");\r\n        user.setPassword(\"password\");\r\n        return user;\r\n    }\r\n```\r\n    \r\n 5. Add User.java and Views.java\r\n \r\n ```\r\n public class User {\r\n\r\n    private String name;\r\n    @JsonView(Views.Private.class)\r\n    private String password;\r\n\r\n    // getters and setters\r\n}\r\n ```\r\n\r\nSame as documentation:\r\n```\r\npublic class Views {\r\n    public static class Public {}\r\n    public static class Private extends Public {}\r\n}\r\n```\r\n\r\nOpen browser: `http://localhost:8080/hello/bug`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nBug has existed since at least 2.16.6.Final. I was hoping the upgrade to 3.5.1 would fix it.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37145/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37145/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

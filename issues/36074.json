@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36074",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36074/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36074/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36074/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36074",
+  "id": 1907374031,
+  "node_id": "I_kwDOCFbutM5xsDfP",
+  "number": 36074,
+  "title": "gRPC: Cannot seem to use the protobuf-maven-plugin instead of quarkus-maven",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-09-21T16:43:08Z",
+  "updated_at": "2023-09-26T08:21:36Z",
+  "closed_at": "2023-09-26T08:21:36Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI originally wanted to use the built in grpc compiler built into Quarkus, but I'm having trouble getting it to handle external imports so I can reference my protos from an external jar which are nested in a folder off the root.\r\n\r\nie. protobuf/Foo.proto \r\n\r\nSo, I saw that we can use the `protobuf-maven-plugin` to configure more options.\r\n\r\nFollowing the link in the docs at https://quarkus.io/guides/grpc-getting-started#protobuf-maven-plugin I configured everything as mentioned.\r\n\r\nI'm am using the `maven-dependency` plugin to pull our standard proto files store in Nexus and then we expand them into the `target` folder so we can include them with the `protobuf-maven-plugin`.\r\n\r\nWe do this in another non-quarkus project and it works fine, so I wanted to use this mechanism.\r\n\r\nBut, when I run the `mvn clean compile` a few things happen:\r\n\r\n1. It appears the `protobuf-maven-plugin` attempts to run but doesn't find any protos at `src/main/proto` which is the default configuration according to the docs at: https://www.xolstice.org/protobuf-maven-plugin/compile-mojo.html\r\nwhich defines the `sourceRoot` as `src/main/proto`. I do have proto files in the `src/main/proto` folder.\r\n\r\n2. It then appears that the default quarkus grpc compiler is still trying to run and is failing because of the import issues I am trying to fix.\r\n\r\nIs there a way to turn off the default grpc compiling when using the other plugin? I didn't see anything in the docs.\r\n\r\n\r\nOutput\r\n```bash\r\n[INFO] Scanning for projects...\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Detecting the operating system and CPU architecture\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] os.detected.name: osx\r\n[INFO] os.detected.arch: aarch_64\r\n[INFO] os.detected.bitness: 64\r\n[INFO] os.detected.version: 13.5\r\n[INFO] os.detected.version.major: 13\r\n[INFO] os.detected.version.minor: 5\r\n[INFO] os.detected.classifier: osx-aarch_64\r\n[INFO] \r\n[INFO] --------------------< org.acme:quarkus-bcconnector >--------------------\r\n[INFO] Building quarkus-bcconnector 1.0.0-SNAPSHOT\r\n[INFO]   from pom.xml\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[INFO] \r\n[INFO] --- dependency:3.6.0:unpack (unpack) @ quarkus-bcconnector ---\r\n[INFO] Configured Artifact: com.acme:protobufs-raw:11.28.0-SNAPSHOT:jar\r\n[INFO] \r\n[INFO] --- protobuf:0.6.1:compile (compile) @ quarkus-bcconnector ---\r\n[INFO] No proto files to compile.\r\n[INFO] \r\n[INFO] --- protobuf:0.6.1:compile-custom (compile) @ quarkus-bcconnector ---\r\n[INFO] No proto files to compile.\r\n[INFO] \r\n[INFO] --- resources:3.3.1:resources (default-resources) @ quarkus-bcconnector ---\r\n[INFO] Copying 2 resources from src/main/resources to target/classes\r\n[INFO] \r\n[INFO] --- quarkus:3.4.1:generate-code (default) @ quarkus-bcconnector ---\r\nMessage.proto: File not found.\r\nservices.proto:9:1: Import \"Message.proto\" was not found or had errors.\r\nservices.proto:37:21: \"BCMessage\" is not defined.\r\nservices.proto:37:41: \"BCMessage\" is not defined.\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  1.713 s\r\n[INFO] Finished at: 2023-09-21T12:30:41-04:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:3.4.1:generate-code (default) on project quarkus-bcconnector: Quarkus code generation phase has failed: InvocationTargetException: Failed to generate Java classes from proto files: [/Users/tmulle/NetBeansProjects/quarkus-bcconnector/src/main/proto/services.proto, /Users/tmulle/NetBeansProjects/quarkus-bcconnector/src/main/proto/hello.proto] to /Users/tmulle/NetBeansProjects/quarkus-bcconnector/target/generated-sources/grpc with command /Users/tmulle/NetBeansProjects/quarkus-bcconnector/target/com.google.protobuf-protoc-osx-aarch_64-exe -I=/Users/tmulle/NetBeansProjects/quarkus-bcconnector/target/protoc-dependencies/2d160609fb74c459975eca766b93d1dc5316867f -I=/Users/tmulle/NetBeansProjects/quarkus-bcconnector/src/main/proto --plugin=protoc-gen-grpc=/Users/tmulle/NetBeansProjects/quarkus-bcconnector/target/io.grpc-protoc-gen-grpc-java-osx-aarch_64-exe --plugin=protoc-gen-q-grpc=/Users/tmulle/NetBeansProjects/quarkus-bcconnector/target/quarkus-grpc2792988370329882637.sh --q-grpc_out=/Users/tmulle/NetBeansProjects/quarkus-bcconnector/target/generated-sources/grpc --grpc_out=/Users/tmulle/NetBeansProjects/quarkus-bcconnector/target/generated-sources/grpc --java_out=/Users/tmulle/NetBeansProjects/quarkus-bcconnector/target/generated-sources/grpc /Users/tmulle/NetBeansProjects/quarkus-bcconnector/src/main/proto/services.proto /Users/tmulle/NetBeansProjects/quarkus-bcconnector/src/main/proto/hello.proto -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR] \r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException\r\n```\n\n### Expected behavior\n\n1. If I specify the `protobuf-maven-plugin` then it should take precedence over the built in grpc compile in quarkus maven\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.4.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36074/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36074/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

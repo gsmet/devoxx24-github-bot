@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31344",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31344/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31344/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31344/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31344",
+  "id": 1595285984,
+  "node_id": "I_kwDOCFbutM5fFiHg",
+  "number": 31344,
+  "title": "gRPC client doesn`t see throwable message from server side",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-02-22T15:11:34Z",
+  "updated_at": "2023-02-27T12:12:48Z",
+  "closed_at": "2023-02-27T12:12:47Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi Quarkus team, I love this framework very much, but still sometimes strange things happens.\r\nLooks like it is a bug or i am doing smth wrong.\r\n\r\nI have 2 gRPC apps client and server. Both using Smallrye Mutiny Grpc generation. And i am using ExceptionHandler, to provide custom error code and message if special error happens.\r\n\r\nIt looks like this:\r\n\r\n```\r\n@ApplicationScoped\r\npublic class GrpcErrorHandler implements ExceptionHandlerProvider {\r\n\r\n    @Override\r\n    public <ReqT, RespT> ExceptionHandler<ReqT, RespT> createHandler(ServerCall.Listener<ReqT> listener,\r\n                                                                     ServerCall<ReqT, RespT> serverCall, Metadata metadata) {\r\n        return new ErrorExceptionHandler<>(listener, serverCall, metadata);\r\n    }\r\n\r\n    @Override\r\n    public Throwable transform(Throwable t) {\r\n        if (t instanceof MyCustomException myEx) {\r\n            return new StatusRuntimeException(Status.ABORTED.withDescription(myEx.getMessage()));\r\n        } else {\r\n            return ExceptionHandlerProvider.toStatusException(t, true);\r\n        }\r\n    }\r\n\r\n    private static class ErrorExceptionHandler<A, B> extends ExceptionHandler<A, B> {\r\n        public ErrorExceptionHandler(ServerCall.Listener<A> listener, ServerCall<A, B> call, Metadata metadata) {\r\n            super(listener, call, metadata);\r\n        }\r\n\r\n        @Override\r\n        protected void handleException(Throwable t, ServerCall<A, B> call, Metadata metadata) {\r\n            StatusRuntimeException sre = (StatusRuntimeException) ExceptionHandlerProvider.toStatusException(t, true);\r\n            Metadata trailers = sre.getTrailers() != null ? sre.getTrailers() : metadata;\r\n            call.close(sre.getStatus(), trailers);\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nOn the client side I am usuing just .onFailure().invoke(th -> log.error(th.getMessage(), th))  , and the result is the following:\r\n`2023-02-22 18:01:12,554 ERROR [io.qua.grp.exa.hel.Startup] (grpc-nio-worker-ELG-2-2) ABORTED: io.grpc.StatusRuntimeException: ABORTED\r\n\tat io.grpc.Status.asRuntimeException(Status.java:539)\r\n\tat io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:487)\r\n\tat io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)\r\n\tat io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)\r\n\tat io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)\r\n\tat io.quarkus.grpc.runtime.supports.IOThreadClientInterceptor$1$1.onClose(IOThreadClientInterceptor.java:72)\r\n\tat io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)\r\n\tat io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)\r\n\tat io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)\r\n\tat io.grpc.internal.DelayedClientCall$DelayedListener$3.run(DelayedClientCall.java:471)\r\n\tat io.grpc.internal.DelayedClientCall$DelayedListener.delayOrExecute(DelayedClientCall.java:435)\r\n\tat io.grpc.internal.DelayedClientCall$DelayedListener.onClose(DelayedClientCall.java:468)\r\n\tat io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:563)\r\n\tat io.grpc.internal.ClientCallImpl.access$300(ClientCallImpl.java:70)\r\n\tat io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:744)\r\n\tat io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:723)\r\n\tat io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)\r\n\tat io.grpc.internal.SerializeReentrantCallsDirectExecutor.execute(SerializeReentrantCallsDirectExecutor.java:49)\r\n\tat io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl.closedInternal(ClientCallImpl.java:752)\r\n\tat io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl.closed(ClientCallImpl.java:688)\r\n\tat io.grpc.internal.DelayedStream$DelayedStreamListener$4.run(DelayedStream.java:510)\r\n\tat io.grpc.internal.DelayedStream$DelayedStreamListener.delayOrExecute(DelayedStream.java:462)\r\n\tat io.grpc.internal.DelayedStream$DelayedStreamListener.closed(DelayedStream.java:507)\r\n\tat io.grpc.internal.ForwardingClientStreamListener.closed(ForwardingClientStreamListener.java:34)\r\n\tat io.grpc.internal.InternalSubchannel$CallTracingTransport$1$1.closed(InternalSubchannel.java:693)\r\n\tat io.grpc.internal.AbstractClientStream$TransportState.closeListener(AbstractClientStream.java:458)\r\n\tat io.grpc.internal.AbstractClientStream$TransportState.access$400(AbstractClientStream.java:221)\r\n\tat io.grpc.internal.AbstractClientStream$TransportState$1.run(AbstractClientStream.java:441)\r\n\tat io.grpc.internal.AbstractClientStream$TransportState.deframerClosed(AbstractClientStream.java:278)\r\n\tat io.grpc.internal.Http2ClientStreamTransportState.deframerClosed(Http2ClientStreamTransportState.java:31)\r\n\tat io.grpc.internal.MessageDeframer.close(MessageDeframer.java:234)\r\n\tat io.grpc.internal.MessageDeframer.closeWhenComplete(MessageDeframer.java:192)\r\n\tat io.grpc.internal.AbstractStream$TransportState.closeDeframer(AbstractStream.java:200)\r\n\tat io.grpc.internal.AbstractClientStream$TransportState.transportReportStatus(AbstractClientStream.java:444)\r\n\tat io.grpc.internal.AbstractClientStream$TransportState.transportReportStatus(AbstractClientStream.java:400)\r\n\tat io.grpc.internal.AbstractClientStream$TransportState.inboundTrailersReceived(AbstractClientStream.java:383)\r\n\tat io.grpc.internal.Http2ClientStreamTransportState.transportTrailersReceived(Http2ClientStreamTransportState.java:183)\r\n\tat io.grpc.netty.NettyClientStream$TransportState.transportHeadersReceived(NettyClientStream.java:341)\r\n\tat io.grpc.netty.NettyClientHandler.onHeadersRead(NettyClientHandler.java:372)\r\n\tat io.grpc.netty.NettyClientHandler.access$1200(NettyClientHandler.java:91)\r\n\tat io.grpc.netty.NettyClientHandler$FrameListener.onHeadersRead(NettyClientHandler.java:940)`\r\n\t\r\nSo i succeded to get ABORTED code, but the message is missed somewhere.\r\nMaybe i am doing smth wrong. But looks like a bug.\r\n\r\n### Expected behavior\r\n\r\nIf i throw MyCustomException(\"Message of my exception\") on server side, to see \"Message of the exception\" on the client side within StatusRuntimeException code  => ABORTED: Message of my exception\r\n\r\n### Actual behavior\r\n\r\nIf i throw MyCustomException(\"Message of my exception\") on server side, i can see only code of StatusRuntimeException\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31344/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31344/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

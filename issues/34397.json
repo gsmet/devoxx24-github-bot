@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34397",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34397/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34397/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34397/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34397",
+  "id": 1779521628,
+  "node_id": "I_kwDOCFbutM5qEVhc",
+  "number": 34397,
+  "title": "SmallRye GraphQL source fields metrics not working",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031886,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxODg2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/metrics",
+      "name": "area/metrics",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 18,
+  "created_at": "2023-06-28T18:47:57Z",
+  "updated_at": "2023-08-29T19:09:59Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nGood day to You!\r\n\r\nI try use GraphQL and achieve Micrometer metrics for my endpoints.\r\nI read Docs and see base metrics implementation in SmallRye GraphQL repository.\r\n\r\nBut, when i test my sandbox project metrics and events (both EventingService implementation and Observes) behaviour looks strange.\r\n\r\nPlease, could you help me explain and resolve 3 things?\r\n1) Metrics for `@Source` fields always 0 it is add on startup with other operations, but then don't calculate because `afterDataFetch` observer method never execute for Source fields;\r\n2) I create batch `@Source` operation and in code this method execute once, but in same time `beforeDataFetch` execute lots of times for each record in my batch list;\r\n3) Because `afterDataFetch` not execute for `@Source` fields context not removed from map (for metrics calculate) (`Long startTime = startTimes.remove(context);`) and map increment size.\r\n\r\nMaybe i have a wrong view, but do we have a way for calculate execution metrics for source fields in same event base way like for general operations?\r\n\r\nI try this in both default (Blocking) and NonBlocking way.\n\n### Expected behavior\n\nI execute query 1:\r\n```\r\nquery findHeroById {\r\n  selectedHero: hero(heroId: \"100\") {\r\n    __typename\r\n    id\r\n    name\r\n    slug\r\n    stats: statsInfo {\r\n      __typename\r\n      intelligence\r\n      power\r\n      combat\r\n      speed\r\n      strength\r\n      durability\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nand query 2:\r\n```\r\nquery heroesList {\r\n  heroes: heroCollection {\r\n    __typename\r\n    id\r\n    name\r\n    slug\r\n    stats: statsInfo {\r\n      __typename\r\n      intelligence\r\n      power\r\n      combat\r\n      speed\r\n      strength\r\n      durability\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nAnd metrics should calculate:\r\n```\r\nmp_graphql_seconds_count{name=\"statsInfo\",source=\"true\",type=\"QUERY\",} 0.0\r\nmp_graphql_seconds_sum{name=\"statsInfo\",source=\"true\",type=\"QUERY\",} 0.0\r\n```\r\n\r\nAnd `afterDataFetch` should fire for source fields and i see in logs:\r\n```\r\n2343534452 - Start fetch data: statsInfo\r\n2343534452 - Complete fetch data: statsInfo\r\n```\r\n\r\nAnd \"metrics map\" should not increase size.\n\n### Actual behavior\n\nMetrics have zero values:\r\n```\r\nmp_graphql_seconds_count{name=\"statsInfo\",source=\"true\",type=\"QUERY\",} 0.0\r\nmp_graphql_seconds_sum{name=\"statsInfo\",source=\"true\",type=\"QUERY\",} 0.0\r\n```\r\n\r\nOnly `beforeDataFetch` message in logs.\r\n```\r\n2343534452 - Start fetch data: statsInfo\r\n```\r\n\r\nAnd \"metrics map\" increase size after each execution.\r\n```\r\n== startTimes map size - 10 ==\r\n```\n\n### How to Reproduce?\n\nReproducer example: https://github.com/akHelix4444/Quarkus-Playground/tree/r-gql-events-metrics\r\nBranch: **r-gql-events-metrics**\r\n\r\nExecute queries:\r\n```\r\nquery findHeroById {\r\n  selectedHero: hero(heroId: \"100\") {\r\n    __typename\r\n    id\r\n    name\r\n    slug\r\n    stats: statsInfo {\r\n      __typename\r\n      intelligence\r\n      power\r\n      combat\r\n      speed\r\n      strength\r\n      durability\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n```\r\nquery heroesList {\r\n  heroes: heroCollection {\r\n    __typename\r\n    id\r\n    name\r\n    slug\r\n    stats: statsInfo {\r\n      __typename\r\n      intelligence\r\n      power\r\n      combat\r\n      speed\r\n      strength\r\n      durability\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nSee logs and metrics values as describe above.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 OpenJDK Runtime Environment Temurin-17.0.7+7 (build 17.0.7+7) OpenJDK 64-Bit Server VM Temurin-17.0.7+7 (build 17.0.7+7, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.7.Final (2.13.8.Final - same behaviour)\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.1.1  Build time:   2023-04-21 12:31:26 UTC Revision:     1cf537a851c635c364a4214885f8b9798051175b  Kotlin:       1.8.10 Groovy:       3.0.15 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021   JVM:          17.0.7 (Eclipse Adoptium 17.0.7+7) OS:           Windows 11 10.0 amd64\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34397/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34397/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

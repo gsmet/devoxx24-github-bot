@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22000",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22000/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22000/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22000/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22000",
+  "id": 1073492990,
+  "node_id": "I_kwDOCFbutM4__DP-",
+  "number": 22000,
+  "title": "Conflicting versions of vertx-mutiny-clients and kafka-clients lead to NoSuchMethodError",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-12-07T15:34:19Z",
+  "updated_at": "2022-01-01T17:12:02Z",
+  "closed_at": "2022-01-01T17:12:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen we use io.vertx.mutiny.kafka.client.producer.KafkaProducer to send messages, we get this error:\r\n```\r\njava.lang.NoSuchMethodError: org.apache.kafka.clients.producer.RecordMetadata.checksum()J\r\n09:51:05 \tat io.vertx.kafka.client.common.impl.Helper.from(Helper.java:111)\r\n```\n\n### Expected behavior\n\nMessages should be sent without errors.\n\n### Actual behavior\n\nException, full stack trace is below:\r\n\r\n```\r\n09:51:05 2021-12-07 08:51:05,814 ERROR [org.jbo.res.res.i18n] (vert.x-eventloop-thread-1) RESTEASY002020: Unhandled asynchronous exception, sending back 500: java.lang.NoSuchMethodError: org.apache.kafka.clients.producer.RecordMetadata.checksum()J\r\n \tat io.vertx.kafka.client.common.impl.Helper.from(Helper.java:111)\r\n \tat io.vertx.core.impl.future.Mapping.onSuccess(Mapping.java:35)\r\n \tat io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n \tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n \tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n \tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:500)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:834)\r\n```\n\n### How to Reproduce?\n\n1. Clone the repo: git@github.com:quarkusio/quarkus-quickstarts.git\r\n2. Switch to `development` branch\r\n3. Run `mvn clean verify -pl org.acme:kafka-bare-quickstart`\n\n### Output of `uname -a` or `ver`\n\nOS name: \"linux\", version: \"5.15.6-100.fc34.x86_64\", arch: \"amd64\", family: \"unix\"\n\n### Output of `java -version`\n\n11.0.13, vendor: Eclipse Adoptium\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n79e84c8693421244a63fd18d478b6ee8b44561f6\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\nBrief search shows, that quarkus-bom exports io.smallrye.reactive:vertx-mutiny-clients-bom:2.16.0, which exports io.vertx:vertx-kafka-client:4.2.1, which have that code at the line 111 of io.vertx.kafka.client.common.impl.Helper:\r\n```\r\n  public static RecordMetadata from(org.apache.kafka.clients.producer.RecordMetadata metadata) {\r\n    return new RecordMetadata(metadata.checksum(), metadata.offset(),\r\n      metadata.partition(), metadata.timestamp(), metadata.topic());\r\n  };\r\n```\r\nAt the same time, quarkus-bom exports org.apache.kafka:kafka-clients:3.0.0, which doesn't have method checksum() in org.apache.kafka.clients.producer.RecordMetadata, and it seems that this method was removed in this commit: https://github.com/apache/kafka/commit/89933f21f204abf75336464d3ac24a4fdd254628",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22000/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22000/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

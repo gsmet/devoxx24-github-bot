@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31926",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31926/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31926/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31926/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31926",
+  "id": 1628798611,
+  "node_id": "I_kwDOCFbutM5hFX6T",
+  "number": 31926,
+  "title": "Sequences in entities do not use quarkus.hibernate-orm.database.default-schema",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-03-17T06:54:10Z",
+  "updated_at": "2023-06-07T16:13:27Z",
+  "closed_at": "2023-06-07T13:50:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nSequences in entities do not use quarkus.hibernate-orm.database.default-schema and you have to define the schema name in the sequence. Maybe https://github.com/hibernate/hibernate-reactive/issues/1120 is not fixed.\n\n### Expected behavior\n\nSequences in entities use quarkus.hibernate-orm.database.default-schema\n\n### Actual behavior\n\nSequences in entities do not use quarkus.hibernate-orm.database.default-schema\n\n### How to Reproduce?\n\nSteps to reproduce:\r\n1) Clone this repository and cd to hibernate-reactive-quickstart\r\n```\r\ngit clone https://github.com/quarkusio/quarkus-quickstarts.git\r\ncd quarkus-quickstarts/hibernate-reactive-quickstart/\r\n```\r\n2) Add default schema (**quarkus.hibernate-orm.database.default-schema**) and enable creating schema on start (**quarkus.hibernate-orm.database.generation.create-schemas**):\r\n```\r\ncat <<EOF > src/main/resources/application.properties\r\n%prod.quarkus.datasource.db-kind=postgresql\r\n%prod.quarkus.datasource.username=quarkus_test\r\n%prod.quarkus.datasource.password=quarkus_test\r\n\r\nquarkus.hibernate-orm.database.generation=drop-and-create\r\nquarkus.hibernate-orm.log.sql=true\r\nquarkus.hibernate-orm.sql-load-script=import.sql\r\nquarkus.hibernate-orm.database.default-schema=testschema\r\nquarkus.hibernate-orm.database.generation.create-schemas=true\r\n\r\n# Reactive config\r\n%prod.quarkus.datasource.reactive.url=vertx-reactive:postgresql://localhost/quarkus_test\r\nEOF\r\n```\r\n3) Add schema name to the import script\r\n```\r\ncat <<EOF > src/main/resources/import.sql\r\nINSERT INTO testschema.known_fruits(id, name) VALUES (1, 'Cherry');\r\nINSERT INTO testschema.known_fruits(id, name) VALUES (2, 'Apple');\r\nINSERT INTO testschema.known_fruits(id, name) VALUES (3, 'Banana');\r\nEOF\r\n```\r\n4) Run application, open http://localhost:8080 and look at the query in logs\r\n```\r\n./mvnw quarkus:dev\r\n\r\nHibernate:                                                                                                                                                                                                  \r\n    select\r\n        fruit0_.id as id1_0_,\r\n        fruit0_.name as name2_0_\r\n    from\r\n        testschema.known_fruits fruit0_\r\n    order by\r\n        fruit0_.name\r\n```\r\n5) Try adding a new entry and get an exception with sequence **relation \"known_fruits_id_seq\" does not exist (42P01)**\r\n```\r\nHibernate: \r\n    select\r\n        nextval ('known_fruits_id_seq')\r\n\r\n2023-03-13 23:21:10,314 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-2) HTTP Request to /fruits failed, error id: 34cb83bc-db95-4649-8977-94419376602c-1: javax.persistence.PersistenceException: org.hibernate.HibernateException: java.util.concurrent.CompletionException: io.vertx.pgclient.PgException: ERROR: relation \"known_fruits_id_seq\" does not exist (42P01)\r\n```\r\n6) Add **schema=\"testschema\"** to the sequence for Fruit Entity https://github.com/quarkusio/quarkus-quickstarts/blob/main/hibernate-reactive-quickstart/src/main/java/org/acme/hibernate/reactive/Fruit.java#L18\r\n```\r\n@SequenceGenerator(name = \"fruitsSequence\", sequenceName = \"known_fruits_id_seq\", schema=\"testschema\", allocationSize = 1, initialValue = 10)\r\n```\r\n7) Try to add record again, everything is OK\r\n```\r\nHibernate: \r\n    select\r\n        nextval ('testschema.known_fruits_id_seq')\r\n\r\nHibernate: \r\n    insert\r\n    into\r\n        testschema.known_fruits\r\n        (name, id)\r\n    values\r\n        ($1, $2)\r\n```\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31926/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31926/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

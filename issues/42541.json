@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42541",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42541/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42541/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42541/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42541",
+  "id": 2465435316,
+  "node_id": "I_kwDOCFbutM6S8460",
+  "number": 42541,
+  "title": "Hibernate cache is using Caffeine instead of Infinispan",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282122953,
+      "node_id": "MDU6TGFiZWwxMjgyMTIyOTUz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/infinispan",
+      "name": "area/infinispan",
+      "color": "0366d6",
+      "default": false,
+      "description": "Infinispan"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-08-14T10:13:35Z",
+  "updated_at": "2024-08-27T09:26:09Z",
+  "closed_at": "2024-08-27T09:26:08Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm trying to use Hibernate cache with Infinispan in Quarkus, but it seems that Hibernate is still using the local cache\r\nCaffeine instead of Infinispan.\r\n\r\nI've added the following dependencies to my `build.gradle.kts`:\r\n\r\n```kotlin\r\nimplementation(\"io.quarkus:quarkus-hibernate-orm\")\r\nimplementation(\"io.quarkus:quarkus-hibernate-orm-panache-kotlin\")\r\nimplementation(\"io.quarkus:quarkus-infinispan-cache\")\r\n```\r\n\r\nMy JPA entity:\r\n```kotlin\r\n@Entity\r\n@Cacheable\r\n@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)\r\nclass Fruit(\r\n  @Id\r\n  val id: UUID,\r\n  var name: String,\r\n)\r\n```\r\n\r\nWhen I run my tests:\r\n- the Infinispan dev service is running fine\r\n- in the logs, I see that the Caffeine cache is used:\r\n\r\n```text\r\n2024-08-14 11:58:06,814 TRACE [org.inf.qua.hib.cac.CaffeineCache] (executor-thread-1) Cache get(key=org.acme.Fruit#e1a3798c-e764-437a-b6b2-3a35a4e3b8a1) returns: null\r\n2024-08-14 11:58:06,816 TRACE [org.inf.qua.hib.cac.PutFromLoadValidator] (executor-thread-1) registerPendingPut(org.acme.Fruit#org.acme.Fruit#e1a3798c-e764-437a-b6b2-3a35a4e3b8a1, 1723629486802) registered using putIfAbsent: { PendingPuts=[R@Session#1618307921], Invalidators=[], LastInvalidationEnd=<none>, Removed=false}\r\n2024-08-14 11:58:06,865 TRACE [org.inf.qua.hib.cac.StrictDataAccess] (executor-thread-1) Registering synchronization on transaction in java.lang.Object@5de2ad46, cache org.acme.Fruit: org.acme.Fruit#e1a3798c-e764-437a-b6b2-3a35a4e3b8a1\r\n2024-08-14 11:58:06,868 TRACE [org.inf.qua.hib.cac.PutFromLoadValidator] (executor-thread-1) beginInvalidatingKey(org.acme.Fruit#org.acme.Fruit#e1a3798c-e764-437a-b6b2-3a35a4e3b8a1, java.lang.Object@5de2ad46) remove invalidator from { PendingPuts=[R@Session#1618307921], Invalidators=[], LastInvalidationEnd=<none>, Removed=false}\r\n2024-08-14 11:58:06,869 TRACE [org.inf.qua.hib.cac.PutFromLoadValidator] (executor-thread-1) beginInvalidatingKey(org.acme.Fruit#org.acme.Fruit#e1a3798c-e764-437a-b6b2-3a35a4e3b8a1, java.lang.Object@5de2ad46) ends with { PendingPuts=[C@Session#1618307921, R@java.lang.Object@5de2ad46], Invalidators=[{Owner=java.lang.Object@5de2ad46, Timestamp=1723629486868}], LastInvalidationEnd=<none>, Removed=false}\r\n2024-08-14 11:58:06,869 TRACE [org.inf.qua.hib.cac.CaffeineCache] (executor-thread-1) Cache invalidate key org.acme.Fruit#e1a3798c-e764-437a-b6b2-3a35a4e3b8a1\r\n2024-08-14 11:58:06,871 DEBUG [org.hib.cac.int.TimestampsCacheEnabledImpl] (executor-thread-1) Pre-invalidating space [Fruit], timestamp: 1723629546871\r\n2024-08-14 11:58:06,871 TRACE [org.inf.qua.hib.cac.CaffeineCache] (executor-thread-1) Cache put key=Fruit value=1723629546871\r\n2024-08-14 11:58:06,873 TRACE [org.inf.qua.hib.cac.Sync] (executor-thread-1) 0 tasks done, 0 tasks not done yet\r\n2024-08-14 11:58:06,874 TRACE [org.inf.qua.hib.cac.Sync] (executor-thread-1) Finished 0 tasks before completion\r\n2024-08-14 11:58:06,876 TRACE [org.inf.qua.hib.cac.StrictDataAccess$LocalInvalidationSynchronization] (executor-thread-1) After completion callback with status 3\r\n2024-08-14 11:58:06,876 TRACE [org.inf.qua.hib.cac.PutFromLoadValidator] (executor-thread-1) Put for external read value, if needed (doPFER=true): key=org.acme.Fruit#e1a3798c-e764-437a-b6b2-3a35a4e3b8a1, valueForPFER=CacheEntry(org.acme.Fruit), owner=java.lang.Object@5de2ad46\r\n2024-08-14 11:58:06,877 TRACE [org.inf.qua.hib.cac.CaffeineCache] (executor-thread-1) Cache put if absent key=org.acme.Fruit#e1a3798c-e764-437a-b6b2-3a35a4e3b8a1 value=CacheEntry(org.acme.Fruit)\r\n2024-08-14 11:58:06,878 TRACE [org.inf.qua.hib.cac.PutFromLoadValidator] (executor-thread-1) endInvalidatingKey(org.acme.Fruit#org.acme.Fruit#e1a3798c-e764-437a-b6b2-3a35a4e3b8a1, java.lang.Object@5de2ad46) ends with { PendingPuts=[C@Session#1618307921], Invalidators=[], LastInvalidationEnd=1723629486876, Removed=false}\r\n2024-08-14 11:58:06,879 DEBUG [org.hib.cac.int.TimestampsCacheEnabledImpl] (executor-thread-1) Invalidating space [Fruit], timestamp: 1723629486879\r\n2024-08-14 11:58:06,880 TRACE [org.inf.qua.hib.cac.CaffeineCache] (executor-thread-1) Cache put key=Fruit value=1723629486879\r\n2024-08-14 11:58:06,881 TRACE [org.inf.qua.hib.cac.Sync] (executor-thread-1) Invoked 0 tasks after completion, 0 are synchronous.\r\n2024-08-14 11:58:06,938 TRACE [org.inf.qua.hib.cac.CaffeineCache] (executor-thread-1) Cache get(key=org.acme.Fruit#e1a3798c-e764-437a-b6b2-3a35a4e3b8a1) returns: CacheEntry(org.acme.Fruit)\r\n```\r\n\r\nHere is a simple repository that reproduces the issue: \r\n[quarkus-hibernate-cache-infinispan](https://github.com/cthiebault/quarkus-hibernate-infinispan)\r\n\r\nMaybe I'm missing some configuration to use Infinispan as the Hibernate cache provider...\r\n\r\nAny idea?\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nI would expect to use Infinispan and not the local Caffeine cache\r\n\r\n### Actual behavior\r\n\r\nHibernate is using the local Caffeine cache\r\n\r\n### How to Reproduce?\r\n\r\n- clone https://github.com/cthiebault/quarkus-hibernate-infinispan\r\n- run `./gradlew build`\r\n- check logs in `build/reports/tests/test/index.html`\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava 21.0.2, Kotlin 2.0.0\r\n\r\n### Quarkus version or git rev\r\n\r\n3.13.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.8\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42541/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42541/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

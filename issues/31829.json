@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31829",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31829/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31829/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31829/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31829",
+  "id": 1622466991,
+  "node_id": "I_kwDOCFbutM5gtOGv",
+  "number": 31829,
+  "title": "Uni.awaitSuspending() at the end of suspending function changes return type of the function",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-03-13T23:39:49Z",
+  "updated_at": "2023-10-09T07:44:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi Quarkus community!\r\nI'm not sure if this has been reported before. I feel like this would probably have been noticed by someone else before and I might be missing something really silly, but I couldn't find a similar issue, so I'm reporting it.\r\n\r\nToday I stumbled upon a very weird behavior. I noticed that calling `Uni.awaitSuspending()` as the last statement of a Kotlin suspending function somehow makes the function return whatever the contents of the `Uni` are, regardless of the actual return value of the function.\r\nStoring the return value of the function in a variable, or adding some other useless statement to the end of the function makes the function behave as expected.\n\n### Expected behavior\n\nCalling `Uni.awaitSuspending()` as the last statement of a suspending function should suspend the function. When the Uni emits an item, the function should ignore the emitted item and return `Unit`.\n\n### Actual behavior\n\nThe value emitted by the Uni becomes the return value of the function.\n\n### How to Reproduce?\n\nSmall reproducer:\r\n\r\n```kotlin\r\n@Path(\"/example\")\r\nclass GreetingResource {\r\n    @GET\r\n    @Path(\"/does-not-work\")\r\n    suspend fun doesNotWork(): Unit {\r\n        returnThing().awaitSuspending()\r\n    }\r\n\r\n    @GET\r\n    @Path(\"/works-1\")\r\n    suspend fun works1(): Unit {\r\n        val ignore = returnThing().awaitSuspending()\r\n        //println(ignore.javaClass.name) //prints java.lang.String\r\n    }\r\n\r\n    @GET\r\n    @Path(\"/works-2\")\r\n    suspend fun works2(): Unit {\r\n        returnThing().awaitSuspending()\r\n        \"abc\"\r\n    }\r\n\r\n    @GET\r\n    @Path(\"/works-3\")\r\n    fun works3(): Unit {\r\n        returnThingSync()\r\n    }\r\n\r\n    fun returnThing(): Uni<String> {\r\n        return Uni.createFrom().item(\"thing\")\r\n            .onItem().delayIt().by(Duration.ofMillis(1))\r\n    }\r\n\r\n    fun returnThingSync(): String {\r\n        return \"thing\"\r\n    }\r\n}\r\n```\r\n\r\nMy understanding is that all endpoints should return an empty response with status 204, but the first one returns a 200 with `thing` in the body\r\n\r\n```\r\n$ curl -i http://localhost:8080/example/does-not-work\r\nHTTP/1.1 200 OK\r\ncontent-length: 5\r\nContent-Type: text/plain;charset=UTF-8\r\n\r\nthing\r\n\r\n$ curl -i http://localhost:8080/example/works-1\r\nHTTP/1.1 204 No Content\r\n\r\n$ curl -i http://localhost:8080/example/works-2\r\nHTTP/1.1 204 No Content\r\n\r\n$ curl -i http://localhost:8080/example/works-3\r\nHTTP/1.1 204 No Content\r\n```\r\n\r\nFull project: [kotlin-uni-reproducer.zip](https://github.com/quarkusio/quarkus/files/10962657/kotlin-uni-reproducer.zip)\n\n### Output of `uname -a` or `ver`\n\nLinux fedora 6.1.14-200.fc37.x86_64 #1 SMP PREEMPT_DYNAMIC Sun Feb 26 00:13:26 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\n```\r\nopenjdk version \"17.0.6\" 2023-01-17\r\nOpenJDK Runtime Environment (Red_Hat-17.0.6.0.10-1.fc37) (build 17.0.6+10)\r\nOpenJDK 64-Bit Server VM (Red_Hat-17.0.6.0.10-1.fc37) (build 17.0.6+10, mixed\r\nmode, sharing)\r\n```\n\n### GraalVM version (if different from Java)\n\nNot using GraalVM, this happened when running on the JVM\n\n### Quarkus version or git rev\n\n999-SNAPSHOT (tested on March 13, 2023)\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n```\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\nMaven home: /path/to/.m2/wrapper/dists/apache-maven-3.8.6-bin/1ks0nkde5v1pk9vtc31i9d0lcd/apache-maven-3.8.6\r\nJava version: 17.0.6, vendor: Red Hat, Inc., runtime: /usr/lib/jvm/java-17-openjdk-17.0.6.0.10-1.fc37.x86_64\r\nDefault locale: en_US, platform encoding: UTF-8\r\nOS name: \"linux\", version: \"6.1.14-200.fc37.x86_64\", arch: \"amd64\", family: \"unix\"\r\n```\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31829/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31829/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

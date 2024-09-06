@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25820",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25820/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25820/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25820/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25820",
+  "id": 1250218088,
+  "node_id": "I_kwDOCFbutM5KhNBo",
+  "number": 25820,
+  "title": "RESTEasy Reactive JsonGenerator not aware of jackson-datatype-jsr310 ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-05-27T00:36:26Z",
+  "updated_at": "2022-05-27T05:13:02Z",
+  "closed_at": "2022-05-27T05:12:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMigrating from `quarkus-resteasy-jackson` to `quarkus-resteasy-reactive-jackson` breaks existing `JsonSerializer`.\r\n\r\nThis code ...\r\n```\r\nimport java.io.IOException;\r\n\r\nimport com.fasterxml.jackson.core.JsonGenerator;\r\nimport com.fasterxml.jackson.databind.JsonSerializer;\r\nimport com.fasterxml.jackson.databind.SerializerProvider;\r\n\r\npublic class EchoCustomBeanSerializer extends JsonSerializer<EchoCustomBean> {\r\n\r\n\t@Override\r\n\tpublic void serialize(EchoCustomBean value, JsonGenerator gen, SerializerProvider serializers) throws IOException {\r\n\t\tgen.writeStartArray();\r\n\r\n\t\t/*- Works for quarkus-resteasy-jackson but not for quarkus-resteasy-reactive-jackson. */\r\n\t\tgen.writePOJO(value.getTimestamp());\r\n\r\n\t\t/*- Works for both:\r\n\t\t  \tserializers.defaultSerializeValue(value.getTimestamp(), gen);\r\n\t\t */\r\n\r\n\t\tgen.writeString(value.getMessage());\r\n\t\tgen.writeEndArray();\r\n\t}\r\n\r\n}\r\n```\r\n... is throwing this error:\r\n```\r\nio.quarkus.resteasy.reactive.jackson.runtime.mappers.NativeInvalidDefinitionExceptionMapper toResponse\r\nERROR: com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Java 8 date/time type `java.time.Instant` not supported by default: add Module \"com.fasterxml.jackson.datatype:jackson-datatype-jsr310\" to enable handling\r\n```\r\nWorked OK with REASTEasy Classic.  Default serialization also works OK.  Workaround is to delegate to the `serializers` as commented in the example code.\n\n### Expected behavior\n\nSuccessful serialization.\n\n### Actual behavior\n\nException thrown.\n\n### How to Reproduce?\n\nReproducer: [rest-reactive-jackson.zip](https://github.com/quarkusio/quarkus/files/8783033/rest-reactive-jackson.zip)\r\n\r\nRun the `EchoServiceTest`.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nAlthough there is a workaround delegating to the `serializers`, this could be a significant effort across a large project and could be easy to miss cases if test coverage isn't 100%.\r\n\r\nOf course I'm assuming that the existing code was spec compliant.  If it was only working by accident then the workaround is the solution.  Please advise if that's the case.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25820/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25820/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

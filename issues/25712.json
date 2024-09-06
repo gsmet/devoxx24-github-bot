@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25712",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25712/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25712/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25712/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25712",
+  "id": 1243956019,
+  "node_id": "I_kwDOCFbutM5KJUMz",
+  "number": 25712,
+  "title": "Quarkus Reactive Code Profiler",
+  "labels": [
+    {
+      "id": 1553869078,
+      "node_id": "MDU6TGFiZWwxNTUzODY5MDc4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/extension-proposal",
+      "name": "kind/extension-proposal",
+      "color": "abfcbb",
+      "default": false,
+      "description": "Discuss and Propose new extensions"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2022-05-21T11:56:30Z",
+  "updated_at": "2022-07-08T03:38:36Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\n**Motivation:**\r\nQuarkus support some metrics/monitoring functions what can show what is happen in top level but sometimes need to understand what is happen inside of code without some additional code manipulation and manual changes. It’s more related to business logic or hard operations what required debug in the different network topologies or different clouds.\r\n\r\nAt this moment my https://github.com/quarkiverse/quarkus-jdbc-sqlite released and I can propose implementation for this feature what require sqlite :)\r\n\r\nPersonally, for me – this module will be part of Quarkus Core. \r\n\r\n**Current Quarkus (simplified) architecture:**\r\nRequest -> Quarkus -> Customer Application -> Mutiny  -> Vert.x –> Netty\r\n\r\nI don’t want to put a lot details how quarkus working. It’s takes 100+ pages for explanations.\r\n\r\n**Technically invoked/customer code will looks like:**\r\n```java\r\n@GET\r\n@Path(\"vertx\")\r\n@Produces(MediaType.TEXT_PLAIN)\r\npublic Uni<String> mutinyVertxTest() {\r\n       Uni<String> uni = Uni\r\n            .createFrom()\r\n            .item( () -> this.method1(\"start\")) // lambda executed in event loop and will be tracked\r\n            .onItem()\r\n            .transform((s) -> s + \" magic \") // lambda executed in event loop and will be tracked\r\n            .onItem()\r\n            .transform(this:: method2) // lambda executed in event loop and will be tracked\r\n            .onItem()\r\n            .transform(this:: method3); // lambda executed in event loop and will be tracked\r\n\r\n    return uni;\r\n}\r\n```\r\nThis code will be analyzed, operations automatically mapped to tree and result will be something like(from debug logs):\r\n```\r\nVertxConsoleTracer:receiveRequest start: 1653132569035 executed: 103ms className: VertxConsoleTracer methodName: receiveRequest\r\n    \ttest/GreetingResource:lambda$mutinyVertxTest$0 start: 1653132569114 executed: 2ms className: test/GreetingResource methodName: lambda$mutinyVertxTest$0\r\n    \ttest/GreetingResource:lambda$mutinyVertxTest$1 start: 1653132569117 executed: 0ms className: test/GreetingResource methodName: lambda$mutinyVertxTest$1\r\n    \ttest/GreetingResource:b start: 1653132569119 executed: 1ms className: test/GreetingResource methodName: method2\r\n    \ttest/GreetingResource:c start: 1653132569122 executed: 1ms className: test/GreetingResource methodName: method3\r\n    \torg.jboss.resteasy.reactive.server.handlers.UniResponseHandler: start: 1653132569125 executed: 0ms className: org.jboss.resteasy.reactive.server.handlers.UniResponseHandler methodName: \r\n```\r\n\r\ndata will be stored in database (or any provider)\r\n\r\n**What implemented in this feature:**\r\n1.\tIntercept all Vert.x requests\r\n2.\tIntercept all Mutity @FunctionalInterfaces\r\n3.\tUnwrap code/methods from lambdas representation (from $$Lambda$14/0x0000000800c01200@214c265e to human readable ClassName:methodName for methods or ClassName$0 for inner code)\r\n4.\tMap asynchronous events from event loop to business operation (like generate stacktrace for them)\r\n5.\tTrack execution time per operation (lambda)\r\n6.\tIntegrate additional plugins for statistic customization\r\n7.\tIntegrate and generate statistic for third parties (like store to remote DB or system) over plugins \r\nbottom line: All asynchronous events will be visible like one stacktrace with execution time per operation and summary for method.\r\n\r\n**Limitations:**\r\nPossibility to unwrap lambdas in GraalVM native-image not available at this moment because only SVM 22.0.0.2 released in maven central. However, required code for this available in GraalVM main branch will be delivered at 22.1(released but not available) or 22.2 (planned to October).\r\n\r\n**How it's to work:**\r\nIn DevMode feature will automatically track all request and code from application and store to embedded sqlite database. All this info will be available over DevUI.\r\nIn Production mode – user can enable flag and include plugin what will dump all this information to external systems (like DB or something else).\r\n\r\nWhat functions and implementation status at this moment:\r\n1.\tInterceptors for Vert.x/Mutiny [Implemented]\r\n2.\tBytecode modification at build time [Implemented]\r\n3.\tTracking methods/lambdas and combine info [Implemented]\r\n4.\tPlugins system to write information [Implemented for DevMode only]\r\n5.\tUI for DevMode/Production mode [Not implemented]\r\n\r\nThe main problem what I have at this moment – how to correctly organize repo’s. Because UI will be available, as embedded module or separated application. At this moment, it is looks like need 2 repos for libraries + application. However, it is can be discussed in workgroup.\r\n\r\nIf this functions interesting for Quarkus community – it’s can be part of quarkiverse project or part of quarkus core.\r\n\r\nPlease notify me if someone have additional questions or need some info.\r\nDraft code available here - https://github.com/alexeysharandin/quarkus-lambdada\r\n\r\n**What can be added in the future:**\r\n1.\tImplement storage provides (remote databases/etc)\r\n2.\tTracking for Vert.x event bus\r\n3.\tTracking for any method without lambdas (need some bytecode guru to do this).\r\n\r\n**What problems I expect in the future:**\r\nI’m not sure what I’ll have possibility to add a functions/support this library very fast(it's my weekend hobby) and need collaborators for this module. :)\r\n\n\n### Configuration suggestion\n\n_No response_\n\n### Additional context\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25712/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25712/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

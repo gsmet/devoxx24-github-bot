@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39757",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39757/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39757/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39757/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39757",
+  "id": 2212029828,
+  "node_id": "I_kwDOCFbutM6D2OWE",
+  "number": 39757,
+  "title": "quarkus-rest: Nested POJOs in Query Params",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2024-03-27T22:52:55Z",
+  "updated_at": "2024-03-28T22:54:14Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nTaking from the discussion here: https://github.com/quarkusio/quarkus/discussions/34268\r\n\r\nA similar example is that I have a project with search endpoints for multiple entities, all of them with paging. To centralize the paging construct, I'd like to have a base class for the SearchParams, like this:\r\n\r\n```java\r\npublic class SearchParams {\r\n    Paging paging;\r\n}\r\n```\r\nwhere `Paging` contains some primitive fields annotated with `@RestQuery`, e.g.:\r\n\r\n```java\r\npublic class Paging {\r\n    @RestQuery\r\n    Integer page;\r\n\r\n    @RestQuery\r\n    Integer pageSize;\r\n}\r\n```\r\n\r\nThen there'd be concrete search option classes like\r\n\r\n```java\r\npublic class SomeEntitySearchParams extends SearchParams {\r\n    @RestQuery\r\n    String someEntityField;\r\n}\r\n```\r\n\r\nFinally you'd use the search options in a search endpoint as query params:\r\n\r\n```java\r\n    public Uni<Response> search(@BeanParam SomeEntitySearchParams params) {\r\n         ...\r\n    }\r\n```\r\n\r\nCurrently, this compiles and the app starts, however, you can't pass any value to `paging`, it will always be `null`. I've tried\r\n\r\n1. Passing values as `page=1`, `paging.page=1`\r\n2. Using `QueryParam(\"somefield\")` on the `Paging` fields and trying to pass a value with `somefield=1`\r\n3. Annotating `Paging paging` with `@RestQuery` -> produces an error because it can't find a suitable converter for it\r\n4. Annotating `Paging paging` with `@BeanParam` -> produces an error of \"Unsatisfied dependency\" because there is no Producer of `Paging`\r\n\r\nI understand there are alternative ways of achieving what I want, such as normalizing each child class of `SearchParams` or including `Paging` as a separate `@BeanParam` in each endpoint, but they lead to unnecessary (IMO) repetition when we could have everything neatly packaged into a hierarchy of objects\r\n\r\nSo the idea would be to either:\r\n\r\n1. \"Unwrap\" `@RestQuery` params from inner objects automatically, prefixing them with `fieldName.`\r\n2. Allow for an annotation to specify that an inner object does not need a custom converter and it will instead be \"unwrapped\"\r\n\r\n \n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39757/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39757/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

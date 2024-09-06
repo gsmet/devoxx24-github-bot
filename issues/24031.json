@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24031",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24031/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24031/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24031/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24031",
+  "id": 1155140182,
+  "node_id": "I_kwDOCFbutM5E2gpW",
+  "number": 24031,
+  "title": "ForbiddenException / DenyAll Check / Happens with constructor argument in REST resource",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-03-01T10:10:47Z",
+  "updated_at": "2022-05-17T09:26:51Z",
+  "closed_at": "2022-05-17T09:26:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI will provide two examples. Example 1 passes just fine, but Example 2 results in a ForbiddenException / DenyAll check when the field \"registry\" is accessed. Otherwise the setup is exactly the same.\r\n\r\nNote: we are using Quarkus with Kotlin 1.6.10\r\n\r\n### Expected behavior\r\n\r\nThere should not be a permission check on a constructor argument when accessed.\r\n\r\n### Actual behavior\r\n\r\n**Example 1 (works)**\r\n\r\n```\r\n@Path(\"/blueprint\")\r\n@RolesAllowed(\"authenticated\")\r\nclass EchoRestResource() {\r\n\r\n    @Inject\r\n    private lateinit var registry: MeterRegistry // <-- This will work as there is no constructor argument involved\r\n\r\n    companion object {\r\n        private val logger = Logger.getLogger(EchoRestResource::class.java)\r\n    }\r\n\r\n    @GET\r\n    @Path(\"/counter\")\r\n    fun counter(): Uni<Double> {\r\n        val counter = registry.counter(\"counter1\")\r\n            counter.increment()\r\n        return Uni.createFrom().item(\r\n            counter.count()\r\n        )\r\n    }\r\n}\r\n```\r\n\r\n**Example 1 (does not work)**\r\n\r\n```\r\n@Path(\"/blueprint\")\r\n@RolesAllowed(\"authenticated\")\r\nclass EchoRestResource(\r\nvar registry: MeterRegistry // <-- Constructor argument not so good\r\n) {\r\n\r\n    companion object {\r\n        private val logger = Logger.getLogger(EchoRestResource::class.java)\r\n    }\r\n\r\n    @GET\r\n    @Path(\"/counter\")\r\n    fun counter(): Uni<Double> {\r\n        val counter = registry.counter(\"counter1\") // <-- This will fail, as a permission check happens here, when we try to access the registry object, but only when the registry is provided as constructor argument\r\n            counter.increment()\r\n        return Uni.createFrom().item(\r\n            counter.count()\r\n        )\r\n    }\r\n}\r\n```\r\n\r\n**Stacktrace of Exception (IntelliJ set to halt any thread on Exception)**\r\n\r\n```\r\nio.quarkus.security.ForbiddenException\r\n\tat io.quarkus.security.runtime.interceptor.check.DenyAllCheck.doApply(DenyAllCheck.java:32)\r\n\tat io.quarkus.security.runtime.interceptor.check.DenyAllCheck.apply(DenyAllCheck.java:20)\r\n\tat io.quarkus.security.runtime.interceptor.SecurityConstrainer.check(SecurityConstrainer.java:32)\r\n\tat io.quarkus.security.runtime.interceptor.SecurityConstrainer_Subclass.check$$superforward1(Unknown Source)\r\n\tat io.quarkus.security.runtime.interceptor.SecurityConstrainer_Subclass$$function$$2.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat io.quarkus.security.runtime.interceptor.SecurityConstrainer_Subclass.check(Unknown Source)\r\n\tat io.quarkus.security.runtime.interceptor.SecurityHandler.handle(SecurityHandler.java:46)\r\n\tat io.quarkus.security.runtime.interceptor.SecurityHandler_Subclass.handle$$superforward1(Unknown Source)\r\n\tat io.quarkus.security.runtime.interceptor.SecurityHandler_Subclass$$function$$2.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat io.quarkus.security.runtime.interceptor.SecurityHandler_Subclass.handle(Unknown Source)\r\n\tat io.quarkus.security.runtime.interceptor.RolesAllowedInterceptor.intercept(RolesAllowedInterceptor.java:29)\r\n\tat io.quarkus.security.runtime.interceptor.RolesAllowedInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat c.m.x.EchoRestResource_Subclass.getRegistry(Unknown Source)\r\n\tat c.m.x.EchoRestResource.counter(EchoRestResource.kt:41)\r\n\tat c.m.x.EchoRestResource_Subclass.counter$$superforward1(Unknown Source)\r\n\tat c.m.x.EchoRestResource_Subclass$$function$$4.apply(Unknown Source)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows 10\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.11\" 2021-04-20 OpenJDK Runtime Environment 18.9 (build 11.0.11+9) OpenJDK 64-Bit Server VM 18.9 (build 11.0.11+9, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nWe do not use GraalVM\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.2\r\n\r\nNote: we are using Quarkus with Kotlin 1.6.10\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n------------------------------------------------------------ Gradle 7.3.3 ------------------------------------------------------------  Build time:   2021-12-22 12:37:54 UTC Revision:     6f556c80f945dc54b50e0be633da6c62dbe8dc71  Kotlin:       1.5.31 Groovy:       3.0.9 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          11.0.11 (Oracle Corporation 11.0.11+9) OS:           Windows 10 10.0 amd64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24031/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24031/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

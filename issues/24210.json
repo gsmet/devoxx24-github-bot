@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24210",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24210/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24210/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24210/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24210",
+  "id": 1164221951,
+  "node_id": "I_kwDOCFbutM5FZJ3_",
+  "number": 24210,
+  "title": "OOM with QuarkusTestResourceConfigurableLifecycleManager",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 19,
+  "created_at": "2022-03-09T17:16:25Z",
+  "updated_at": "2022-03-17T15:32:04Z",
+  "closed_at": "2022-03-11T04:17:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI replaced our wiremock integration tests with a QuarkusTestResourceLifecycleManager approach. Instead of starting und stopping the wiremock server in the junit `BeforeAll` and `AfterAll` methods, I provide a class the looks like the following:\r\n```kotlin \r\nclass WiremockServerTestResource: QuarkusTestResourceConfigurableLifecycleManager<WithWiremockedRemoteApis> {\r\n    val server = WireMockServer(WireMockConfiguration.options().dynamicPort())\r\n    val name = AtomicReference<String>()\r\n\r\n    override fun init(annotation: WithWiremockedRemoteApis) {\r\n        name.set(annotation.name)\r\n    }\r\n\r\n    override fun start(): MutableMap<String, String> {\r\n        val mappingSource = JsonFileMappingsSource(ClasspathFileSource(\"wiremock\"))\r\n        mappingSource.loadMappingsInto(InMemoryStubMappings())\r\n\r\n        server.loadMappingsUsing(mappingSource)\r\n        server.start()\r\n\r\n        return mutableMapOf(\r\n            \"org.acme.UserClient/mp-rest/url\" to server.baseUrl()\r\n        )\r\n    }\r\n\r\n    @Synchronized\r\n    override fun stop() {\r\n        server.stop()\r\n    }\r\n}\r\n\r\n\r\n@QuarkusTestResource(WiremockServerTestResourceSlow::class)\r\n@Retention(AnnotationRetention.RUNTIME)\r\n@Target(AnnotationTarget.CLASS)\r\nannotation class WithWiremockedRemoteApis(\r\n    val name: String = \"Frufru\"\r\n)\r\n```\r\n\r\nI annotated all integration tests with `@WithWiremockedRemoteApis` and basically this approach looks pretty charming.  My problem is though, that my tests ran into an OOM with this approach. On my local macbook this does not happen all the time but on our gitlab runners (with lower resources), the tests do not work at all and fail with an OOM.\r\n\r\nI also created a sample project that at least shows, that this approach is much slower than the static initialisation: https://github.com/u6f6o/slow_tests I could not reproduce the OOM though :( I think there might be an issue with the QuarkusTestResourceConfigurableLifecycleManager as the tests, even for this simple project are much slower in the test setup phase:\r\n![image](https://user-images.githubusercontent.com/1176370/157493897-18b129d6-1eed-4c4c-ad20-335c3d3adf61.png)\r\n\n\n### Expected behavior\n\nTests should be almost as fast as with static wiremock initialisation and should not run in to an OOM. \n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n1.) Check out https://github.com/u6f6o/slow_tests \r\n2.) Run tests in org.acme.static \r\n3.) Run tests in org.acme.quarkuslifecycle \r\n4.) Compare results (OOM does not occur in this example though) \n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24210/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24210/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

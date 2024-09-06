@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40326",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40326/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40326/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40326/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40326",
+  "id": 2266897110,
+  "node_id": "I_kwDOCFbutM6HHhrW",
+  "number": 40326,
+  "title": "OpenTelemetry support for Panache",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2024-04-27T07:50:16Z",
+  "updated_at": "2024-05-04T08:50:09Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nQuarkus has the ambition of being a cloud native application framework, so full observability support is a must.  From this perspective, I believe that a serious lack of Quarkus is the support for OpenTelemetry for accesses made to the DB (SQL and NoSQL, reactive and not) via Panache.\r\n\r\n### Implementation ideas\r\n\r\nMy ideas are related to my use case: access to MongoDB using reactive repository pattern.\r\n\r\n#### 1st: MongoDB command listener\r\nThe problem with this solution is that I was unable to retrieve the parent span.\r\n\r\n```java\r\npackage io.tarric1.quickndirty;\r\n\r\nimport java.util.Map;\r\nimport java.util.concurrent.ConcurrentHashMap;\r\nimport java.util.concurrent.TimeUnit;\r\n\r\nimport com.mongodb.MongoClientSettings;.CommandFailedEvent;\r\nimport com.mongodb.event.CommandListener;\r\nimport com.mongodb.event.CommandStartedEvent;\r\nimport com.mongodb.event.CommandSucceededEvent;\r\n\r\nimport io.opentelemetry.api.trace.Span;\r\nimport io.opentelemetry.api.trace.SpanKind;\r\nimport io.opentelemetry.api.trace.Tracer;\r\nimport io.opentelemetry.context.Context;\r\nimport io.quarkus.arc.lookup.LookupIfProperty;\r\nimport io.quarkus.logging.Log;\r\nimport jakarta.enterprise.context.ApplicationScoped;\r\nimport jakarta.enterprise.context.RequestScoped;\r\nimport jakarta.inject.Inject;\r\n\r\n@ApplicationScoped\r\n@LookupIfProperty(name = \"mongo-tracing.enabled\", stringValue = \"true\")\r\npublic class MongoDbTracing implements CommandListener {\r\n\tprivate Tracer tracer;\r\n\t\r\n\tprivate final Map<Integer, Span> requestMap;\r\n\r\n\t@Inject\r\n\tMongoDbTracing(Tracer tracer) {\r\n\t\tthis.tracer = tracer;\r\n\t\trequestMap = new ConcurrentHashMap<>();\r\n\t}\r\n\r\n\t@Override\r\n\tpublic void commandStarted(CommandStartedEvent event) {\r\n\t\tLog.debug(\"COMMAND STARTED\");\r\n\r\n\t\tString name = null;\r\n\t\tSpan span = tracer.spanBuilder(name)\r\n\t\t\t.setParent(Context.current().with(Span.current()))\r\n\t\t\t.setSpanKind(SpanKind.CLIENT)\r\n\t\t\t.setAttribute(\"db.system\", \"mongodb\")\r\n\t\t\t.setAttribute(\"db.name\", event.getDatabaseName())\r\n\t\t\t.setAttribute(\"db.operation\", event.getCommandName())\r\n\t\t\t.setAttribute(\"db.mongodb.connection-id\", event.getConnectionDescription().getConnectionId().toString())\r\n\t\t\t.setAttribute(\"db.mongodb.server-address\", event.getConnectionDescription().getServerAddress().toString())\r\n\t\t\t.setAttribute(\"db.mongodb.server-type\", event.getConnectionDescription().getServerType().toString())\r\n\t\t\t.setAttribute(\"db.mongodb.request-id\", event.getRequestId())\r\n\t\t\t.setAttribute(\"db.mongodb.operation-id\", event.getOperationId())\r\n\t\t\t.setAttribute(\"db.mongodb.command\", event.getCommand().toJson())\r\n\t\t\t.startSpan();\r\n\r\n\t\trequestMap.put(event.getRequestId(), span);\r\n\t}\r\n\r\n\t@Override\r\n\tpublic void commandSucceeded(CommandSucceededEvent event) {\r\n\t\tLog.debug(\"COMMAND SUCCEEDED\");\r\n\t\tSpan span = requestMap.get(event.getRequestId());\r\n\t\tif (span != null) {\r\n\t\t\tspan.setAttribute(\"db.mongodb.elapsed-time\", event.getElapsedTime(TimeUnit.MILLISECONDS))\r\n\t\t\t\t.setAttribute(\"db.mongodb.response\", event.getResponse().toJson())\r\n\t\t\t\t.end();\r\n\t\t}\r\n\t}\r\n\r\n\t@Override\r\n\tpublic void commandFailed(CommandFailedEvent event) {\r\n\t\tLog.debug(\"COMMAND FAILED\");\r\n\t\tSpan span = requestMap.get(event.getRequestId());\r\n\t\tif (span != null) {\r\n\t\t\tspan.setAttribute(\"db.mongodb.elapsed-time\", event.getElapsedTime(TimeUnit.MILLISECONDS))\r\n\t\t\t\t.setAttribute(\"db.mongodb.throwable\", event.getThrowable().toString())\r\n\t\t\t\t.end();\r\n\t\t}\r\n\t}\r\n}\r\n```\r\n\r\n#### 2nd: Interceptor for repository class\r\nThe problem with this solution (that is a draft) is that I was unable to retrieve the statement.\r\n\r\nThe following annotation is used on repository class to intercept invocations:\r\n\r\n```java\r\npackage io.tarric1.quickndirty;\r\n\r\nimport java.lang.annotation.ElementType;\r\nimport java.lang.annotation.Inherited;\r\nimport java.lang.annotation.Retention;\r\nimport java.lang.annotation.RetentionPolicy;\r\nimport java.lang.annotation.Target;\r\n\r\nimport jakarta.interceptor.InterceptorBinding;\r\n\r\n@InterceptorBinding\r\n@Retention(RetentionPolicy.RUNTIME)\r\n@Target({\r\n\tElementType.TYPE, ElementType.METHOD, ElementType.CONSTRUCTOR\r\n})\r\n@Inherited\r\npublic @interface Trace {\r\n}\r\n```\r\n\r\nThe interceptor:\r\n\r\n```java\r\npackage io.tarric1.quickndirty;\r\n\r\nimport java.lang.reflect.Method;\r\n\r\nimport org.eclipse.microprofile.config.ConfigProvider;\r\n\r\nimport com.mongodb.MongoNamespace;\r\n\r\nimport io.opentelemetry.api.trace.Span;\r\nimport io.opentelemetry.api.trace.SpanKind;\r\nimport io.opentelemetry.api.trace.Tracer;\r\nimport io.opentelemetry.context.Context;\r\nimport io.opentelemetry.semconv.SemanticAttributes;\r\nimport io.quarkus.logging.Log;\r\nimport io.quarkus.mongodb.panache.common.MongoEntity;\r\nimport io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepositoryBase;\r\nimport io.quarkus.mongodb.reactive.ReactiveMongoCollection;\r\nimport jakarta.inject.Inject;\r\nimport jakarta.interceptor.AroundInvoke;\r\nimport jakarta.interceptor.Interceptor;\r\nimport jakarta.interceptor.InvocationContext;\r\n\r\n@Trace\r\n@Interceptor\r\npublic class TraceInterceptor {\r\n\tprivate Tracer tracer;\r\n\r\n\t@Inject\r\n\tTraceInterceptor(Tracer tracer) {\r\n\t\tthis.tracer = tracer;\r\n\t}\r\n\r\n\t@AroundInvoke\r\n\tObject trace(InvocationContext context) throws Exception {\r\n\t\ttry {\r\n\t\t\tReactivePanacheMongoRepositoryBase<?, ?> repository = (ReactivePanacheMongoRepositoryBase<?, ?>) (context.getTarget());\r\n\t\t\t\r\n\t\t\tClass<?> clazz = context.getTarget().getClass();\r\n\t\t\tMethod method = context.getMethod();\r\n\r\n\t\t\tif (!method.getName().equals(\"mongoCollection\")) {\r\n\t\t\t\tReactiveMongoCollection<?> mongoCollection = repository.mongoCollection();\r\n\t\t\t\t\r\n\t\t\t\t/*\r\n\t\t\t\t * Resolving connection string.\r\n\t\t\t\t */\r\n\t\t\t\tClass<?> documentClass = mongoCollection.getDocumentClass();\r\n\t\t\t\tMongoEntity mongoEntity = documentClass.getAnnotation(MongoEntity.class);\r\n\t\t\t\t\r\n\t\t\t\tString clientName = null;\r\n\t\t\t\tif (mongoEntity != null) {\r\n\t\t\t\t\tclientName = mongoEntity.clientName();\r\n\t\t\t\t}\r\n\t\t\t\t\r\n\t\t\t\tString connectionString = null;\r\n\t\t\t\tif (clientName == null || clientName.isEmpty()) {\r\n\t\t\t\t\tconnectionString = ConfigProvider.getConfig().getOptionalValue(\"quarkus.mongodb.connection-string\", String.class).orElse(null);\r\n\t\t\t\t} else {\r\n\t\t\t\t\tconnectionString = ConfigProvider.getConfig().getOptionalValue(String.format(\"quarkus.mongodb.%s.connection-string\", clientName), String.class).orElse(null);\r\n\t\t\t\t\tif (connectionString == null) {\r\n\t\t\t\t\t\tconnectionString = ConfigProvider.getConfig().getOptionalValue(\"quarkus.mongodb.connection-string\", String.class).orElse(null);\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t\t\r\n\t\t\t\tMongoNamespace mongoNamespace = mongoCollection.getNamespace();\r\n\t\t\t\t\r\n\t\t\t\tSpan span = tracer.spanBuilder(clazz.getSimpleName() + \".\" + method.getName())\r\n\t\t\t\t\t.setParent(Context.current().with(Span.current()))\r\n\t\t\t\t\t.setSpanKind(SpanKind.CLIENT)\r\n\t\t\t\t\t.setAttribute(SemanticAttributes.DB_SYSTEM.getKey(), SemanticAttributes.DbSystemValues.MONGODB)\r\n\t\t\t\t\t.setAttribute(SemanticAttributes.DB_OPERATION.getKey(), method.getName())\r\n\t\t\t\t\t.setAttribute(SemanticAttributes.DB_NAME.getKey(), mongoNamespace.getDatabaseName())\r\n\t\t\t\t\t.setAttribute(SemanticAttributes.DB_MONGODB_COLLECTION.getKey(), mongoNamespace.getCollectionName())\r\n\t\t\t\t\t.setAttribute(SemanticAttributes.DB_CONNECTION_STRING.getKey(), connectionString != null ? connectionString : \"\")\r\n\t\t\t\t\t.startSpan();\r\n\r\n\t\t\t\tObject ret = context.proceed();\r\n\r\n\t\t\t\tspan.end();\r\n\r\n\t\t\t\treturn ret;\r\n\t\t\t} else {\r\n\t\t\t\tLog.info(\"mongoCollection() invocation has been intercepted. Ignore it!\");\r\n\t\t\t\treturn context.proceed();\r\n\t\t\t}\r\n\t\t} catch (ClassCastException e) {\r\n\t\t\tLog.warn(\"Did you use @Trace with a class which doesn't implement ReactivePanacheMongoRepositoryBase?\");\r\n\t\t\treturn context.proceed();\r\n\t\t}\r\n\t}\r\n}\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40326/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40326/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

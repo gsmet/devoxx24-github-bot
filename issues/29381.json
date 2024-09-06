@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29381",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29381/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29381/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29381/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29381",
+  "id": 1457735800,
+  "node_id": "I_kwDOCFbutM5W40h4",
+  "number": 29381,
+  "title": "QueryParam not validated if rest controller implements an interface",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1305687763,
+      "node_id": "MDU6TGFiZWwxMzA1Njg3NzYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-validator",
+      "name": "area/hibernate-validator",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Validator"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-11-21T10:58:55Z",
+  "updated_at": "2023-12-13T20:08:21Z",
+  "closed_at": "2022-11-21T18:40:43Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen the Rest Controller implements an interface where all the JAXRS & Bean Validation annotations are present, then the validation doesn't occur.\r\n\r\nExample:\r\n\r\n```java\r\n@Path(\"/v1/mycontroller\")\r\n@io.swagger.annotations.Api(description = \"the API\")\r\n@javax.annotation.Generated(value = \"org.openapitools.codegen.languages.JavaResteasyEapServerCodegen\")\r\npublic interface MyApi  {\r\n   \r\n    @GET\r\n    @Path(\"/foo\")    \r\n    @Produces({ \"application/json\" })\r\n    @io.swagger.annotations.ApiOperation(value = \"Request for foo\", notes = \"\", response = Boolean.class)\r\n    @io.swagger.annotations.ApiResponses(value = { \r\n        @io.swagger.annotations.ApiResponse(code = 200, message = \"request received\", response = Boolean.class) })\r\n    public Response foo(@NotNull @Size(min=8,max=9)  @QueryParam(\"myParam\") String myParam,@Context SecurityContext securityContext);  \r\n}\r\n```\r\n\r\n\r\n```java\r\n@Path(\"/v1/mycontroller\")\r\n@Produces(APPLICATION_JSON)\r\npublic class MyController implements MyApi {      \r\n  \r\n     static Logger log = ....;\r\n\r\n    @Override\r\n    public Response foo(String myParam, SecurityContext securityContext) {\r\n        log.info(\"received param {}*******\", myParam.subString(0, 3));\r\n        return Response.ok().build();\r\n    } \r\n}\r\n```\r\n\r\nCall via HttPie:\r\n`http :8080/v1/mycontroller?myparam=1`\r\n\r\nOutput: \r\n```json\r\n{\r\n  \"details\": \"Error id 6cea631d-ed15-47d0-a0ba-b8ddd97c274e-2, org.jboss.resteasy.spi.UnhandledException: java.lang.StringIndexOutOfBoundsException: begin 0, end 3, length 2\",\r\n  \"stack\": \"org.jboss.resteasy.spi.UnhandledException: java.lang.StringIndexOutOfBoundsException: begin 0, end 3, length 2\\r\\n\\tat \r\n....\r\nat com.acme.MyController.foo(MyController.java:)\r\n...\r\n}\r\n```\r\n\r\npom.xml: \r\n\r\n```xml\r\n    <dependencies>       \r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-hibernate-orm-panache</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-hibernate-validator</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-openapi</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-elytron-security-ldap</artifactId>\r\n            <exclusions>\r\n                <exclusion>\r\n                    <groupId>org.wildfly.security</groupId>\r\n                    <artifactId>wildfly-elytron-client</artifactId>\r\n                </exclusion>\r\n            </exclusions>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-resteasy-jackson</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-liquibase</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-jdbc-postgresql</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-health</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.assertj</groupId>\r\n            <artifactId>assertj-core</artifactId>\r\n            <version>${assertj.version}</version>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-junit5</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-junit5-mockito</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-test-security</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-jacoco</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.instancio</groupId>\r\n            <artifactId>instancio-junit</artifactId>\r\n            <version>1.5.2</version>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.rest-assured</groupId>\r\n            <artifactId>rest-assured</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n    </dependencies>\r\n```\r\n\r\nNote that, as soon as I remove the interface and add all the JAXRS & Validator annotations directly on the Controller then everything works as expected.\n\n### Expected behavior\n\nBean Validation should be triggered, and the error on the logging line should not occur.\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nSee example code above.\n\n### Output of `uname -a` or `ver`\n\nWindows 11\n\n### Output of `java -version`\n\njdk 17 Temurin\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.14.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.8.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29381/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29381/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

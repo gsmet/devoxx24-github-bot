@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39038",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39038/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39038/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39038/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39038",
+  "id": 2157381539,
+  "node_id": "I_kwDOCFbutM6Alwej",
+  "number": 39038,
+  "title": "quarkus-amazon-lambda-rest doesn't support Java 17 ?",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-02-27T18:53:08Z",
+  "updated_at": "2024-02-28T23:45:15Z",
+  "closed_at": "2024-02-28T23:45:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm using Quarkus 3.7.4 with the `quarkus-amazon-lambda-rest` extension. The build generates the following `sam.jvm.yaml` file in the `target` directory:\r\n\r\n      AWSTemplateFormatVersion: '2010-09-09'\r\n      Transform: AWS::Serverless-2016-10-31\r\n      Description: AWS Serverless Quarkus HTTP - rest-gateway-api\r\n      Globals:\r\n        Api:\r\n          EndpointConfiguration: REGIONAL\r\n          BinaryMediaTypes:\r\n            - \"*/*\"\r\n\r\n      Resources:\r\n        RestGatewayApi:\r\n          Type: AWS::Serverless::Function\r\n          Properties:\r\n            Handler: io.quarkus.amazon.lambda.runtime.QuarkusStreamHandler::handleRequest\r\n            Runtime: java11\r\n            CodeUri: function.zip\r\n            MemorySize: 512\r\n            Policies: AWSLambdaBasicExecutionRole\r\n            Timeout: 15\r\n            Events:\r\n              GetResource:\r\n                Type: Api\r\n                Properties:\r\n                  Path: /{proxy+}\r\n                  Method: any\r\n\r\n      Outputs:\r\n        RestGatewayApiApi:\r\n          Description: URL for application\r\n          Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'\r\n          Export:\r\n            Name: RestGatewayApiApi\r\n\r\nThe default runtime is, for some reason, Java 11. I'm modifying it to be Java 17 and I run the floowing command:\r\n\r\n    sam local start-api -t target/sam.jvm.yaml\r\n\r\nThen running my integration tests I get the following:\r\n\r\n    Mounting RestGatewayApi at http://127.0.0.1:3000/{proxy+} [DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT]\r\n    You can now browse to the above endpoints to invoke your functions. You do not need to restart/reload SAM CLI while working on your functions, changes will be reflected instantly/automatically. If you used sam build before running local commands, you will need to re-run sam build for the changes to be picked up. You only need to restart SAM CLI if you update your AWS SAM template\r\n    2024-02-27 19:37:16  * Running on http://127.0.0.1:3000/ (Press CTRL+C to quit)\r\n    Invoking io.quarkus.amazon.lambda.runtime.QuarkusStreamHandler::handleRequest (java17)\r\n    Decompressing /home/nicolas/rest-gateway/rest-gateway-api/target/function.zip\r\n    Exception on /hello [GET]\r\n    Traceback (most recent call last):\r\n      File \"flask/app.py\", line 2073, in wsgi_app\r\n      File \"flask/app.py\", line 1518, in full_dispatch_request\r\n      File \"flask/app.py\", line 1516, in full_dispatch_request\r\n      File \"flask/app.py\", line 1502, in dispatch_request\r\n      File \"samcli/local/apigw/local_apigw_service.py\", line 361, in _request_handler\r\n      File \"samcli/commands/local/lib/local_lambda.py\", line 144, in invoke\r\n      File \"samcli/lib/telemetry/metric.py\", line 277, in wrapped_func\r\n      File \"samcli/local/lambdafn/runtime.py\", line 177, in invoke\r\n      File \"samcli/local/lambdafn/runtime.py\", line 88, in create\r\n      File \"samcli/local/docker/lambda_container.py\", line 91, in __init__\r\n    ValueError: Unsupported Lambda runtime java17\r\n    2024-02-27 19:37:53 127.0.0.1 - - [27/Feb/2024 19:37:53] \"GET /hello HTTP/1.1\" 502 -\r\n\n\n### Expected behavior\n\nI expect that the integration tests run successfully.\n\n### Actual behavior\n\nThe mention exception is raised.\n\n### How to Reproduce?\n\nDon't have a reproducer\n\n### Output of `uname -a` or `ver`\n\nLinux nicolas-XPS-13-9360 6.5.0-21-generic #21~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Feb  9 13:32:52 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\njava version \"17.0.6\" 2023-01-17 LTS Java(TM) SE Runtime Environment (build 17.0.6+9-LTS-190) Java HotSpot(TM) 64-Bit Server VM (build 17.0.6+9-LTS-190, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.7.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven home: /opt/apache-maven-3.9.4 Java version: 17.0.6, vendor: Oracle Corporation, runtime: /usr/lib/jvm/jdk-17 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"6.5.0-21-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\nThe following command:\r\n\r\n    $ curl http://localhost:3000/hello\r\n\r\nraises exactly the same exception.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39038/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39038/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

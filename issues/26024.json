@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26024",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26024/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26024/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26024/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26024",
+  "id": 1265843621,
+  "node_id": "I_kwDOCFbutM5Lcz2l",
+  "number": 26024,
+  "title": "Panache @CreationTimestamp and @UpdateTimestamp not working",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-06-09T09:20:52Z",
+  "updated_at": "2022-06-12T22:05:35Z",
+  "closed_at": "2022-06-11T15:20:32Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nEntity having colums annotated with @CreationTimestamp and @UpdateTimestamp are not automatically updated on entity persist with Hibernate Panache ORM.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nExample Entity:\r\n\r\n```\r\n@Builder\r\n@Entity\r\n@Getter\r\n@Setter\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@ToString\r\n@EqualsAndHashCode(onlyExplicitlyIncluded = true)\r\npublic class Insertion  {\r\n\r\n\t@Id\r\n\t@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = \"INSERTION_SEQ_GENERATOR\")\r\n\t@SequenceGenerator(name = \"INSERTION_SEQ_GENERATOR\", sequenceName = \"INSERTION_SEQ\", allocationSize = 50)\r\n\t@EqualsAndHashCode.Include\r\n\tprivate Long id;\r\n\r\n\t@UpdateTimestamp\r\n\tprivate LocalDateTime updatedAt;\r\n\r\n\t@CreationTimestamp\r\n\t@Column(nullable = false, updatable = false)\r\n\tprivate LocalDateTime createdAt;\r\n\r\n}\r\n```\r\nRepository:\r\n```\r\n@ApplicationScoped\r\npublic class InsertionRepository implements PanacheRepository<Insertion> {\r\n\r\n    public Stream<Insertion> findByCreatedBetween(Instant from, Instant to) {\r\n        return find(\"created_at BETWEEN ?1 AND ?2\", from, to).stream();\r\n    }\r\n\r\n}\r\n```\r\nTest Class:\r\n```\r\n@QuarkusTest\r\npublic class InsertionRepositoryUnitTest {\r\n\r\n    @Inject\r\n    InsertionRepository insertionRepository;\r\n\r\n    @Test\r\n    @TestTransaction\r\n    public void should_populate_crated_at() {\r\n         var insertion = Insertion.builder()\r\n                .build();\r\n\r\n        this.insertionRepository.persist(insertion);\r\n\r\n        insertion = this.insertionRepository.findById(insertion.getId());\r\n\r\n        Assertions.assertNotNull(insertion.getId());\r\n        Assertions.assertNotNull(insertion.getUpdatedAt());\r\n        Assertions.assertNotNull(insertion.getCreatedAt());\r\n    }\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux CH-ADN-3DVB3F3 5.10.16.3-microsoft-standard-WSL2 #1 SMP Fri Apr 2 22:23:49 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.2\" 2022-01-18 OpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8) OpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26024/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26024/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

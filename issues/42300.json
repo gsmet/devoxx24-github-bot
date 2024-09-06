@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42300",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42300/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42300/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42300/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42300",
+  "id": 2445237021,
+  "node_id": "I_kwDOCFbutM6Rv1sd",
+  "number": 42300,
+  "title": "Quarkus Dev Mode Hazelcast Issue",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2024-08-02T15:33:11Z",
+  "updated_at": "2024-08-04T12:19:07Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n# Quarkus Dev Mode Hazelcast Hot Reload Issue\r\n\r\nWe register a Hazelcast Cluster Manager Configuration to use a custom replicated cache including a custom serializer. With quarkus dev mode the custom serializer registration is lost upon hot reload / server restart (hitting `s` in dev mode).\r\n\r\nThe missing serializer results in an error like this in our case:\r\n\r\n```\r\n2024-08-02 17:20:05,417 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (Aesh InputStream Reader) Failed to start quarkus: io.quarkus.dev.appstate.ApplicationStartException: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.dev.appstate.ApplicationStateNotification.waitForApplicationStart(ApplicationStateNotification.java:63)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl.runMainClass(StartupActionImpl.java:141)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.restartApp(IsolatedDevModeMain.java:204)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.restartCallback(IsolatedDevModeMain.java:185)\r\n        at io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:555)\r\n        at io.quarkus.deployment.console.ConsoleStateManager.forceRestart(ConsoleStateManager.java:175)\r\n        at io.quarkus.deployment.console.ConsoleStateManager.lambda$installBuiltins$0(ConsoleStateManager.java:112)\r\n        at io.quarkus.deployment.console.ConsoleStateManager$1.accept(ConsoleStateManager.java:77)\r\n        at io.quarkus.deployment.console.ConsoleStateManager$1.accept(ConsoleStateManager.java:49)\r\n        at io.quarkus.deployment.console.AeshConsole.lambda$setup$1(AeshConsole.java:278)\r\n        at org.aesh.terminal.EventDecoder.accept(EventDecoder.java:118)\r\n        at org.aesh.terminal.EventDecoder.accept(EventDecoder.java:31)\r\n        at org.aesh.terminal.io.Decoder.write(Decoder.java:133)\r\n        at org.aesh.readline.tty.terminal.TerminalConnection.openBlocking(TerminalConnection.java:216)\r\n        at org.aesh.readline.tty.terminal.TerminalConnection.openBlocking(TerminalConnection.java:203)\r\n        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n        at java.base/java.lang.Thread.run(Thread.java:1583)\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:115)\r\n        ... 1 more\r\nCaused by: com.hazelcast.nio.serialization.HazelcastSerializationException: Failed to serialize 'com.github.weand.hazelcastreproducer.task.Task'\r\n        at com.hazelcast.internal.serialization.impl.SerializationUtil.handleSerializeException(SerializationUtil.java:129)\r\n        at com.hazelcast.internal.serialization.impl.AbstractSerializationService.toBytes(AbstractSerializationService.java:241)\r\n        at com.hazelcast.internal.serialization.impl.AbstractSerializationService.toBytes(AbstractSerializationService.java:217)\r\n        at com.hazelcast.internal.serialization.impl.AbstractSerializationService.toData(AbstractSerializationService.java:202)\r\n        at com.hazelcast.internal.serialization.impl.AbstractSerializationService.toData(AbstractSerializationService.java:157)\r\n        at com.hazelcast.spi.impl.NodeEngineImpl.toData(NodeEngineImpl.java:419)\r\n        at com.hazelcast.replicatedmap.impl.ReplicatedMapProxy.put(ReplicatedMapProxy.java:268)\r\n        at com.github.weand.hazelcastreproducer.HazelcastReproducer.onStart(HazelcastReproducer.java:32)\r\n        at com.github.weand.hazelcastreproducer.HazelcastReproducer_Observer_onStart_Ljc3CHlatA83Z5UhUpFV8l5xk1E.notify(Unknown Source)\r\n        at io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:351)\r\n        at io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:333)\r\n        at io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:80)\r\n        at io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:156)\r\n        at io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:107)\r\n        at io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy(Unknown Source)\r\n        ... 11 more\r\nCaused by: com.hazelcast.nio.serialization.HazelcastSerializationException: The 'class java.util.UUID' cannot be serialized with zero configuration Compact serialization because this type is not supported yet. If you want to seri\r\nalize 'class com.github.weand.hazelcastreproducer.task.Task' which uses this class in its fields, consider writing a CompactSerializer for either the 'class com.github.weand.hazelcastreproducer.task.Task' or the 'class java.util.\r\nUUID'.\r\n        at com.hazelcast.internal.serialization.impl.compact.CompactUtil.verifyFieldClassIsCompactSerializable(CompactUtil.java:194)\r\n        at com.hazelcast.internal.serialization.impl.compact.zeroconfig.ValueReaderWriters.readerWriterFor(ValueReaderWriters.java:217)\r\n        at com.hazelcast.internal.serialization.impl.compact.ReflectiveCompactSerializer.createFastReadWriteCaches(ReflectiveCompactSerializer.java:299)\r\n        at com.hazelcast.internal.serialization.impl.compact.ReflectiveCompactSerializer.write(ReflectiveCompactSerializer.java:82)\r\n        at com.hazelcast.internal.serialization.impl.compact.CompactStreamSerializer.buildSchema(CompactStreamSerializer.java:396)\r\n        at com.hazelcast.internal.serialization.impl.compact.CompactStreamSerializer.writeObject(CompactStreamSerializer.java:147)\r\n        at com.hazelcast.internal.serialization.impl.compact.CompactStreamSerializer.write(CompactStreamSerializer.java:116)\r\n        at com.hazelcast.internal.serialization.impl.compact.CompactStreamSerializer.write(CompactStreamSerializer.java:109)\r\n        at com.hazelcast.internal.serialization.impl.StreamSerializerAdapter.write(StreamSerializerAdapter.java:39)\r\n        at com.hazelcast.internal.serialization.impl.AbstractSerializationService.toBytes(AbstractSerializationService.java:238)\r\n        ... 25 more\r\n```\r\n\r\n\r\n\r\nAny idea whats going wrong in dev mode ?\r\n\r\nThanks in advance \r\nAndreas\r\n\r\n\r\n### Expected behavior\r\n\r\nCluster Manager configuration is stable during dev mode.\r\n\r\n### Actual behavior\r\n\r\nCluster manager seems to loose custom serializer after restart within dev mode (hitting `s`).\r\n\r\n### How to Reproduce?\r\n\r\nReproducer here\r\nhttps://github.com/weand/quarkus-vertx-customizer-reproducer/\r\n\r\nRun quarkus dev mode...\r\n\r\n```shell script\r\n./mvnw compile quarkus:dev\r\n```\r\n\r\nWhen starting dev mode everything runs without issues initially and the custom hazelcast cache processes custom object serialization...\r\n\r\n```\r\n2024-08-02 17:16:26,998 INFO  [com.git.wea.haz.HazelcastReproducer] (Quarkus Main Thread) #################### Successfully inserted task into map ####################\r\n```\r\n\r\nRestarting quarkus in dev mode by pushing `s` results in serialization issues...\r\n\r\n\r\n```\r\n...\r\nCaused by: com.hazelcast.nio.serialization.HazelcastSerializationException: Failed to serialize 'com.github.weand.hazelcastreproducer.task.Task'\r\n...\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nUbuntu 22\r\n\r\n### Output of `java -version`\r\n\r\n21\r\n\r\n### Quarkus version or git rev\r\n\r\n3.13.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42300/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42300/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

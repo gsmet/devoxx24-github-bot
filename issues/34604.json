@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34604",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34604/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34604/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34604/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34604",
+  "id": 1793459067,
+  "node_id": "I_kwDOCFbutM5q5gN7",
+  "number": 34604,
+  "title": "AnnotationsTransformerBuildItem can't inject to ResteasyReactiveProcessor#setupEndpoints",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-07-07T12:23:39Z",
+  "updated_at": "2023-07-08T06:06:27Z",
+  "closed_at": "2023-07-08T06:06:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThis below is  a  builditem in my extension,\r\n\r\n```java\r\n    @BuildStep\r\n    void addCompressed(HttpBuildTimeConfig httpBuildTimeConfig,BuildProducer<AnnotationsTransformerBuildItem> annotationsTransformerBuildItemBuildProducer) {\r\n        AnnotationsTransformerBuildItem annotationsTransformerBuildItem = new AnnotationsTransformerBuildItem(new AnnotationsTransformer() {\r\n\r\n            public boolean appliesTo(AnnotationTarget.Kind kind) {\r\n                return kind == AnnotationTarget.Kind.METHOD;\r\n            }\r\n\r\n            @Override\r\n            public int getPriority() {\r\n                return DEFAULT_PRIORITY - 1;\r\n            }\r\n\r\n            public void transform(TransformationContext context) {\r\n                if (httpBuildTimeConfig.enableCompression) {\r\n                    MethodInfo method = context.getTarget().asMethod();\r\n                    if (method.hasAnnotation(UNCOMPRESSED) || method.hasAnnotation(COMPRESSED)) {\r\n                        return;\r\n                    }\r\n\r\n                    if (method.hasAnnotation(GET_ANNOTATION) || method.hasAnnotation(POST_ANNOTATION) ||\r\n                        method.hasAnnotation(PUT_ANNOTATION) || method.hasAnnotation(DELETE_ANNOTATION)) {\r\n                        context.transform().add(COMPRESSED).done();\r\n                    }\r\n                }\r\n            }\r\n        });\r\n        annotationsTransformerBuildItemBuildProducer.produce(annotationsTransformerBuildItem);\r\n    }\r\n```\r\n\r\nIn `ResteasyReactiveProcessor`.`setupEndpoints`,`List<AnnotationsTransformerBuildItem> annotationTransformerBuildItems` is empty.\r\n\r\n```java\r\n            if (!annotationTransformerBuildItems.isEmpty()) {\r\n                List<AnnotationsTransformer> annotationsTransformers = new ArrayList<>(annotationTransformerBuildItems.size());\r\n                for (AnnotationsTransformerBuildItem bi : annotationTransformerBuildItems) {\r\n                    annotationsTransformers.add(bi.getAnnotationsTransformer());\r\n                }\r\n                serverEndpointIndexerBuilder.setAnnotationsTransformers(annotationsTransformers);\r\n            }\r\n```\r\n\r\n I confirm that  `addCompressed` run before `setupEndpoints`, I had run them in debug mode.\r\n\r\n\n\n### Expected behavior\n\n`ResteasyReactiveProcessor`.`setupEndpoints` can get `AnnotationsTransformerBuildItem`\n\n### Actual behavior\n\n`ResteasyReactiveProcessor`.`setupEndpoints` can't get `AnnotationsTransformerBuildItem`\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nDarwin Kernel Version 21.6.0\n\n### Output of `java -version`\n\nOpenJDK 64-Bit Server VM Zulu17.38+21-CA\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.13.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.8.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34604/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34604/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

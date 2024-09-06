@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23746",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23746/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23746/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23746/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23746",
+  "id": 1139629771,
+  "node_id": "I_kwDOCFbutM5D7V7L",
+  "number": 23746,
+  "title": "Quarkus cache does not work with kotlin suspend functions",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 23,
+  "created_at": "2022-02-16T07:19:25Z",
+  "updated_at": "2024-06-16T08:13:41Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nQuarkus-cache does not work correctly with kotlin suspend functions. The following code snippet\r\n\r\n```kotlin\r\n@ApplicationScoped\r\nclass StationAmbassador(\r\n    @RestClient\r\n    private val stationConfigClient: StationConfigClient\r\n) {\r\n\r\n    suspend fun stationConfig(stationId: String): StationConfig? {\r\n        return stationConfig()[stationId]\r\n    }\r\n\r\n    @CacheResult(cacheName = \"station-config\")\r\n    suspend fun stationConfig(): Map<String, StationConfig> {\r\n        val snapshot = stationConfigClient.loadStationConfig()\r\n\r\n        Log.infof(\r\n            \"Fetched {} stations (hd: {}, sd: {}, newTv: {}) from product-configuration.\",\r\n            snapshot.stationsCount,\r\n            snapshot.hdStationsCount,\r\n            snapshot.sdStationsCount,\r\n            snapshot.newTvStationsCount\r\n        )\r\n        return snapshot.stations.associateBy { it.id }\r\n    }\r\n}\r\n```\r\nresults in \r\n\r\n```posh\r\n2022-02-15 19:50:11,168 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-3) HTTP Request to /api/station-config failed, error id: 2e427033-ad2e-4129-9391-a8fd872be97f-1: java.lang.IllegalStateException: The current thread cannot be blocked: vert.x-eventloop-thread-3\r\n\tat io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:30)\r\n\tat io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n\tat io.smallrye.mutiny.groups.UniAwait.indefinitely(UniAwait.java:46)\r\n\tat io.quarkus.cache.runtime.CacheResultInterceptor.intercept(CacheResultInterceptor.java:115)\r\n\tat io.quarkus.cache.runtime.CacheResultInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat stationconfig.StationAmbassador_Subclass.stationConfig(Unknown Source)\r\n\tat stationconfig.StationAmbassador.stationConfig$suspendImpl(StationAmbassador.kt:17)\r\n\tat stationconfig.StationAmbassador.stationConfig(StationAmbassador.kt)\r\n\tat stationconfig.StationAmbassador_Subclass.stationConfig$$superforward1(Unknown Source)\r\n\tat stationconfig.StationAmbassador_Subclass$$function$$1.apply(Unknown Source)\r\n```\r\nWe can workaround this behaviour by returning a CompletionStage from the rest client and work with unis instead. \r\n\r\n### Expected behavior\r\n\r\nQuarkus-cache should work with suspend functions as well. \r\n\r\n### Actual behavior\r\n\r\n```posh\r\n2022-02-15 19:50:11,168 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-3) HTTP Request to /api/station-config failed, error id: 2e427033-ad2e-4129-9391-a8fd872be97f-1: java.lang.IllegalStateException: The current thread cannot be blocked: vert.x-eventloop-thread-3\r\n\tat io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:30)\r\n\tat io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n\tat io.smallrye.mutiny.groups.UniAwait.indefinitely(UniAwait.java:46)\r\n\tat io.quarkus.cache.runtime.CacheResultInterceptor.intercept(CacheResultInterceptor.java:115)\r\n\tat io.quarkus.cache.runtime.CacheResultInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\tat stationconfig.StationAmbassador_Subclass.stationConfig(Unknown Source)\r\n\tat stationconfig.StationAmbassador.stationConfig$suspendImpl(StationAmbassador.kt:17)\r\n\tat stationconfig.StationAmbassador.stationConfig(StationAmbassador.kt)\r\n\tat stationconfig.StationAmbassador_Subclass.stationConfig$$superforward1(Unknown Source)\r\n\tat stationconfig.StationAmbassador_Subclass$$function$$1.apply(Unknown Source)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin MB-07-P15.fritz.box 19.6.0 Darwin Kernel Version 19.6.0: Mon Aug 31 22:12:52 PDT 2020; root:xnu-6153.141.2~1/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.13\" 2021-10-19 OpenJDK Runtime Environment GraalVM CE 20.3.4 (build 11.0.13+7-jvmci-20.3-b24) OpenJDK 64-Bit Server VM GraalVM CE 20.3.4 (build 11.0.13+7-jvmci-20.3-b24, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.3.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23746/reactions",
+    "total_count": 13,
+    "+1": 13,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23746/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

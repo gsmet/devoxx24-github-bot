@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21814",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21814/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21814/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21814/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21814",
+  "id": 1067162190,
+  "node_id": "I_kwDOCFbutM4_m5pO",
+  "number": 21814,
+  "title": "@RolesAllowed causes Resource method returning CompletionStage to ignore exception mapping ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2021-11-30T12:11:53Z",
+  "updated_at": "2021-11-30T13:11:58Z",
+  "closed_at": "2021-11-30T13:11:53Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThis issue is related to #20979. Looks to have been working in quarkus 2.3.2.Final, but the bug was interduced in quarkus 2.4.0.Final and is still present in quarkus 2.5.0.Final. Note that the code is fork'ed from @antoniomacri :  [antoniomacri/quarkus-completionstage-rolesallowed](https://github.com/antoniomacri/quarkus-completionstage-rolesallowed).\r\n\r\n\r\nConsider the following method:\r\n\r\n```\r\n@RolesAllowed(\"protected-role\")\r\n@Path(\"/\")\r\npublic class SampleResource {\r\n    @POST\r\n    @Path(\"protected\")\r\n    @Consumes(MediaType.APPLICATION_JSON)\r\n    public CompletionStage<Response> getProtected(final Content data) throws Exception {\r\n        return CompletableFuture.completedFuture(Response.ok().build());\r\n    }\r\n}\r\n```\r\n\r\nAnd consider that `Content` object's field `name` must not be null:\r\n\r\n```\r\n@Getter\r\n@Setter\r\npublic class Content {\r\n    @NotNull\r\n    private String name;\r\n\r\n}\r\n```\r\n\r\nWhen `getProtected` is called where  `Content` object's field `name` is `null`, an `unhandledAsynchronousException` is thrown.\r\nIt is expected that exceptions are thrown in completionStages (in this case the `@Valid` throws the exception) and that these exceptions are correctly mapped. This do not look to be the case with `RolesAllowedInterceptor.java:29` which calls the SecurityHandler.handle method(see below). It looks like the exception mapped is ignored on line 39: https://github.com/quarkusio/quarkus/blob/31cacccf69e3d913ff4244c45b6d0ed5f3043134/extensions/security/runtime/src/main/java/io/quarkus/security/runtime/interceptor/SecurityHandler.java#L25-L49\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nAs the request contains incomplete content, it is expected to receive a CompletionStage with a response with 400 Bad Request. And that the exception mapping is not ignored.\r\n\r\n### Actual behavior\r\n\r\nAn unhandledAsynchronousException from resteasy with the return code 500 is returned.\r\n\r\nIn a QuarkusTest shows this error:\r\nAM org.jboss.resteasy.core.SynchronousDispatcher unhandledAsynchronousException\r\nERROR: RESTEASY002020: Unhandled asynchronous exception, sending back 500\r\n\r\n\r\n### How to Reproduce?\r\n\r\nFind code to reproduce [here](https://github.com/LoveFeelings/quarkus-completionstage-rolesallowed)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava 11\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.5.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.1\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21814/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21814/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

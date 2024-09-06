@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34419",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34419/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34419/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34419/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34419",
+  "id": 1780834557,
+  "node_id": "I_kwDOCFbutM5qJWD9",
+  "number": 34419,
+  "title": "Resteasy Classic is not properly handling exceptions when serializing elements in a Java Stream",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282147660,
+      "node_id": "MDU6TGFiZWwxMjgyMTQ3NjYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/resteasy-classic",
+      "name": "area/resteasy-classic",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2023-06-29T13:35:33Z",
+  "updated_at": "2023-07-04T16:04:24Z",
+  "closed_at": "2023-07-03T08:19:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen an application is using a custom `ExceptionMapper` and `WriterInterceptor` and returning a Java Stream from its endpoint, it might happen that part of the elements in a stream is successfully written to the response even though subsequent elements fail during their serialization.\r\n\r\nWhen the exception happens during serialization, Resteasy will invoke the custom `ExceptionMapper` and append whatever error response is added by it. In the end, the response might end up as:\r\n\r\n```\r\n[0,1,2,3,4,5,6,7,8] BAD Request\r\n```\r\n\r\nThe response above is about returning a Java Stream from a JAX-RS method where an exception is through when serializing the 9th element in a Java Stream.\r\n\r\nThis behavior only happens if you have a custom `ExceptionMapper`, otherwise a proper error response from Resteasy Classic is returned to the client.\n\n### Expected behavior\n\nIf any exception is thrown when serializing a Java Stream, the response body should hold only the error message from the `ExceptionMapper`.\n\n### Actual behavior\n\nIf any exception is thrown when serializing a Java Stream, the response includes the elements in a stream that were successfully serialized and the error message from the `ExceptionMapper` appended at the end of the response body.\n\n### How to Reproduce?\n\n1. `git clone https://github.com/patrickjennings/quarkus-response-interceptor-streaming.git`\r\n2. `cd quarkus-response-interceptor-streaming`\r\n3. `mvn quarkus:dev`\r\n4.  `curl http://localhost:8080/api/users`\r\n\r\nAs a result of the last step, you should get a response as follows:\r\n\r\n```\r\n[0,1,2,3,4,5,6,7,8]BAD Request\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux fedora 6.3.8-200.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC Thu Jun 15 02:15:40 UTC 2023 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 OpenJDK Runtime Environment (Red_Hat-17.0.7.0.7-4.fc38) (build 17.0.7+7) OpenJDK 64-Bit Server VM (Red_Hat-17.0.7.0.7-4.fc38) (build 17.0.7+7, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\nN/A\n\n### Quarkus version or git rev\n\n3.1.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63) Maven home: /pedroigor/development/tools/maven/current Java version: 17.0.5, vendor: Eclipse Adoptium, runtime: /pedroigor/development/sdk/java/jdk-17.0.5+8 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"6.3.8-200.fc38.x86_64\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\nThis issue originates from https://github.com/keycloak/keycloak/issues/20451.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34419/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34419/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

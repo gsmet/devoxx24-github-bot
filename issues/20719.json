@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20719",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20719/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20719/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20719/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20719",
+  "id": 1024701519,
+  "node_id": "I_kwDOCFbutM49E7RP",
+  "number": 20719,
+  "title": "db connection dropping using Agroal ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955097332,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3MzMy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/agroal",
+      "name": "area/agroal",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-10-13T02:31:28Z",
+  "updated_at": "2021-10-18T12:45:07Z",
+  "closed_at": "2021-10-15T19:33:22Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nseems that the connection acquired from Agroal pool is dropping. (I'm not even sure it's agroal issue or postgres driver issue or something else, hopefully, my description below will help to triage)\r\n\r\nActually it's related to https://github.com/quarkusio/quarkus/issues/20718, but I will put things here again with more detailed logging\r\n\r\nWhat happened:\r\n- I was running quarkus in dev mode.  normal rest service not reactive\r\n- I got a client, **sending request in sequence**\r\n- some request contains large data, and lead to some large bulk insert into database (~ 10s)\r\n- seems that quarkus' worker thread has some timeout setting, after blocking for a while, it will spawn a new thread to handle new requests, and my client got some reading error from the connection(while quarkus didn't kill that long-running thread, it was still running and finally finished)\r\n- so there're more than one threads interleaving\r\n- I'm using `Agroal` connection pool, no ORM, simply raw `java.sql.Connection`\r\n- the connection drop in halfway and giving a `org.postgresql.util.PSQLException: An I/O error occurred while sending to the backend.` error\r\n\r\n\r\n\r\nlog:\r\n\r\n```\r\n/*********** request1, all good ***********/\r\n===\r\nConnections: 2 created | 0 invalid | 0 reap | 0 flush | 0 destroyed\r\nPool: 2 available | 0 active | 2 max | 129 acquired | 129 returned\r\nCreated duration: 084.717ms average | 148ms max | 169ms total\r\nAcquire duration: 001.362ms average | 151ms max | 175ms total\r\nThreads awaiting: 0\r\n===\r\nusing connection instance: wrapped[org.postgresql.jdbc.PgConnection@358c6800]\r\n2021-10-12 19:17:32,257 WARN  [MapFileDAO.java:261] (executor-thread-0) flag0\r\n2021-10-12 19:17:32,257 WARN  [MapFileDAO.java:271] (executor-thread-0) flag1.2\r\n2021-10-12 19:17:32,261 WARN  [MapFileDAO.java:295] (executor-thread-0) flag2\r\n2021-10-12 19:17:32,262 WARN  [MapFileDAO.java:329] (executor-thread-0) flag3\r\n2021-10-12 19:17:32,270 WARN  [MapFileDAO.java:341] (executor-thread-0) flag4\r\n2021-10-12 19:17:32,273 WARN  [MapFileDAO.java:354] (executor-thread-0) flag5\r\n2021-10-12 19:17:32,276 ERROR [MapFileDAO.java:246] (executor-thread-0) before bulk insert1\r\n2021-10-12 19:17:32,281 ERROR [MapFileDAO.java:248] (executor-thread-0) after bulk insert1\r\n2021-10-12 19:17:32,282 ERROR [MapFileDAO.java:255] (executor-thread-0) before bulk insert2\r\n2021-10-12 19:17:32,288 ERROR [MapFileDAO.java:257] (executor-thread-0) after bulk insert2\r\n2021-10-12 19:17:32,289 WARN  [MapFileDAO.java:363] (executor-thread-0) flag6\r\n2021-10-12 19:17:32,290 WARN  [MapFileDAO.java:395] (executor-thread-0) flag7\r\n2021-10-12 19:17:32,296 INFO  [InvocationLogger.java:29] (executor-thread-0) MapFileServiceImpl.create(request, body, securityContext)\r\n2021-10-12 19:17:32,297 INFO  [JBossLoggingAccessLogReceiver.java:44] (executor-thread-0) 0:0:0:0:0:0:0:1 - - 12/Oct/2021:19:17:32 -0700 \"POST /api/v1/map_file HTTP/1.1\" 200 1823\r\n/*********** request1, finished. ***********/\r\n\r\n/*********** request2 come, this request contains some large data, leading to long-running db bulk insert below  ***********/\r\n===\r\nConnections: 2 created | 0 invalid | 0 reap | 0 flush | 0 destroyed\r\nPool: 2 available | 0 active | 2 max | 130 acquired | 130 returned\r\nCreated duration: 084.717ms average | 148ms max | 169ms total\r\nAcquire duration: 001.352ms average | 151ms max | 175ms total\r\nThreads awaiting: 0\r\n===\r\nusing connection instance: wrapped[org.postgresql.jdbc.PgConnection@358c6800]\r\n2021-10-12 19:17:32,343 WARN  [MapFileDAO.java:261] (executor-thread-0) flag0\r\n2021-10-12 19:17:32,343 WARN  [MapFileDAO.java:271] (executor-thread-0) flag1.2\r\n2021-10-12 19:17:32,359 WARN  [MapFileDAO.java:295] (executor-thread-0) flag2\r\n2021-10-12 19:17:32,367 WARN  [MapFileDAO.java:329] (executor-thread-0) flag3\r\n2021-10-12 19:17:32,381 WARN  [MapFileDAO.java:341] (executor-thread-0) flag4\r\n2021-10-12 19:17:32,386 WARN  [MapFileDAO.java:354] (executor-thread-0) flag5\r\n     2021-10-12 19:17:32,637 ERROR [MapFileDAO.java:246] (executor-thread-0) before bulk insert1\r\n<====2021-10-12 19:17:37,066 ERROR [MapFileDAO.java:248] (executor-thread-0) after bulk insert1\r\n<====2021-10-12 19:17:37,282 ERROR [MapFileDAO.java:255] (executor-thread-0) before bulk insert2\r\n\r\n/*********** \r\nI believe this is where the executor timeout happen, \r\n\r\nalso the next line below is weird, it's pirnted by  \"vert.x-eventloop-thread-3\", maybe because the worker thread is somehow abandoned by vertx? \r\n\r\nand my client receive some read error at this moment\r\n***********/\r\n<====2021-10-12 19:17:37,316 INFO  [JBossLoggingAccessLogReceiver.java:44] (vert.x-eventloop-thread-3) 0:0:0:0:0:0:0:1 - - 12/Oct/2021:19:17:37 -0700 \"POST /api/v1/map_file HTTP/1.1\" 200 -=====-> 92% EXECUTING [1m 7s]\r\n> :feature:quarkusDev\r\n\r\n/*********** request3 come, the interleaving begin, you will see executor-thread-1 below. ***********/\r\n===\r\nConnections: 2 created | 0 invalid | 0 reap | 0 flush | 0 destroyed\r\nPool: 1 available | 1 active | 2 max | 131 acquired | 130 returned\r\nCreated duration: 084.717ms average | 148ms max | 169ms total\r\nAcquire duration: 001.342ms average | 151ms max | 175ms total\r\nThreads awaiting: 0\r\n===\r\nusing connection instance: wrapped[org.postgresql.jdbc.PgConnection@61ad9427]\r\n2021-10-12 19:17:37,359 WARN  [MapFileDAO.java:261] (executor-thread-1) flag0\r\n2021-10-12 19:17:37,359 WARN  [MapFileDAO.java:271] (executor-thread-1) flag1.2\r\n2021-10-12 19:17:37,375 WARN  [MapFileDAO.java:295] (executor-thread-1) flag2\r\n2021-10-12 19:17:37,380 WARN  [MapFileDAO.java:329] (executor-thread-1) flag3\r\n     2021-10-12 19:17:37,406 WARN  [MapFileDAO.java:341] (executor-thread-1) flag4\r\n\r\n/*********** interleaving, below is from request2(that long running one), it seems that it's abandoned but not killed, still running ***********/\r\n<====2021-10-12 19:17:41,942 ERROR [MapFileDAO.java:257] (executor-thread-0) after bulk insert2\r\n<====2021-10-12 19:17:42,135 WARN  [MapFileDAO.java:363] (executor-thread-0) flag6\r\n2021-10-12 19:17:42,195 WARN  [MapFileDAO.java:395] (executor-thread-0) flag7\r\n> :fe2021-10-12 19:17:42,260 WARN  [MapFileDAO.java:354] (executor-thread-1) flag5\r\n2021-10-12 19:17:42,275 INFO  [InvocationLogger.java:29] (executor-thread-0) MapFileServiceImpl.create(request, body, securityContext)\r\n\r\n/*********** here is where request 2 really finished, and the HTTP log is also weird printed by vertx evenlop thread instead of executor thread, and this http log print twice for request2 actually ***********/\r\n> :fe2021-10-12 19:17:42,341 INFO  [JBossLoggingAccessLogReceiver.java:44] (vert.x-eventloop-thread-17) 0:0:0:0:0:0:0:1 - - 12/Oct/2021:19:17:42 -0700 \"POST /api/v1/map_file HTTP/1.1\" 200 -====-> 92% EXECUTING [1m 12s]\r\n2021-10-12 19:17:42,345 ERROR [MapFileDAO.java:246] (executor-thread-1) before bulk insert1\r\n\r\n/*********** request 4 come, the finally exception happened in this one ***********/\r\n===\r\nConnections: 2 created | 0 invalid | 0 reap | 0 flush | 0 destroyed\r\nPool: 1 available | 1 active | 2 max | 132 acquired | 131 returned\r\nCreated duration: 084.717ms average | 148ms max | 169ms total\r\nAcquire duration: 001.332ms average | 151ms max | 175ms total\r\nThreads awaiting: 0\r\n===\r\nusing connection instance: wrapped[org.postgresql.jdbc.PgConnection@358c6800]\r\n2021-10-12 19:17:42,371 WARN  [MapFileDAO.java:261] (executor-thread-0) flag0\r\n2021-10-12 19:17:42,372 WARN  [MapFileDAO.java:271] (executor-thread-0) flag1.2\r\n     org.postgresql.util.PSQLException: An I/O error occurred while sending to the backend.\r\n2021-10-12 19:17:42,456 WARN  [AgroalEventLoggingListener.java:76] (executor-thread-0) Datasource '<default>': This connection has been closed.\r\n2021-10-12 19:17:42,457 ERROR [ErrorMapper.java:25] (executor-thread-0) Failed to handle request: org.postgresql.util.PSQLException: This connection has been closed.\r\n        at org.postgresql.jdbc.PgConnection.checkClosed(PgConnection.java:877)\r\n        at org.postgresql.jdbc.PgConnection.rollback(PgConnection.java:884)\r\n        at io.agroal.pool.wrapper.ConnectionWrapper.rollback(ConnectionWrapper.java:219)\r\n```\r\n\r\nfrom the log above, you will see the finally exception happened in request4, and request4 get the connection which should be returned by request2, and request2 seems be abandoned by vertx maybe due to timeout.   So I'm really not sure about it's a `Agroal` issue or `postgres` issue or vertx issue, maybe the timeout abandoned thead has some effect on its sql connection?\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux sd-dub-527ca2 5.4.0-80-generic #90~18.04.1-Ubuntu SMP Tue Jul 13 19:40:02 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08) OpenJDK 64-Bit Server VM GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n------------------------------------------------------------ Gradle 7.0.2 ------------------------------------------------------------ Build time: 2021-05-14 12:02:31 UTC Revision: 1ef1b260d39daacbf9357f9d8594a8a743e2152e Kotlin: 1.4.31 Groovy: 3.0.7 Ant: Apache Ant(TM) version 1.10.9 compiled on September 27 2020 JVM: 11.0.12 (GraalVM Community 11.0.12+6-jvmci-21.2-b08) OS: Linux 5.4.0-80-generic amd64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20719/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20719/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

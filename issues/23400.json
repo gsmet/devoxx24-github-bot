@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23400",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23400/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23400/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23400/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23400",
+  "id": 1122699031,
+  "node_id": "I_kwDOCFbutM5C6wcX",
+  "number": 23400,
+  "title": "Log format is ignored in uber-jar if there is a custom main method",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283428650,
+      "node_id": "MDU6TGFiZWwxMjgzNDI4NjUw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/logging",
+      "name": "area/logging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-02-03T06:21:31Z",
+  "updated_at": "2022-12-14T14:37:36Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nConsole log format is set to `%d{yyyy-MM-dd HH:mm:ss} %-5p [%c] %s%e%n` in \r\n`application.properties` but the log output on the console looks like this:\r\n\r\n```\r\ncdh:~/uber-jar-demo$ java -jar target/uber-jar-demo-1.0.0-SNAPSHOT-runner.jar\r\nFeb 03, 2022 5:56:23 AM org.acme.Main main\r\nINFO: Main method\r\nFeb 03, 2022 5:56:23 AM org.jboss.threads.Version <clinit>\r\nINFO: JBoss Threads version 3.4.2.Final\r\nFeb 03, 2022 5:56:23 AM io.quarkus.bootstrap.runner.Timing printStartupTime\r\nINFO: uber-jar-demo 1.0.0-SNAPSHOT on JVM (powered by Quarkus 2.6.3.Final) started in 0.438s. \r\nFeb 03, 2022 5:56:23 AM io.quarkus.bootstrap.runner.Timing printStartupTime\r\nINFO: Profile prod activated. \r\nFeb 03, 2022 5:56:23 AM io.quarkus.bootstrap.runner.Timing printStartupTime\r\nINFO: Installed features: [cdi, picocli]\r\nFeb 03, 2022 5:56:23 AM org.acme.HelloCommand run\r\nINFO: Saying 'World'\r\nFeb 03, 2022 5:56:23 AM io.quarkus.bootstrap.runner.Timing printStopTime\r\nINFO: uber-jar-demo stopped in 0.030s\r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n```\r\n\r\nPackaging a fast-jar and running the application does all the pretty-printing:\r\n\r\n```\r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2022-02-03 06:00:56 INFO  [staticLogger] Main method\r\n2022-02-03 06:00:56 INFO  [io.quarkus] uber-jar-demo 1.0.0-SNAPSHOT on JVM (powered by Quarkus 2.6.3.Final) started in 0.517s. \r\n2022-02-03 06:00:56 INFO  [io.quarkus] Profile prod activated. \r\n2022-02-03 06:00:56 INFO  [io.quarkus] Installed features: [cdi, picocli]\r\n2022-02-03 06:00:57 INFO  [inCommand] Saying 'World'\r\n2022-02-03 06:00:57 INFO  [io.quarkus] uber-jar-demo stopped in 0.031s\r\n```\r\n\r\nThis seems to happen only if there is a custom main method.\r\n\r\nThe behavior is the same on Linux, Mac and Windows.\n\n### Expected behavior\n\nLog formatting is the same no matter which package type is used.\n\n### Actual behavior\n\nPackaging a uber-jar ignories the log formatting whereas fast-jar for example obeys the log formatting configuration.\r\n\r\nIf there is no custom main method but package types behave the same.\n\n### How to Reproduce?\n\n1. Checkout the demo project at https://github.com/itbh-at/uber-jar-demo\r\n2. Build with `-Dquarkus.package.type=uber-jar` and run the application\r\n3. Build with `-Dquarkus.package.type=fast-jar`and run the application\r\n4. Compare the outputs\n\n### Output of `uname -a` or `ver`\n\nDarwin cdh.localdomain 21.2.0 Darwin Kernel Version 21.2.0: Sun Nov 28 20:29:10 PST 2021; root:xnu-8019.61.5~1/RELEASE_ARM64_T8101 arm64\n\n### Output of `java -version`\n\njava version \"17\" 2021-09-14 LTS Java(TM) SE Runtime Environment (build 17+35-LTS-2724) Java HotSpot(TM) 64-Bit Server VM (build 17+35-LTS-2724, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.0.Final (also testet with 2.6.3.Final)\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23400/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23400/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

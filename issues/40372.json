@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40372",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40372/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40372/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40372/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40372",
+  "id": 2271991208,
+  "node_id": "I_kwDOCFbutM6Ha9Wo",
+  "number": 40372,
+  "title": "have static @Observes method work on things that aren't beans",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-04-30T16:33:04Z",
+  "updated_at": "2024-05-04T15:58:14Z",
+  "closed_at": "2024-05-02T14:03:01Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nI initially was going to make this a bug report but I think it makes sense how it works now.\r\n\r\nIt would be nice if I could put static `@Observes` methods on things that aren't beans. If an `@Observes` method is static then the Observer doesn't need to get a `this` instance to dispatch events to it. That probably works fine based on the code here: https://github.com/quarkusio/quarkus/blob/094d626f20cffa6cedf79330c087d5b97db3f808/independent-projects/arc/processor/src/main/java/io/quarkus/arc/processor/ObserverGenerator.java#L368-L370. At build time though ArcProcessor#validate doesn't necessarily like it because I think adding an Observes method, even if it's static, turns it into a bean. When it finds out the class doesn't make sense as a bean it errors out.\r\n\r\nHere is what can be used to see the error happen:\r\n```\r\npublic class Test {\r\n    Test(Void x) {} // uninjectable type\r\n    static void test(@Observes String event) {}\r\n}\r\n```\r\n\r\nHere is what some of the error looks like:\r\n```\r\nCaused by: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type java.lang.Void and qualifiers [@Default]\r\n\t- injection target: parameter 'x' of info.sixcorners.client.Test constructor\r\n\t- declared on CLASS bean [types=[info.sixcorners.client.Test, java.lang.Object], qualifiers=[@Default, @Any], target=info.sixcorners.client.Test]\r\n\tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:519)\r\n\tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:638)\r\n```\r\n\r\nOn the other hand working around this is pretty easy. Just need to define an additional class to house the `@Observes` method.\n\n### Implementation ideas\n\nI don't exactly know what all of the consequences of this would be but you could make it so that static methods don't turn the class into a bean.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40372/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40372/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

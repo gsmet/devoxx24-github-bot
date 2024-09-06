@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24537",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24537/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24537/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24537/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24537",
+  "id": 1179645795,
+  "node_id": "I_kwDOCFbutM5GT_dj",
+  "number": 24537,
+  "title": "quarkusGenerateCode fails because of out of memory Java heap space",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-03-24T15:04:11Z",
+  "updated_at": "2022-10-13T12:57:29Z",
+  "closed_at": "2022-10-13T12:57:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nCode compilation fails for any 2.7.x version with a Java heap space error, while was working fine with 2.6.x. The error message is:\r\n```\r\n> Task :quarkusGenerateCode\r\npreparing quarkus application\r\n\r\nProblem in daemon expiration check\r\njava.lang.OutOfMemoryError: Java heap space\r\n        at java.base/java.net.InetAddress.getByAddress(InetAddress.java:1201)\r\n        at java.base/java.net.InetAddress.getByAddress(InetAddress.java:1575)\r\n        at org.gradle.internal.remote.internal.inet.MultiChoiceAddressSerializer.read(MultiChoiceAddressSerializer.java:37)\r\n        at org.gradle.launcher.daemon.registry.DaemonRegistryContent$Serializer.readAddresses(DaemonRegistryContent.java:208)\r\n        at org.gradle.launcher.daemon.registry.DaemonRegistryContent$Serializer.read(DaemonRegistryContent.java:118)\r\n        at org.gradle.launcher.daemon.registry.DaemonRegistryContent$Serializer.read(DaemonRegistryContent.java:113)\r\n        at org.gradle.cache.internal.SimpleStateCache.deserialize(SimpleStateCache.java:144)\r\n        at org.gradle.cache.internal.SimpleStateCache.access$000(SimpleStateCache.java:34)\r\n        at org.gradle.cache.internal.SimpleStateCache$1.create(SimpleStateCache.java:52)\r\n        at org.gradle.cache.internal.DefaultFileLockManager$DefaultFileLock.readFile(DefaultFileLockManager.java:194)\r\n        at org.gradle.cache.internal.OnDemandFileAccess.readFile(OnDemandFileAccess.java:43)\r\n        at org.gradle.cache.internal.SimpleStateCache.get(SimpleStateCache.java:49)\r\n        at org.gradle.cache.internal.FileIntegrityViolationSuppressingPersistentStateCacheDecorator.get(FileIntegrityViolationSuppressingPersistentStateCacheDecorator.java:34)\r\n        at org.gradle.launcher.daemon.registry.PersistentDaemonRegistry.getAll(PersistentDaemonRegistry.java:71)\r\n        at org.gradle.launcher.daemon.registry.PersistentDaemonRegistry.getDaemonsMatching(PersistentDaemonRegistry.java:116)\r\n        at org.gradle.launcher.daemon.registry.PersistentDaemonRegistry.getIdle(PersistentDaemonRegistry.java:84)\r\n        at org.gradle.launcher.daemon.server.CompatibleDaemonExpirationStrategy.checkExpiration(CompatibleDaemonExpirationStrategy.java:54)\r\n        at org.gradle.launcher.daemon.server.expiry.AllDaemonExpirationStrategy.checkExpiration(AllDaemonExpirationStrategy.java:46)\r\n        at org.gradle.launcher.daemon.server.expiry.AnyDaemonExpirationStrategy.checkExpiration(AnyDaemonExpirationStrategy.java:43)\r\n        at org.gradle.launcher.daemon.server.MasterExpirationStrategy.checkExpiration(MasterExpirationStrategy.java:73)\r\n        at org.gradle.launcher.daemon.server.Daemon$DaemonExpirationPeriodicCheck.run(Daemon.java:268)\r\n        at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)\r\n        at org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)\r\n        at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)\r\n        at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\r\n        at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\r\n        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\r\n        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\r\n        at org.gradle.internal.concurrent.ThreadFactoryImpl$ManagedThreadRunnable.run(ThreadFactoryImpl.java:61)\r\n        at java.base/java.lang.Thread.run(Unknown Source)\r\nExpiring Daemon because JVM heap space is exhausted\r\nDaemon will be stopped at the end of the build after running out of JVM memory\r\n```\r\n\r\nThere is a massive increase in memory used  at compile time. \r\nQuarkus 2.6.1 was:\r\n<img width=\"1210\" alt=\"quarkus-compile-2 6 x\" src=\"https://user-images.githubusercontent.com/64641556/159945068-76a63d89-1311-4e6f-9098-2d2e943662b7.png\">\r\n\r\nWhile with quarkus 2.7.5 (or any other 2.7.x) is:\r\n<img width=\"1222\" alt=\"quarkus-compile-2 7 x\" src=\"https://user-images.githubusercontent.com/64641556/159945294-6e5c9b9f-bf1a-4948-809f-a4756617f562.png\">\r\n\r\n\n\n### Expected behavior\n\ncode compilation should complete without errors\n\n### Actual behavior\n\ncode compilation fails because of a memory error\n\n### How to Reproduce?\n\nI did try with an example project, but the amount of memory necessary for it is too small and the problem does not arise.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n11.0.13 (Eclipse Adoptium 11.0.13+8)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.5\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.3.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24537/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24537/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36987",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36987/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36987/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36987/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36987",
+  "id": 1986260286,
+  "node_id": "I_kwDOCFbutM52Y-0-",
+  "number": 36987,
+  "title": "Datasource Devservice: Skip init script, if testcontainers.reuse.enable=true",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955124662,
+      "node_id": "MDU6TGFiZWwyOTU1MTI0NjYy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-sql-clients",
+      "name": "area/reactive-sql-clients",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 7319823129,
+      "node_id": "LA_kwDOCFbutM8AAAABtEujGQ",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jdbc",
+      "name": "area/jdbc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to the JDBC extensions"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-11-09T19:22:51Z",
+  "updated_at": "2024-08-13T15:49:35Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen testcontainers.reuse.enable=true, the database container is reused between Quarkus hot reloads (a really awesome feature btw). But also the init script referenced in quarkus.datasource.devservices.init-script-path seems to be executed again.\r\n\r\nI would count that as a bug - but that might be debateable. \r\n\r\nMy reasoning is: The script is meant to initialize the database. So if I keep the database up, it does not need to be initialized again. If your init script does contain actions that are not repeatable, there will be errors on hot reload and your app has to be restarted manually (and sometimes the still running container needs to be killed manually).\r\n\r\nIf not counted as bug, it should at least be configurable. Maybe some kinds of init scripts should run on each hot reload and some don't?\r\n\r\nCurrent workaround is to make your init scripts idempotent (which is often easy, but in case of creating users in postgres a simple \"if not exists\" is not available for example).\r\n\r\n### Expected behavior\r\n\r\nDon't execute the init script on quarkus hot reload, when testcontainers.reuse.enable=true is set.\r\n\r\n### Actual behavior\r\n\r\nScript gets executed again on every hot reload.\r\n\r\n### How to Reproduce?\r\n\r\nSteps to reproduce:\r\n\r\n1. Create a Quarkus Project with SQL Datasource, for example with \"quarkus-jdbc-postgresql\" dependency\r\n```\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-jdbc-postgresql</artifactId>\r\n    </dependency>\r\n```\r\n\r\n2. Configure DevService with init script and enable container reuse\r\n\r\napplication.properties:\r\n\r\n`quarkus.datasource.devservices.init-script-path=db/init/init-users.sql`\r\n\r\n\r\n~/.testcontainers.properties:\r\n\r\n`testcontainers.reuse.enable=true`\r\n\r\n\r\n3. Do something non-idempotent in the init script, that will produce an error on second execution, for example:\r\n\r\nsrc/main/resources/db/init/init-users.sql:\r\n`create user app_user with password 'local';`\r\n\r\n4. Start the app (everything should be fine for first start)\r\n5. Change a line in your code and trigger something for the hot reload feature (for example a rest api call)\r\n\r\n=> Now your init script will throw an error\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36987/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36987/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24276",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24276/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24276/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24276/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24276",
+  "id": 1166546406,
+  "node_id": "I_kwDOCFbutM5FiBXm",
+  "number": 24276,
+  "title": "Getting io.quarkus.runtime.configuration.QuarkusConfigFactory not a subtype in dev mode really intermitently",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-03-11T15:19:24Z",
+  "updated_at": "2022-04-12T16:57:20Z",
+  "closed_at": "2022-04-12T16:57:20Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThis one is really hard to reproduce, it seems to happen randomly, and so far I have been able to observe it only in dev mode. I will not be able to put a reproducer in place as I am really not able to reproduce at will.\r\n\r\nHere's the stacktrace;\r\n\r\n```\r\n2022-03-10 22:11:00,269 ERROR [org.qua.cor.ErrorLogger] (QuarkusQuartzScheduler_Worker-8) Job (io.quarkus.scheduler.Scheduler.scheduler-poller-job threw an exception.: org.quartz.SchedulerException: Job threw an unhandled exception. [See nested exception: java.util.ServiceConfigurationError: io.smallrye.config.SmallRyeConfigFactory: io.quarkus.runtime.configuration.QuarkusConfigFactory not a subtype]\r\nat org.quartz.core.JobRunShell.run(JobRunShell.java:213)\r\nat org.quartz.simpl.SimpleThreadPool$WorkerThread.run(SimpleThreadPool.java:573)\r\nCaused by: java.util.ServiceConfigurationError: io.smallrye.config.SmallRyeConfigFactory: io.quarkus.runtime.configuration.QuarkusConfigFactory not a subtype\r\nat java.base/java.util.ServiceLoader.fail(ServiceLoader.java:593)\r\nat java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNextService(ServiceLoader.java:1244)\r\nat java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNext(ServiceLoader.java:1273)\r\nat java.base/java.util.ServiceLoader$2.hasNext(ServiceLoader.java:1309)\r\nat java.base/java.util.ServiceLoader$3.hasNext(ServiceLoader.java:1393)\r\nat io.smallrye.config.SmallRyeConfigProviderResolver.getFactoryFor(SmallRyeConfigProviderResolver.java:100)\r\nat io.smallrye.config.SmallRyeConfigProviderResolver.getConfig(SmallRyeConfigProviderResolver.java:76)\r\nat io.smallrye.config.SmallRyeConfigProviderResolver.getConfig(SmallRyeConfigProviderResolver.java:64)\r\nat org.eclipse.microprofile.config.ConfigProvider.getConfig(ConfigProvider.java:85)\r\nat io.quarkus.arc.runtime.ConfigMappingCreator.create(ConfigMappingCreator.java:27)\r\nat org.acme.Config_89c98782817d888e3bd4372ecd7ed122bdb30c72_Synthetic_Bean.create(Unknown Source)\r\nat org.acme.Config_89c98782817d888e3bd4372ecd7ed122bdb30c72_Synthetic_Bean.get(Unknown Source)\r\nat org.acme.Config_89c98782817d888e3bd4372ecd7ed122bdb30c72_Synthetic_Bean.get(Unknown Source)\r\nat io.quarkus.arc.impl.ArcContainerImpl.beanInstanceHandle(ArcContainerImpl.java:428)\r\nat io.quarkus.arc.impl.ArcContainerImpl.beanInstanceHandle(ArcContainerImpl.java:441)\r\nat io.quarkus.arc.impl.ArcContainerImpl.instanceHandle(ArcContainerImpl.java:412)\r\nat io.quarkus.arc.impl.ArcContainerImpl.instance(ArcContainerImpl.java:229)\r\nat org.acme.event.Event.isValid(Event.java:169)\r\n```\r\n\r\nPlease note;\r\n1. Event is coming as a List<Event> from a rest client reactive jackson\r\n2. first line of the stackStrace, the isValid, contains this; `Config config = Arc.container().instance(Config.class).get();`\r\n2.1 **Could this be an issue running that in a parallelStream?** if yes, what could be my alternative?\r\n4. isValid is called from a list.parallelStream().forEach() Where all items are unique\r\n5. the parallelStream() is called within a quartz `@Scheduled` method\r\n\r\nis seems consistent with @fstarred comments https://github.com/quarkusio/quarkus/issues/9273#issuecomment-1059336625 and https://github.com/quarkusio/quarkus/issues/8210#issuecomment-1059222354 but in his case it seems to say that the dev mode is fine, which is not my case.\r\n\r\nI wonder if this can happen with the jar or native. As it is really hard to repro, I cannot say if **only** devmode is affected, but so far it is the only place I could see it.\r\n\n\n### Expected behavior\n\nNo Exceptions are thrown and processing goes through\n\n### Actual behavior\n\nException happens (somewhat rarely)\n\n### How to Reproduce?\n\nI cannot reproduce easily and consistently, even with my main app. I tried making a reproducer making the same steps in the descriptions but could not make it fail.\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [Version 10.0.19043.1526]\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmvn 3.8.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24276/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24276/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36779",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36779/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36779/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36779/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36779",
+  "id": 1968329385,
+  "node_id": "I_kwDOCFbutM51UlKp",
+  "number": 36779,
+  "title": "Reactive - Different behaviour between Prod and Dev",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-10-30T13:13:14Z",
+  "updated_at": "2023-12-07T09:21:38Z",
+  "closed_at": "2023-12-07T09:21:30Z",
+  "active_lock_reason": null,
+  "body": "I've noticed that the application behaves differently for prod and dev mode. \r\nI am using the most recent version of Quarkus (3.5.0) and I built the application as an uber-jar.\r\nIn production, the response is flushed just after all the content is collected.\r\nHowever, when I run the application in development mode, the response body is being sent every 1 second. \r\n\r\nI prepared a simple example:\r\n\r\n\r\n```java\r\n@Path(\"/test\")\r\n@RequestScoped\r\npublic class TestLevel {\r\n\r\n  @GET\r\n  @Produces(MediaType.APPLICATION_JSON)\r\n  public Multi<Integer> getInts() {\r\n    return Multi.createFrom().emitter(this::emitNumbers);\r\n  }\r\n\r\n  private void emitNumbers(MultiEmitter emitter) {\r\n    for (int i = 0; i < 10; i++) {\r\n      emitter.emit(i);\r\n      try {\r\n        Thread.sleep(1000);\r\n      } catch (InterruptedException e) {\r\n        emitter.fail(e);\r\n        throw new RuntimeException(e);\r\n      }\r\n    }\r\n    emitter.complete();\r\n  }\r\n}\r\n```\r\n\r\nIllustration of the issue:\r\n![image](https://github.com/quarkusio/quarkus/assets/42775212/585a8070-0ad5-4939-98ae-3ae9172d7dc3)\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava 17.0.7 2023-04-18 LTS\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36779/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36779/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

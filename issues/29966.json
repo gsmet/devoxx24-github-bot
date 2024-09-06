@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29966",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29966/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29966/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29966/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29966",
+  "id": 1503695821,
+  "node_id": "I_kwDOCFbutM5ZoJPN",
+  "number": 29966,
+  "title": "Missing First Kafka messages from Quarkus Tests on every new container.",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-12-19T22:21:45Z",
+  "updated_at": "2023-01-02T15:02:03Z",
+  "closed_at": "2023-01-02T15:01:48Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen I create a completely new docker container with docker-compose down / docker-compose up:\r\n -- confluentinc/cp-zookeeper:latest\r\n -- confluentinc/cp-server:latest\r\n \r\n The first time I run a @Test that publishes a batch of messages and recieves them, the messages do not appear in the @Incoming annotated method. Re-running the test again once the state is 'primed' will not produce the same failure. \r\n \r\nThe consumer of the messages is an @ApplicationScoped object outside of the @QuarkusTest class that prints out the message  as it recieves them to termial and then pushes them into a BlockingQue.\r\n\r\nHypothisis: Something about the quarkus lazy loading behavior is causing the @Injected consumer to be improperly initialized at boot time allowing it to acknowlege messages to Kafka without them hitting the @Incoming(channel). Only after the first batch of messages is missed, does the new Kafka create the _consumer offsets directory and finish setting itself up.\r\n\r\nBasically, I think that due to the lazy loading until we hit blockingQue.take(), that resource isn't initialized and the consumer is providing false acknowledgements to the kafka consumer offset. \n\n### Expected behavior\n\nExpected: All messages acknowleged in Kafka are recieved by @Incoming method.\n\n### Actual behavior\n\nActual Behavior: Messages are ack'ed from Kafka but do not appear in @Incoming method.\n\n### How to Reproduce?\n\n1. Clone https://github.com/Eli-Ronai/QuarkusKafkaBugDemo.git\r\n\r\n2. MVN clean install.\r\n\r\n3. RestartDocker.bat (or use docker-compose up in terminal.)\r\n\r\n4. Run BufferTests.Java, first test fails.\r\n\r\n5. Run BufferTests.Java again, test now passes.\r\n\r\n-----\r\n\r\nReproduction of the bug requires the recreation of the docker container each time. Stopping and starting the container does not reproduce the bug. You must completely destroy the container and rerun docker-compose up.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\njava version \"17\" 2021-09-14 LTS Java(TM) SE Runtime Environment (build 17+35-LTS-2724) Java HotSpot(TM) 64-Bit Server VM (build 17+35-LTS-2724, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.13.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\napache-maven-3.8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29966/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29966/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36863",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36863/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36863/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36863/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36863",
+  "id": 1976536387,
+  "node_id": "I_kwDOCFbutM51z41D",
+  "number": 36863,
+  "title": "Unit tests fail for MutinyEmitter with ProducerRecord",
+  "labels": [
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": true,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-11-03T16:21:29Z",
+  "updated_at": "2023-11-15T10:20:18Z",
+  "closed_at": "2023-11-15T10:20:18Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi,\r\n\r\nI have defined a MutinyEmitter to send data to Kafka. Since I need to dynamically set the topic name and to handle possible errors, my Emitter is defined as follows:\r\n\r\n    @Inject\r\n    @Channel(\"message\")\r\n    MutinyEmitter<ProducerRecord<String, MyObject>> streamsEmitter;\r\n\r\n    @POST\r\n    public Uni<Response> sendMyObject(MyObject obj) {\r\n\r\n        return streamsEmitter.send(new ProducerRecord<>(obj.getTopicName(), obj))\r\n                .map(x -> Response.ok(\"Message sent\").build())\r\n                .onFailure().recoverWithItem(Response.serverError().entity(\"Message not sent correctly\").build());\r\n\r\n    }\r\n\r\nThis works as expected but executing tests defined as described in [doc](https://quarkus.io/version/3.2/guides/kafka#testing-without-a-broker) returns **org.awaitility.core.ConditionTimeoutException: com.package.MyTestClass expected the predicate to return <true> but it returned <false> for input of <[]> within 10 seconds.**\r\n\r\nMy test class is defined as follows:\r\n\r\n```\r\n@QuarkusTest\r\n@QuarkusTestResource(KafkaTestResourceLifecycleManager.class)\r\nclass MyTestClass {\r\n\r\n    @Inject @Any\r\n    InMemoryConnector connector;\r\n    @Inject\r\n    MyResourceClass resource;\r\n\r\n    @Test\r\n    void testMessageSender() {\r\n\r\n        InMemorySink<MyObject> messages = connector.sink(\"message\");\r\n\r\n        MyObject obj = new MyObject();\r\n        obj.setTopicName(\"test\");\r\n\r\n        resource.sendMyObject(obj);\r\n\r\n        await().<List<? extends Message<MyObject>>>until(messages::received, t -> t.size() == 1);\r\n\r\n        final var received = messages.received().get(0).getPayload();\r\n        assertNotNull(received);\r\n    }\r\n}\r\n```\r\n\r\nI suspect that this behaviour could be caused by the use of MutinyEmitter<ProducerRecord<String, MyObject>> instead of MutinyEmitter<MyObject, but I don't know how to fix it.\r\n\r\nThanks,\r\nEnrico\r\n\r\n\n\n### Expected behavior\n\nThe in-memory channel receives correctly the data and test pass\n\n### Actual behavior\n\nTest failed with **org.awaitility.core.ConditionTimeoutException: com.package.MyTestClass expected the predicate to return <true> but it returned <false> for input of <[]> within 10 seconds.**\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux asset-00287 6.2.0-36-generic #37~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Mon Oct  9 15:34:04 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.8\"\n\n### Quarkus version or git rev\n\n3.2.6.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.11.0\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36863/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36863/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

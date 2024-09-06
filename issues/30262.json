@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30262",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30262/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30262/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30262/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30262",
+  "id": 1525720250,
+  "node_id": "I_kwDOCFbutM5a8KS6",
+  "number": 30262,
+  "title": "Charset appended to multipart parts regardless of the media type already specified",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282147660,
+      "node_id": "MDU6TGFiZWwxMjgyMTQ3NjYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/resteasy-classic",
+      "name": "area/resteasy-classic",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2023-01-09T14:38:12Z",
+  "updated_at": "2023-04-10T11:25:30Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe use `org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput` parameter for a JAX-RS endpoint method that consumes `multipart/form-data`. When we fetch the media type of a part, it has always `charset=UTF-8` specified, regardless of the media type that the client actually specified (so, we can get things like `application/octet-stream; charset=UTF-8`, which is absurd).\r\n\r\nWe tried to set `quarkus.resteasy-reactive.multipart.input-part.default-charset` to an empty value in `application.properties`, but this is not supported, there simply must be a valid `Charset` name, otherwise the container fails to start because of the value is not acceptable.\r\n\r\nAnyway, we need to get the media type exactly as the client specified, so not having the option to suppress any default charset is quite a problem.\n\n### Expected behavior\n\nIt should be possible to specify no default charset at all, so that we can get the media type as actually specified by the client. It might be acceptable if the default charset is applied for types when it makes sense (probably just `text/*`).\r\n\n\n### Actual behavior\n\nThe endpoint receives the form data with the media type with the default charset specified always.\n\n### How to Reproduce?\n\n```\r\nimport javax.ws.rs.Consumes;\r\nimport javax.ws.rs.POST;\r\nimport javax.ws.rs.Path;\r\nimport javax.ws.rs.core.MediaType;\r\nimport org.jboss.resteasy.plugins.providers.multipart.InputPart;\r\nimport org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;\r\n\r\n@Path(\"/test\")\r\npublic final class TestEndpoint {\r\n\r\n    @POST\r\n    @Consumes(MediaType.MULTIPART_FORM_DATA)\r\n    public void test(MultipartFormDataInput form) {\r\n        final var parts = form.getParts();\r\n\r\n        if (parts != null) {\r\n            parts.stream().map(InputPart::getMediaType).forEach(System.out::println);\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nSend a multipart request then, e.g.:\r\n```\r\ncurl -X POST \\\r\n-H 'content-type: multipart/form-data; boundary=f555d9c6-f40f-4d62-a217-f64a58d75b50' \\\r\n--data-raw '--f555d9c6-f40f-4d62-a217-f64a58d75b50\r\nContent-Disposition: form-data; name=\"data\"\r\nContent-Type: application/octet-stream\r\n\r\nABC\r\n\r\n--f555d9c6-f40f-4d62-a217-f64a58d75b50--\r\n' http://localhost:8080/test\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.15.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30262/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30262/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25105",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25105/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25105/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25105/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25105",
+  "id": 1212505565,
+  "node_id": "I_kwDOCFbutM5IRV3d",
+  "number": 25105,
+  "title": "Confusing test output from vertx-http deployment tests (it looks like a failure, but isn't)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1274848091,
+      "node_id": "MDU6TGFiZWwxMjc0ODQ4MDkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/build",
+      "name": "area/build",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-04-22T15:32:37Z",
+  "updated_at": "2022-10-11T08:20:52Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nA number of apparent errors (stack traces and test failures) are present in the test logs. These aren't real problems, since the tests are testing the testing, but someone would need to understand the test suite to know that. These errors increase the cognitive load of reading the build logs and could cause confusion. \r\n\r\nI think we can make the logs a big clearer while still testing the right things. \r\n\r\n- *Option 1* (very cheap): Rename some test class names and strings. This makes the intention clearer to people reading the logs. For example,  \"hello-this-is-expected-to-fail\" and the class names things like \"ParamETWhichShouldFail\".\r\n- *Option 2* (slightly more work): Amend `QuarkusDevModeTest` to write the dev mode logs + stack traces only when an assertion fails.\r\n\r\nI think the two options are complementary, so we could do the easy one first and then look into suppressing the output.\r\n\r\n(I can see similar output in io.quarkus.amazon.lambda.deployment.testing.LambdaHandlerET.)\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nAll test failures reported in the logs should represent real problems. \r\n\r\n### Actual behavior\r\n\r\nA number of apparent errors are present in the test logs. These aren't real problems, since the tests are testing the testing, but someone would need to understand the test suite to know that. \r\n\r\n```\r\n2022-04-22T02:58:24.3227607Z 2022-04-22 02:58:24,237 ERROR [io.qua.test] (Test runner thread) ==================== TEST REPORT #1 ====================\r\n2022-04-22T02:58:24.3228349Z 2022-04-22 02:58:24,237 ERROR [io.qua.test] (Test runner thread) Test SimpleET#testHelloEndpoint() failed \r\n2022-04-22T02:58:24.3228834Z : java.lang.AssertionError: 1 expectation failed.\r\n2022-04-22T02:58:24.3229226Z Expected status code <200> but was <404>.\r\n```\r\n```\r\n2022-04-22T02:58:33.7610222Z 2022-04-22 02:58:32,085 ERROR [io.qua.test] (Test runner thread) ==================== TEST REPORT #2 ====================\r\n2022-04-22T02:58:33.7610914Z 2022-04-22 02:58:32,086 ERROR [io.qua.test] (Test runner thread) Test DuplicateSimpleET#testHelloEndpoint() failed \r\n2022-04-22T02:58:33.7611480Z : java.lang.RuntimeException: java.lang.RuntimeException: Failed to start quarkus\r\n2022-04-22T02:58:33.7612184Z \tat io.quarkus.test.junit.QuarkusTestExtension.throwBootFailureException(QuarkusTestExtension.java:632)\r\n```\r\n```\r\n2022-04-22T02:58:51.0344609Z 2022-04-22 02:58:46,825 ERROR [io.qua.test] (Test runner thread) Test UnitET#unitStyleTest() failed \r\n2022-04-22T02:58:51.0345132Z : org.opentest4j.AssertionFailedError: expected: <Hi> but was: <hello>\r\n2022-04-22T02:58:51.0345674Z \tat org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:55)\r\n```\r\n```\r\n2022-04-22T02:58:51.0408787Z 2022-04-22 02:58:46,825 ERROR [io.qua.test] (Test runner thread) Test UnitET#unitStyleTest2() failed \r\n2022-04-22T02:58:51.0409317Z : org.opentest4j.AssertionFailedError: expected: <UNIT> but was: <unit>\r\n```\r\n```\r\n2022-04-22T02:58:35.7188807Z 2022-04-22 02:58:35,588 INFO  [io.quarkus] (Test runner thread) quarkus-vertx-http-deployment(test application) stopped in 0.010s\r\n2022-04-22T02:58:35.7189738Z 2022-04-22 02:58:35,591 ERROR [io.qua.test] (Test runner thread) ==================== TEST REPORT #4 ====================\r\n2022-04-22T02:58:35.7190808Z 2022-04-22 02:58:35,592 ERROR [io.qua.test] (Test runner thread) Test SimpleET#testHelloEndpoint() failed \r\n2022-04-22T02:58:35.7191458Z : java.lang.AssertionError: 1 expectation failed.\r\n2022-04-22T02:58:35.7192255Z Expected status code <200> but was <404>.\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n```\r\ncd /Users/holly/Code/quarkus/main/quarkus/extensions/vertx-http/deployment\r\nmvn -Dquickly -DskipTests=false\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25105/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25105/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

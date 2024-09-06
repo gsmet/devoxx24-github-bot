@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24156",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24156/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24156/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24156/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24156",
+  "id": 1162006760,
+  "node_id": "I_kwDOCFbutM5FQtDo",
+  "number": 24156,
+  "title": "Mutiny worker pool fails when used to resolve OIDC tenant config",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-03-07T22:43:16Z",
+  "updated_at": "2022-03-09T06:36:50Z",
+  "closed_at": "2022-03-09T06:36:49Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nTenantConfigResolver#resolve throws IllegalStateException if the returned Uni is run on the default worker thread from Mutiny.\r\ne.g. Uni.createFrom().item(() -> getTenantConfig()).runSubscriptionOn(Infrastructure.getDefaultWorkerPool())\r\n\r\nChanging the line above with the executor service from Arc solves the issue (Arc.container().getExecutorService()).\r\n\n\n### Expected behavior\n\nInfrastructure.getDefaultWorkerPool() should behave correctly if used in the TenantConfigResolver#resolve\n\n### Actual behavior\n\nThe following exception is thrown:\r\n\r\n```\r\n2022-03-08 01:27:11,272 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-1) HTTP Request to /hello failed, error id: e502e653-f3c1-4ba3-8370-8a522104e306-1: java.lang.IllegalStateException: Can't set the context safety flag: the current context is not a duplicated context\r\n\tat io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.setContextSafe(VertxContextSafetyToggle.java:107)\r\n\tat io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.setCurrentContextSafe(VertxContextSafetyToggle.java:94)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.<init>(QuarkusResteasyReactiveRequestContext.java:33)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.ResteasyReactiveRecorder$4.createContext(ResteasyReactiveRecorder.java:111)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:46)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:17)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:7)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1212)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:163)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:67)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:55)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1212)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:126)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n\tat io.vertx.ext.web.handler.impl.StaticHandlerImpl.lambda$sendStatic$1(StaticHandlerImpl.java:274)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\n\n### How to Reproduce?\n\n1. Create TenantConfigResolver\r\n2. Within resolve method, return\r\nUni.createFrom().item(() -> getTenantConfig()).runSubscriptionOn(Infrastructure.getDefaultWorkerPool())\r\n3. Use Resteasy Reactive and expose an authenticated API\r\n4. Run quarkus and Invoke the API\r\n5. Observe the exception in the log upon sending a request\n\n### Output of `uname -a` or `ver`\n\nDarwin Mazens-MacBook-Pro.local 21.3.0 Darwin Kernel Version 21.3.0: Wed Jan  5 21:37:58 PST 2022; root:xnu-8019.80.24~20/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.2\" 2022-01-18 OpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8) OpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24156/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24156/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

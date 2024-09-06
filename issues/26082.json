@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26082",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26082/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26082/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26082/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26082",
+  "id": 1269228823,
+  "node_id": "I_kwDOCFbutM5LpuUX",
+  "number": 26082,
+  "title": "`io.grpc.netty.UdsNettyChannelProvider` needs to be registered for reflection in Native mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-06-13T10:26:02Z",
+  "updated_at": "2022-06-13T10:30:14Z",
+  "closed_at": "2022-06-13T10:30:14Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nRelated to: \r\nhttps://github.com/quarkusio/quarkus/pull/26047/files#diff-ab718592919c4c47502d7fa6345c367ee6f6fcf4bab52c4b3b5b01fed26b0498R75\r\n\r\nQuarkus Upstream: 999-snapshot\r\n\r\nSome scenarios start failing because of the following error:\r\n\r\n```\r\n01:15:49,801 INFO  [vertx] java.lang.NoSuchMethodException: io.grpc.netty.UdsNettyChannelProvider.<init>()\r\n01:15:49,801 INFO  [vertx] \tat java.lang.Class.getConstructor0(DynamicHub.java:3349)\r\n01:15:49,802 INFO  [vertx] \tat java.lang.Class.getConstructor(DynamicHub.java:2151)\r\n01:15:49,803 INFO  [vertx] \tat io.grpc.ServiceProviders.createForHardCoded(ServiceProviders.java:136)\r\n01:15:49,803 INFO  [vertx] \tat io.grpc.ServiceProviders.getCandidatesViaHardCoded(ServiceProviders.java:125)\r\n01:15:49,804 INFO  [vertx] \tat io.grpc.InternalServiceProviders.getCandidatesViaHardCoded(InternalServiceProviders.java:63)\r\n01:15:49,804 INFO  [vertx] \tat io.grpc.ServiceProviders.loadAll(ServiceProviders.java:28)\r\n01:15:49,805 INFO  [vertx] \tat io.grpc.ManagedChannelRegistry.getDefaultRegistry(ManagedChannelRegistry.java:101)\r\n01:15:49,806 INFO  [vertx] \tat io.grpc.ManagedChannelProvider.provider(ManagedChannelProvider.java:43)\r\n01:15:49,806 INFO  [vertx] \tat io.grpc.ManagedChannelBuilder.forTarget(ManagedChannelBuilder.java:76)\r\n01:15:49,807 INFO  [vertx] \tat io.opentelemetry.exporter.internal.grpc.DefaultGrpcExporterBuilder.build(DefaultGrpcExporterBuilder.java:134)\r\n01:15:49,807 INFO  [vertx] \tat io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporterBuilder.build(JaegerGrpcSpanExporterBuilder.java:111)\r\n01:15:49,808 INFO  [vertx] \tat io.quarkus.opentelemetry.exporter.jaeger.runtime.JaegerRecorder.installBatchSpanProcessorForJaeger(JaegerRecorder.java:29)\r\n01:15:49,808 INFO  [vertx] \tat io.quarkus.deployment.steps.JaegerExporterProcessor$installBatchSpanProcessorForJaeger1237208624.deploy_0(Unknown Source)\r\n01:15:49,809 INFO  [vertx] \tat io.quarkus.deployment.steps.JaegerExporterProcessor$installBatchSpanProcessorForJaeger1237208624.deploy(Unknown Source)\r\n01:15:49,810 INFO  [vertx] \tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n01:15:49,810 INFO  [vertx] \tat io.quarkus.runtime.Application.start(Application.java:101)\r\n01:15:49,811 INFO  [vertx] \tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:103)\r\n01:15:49,812 INFO  [vertx] \tat io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\n01:15:49,812 INFO  [vertx] \tat io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n01:15:49,813 INFO  [vertx] \tat io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n01:15:49,813 INFO  [vertx] \tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n```\r\n\r\nThe workaround was to add this missing class to the list of classes to be registered for reflection\r\nreflection-config.json\r\n\r\n```\r\n[\r\n  {\r\n    \"name\": \"io.grpc.netty.UdsNettyChannelProvider\",\r\n    \"allDeclaredConstructors\" : true,\r\n    \"allPublicConstructors\" : true,\r\n    \"allDeclaredMethods\" : true,\r\n    \"allPublicMethods\" : true,\r\n    \"allDeclaredFields\" : true,\r\n    \"allPublicFields\" : true\r\n  }\r\n]\r\n```\r\n\r\napplication.properties:\r\n```\r\nquarkus.native.additional-build-args=--allow-incomplete-classpath, -H:ReflectionConfigurationFiles=reflection-config.json\r\n\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\nI would expect that netty internal class `UdsNettyChannelProvider` would be added by default to the registered for reflection class without any extra configuration (because is not an end user/business class, is some internal stuff that should not be exposed) \r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26082/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26082/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

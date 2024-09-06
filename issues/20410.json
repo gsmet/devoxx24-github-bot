@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20410",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20410/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20410/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20410/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20410",
+  "id": 1007817885,
+  "node_id": "I_kwDOCFbutM48EhSd",
+  "number": 20410,
+  "title": "Arc: select(rawType) does not match beans implementing parameterized types",
+  "labels": [
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-09-27T07:52:34Z",
+  "updated_at": "2021-09-29T07:52:41Z",
+  "closed_at": "2021-09-29T06:58:07Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAs seen in #20347,  `Arc.container().beanManager().createInstance().select(ValueExtractor.class)` does not match a bean implementing `ValueExtractor<List<?>>`, for example.\r\n\r\nI managed to work around that in #20382 , but I believe this impacts users as well as our extensions, and should probably get fixed.\n\n### Expected behavior\n\n`Arc.container().beanManager().createInstance().select(ValueExtractor.class)` should match a bean implementing `ValueExtractor<List<?>>`.\n\n### Actual behavior\n\n`Arc.container().beanManager().createInstance().select(ValueExtractor.class)` does not match a bean implementing `ValueExtractor<List<?>>`.\n\n### How to Reproduce?\n\nSeems trivial to reproduce, but if you need a quick way: revert 01c1c7f and see how `io.quarkus.hibernate.validator.test.valueextractor;.SingletonCustomValueExtractorTest` starts failing because `io.quarkus.hibernate.validator.runtime.HibernateValidatorRecorder#initializeValidatorFactory` is unable to retrieve beans of type `ValueExtractor` (around line 135).\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nThis seems caused by an incorrect implementation in `BeanTypeAssignabilityRules`.\r\n\r\nAccording to the javadoc on `io.quarkus.arc.impl.BeanTypeAssignabilityRules#matches(java.lang.Class<?>, java.lang.reflect.ParameterizedType)`:\r\n\r\n```\r\n     * A parameterized bean type is considered assignable to a raw required type if the raw types are identical and all type\r\n     * parameters of the bean type are\r\n     * either unbounded type variables or java.lang.Object.\r\n```\r\n\r\nSo according to this definition, `ValueExtractor<T>` is assignable to `ValueExtractor`, but `ValueExtractor<List<?>>` is not.\r\n\r\nPersonally, I think this method should return true as soon as the raw types are equal.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20410/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20410/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

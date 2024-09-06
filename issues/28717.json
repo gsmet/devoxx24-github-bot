@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28717",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28717/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28717/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28717/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28717",
+  "id": 1416515453,
+  "node_id": "I_kwDOCFbutM5Ubk99",
+  "number": 28717,
+  "title": "Jackson - Error with @JsonCreator on record",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-10-20T12:14:09Z",
+  "updated_at": "2022-10-20T13:31:09Z",
+  "closed_at": "2022-10-20T13:29:14Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n```java\r\n@RegisterForReflection\r\npublic record MyRecord(String value) {\r\n\r\n    @Override\r\n    @JsonValue\r\n    public String toString() {\r\n        return value;\r\n    }\r\n\r\n    @JsonCreator\r\n    public static MyRecord of(String value) {\r\n        return new MyRecord(value);\r\n    }\r\n\r\n}\r\n\r\n@QuarkusTest\r\npublic class MyRecordQuarkusTest {\r\n\r\n    @Inject\r\n    ObjectMapper objectMapper;\r\n\r\n    @Test\r\n    void deserialization() throws JsonProcessingException {\r\n        System.out.println(Arrays.asList(objectMapper.readerForArrayOf(MyRecord.class).readValue(\"[\\\"bla\\\"]\")));\r\n    }\r\n\r\n}\r\n```\r\n\r\nDeserialization test fails with:\r\n\r\n```java\r\ncom.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot construct instance of `org.acme.MyRecord` (although at least one Creator exists): no String-argument constructor/factory method to deserialize from String value ('bla')\r\n at [Source: (String)\"[\"bla\"]\"; line: 1, column: 2] (through reference chain: java.lang.Object[][0])\r\n```\r\n\r\n### Expected behavior\r\n\r\nRecord is deserialized properly, like the following cases which work:\r\n\r\nNon Quarkus test\r\n\r\n```java\r\npublic class MyRecordTest {\r\n\r\n    @Test\r\n    void deserialization() throws JsonProcessingException {\r\n        System.out.println(Arrays.asList(new ObjectMapper().readerForArrayOf(MyRecord.class).readValue(\"[\\\"bla\\\"]\")));\r\n    }\r\n\r\n}\r\n```\r\n\r\nUsing class instead of record:\r\n\r\n```java\r\n@RegisterForReflection\r\npublic class MyClass {\r\n\r\n    private final String value;\r\n\r\n    public MyClass(String value) {\r\n        this.value = value;\r\n    }\r\n\r\n    @Override\r\n    @JsonValue\r\n    public String toString() {\r\n        return value;\r\n    }\r\n\r\n    @JsonCreator\r\n    public static MyClass of(String value) {\r\n        return new MyClass(value);\r\n    }\r\n\r\n}\r\n\r\n@QuarkusTest\r\npublic class MyClassQuarkusTest {\r\n\r\n    @Inject\r\n    ObjectMapper objectMapper;\r\n\r\n    @Test\r\n    void deserialization() throws JsonProcessingException {\r\n        System.out.println(Arrays.asList(objectMapper.readerForArrayOf(MyClass.class).readValue(\"[\\\"bla\\\"]\")));\r\n    }\r\n\r\n}\r\n```\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: [code-with-quarkus.zip](https://github.com/quarkusio/quarkus/files/9829800/code-with-quarkus.zip)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin N4MFM06QYD 21.6.0 Darwin Kernel Version 21.6.0: Mon Aug 22 20:19:52 PDT 2022; root:xnu-8020.140.49~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.4\" 2022-07-19 OpenJDK Runtime Environment GraalVM CE 22.2.0 (build 17.0.4+8-jvmci-22.2-b06) OpenJDK 64-Bit Server VM GraalVM CE 22.2.0 (build 17.0.4+8-jvmci-22.2-b06, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28717/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28717/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

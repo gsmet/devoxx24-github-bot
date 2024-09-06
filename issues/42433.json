@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42433",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42433/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42433/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42433/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42433",
+  "id": 2456950425,
+  "node_id": "I_kwDOCFbutM6SchaZ",
+  "number": 42433,
+  "title": "How to force mvn -Dnative to select a later version of Paketo Buildpack for JDK 21 builds",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-08-09T02:00:21Z",
+  "updated_at": "2024-08-09T07:45:14Z",
+  "closed_at": "2024-08-09T07:45:14Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am trying to build using `./mvnw clean install -Dnative \"-Dquarkus.container-image.build=true\" \"-Dquarkus.native.container-build=true\"\r\n \"-Dquarkus.buildpack.builder-env.BP_JVM_VERSION=21\"` which triggers the build against the following libraries:\r\n\r\n```\r\n===> DETECTING\r\n10 of 26 buildpacks participating\r\npaketo-buildpacks/ca-certificates   3.6.3\r\npaketo-buildpacks/bellsoft-liberica 10.2.6\r\npaketo-buildpacks/syft              1.32.1\r\npaketo-buildpacks/maven             6.15.5\r\npaketo-buildpacks/executable-jar    6.7.4\r\npaketo-buildpacks/apache-tomcat     7.13.7\r\npaketo-buildpacks/apache-tomee      1.7.4\r\npaketo-buildpacks/liberty           3.8.2\r\npaketo-buildpacks/dist-zip          5.6.4\r\npaketo-buildpacks/spring-boot       5.26.1\r\n```\r\nIt crashes as the version of Paketo Buildpack that it uses doesn't support JDK 21:\r\n\r\n```\r\nPaketo Buildpack for BellSoft Liberica 10.2.6\r\n  unable to find dependency\r\n  no valid dependencies for jdk, 21, and io.buildpacks.stacks.bionic in [(jdk, 8.0.372, [io.buildpacks.stacks.bionic io.paketo.stacks.tiny *]) (jre, 8.0.372, [io.buildpacks.stacks.bionic io.paketo.stacks.tiny *]) (jdk, 11.0.19, [io.buildpacks.stacks.bionic io.paketo.stacks.tiny *]) (jre, 11.0.19, [io.buildpacks.stacks.bionic io.paketo.stacks.tiny *]) (native-image-svm, 11.0.19, [io.buildpacks.stacks.bionic io.paketo.stacks.tiny *]) (jdk, 17.0.7, [io.buildpacks.stacks.bionic io.paketo.stacks.tiny *]) (jre, 17.0.7, [io.buildpacks.stacks.bionic io.paketo.stacks.tiny *]) (native-image-svm, 17.0.7, [io.buildpacks.stacks.bionic io.paketo.stacks.tiny *]) (jdk, 20.0.1, [io.buildpacks.stacks.bionic io.paketo.stacks.tiny *]) (jre, 20.0.1, [io.buildpacks.stacks.bionic io.paketo.stacks.tiny *])]\r\n```\r\n\r\nLooking at the current version of this package, 10.8.2, does indeed support JDK 21: https://github.com/paketo-buildpacks/bellsoft-liberica/releases/tag/v10.8.2\r\n\r\nHowever, I can't seem to figure out how to get maven to select a newer version of this library. Trying `graalvm` or the latest version of Mandrel both yields the same result:\r\n- `./mvnw clean install -Dnative \"-Dquarkus.container-image.build=true\" \"-Dquarkus.native.container-build=true\"\r\n \"-Dquarkus.buildpack.builder-env.BP_JVM_VERSION=21\" \"-Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-22\"` \r\n- `./mvnw clean install -Dnative \"-Dquarkus.container-image.build=true\" \"-Dquarkus.native.container-build=true\" \"-Dquarkus.buildpack.builder-env.BP_JVM_VERSION=21\" \"-Dquarkus.native.builder-image=graalvm\"`\r\n\r\nNot having the `JVM_VERSION` flag leads to the same Buildpack v10.2.6 to be used and it defaults to JDK 17, which of course crashes since I am targeting JDK 21. \r\n\r\nAll the above was tested in Windows Powershell. Switching over to the Visual Code Native Image Command Prompt (ie using my local `native-image`) gives me similar results:\r\n- `mvnw clean install -Dnative -Dquarkus.native.container-build=true` works but did not seem to have used Buildpack\r\n- `mvnw clean install -Dnative -Dquarkus.container-image.build=true` does not work, noting that `Build step io.quarkus.container.image.buildpack.deployment.BuildpackProcessor#buildFromNative threw an exception: java.lang.RuntimeException: The native binary produced by the build is not a Linux binary and therefore cannot be used in a Linux container image. Consider adding \"quarkus.native.container-build=true\" to your configuration`\r\n- `mvnw clean install -Dnative -Dquarkus.native.container-build=true -Dquarkus.container-image.build=true` does invoke Buildpack and fails since it defaults to JDK 17\r\n-  `mvnw clean install -Dnative -Dquarkus.native.container-build=true -Dquarkus.container-image.build=true -Dquarkus.buildpack.builder-env.BP_JVM_VERSION=21` invokes Buildpack v10.2.6 and thus doesn't support JDK 21\r\n\r\n### Expected behavior\r\n\r\nNative container builds to support JDK 21\r\n\r\n### Actual behavior\r\n\r\nNative container builds select older version of Paketo Buildpack that does not support JDK 21\r\n\r\n### How to Reproduce?\r\n\r\n`./mvnw clean install -Dnative \"-Dquarkus.container-image.build=true\" \"-Dquarkus.native.container-build=true\"\r\n \"-Dquarkus.buildpack.builder-env.BP_JVM_VERSION=21\"`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWin 11\r\n\r\n### Output of `java -version`\r\n\r\njava version \"21.0.3\" 2024-04-16 LTS\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\nJava(TM) SE Runtime Environment Oracle GraalVM 21.0.3+7.1 (build 21.0.3+7-LTS-jvmci-23.1-b37)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.8 (36645f6c9b5079805ea5009217e36f2cffd34256)\r\n\r\n### Additional information\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42433/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42433/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

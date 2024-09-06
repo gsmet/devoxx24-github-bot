@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33347",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33347/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33347/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33347/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33347",
+  "id": 1708761864,
+  "node_id": "I_kwDOCFbutM5l2aMI",
+  "number": 33347,
+  "title": "ServerExceptionMapper AmbiguousResolutionException during testing only",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-05-13T23:04:20Z",
+  "updated_at": "2023-06-02T09:38:25Z",
+  "closed_at": "2023-06-02T09:38:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello,\r\n\r\nI am facing the following exception while running the tests, and I am not facing something while running through Quarkus dev command.\r\n\r\nIf I put the ServerExceptionMapper inside the end point, then no issue, but if I placed it outside it, I am facing the error.\r\n\r\n**Gradle File**\r\n\r\n`plugins {\r\n    id 'org.jetbrains.kotlin.jvm' version \"1.8.20\"\r\n    id \"org.jetbrains.kotlin.plugin.allopen\" version \"1.8.20\"\r\n    id 'io.quarkus'\r\n}\r\n\r\nrepositories {\r\n    mavenCentral()\r\n    mavenLocal()\r\n}\r\n\r\ndependencies {\r\n    implementation enforcedPlatform(\"${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}\")\r\n    implementation 'io.quarkus:quarkus-smallrye-jwt-build'\r\n    implementation 'io.quarkus:quarkus-smallrye-jwt'\r\n    implementation 'io.quarkus:quarkus-resteasy-reactive'\r\n    implementation 'io.quarkus:quarkus-resteasy-reactive-jackson'\r\n    implementation 'io.quarkus:quarkus-kotlin'\r\n    implementation 'io.quarkus:quarkus-smallrye-graphql'\r\n    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'\r\n    implementation 'io.quarkus:quarkus-arc'\r\n    implementation \"io.quarkus:quarkus-hibernate-reactive-panache\"\r\n    implementation \"io.quarkus:quarkus-reactive-mysql-client\"\r\n    implementation 'io.quarkus:quarkus-elytron-security-common'\r\n    implementation \"io.quarkus:quarkus-reactive-pg-client\"\r\n    compileOnly 'org.projectlombok:lombok:1.18.26'\r\n    annotationProcessor 'org.projectlombok:lombok:1.18.26'\r\n\r\n    testCompileOnly 'org.projectlombok:lombok:1.18.26'\r\n    testAnnotationProcessor 'org.projectlombok:lombok:1.18.26'\r\n    testImplementation 'io.quarkus:quarkus-junit5'\r\n    testImplementation 'io.rest-assured:rest-assured'\r\n    testImplementation 'io.quarkus:quarkus-test-vertx'\r\n}\r\n\r\ngroup 'com.demo'\r\nversion '1.0.0-SNAPSHOT'\r\n\r\njava {\r\n    sourceCompatibility = JavaVersion.VERSION_17\r\n    targetCompatibility = JavaVersion.VERSION_17\r\n}\r\n\r\ntest {\r\n    systemProperty \"java.util.logging.manager\", \"org.jboss.logmanager.LogManager\"\r\n}\r\nallOpen {\r\n    annotation(\"jakarta.ws.rs.Path\")\r\n    annotation(\"jakarta.enterprise.context.ApplicationScoped\")\r\n    annotation(\"io.quarkus.test.junit.QuarkusTest\")\r\n}\r\n\r\ncompileKotlin {\r\n    kotlinOptions.jvmTarget = JavaVersion.VERSION_17\r\n    kotlinOptions.javaParameters = true\r\n}\r\n\r\ncompileTestKotlin {\r\n    kotlinOptions.jvmTarget = JavaVersion.VERSION_17\r\n}\r\n\r\ncompileJava {\r\n    options.encoding = 'UTF-8'\r\n    options.compilerArgs << '-parameters'\r\n}\r\n\r\ncompileTestJava {\r\n    options.encoding = 'UTF-8'\r\n}\r\n\r\nsourceSets {\r\n    main.java.srcDirs += 'src/main/kotlin'\r\n    main.java.srcDirs += 'src/main/java'    \r\n}\r\n`\r\n\r\n**Test File**\r\n\r\n`package com.demo;\r\n\r\nimport static io.restassured.RestAssured.given;\r\n\r\nimport io.quarkus.test.junit.QuarkusTest;\r\nimport io.quarkus.test.vertx.RunOnVertxContext;\r\nimport jakarta.ws.rs.core.MediaType;\r\nimport org.jose4j.json.internal.json_simple.JSONObject;\r\nimport org.junit.jupiter.api.AfterEach;\r\nimport org.junit.jupiter.api.BeforeEach;\r\nimport org.junit.jupiter.api.Test;\r\n\r\nimport java.util.HashMap;\r\nimport java.util.Map;\r\nimport static org.junit.jupiter.api.Assertions.*;\r\n\r\n@QuarkusTest\r\nclass AuthenticateRoutesTest {\r\n\r\n    @BeforeEach\r\n    void setUp() {\r\n    }\r\n\r\n    @AfterEach\r\n    void tearDown() {\r\n    }\r\n\r\n    @Test\r\n    @RunOnVertxContext\r\n    void testAuthenticate() {\r\n        Map<String, String> paramsMap = new HashMap<>();\r\n        paramsMap.put(\"username\", \"admin\");\r\n        paramsMap.put(\"password\", \"password\");\r\n        JSONObject joParams = new JSONObject(paramsMap);\r\n\r\n        JSONObject joResponse = given()\r\n                .when()\r\n                .body(joParams)\r\n                .contentType(MediaType.APPLICATION_JSON)\r\n                .post(\"/security/authenticate\")\r\n                .then()\r\n                .statusCode(200)\r\n                .contentType(MediaType.APPLICATION_JSON)\r\n                .extract().response().as(JSONObject.class);\r\n\r\n        assertNotNull(joResponse.get(\"token\"));\r\n\r\n\r\n    }\r\n}`\r\n\r\n**Exception Mapper**\r\n\r\n`package com.demo;\r\n\r\nimport jakarta.ws.rs.core.Response;\r\nimport org.jboss.resteasy.reactive.RestResponse;\r\nimport org.jboss.resteasy.reactive.server.ServerExceptionMapper;\r\n\r\npublic class SecurityExceptionsMapper {\r\n    @ServerExceptionMapper(value = InvalidUsernameOrPasswordException.class)\r\n    public RestResponse<String> mapInvalidUsernameOrPasswordException(InvalidUsernameOrPasswordException ex) {\r\n        return RestResponse.status(Response.Status.UNAUTHORIZED, \"InvalidUsernameOrPasswordException\");\r\n    }\r\n}\r\n`\r\n\r\n**Build Exceptions during testing**\r\n\r\n`\r\n> Task :processResources UP-TO-DATE\r\n> Task :quarkusGenerateCode UP-TO-DATE\r\n> Task :compileQuarkus-test-generated-sourcesKotlin NO-SOURCE\r\n> Task :compileQuarkusTestGeneratedSourcesJava NO-SOURCE\r\n> Task :processTestResources NO-SOURCE\r\n> Task :compileKotlin\r\n> Task :compileJava\r\n> Task :classes\r\n> Task :quarkusGenerateCodeTests\r\n> Task :compileTestKotlin\r\n> Task :compileTestJava UP-TO-DATE\r\n> Task :testClasses UP-TO-DATE\r\n> Task :test\r\nDetected a split package usage which is considered a bad practice and should be avoided. Following packages were detected in multiple archives: %s\r\n> Task :test FAILED\r\n2023-05-14 01:49:43,447 WARN  [io.qua.arc.dep.SplitPackageProcessor] (build-19) Detected a split package usage which is considered a bad practice and should be avoided. Following packages were detected in multiple archives: \r\n- \"com.demo\" found in [com.demo::jar, e82ef38503f957aa096ebfbac35bf0bed110c474:main::jar]\r\n\r\njava.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: jakarta.enterprise.inject.spi.DeploymentException: jakarta.enterprise.inject.AmbiguousResolutionException: Ambiguous dependencies for type com.demo.SecurityExceptionsMapper and qualifiers [@Default]\r\n\t- java member: com.demo.SecurityExceptionsMapper$GeneratedExceptionHandlerFor$InvalidUsernameOrPasswordException$OfMethod$mapInvalidUsernameOrPasswordException():arg0\r\n\t- declared on CLASS bean [types=[org.jboss.resteasy.reactive.server.spi.ResteasyReactiveExceptionMapper, com.demo.SecurityExceptionsMapper$GeneratedExceptionHandlerFor$InvalidUsernameOrPasswordException$OfMethod$mapInvalidUsernameOrPasswordException, java.lang.Object, jakarta.ws.rs.ext.ExceptionMapper], qualifiers=[@Default, @Any], target=com.demo.SecurityExceptionsMapper$GeneratedExceptionHandlerFor$InvalidUsernameOrPasswordException$OfMethod$mapInvalidUsernameOrPasswordException]\r\n\t- available beans:\r\n\t\t- CLASS bean [types=[com.demo.SecurityExceptionsMapper, java.lang.Object], qualifiers=[@Default, @Any], target=com.demo.SecurityExceptionsMapper]\r\n\t\t- CLASS bean [types=[com.demo.SecurityExceptionsMapper, java.lang.Object], qualifiers=[@Default, @Any], target=com.demo.SecurityExceptionsMapper]\r\n\tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1395)\r\n\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:305)\r\n\tat io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:156)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:526)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)`\r\n\n\n### Expected behavior\n\nTo work during testing the same way like during quarkus dev command\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33347/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33347/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

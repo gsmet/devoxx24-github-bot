@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23331",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23331/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23331/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23331/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23331",
+  "id": 1120342211,
+  "node_id": "I_kwDOCFbutM5CxxDD",
+  "number": 23331,
+  "title": "Reactive Messaging (RabbitMQ) - too many connection",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-02-01T07:57:59Z",
+  "updated_at": "2022-10-18T14:21:49Z",
+  "closed_at": "2022-10-18T14:21:42Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nsmallrye-reactive-messaging-rabbitmq create as many connections to rabbit server as @Channel and @Incoming are used in application.\n\n### Expected behavior\n\nExpected to use some pool or less connections 1-2 for application.\n\n### Actual behavior\n\nsmallrye-reactive-messaging-rabbitmq create as many connections to rabbit server as @Channel and @Incoming are used in application.\n\n### How to Reproduce?\n\napplication.properties\r\n\r\n\r\nrabbitmq-host=server_hostname\r\nrabbitmq-port=5672\r\nrabbitmq-username=server_username\r\nrabbitmq-password=server_password\r\n\r\n# Configuring the incoming channel (reading from AMQP)\r\nmp.messaging.incoming.test-in.connector=smallrye-rabbitmq\r\nmp.messaging.incoming.test-in.queue.name=test\r\nmp.messaging.incoming.test-in.exchange.name=test\r\n\r\n# Configuring the outgoing channel (writing to AMQP)\r\nmp.messaging.outgoing.test-out.connector=smallrye-rabbitmq\r\nmp.messaging.outgoing.test-out.exchange.name=test\r\n\r\n# Configuring the incoming channel (reading from AMQP)\r\nmp.messaging.incoming.test1-in.connector=smallrye-rabbitmq\r\nmp.messaging.incoming.test1-in.queue.name=test1\r\nmp.messaging.incoming.test1-in.exchange.name=test1\r\n\r\n# Configuring the outgoing channel (writing to AMQP)\r\nmp.messaging.outgoing.test1-out.connector=smallrye-rabbitmq\r\nmp.messaging.outgoing.test1-out.exchange.name=test1\r\n\r\n\r\n\r\n\r\n@Path(\"/hello\")\r\nclass GreetingResource {\r\n\r\n    @Channel(\"test-out\")\r\n    var emitter: Emitter<String>? = null\r\n\r\n    @Channel(\"test1-out\")\r\n    var emitter1: Emitter<String>? = null\r\n\r\n    @GET\r\n    @Path(\"/rabbit\")\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    fun hellorabbit(): String {\r\n        emitter?.send(\"sending test message\")\r\n        return \"DONE\"\r\n    }\r\n\r\n    @GET\r\n    @Path(\"/rabbit1\")\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    fun hellorabbit1(): String {\r\n        emitter1?.send(\"sending test message1\")\r\n        return \"DONE\"\r\n    }\r\n}\r\n\r\n\r\n\r\n@ApplicationScoped\r\nclass QuoteProcessor {\r\n\r\n    @Incoming(\"test-in\")\r\n    fun process(mess: String) {\r\n        println(\"Message received: $mess\")\r\n    }\r\n\r\n    @Incoming(\"test1-in\")\r\n    fun process1(mess: String) {\r\n        println(\"Message received1: $mess\")\r\n    }\r\n}\n\n### Output of `uname -a` or `ver`\n\nLinux 4.19.0-17-amd64 #1 SMP Debian 4.19.194-3 (2021-07-18) x86_64 GNU/Linux\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\nopenjdk version \"11.0.14\" 2022-01-18 OpenJDK Runtime Environment (build 11.0.14+9-post-Debian-1deb10u1) OpenJDK 64-Bit Server VM (build 11.0.14+9-post-Debian-1deb10u1, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n2.7.0.CR1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.2.5 (12a6b3acb947671f09b81f49094c53f426d8cea1; 2014-12-14T18:29:23+01:00)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23331/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23331/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

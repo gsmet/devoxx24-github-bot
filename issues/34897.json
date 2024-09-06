@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34897",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34897/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34897/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34897/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34897",
+  "id": 1814635011,
+  "node_id": "I_kwDOCFbutM5sKSID",
+  "number": 34897,
+  "title": "Non-JWT QuarkusPrincipal injected into JsonWebToken field",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2023-07-20T19:06:27Z",
+  "updated_at": "2023-11-28T18:24:06Z",
+  "closed_at": "2023-11-28T18:24:06Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have created a custom HTTP Authorization mechanism (from `HttpAuthenticationMechanism`, `UsernamePasswordAuthenticationRequest` and `IdentityProvider`), which is to be used in the same service that uses both Basic and JWT authorization (ie. for an administration endpoint that uses custom/non-Basic authorization).\r\n\r\nHowever, since Quarkus 3.0, an injected `JsonWebToken` field in a service will be assigned the `QuarkusPrincipal` provided by the custom authorization, resulting in the error: `java.lang.IllegalStateException: Current principal io.quarkus.security.runtime.QuarkusPrincipal is not a JSON web token`. The error also occurs when injecting a field with a `Claim` annotation.\n\n### Expected behavior\n\nThe injected `JsonWebToken` value and any `Claim` fields are null, since no `Authorization: Bearer` (JWT) header was provided.\n\n### Actual behavior\n\nThe following error occurs when the `JsonWebToken` field is accessed (or `Claim` is decoded):\r\n```\r\nERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-1) HTTP Request to /secured/permit-all failed, error id: 9dbdf911-bc9e-46ee-99f7-cae7c4a3f32e-1: java.lang.RuntimeException: Error injecting java.lang.String org.acme.security.jwt.TokenSecuredResource.birthdate\r\n        at org.acme.security.jwt.TokenSecuredResource_Bean.doCreate(Unknown Source)\r\n        at org.acme.security.jwt.TokenSecuredResource_Bean.create(Unknown Source)\r\n        at org.acme.security.jwt.TokenSecuredResource_Bean.create(Unknown Source)\r\n        at io.quarkus.arc.impl.RequestContext.getIfActive(RequestContext.java:74)\r\n        at io.quarkus.arc.impl.ClientProxies.getDelegate(ClientProxies.java:30)\r\n        at org.acme.security.jwt.TokenSecuredResource_ClientProxy.arc$delegate(Unknown Source)\r\n        at org.acme.security.jwt.TokenSecuredResource_ClientProxy.hello(Unknown Source)\r\n        at org.acme.security.jwt.TokenSecuredResource$quarkusrestinvoker$hello_67032e9948ffec8c1b8bdb973e787b16f99d28e7.invoke(Unknown Source)\r\n        at org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n        at io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:141)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:834)\r\nCaused by: java.lang.IllegalStateException: Current principal io.quarkus.security.runtime.QuarkusPrincipal@3c3134e is not a JSON web token\r\n        at io.quarkus.smallrye.jwt.runtime.auth.JwtPrincipalProducer.currentJWTPrincipalOrNull(JwtPrincipalProducer.java:36)\r\n        at io.quarkus.smallrye.jwt.runtime.auth.JwtPrincipalProducer_ProducerMethod_currentJWTPrincipalOrNull_cfb1303ffa51cd11e1f530c7fecb6216b77f5bb8_Bean.doCreate(Unknown Source)\r\n        at io.quarkus.smallrye.jwt.runtime.auth.JwtPrincipalProducer_ProducerMethod_currentJWTPrincipalOrNull_cfb1303ffa51cd11e1f530c7fecb6216b77f5bb8_Bean.create(Unknown Source)\r\n        at io.quarkus.smallrye.jwt.runtime.auth.JwtPrincipalProducer_ProducerMethod_currentJWTPrincipalOrNull_cfb1303ffa51cd11e1f530c7fecb6216b77f5bb8_Bean.create(Unknown Source)\r\n        at io.quarkus.arc.impl.RequestContext.getIfActive(RequestContext.java:74)\r\n        at io.quarkus.arc.impl.ClientProxies.getDelegate(ClientProxies.java:30)\r\n        at org.eclipse.microprofile.jwt.JwtPrincipalProducer_ProducerMethod_currentJWTPrincipalOrNull_cfb1303ffa51cd11e1f530c7fecb6216b77f5bb8_ClientProxy.arc$delegate(Unknown Source)\r\n        at org.eclipse.microprofile.jwt.JwtPrincipalProducer_ProducerMethod_currentJWTPrincipalOrNull_cfb1303ffa51cd11e1f530c7fecb6216b77f5bb8_ClientProxy.claim(Unknown Source)\r\n        at io.smallrye.jwt.auth.cdi.RawClaimTypeProducer.getClaimAsString(RawClaimTypeProducer.java:62)\r\n        at io.smallrye.jwt.auth.cdi.RawClaimTypeProducer_ProducerMethod_getClaimAsString_1413fbcd36c84912439659fac5da1bcac3671d96_Bean.doCreate(Unknown Source)\r\n        at io.smallrye.jwt.auth.cdi.RawClaimTypeProducer_ProducerMethod_getClaimAsString_1413fbcd36c84912439659fac5da1bcac3671d96_Bean.create(Unknown Source)\r\n        at io.smallrye.jwt.auth.cdi.RawClaimTypeProducer_ProducerMethod_getClaimAsString_1413fbcd36c84912439659fac5da1bcac3671d96_Bean.get(Unknown Source)\r\n        at io.smallrye.jwt.auth.cdi.RawClaimTypeProducer_ProducerMethod_getClaimAsString_1413fbcd36c84912439659fac5da1bcac3671d96_Bean.get(Unknown Source)\r\n        at io.quarkus.arc.impl.CurrentInjectionPointProvider.get(CurrentInjectionPointProvider.java:48)\r\n        ... 18 more\r\n```\n\n### How to Reproduce?\n\nReproducer: [IllegalStateException-not-a-JSON-web-token](https://github.com/martinoneutrino/quarkus-quickstarts/tree/IllegalStateException-not-a-JSON-web-token/security-jwt-quickstart)\r\n\r\nAdds three classes to `security-jwt-quickstart` project:\r\n`AdminAuthenticationMechanism`, `UsernamePasswordAuthenticationRequest`, `AdminRoleIdentityProvider`.\r\n\r\nRun `security-jwt-quickstart` project and send a request to any endpoint (ie. `localhost:8080/secured/permit-all`), and include header: `Authorization: Admin ANYDATA`\r\n\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [Version 10.0.19045.3208]\n\n### Output of `java -version`\n\nopenjdk version \"11.0.7\"\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34897/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34897/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21592",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21592/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21592/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21592/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21592",
+  "id": 1059444624,
+  "node_id": "I_kwDOCFbutM4_JdeQ",
+  "number": 21592,
+  "title": "Quarkus Cache always executes or deadlocks on Kotlin coroutines",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2021-11-21T17:58:57Z",
+  "updated_at": "2022-05-17T09:13:27Z",
+  "closed_at": "2022-05-17T09:13:20Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using `@CacheResult` on a Kotlin coroutine method the method is either always called (i.e. nothing is cached) or the method deadlocks.\r\n\r\n### No Caching\r\n\r\nThe following example method, the method is always called; no caching is done.\r\n```kotlin\r\nsuspend getData(id: String): List<Data> {...}\r\n```\r\n\r\nThis appears to be because the `kotlin.coroutines.Continuation` completion parameter is included in the cache key.\r\n\r\n### Deadlock\r\n\r\nYou can \"fix\" the inclusion of the completion parameter using the `@CacheKey` annotation. Unfortunately, this causes a deadlock.\r\n\r\nAdding the annotation to the original example, causes any call to the cached method to deadlock.\r\n```kotlin\r\nsuspend getData(@CacheKey id: String): List<Data> {...}\r\n```\r\n\r\nWhen calling the method the invocation happens twice, and the second time deadlocks waiting for the cached value to be fulfilled.\r\n\r\n### Expected behavior\r\n\r\nKotlin coroutine methods work the same way as synchronous or reactive methods.\r\n\r\nKotlin continuation parameters (`kotlin.coroutines.Continuation`) should always be excluded from the cache key with having to use the `@CacheKey` annotation.\r\n\r\n### Actual behavior\r\n\r\nEither no caching happen or the thread deadlocks when calling a coroutine with the `@CacheResult`.\r\n\r\n### How to Reproduce?\r\n\r\n1. Run the attached attached demo using `./mvnw quarkus:dev`. \r\n1. Calling `https://localhost:8080/hello/test1` with return a new timestamp when it should be cached indefinitely after the first invocation.\r\n1. Calling `https://localhost:8080/hello/test2` will deadlock the request (and apparently the CLI  along with it).\r\n\r\n[code-with-quarkus.zip](https://github.com/quarkusio/quarkus/files/7576772/code-with-quarkus.zip)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nmacOS 12\r\n\r\n### Output of `java -version`\r\n\r\nJava version \"17\" 2021-09-14 LTS Java(TM) SE Runtime Environment (build 17+35-LTS-2724) Java HotSpot(TM) 64-Bit Server VM (build 17+35-LTS-2724, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.4.2 & 2.5.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21592/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21592/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

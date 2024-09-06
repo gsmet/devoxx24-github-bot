@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26859",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26859/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26859/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26859/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26859",
+  "id": 1313133661,
+  "node_id": "I_kwDOCFbutM5ORNRd",
+  "number": 26859,
+  "title": "Quarkus compiler/extension use JDK-17 classes even when compiler-target/release is set to 11",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-07-21T11:48:54Z",
+  "updated_at": "2023-03-07T13:35:26Z",
+  "closed_at": "2022-10-05T08:11:30Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe are migrating our Quarkus services from JDK 11 to 17. In the first step we moved our build-pipeline to run with JDK-17, while still having set the compiler-target (bytecode level) to JDK-11 by setting `<release>11</release>` in the the **maven-compiler-plugin**.\r\n\r\nThe built image is still running with JDK-11 and now when starting the application Quarkus tries to load java.util.InstantSource which is a [new class since JDK-17](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/InstantSource.html). The Code is triggered from a Clock-Config but InstantSource is not used directly\r\n\r\n```\r\nException in thread \"main\" java.lang.reflect.InvocationTargetException\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)\r\n        at java.base/java.lang.reflect.Method.invoke(Unknown Source)\r\n        at io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:60)\r\n        at io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:31)\r\nCaused by: java.lang.ExceptionInInitializerError\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)\r\n        at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Source)\r\n        at java.base/java.lang.reflect.Constructor.newInstance(Unknown Source)\r\n        at java.base/java.lang.Class.newInstance(Unknown Source)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:66)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n        at ourpackage.Main.main(Main.java:10)\r\n        ... 6 more\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n        ... 15 more\r\nCaused by: java.lang.ClassNotFoundException: java.time.InstantSource\r\n        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(Unknown Source)\r\n        at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(Unknown Source)\r\n        at java.base/java.lang.ClassLoader.loadClass(Unknown Source)\r\n        at io.quarkus.bootstrap.runner.RunnerClassLoader.loadClass(RunnerClassLoader.java:66)\r\n        at io.quarkus.bootstrap.runner.RunnerClassLoader.loadClass(RunnerClassLoader.java:57)\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Unknown Source)\r\n        at ourpackage.ClockConfiguration_ProducerMethod_systemClock_a5266df8284edb30622299b8a888fe9c87d38a88_Bean.<init>(Unknown Source)\r\n        at io.quarkus.arc.setup.Default_ComponentsProvider.addBeans4(Unknown Source)\r\n        at io.quarkus.arc.setup.Default_ComponentsProvider.getComponents(Unknown Source)\r\n        at io.quarkus.arc.impl.ArcContainerImpl.<init>(ArcContainerImpl.java:118)\r\n        at io.quarkus.arc.Arc.initialize(Arc.java:24)\r\n        at io.quarkus.arc.runtime.ArcRecorder.getContainer(ArcRecorder.java:40)\r\n        at io.quarkus.deployment.steps.ArcProcessor$generateResources686947423.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.ArcProcessor$generateResources686947423.deploy(Unknown Source)\r\n```\r\n\r\nSince the maven-compiler is setup correct, I assume that the Quarkus-extension do not honor this setting when they do their magic.\n\n### Expected behavior\n\nCompiling against a different JDK-Version doesn not use wrong classes.\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nConfigure a Clock-Provider\r\n```\r\n@Dependent\r\npublic class ClockConfiguration {\r\n\r\n    @DefaultBean\r\n    @ApplicationScoped\r\n    public Clock systemClock() {\r\n        return Clock.systemDefaultZone();\r\n    }\r\n```\r\nCompile with JDK-17 and using release 11 in maven-compiler\r\n\r\nRun with JRE-11\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"11.0.13\" 2021-10-19 LTS\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.8.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26859/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26859/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37299",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37299/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37299/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37299/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37299",
+  "id": 2009563373,
+  "node_id": "I_kwDOCFbutM53x4Dt",
+  "number": 37299,
+  "title": "Resteasy Reactive with reactive hangs when using with azure blob store extension",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2023-11-24T11:24:25Z",
+  "updated_at": "2024-04-24T15:00:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen combining rest easy reactive (using `CompletionStage` or via reactive messaging) with azure blob store extension (which is actually tiny wrapper on top of azure java client) requests hang and never complete.\r\n\r\nThis seems to be related to mixing quarkus reactive stack with reactor (that is used within azure client library).\r\n\r\n````\r\n2023-11-24 12:14:49,463 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.red by Quarkus 3.5.3) started in 4.096s. Listening on: http://localhost:8080\r\n2023-11-24 12:14:49,463 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [azure-storage-blob, cdi, resteasy-reactive, resteasy-reactive-jackson, smallrye-context-propagation, smallrye-reactive-messaging, vertx]\r\n2023-11-24 12:14:57,269 WARN  [io.ver.cor.imp.BlockedThreadChecker] (vertx-blocked-thread-checker) Thread Thread[vert.x-eventloop-thread-0,5,main] has been blocked for 3257 ms, time limit is 2000 ms: io.vertx.core.VertxException: Thread blocked\r\n\tat java.base@17.0.2/jdk.internal.misc.Unsafe.park(Native Method)\r\n\tat java.base@17.0.2/java.util.concurrent.locks.LockSupport.park(LockSupport.java:211)\r\n\tat java.base@17.0.2/java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:715)\r\n\tat java.base@17.0.2/java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireSharedInterruptibly(AbstractQueuedSynchronizer.java:1047)\r\n\tat java.base@17.0.2/java.util.concurrent.CountDownLatch.await(CountDownLatch.java:230)\r\n\tat reactor.core.publisher.BlockingSingleSubscriber.blockingGet(BlockingSingleSubscriber.java:87)\r\n\tat reactor.core.publisher.Mono.block(Mono.java:1742)\r\n\tat com.azure.storage.common.implementation.StorageImplUtils.blockWithOptionalTimeout(StorageImplUtils.java:146)\r\n\tat com.azure.storage.blob.BlobContainerClient.createIfNotExistsWithResponse(BlobContainerClient.java:374)\r\n\tat com.azure.storage.blob.BlobServiceClient.createBlobContainerIfNotExistsWithResponse(BlobServiceClient.java:210)\r\n\tat com.azure.storage.blob.BlobServiceClient.createBlobContainerIfNotExists(BlobServiceClient.java:172)\r\n\tat TestResource.lambda$checkExistence$0(TestResource.java:34)\r\n\tat TestResource$$Lambda$1308/0x00000008012b1cd8.apply(Unknown Source)\r\n\tat java.base@17.0.2/java.util.concurrent.CompletableFuture.uniApplyNow(CompletableFuture.java:684)\r\n\tat java.base@17.0.2/java.util.concurrent.CompletableFuture.uniApplyStage(CompletableFuture.java:662)\r\n\tat java.base@17.0.2/java.util.concurrent.CompletableFuture.thenApply(CompletableFuture.java:2168)\r\n\tat java.base@17.0.2/java.util.concurrent.CompletableFuture$MinimalStage.thenApply(CompletableFuture.java:2902)\r\n\tat TestResource.checkExistence(TestResource.java:32)\r\n\tat TestResource$quarkusrestinvoker$checkExistence_97d8ae0b717d419d2c2049ee33b1b138b6c176e1.invoke(Unknown Source)\r\n\tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:141)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:48)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:23)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:10)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1286)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:177)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:144)\r\n\tat io.quarkus.vertx.http.runtime.options.HttpServerCommonHandlers$1.handle(HttpServerCommonHandlers.java:59)\r\n\tat io.quarkus.vertx.http.runtime.options.HttpServerCommonHandlers$1.handle(HttpServerCommonHandlers.java:37)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1286)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:177)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:144)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.ResteasyReactiveRecorder$13.handle(ResteasyReactiveRecorder.java:339)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.ResteasyReactiveRecorder$13.handle(ResteasyReactiveRecorder.java:332)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1286)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:177)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:144)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:192)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:181)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n\tat io.vertx.core.impl.future.FutureBase$$Lambda$1204/0x0000000801358238.run(Unknown Source)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base@17.0.2/java.lang.Thread.run(Thread.java:833)\r\n````\n\n### Expected behavior\n\nRequest is processed without any hanging\n\n### Actual behavior\n\nRequest is hung and never finishes\n\n### How to Reproduce?\n\nReproducer\r\n\r\nhttps://github.com/mswiderski/quarkus-azure-reactive-issue\r\n\r\n1. start the reproducer in dev mode\r\n2. send following command `curl http://localhost:8080/test/123`\r\n\r\ncurl is blocked and in quarkus logs you will see thread blocked exceptions that never ends, in addition the app cannot be stopped in normal way, only killed\n\n### Output of `uname -a` or `ver`\n\nMacBook-Pro.local 23.1.0 Darwin Kernel Version 23.1.0\n\n### Output of `java -version`\n\nJava version: 17.0.2, vendor: Oracle Corporation\n\n### Quarkus version or git rev\n\n3.5.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37299/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37299/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

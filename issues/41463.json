@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41463",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41463/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41463/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41463/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41463",
+  "id": 2375062058,
+  "node_id": "I_kwDOCFbutM6NkJIq",
+  "number": 41463,
+  "title": "Error Due to Duplicate Event Listener in Hibernate SessionFactory Initialization when start application",
+  "labels": [
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": true,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-06-26T11:18:03Z",
+  "updated_at": "2024-07-01T14:21:59Z",
+  "closed_at": "2024-07-01T14:21:59Z",
+  "active_lock_reason": null,
+  "body": "After upgrading our application to the latest version of Quarkus, we encountered an error preventing the application from starting successfully. The error stack trace indicates a problem with building the Hibernate SessionFactory due to a \"Duplicate event listener found\" exception.\r\n\r\n**Error Stack Trace:**\r\n\r\n```\r\nat io.quarkus.test.junit.QuarkusTestExtension.throwBootFailureException(QuarkusTestExtension.java:642)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.interceptBeforeAllMethod(QuarkusTestExtension.java:710)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl.run(StartupActionImpl.java:285)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.doJavaStart(QuarkusTestExtension.java:251)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.ensureStarted(QuarkusTestExtension.java:609)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.beforeAll(QuarkusTestExtension.java:659)\r\n\t... 1 more\r\nCaused by: jakarta.persistence.PersistenceException: [PersistenceUnit: <default>] Unable to build Hibernate SessionFactory\r\n\tat io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.persistenceException(FastBootEntityManagerFactoryBuilder.java:129)\r\n\tat io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:89)\r\n\tat io.quarkus.hibernate.orm.runtime.FastBootHibernatePersistenceProvider.createEntityManagerFactory(FastBootHibernatePersistenceProvider.java:72)\r\n\tat jakarta.persistence.Persistence.createEntityManagerFactory(Persistence.java:80)\r\n\tat jakarta.persistence.Persistence.createEntityManagerFactory(Persistence.java:55)\r\n\tat io.quarkus.hibernate.orm.runtime.JPAConfig$LazyPersistenceUnit.get(JPAConfig.java:154)\r\n\tat io.quarkus.hibernate.orm.runtime.JPAConfig$1.run(JPAConfig.java:61)\r\n\tat java.base/java.lang.Thread.run(Thread.java:840)\r\nCaused by: org.hibernate.event.service.spi.EventListenerRegistrationException: Duplicate event listener found\r\n\tat org.hibernate.event.service.internal.EventListenerGroupImpl.handleListenerAddition(EventListenerGroupImpl.java:312)\r\n\tat org.hibernate.event.service.internal.EventListenerGroupImpl.appendListeners(EventListenerGroupImpl.java:209)\r\n\tat org.hibernate.event.service.internal.EventListenerRegistryImpl.appendListeners(EventListenerRegistryImpl.java:184)\r\n\tat org.hibernate.envers.boot.internal.EnversIntegrator.integrate(EnversIntegrator.java:89)\r\n\tat org.hibernate.internal.SessionFactoryImpl.integrate(SessionFactoryImpl.java:517)\r\n\tat org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:276)\r\n\tat io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:87)\r\n\t... 6 more\r\n```\r\n\r\n**Additional Details:**\r\n\r\n- **Application Framework:** Quarkus\r\n- **Persistence Provider:** Hibernate\r\n- **Envers Integration:** Enabled for auditing purposes\r\n- **Steps to Reproduce:** Upgrade application to the latest Quarkus version and attempt to start the application.\r\n\r\n**Expected Resolution:**\r\n\r\nIdentify the root cause of the \"Duplicate event listener found\" exception during Hibernate SessionFactory initialization and provide a solution to ensure proper integration of Hibernate Envers without duplication.\r\n\r\n---\r\n\r\n\r\nNote: Attached Below are My Dependencies\r\n\r\nPlease find attached the file containing details of the dependencies used in the project. This includes configurations and libraries that are crucial for the application's functionality and integration.\r\n\r\n[parent_pom.txt](https://github.com/user-attachments/files/15987071/parent_pom.txt)\r\n[child_pom.txt](https://github.com/user-attachments/files/15987070/child_pom.txt)\r\n\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41463/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41463/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

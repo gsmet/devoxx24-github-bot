@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36831",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36831/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36831/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36831/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36831",
+  "id": 1974092881,
+  "node_id": "I_kwDOCFbutM51qkRR",
+  "number": 36831,
+  "title": "Support for generic tenant identifiers in Hibernate ORM",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 26,
+  "created_at": "2023-11-02T11:54:27Z",
+  "updated_at": "2024-08-14T15:10:36Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nHibernate ORM changed a few things to allow tenant identifiers to be any type now, instead of just strings.\r\n\r\nIn particular:\r\n\r\n* `MultiTenantConnectionProvider` becomes `MultiTenantConnectionProvider<T>`\r\n* `CurrentTenantIdentifierResolver` becomes `CurrentTenantIdentifierResolver<T>`\r\n\r\nAs a first step we'll probably just force `T` to `String` in the Quarkus implementations, but eventually we'll need to add generics in Quarkus-specific interfaces as well:\r\n\r\n* `io.quarkus.hibernate.orm.runtime.tenant.TenantResolver` => `TenantResolver<T>`\r\n* `io.quarkus.hibernate.orm.runtime.tenant.TenantConnectionResolver` => `TenantConnectionResolver<T>`\r\n\r\n\r\n### Implementation ideas\r\n\r\nOne challenge is how to retrieve such beans. Some time ago Arc changed the way it behaved so that you can't just use `.select(TenantResolver.class)`; it just wouldn't return any bean if `TenantResolver` is a generic type.\r\n\r\nSo, the question is: how would we retrieve retrieve all implementations of `TenantResolver` regardless of their generics? Do we need to collect those at build-time and mark them somehow, like [we did for Hibernate Validator's ValueExtractors](https://github.com/quarkusio/quarkus/pull/30447/commits/f5cf52932da21b8c78d2e73281e9d135cf9666c4)? :/\r\n\r\n@mkouba , @Ladicek maybe you have a better idea? Some feature or build item that would make it easy to retrieve all beans implementing a given generic type regardless of type arguments?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36831/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36831/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25294",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25294/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25294/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25294/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25294",
+  "id": 1222636196,
+  "node_id": "I_kwDOCFbutM5I3_Kk",
+  "number": 25294,
+  "title": "NPE thrown by `QuarkusClassLoader#getResources(String)`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-05-02T08:43:50Z",
+  "updated_at": "2022-05-03T14:03:07Z",
+  "closed_at": "2022-05-03T14:03:07Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIt appears that the `QuarkusClassLoader#getResources(String)` method will throw an NPE in some cases when it shouldn't. While testing the PR #25280 I stumbled across this:\r\n```\r\njava.lang.NullPointerException: Cannot invoke \"io.quarkus.bootstrap.classloading.ClassPathResource.getUrl()\" because \"res\" is null\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.getResources(QuarkusClassLoader.java:251)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.getResources(QuarkusClassLoader.java:198)\r\n\tat org.flywaydb.core.internal.resource.classpath.ClassPathResource.read(ClassPathResource.java:105)\r\n\tat org.flywaydb.core.internal.resolver.ChecksumCalculator.calculateChecksumForResource(ChecksumCalculator.java:64)\r\n\tat org.flywaydb.core.internal.resolver.ChecksumCalculator.calculate(ChecksumCalculator.java:43)\r\n\tat org.flywaydb.core.internal.resolver.sql.SqlMigrationResolver.getChecksumForLoadableResource(SqlMigrationResolver.java:126)\r\n\tat org.flywaydb.core.internal.resolver.sql.SqlMigrationResolver.addMigrations(SqlMigrationResolver.java:168)\r\n\tat org.flywaydb.core.internal.resolver.sql.SqlMigrationResolver.resolveMigrations(SqlMigrationResolver.java:71)\r\n\tat org.flywaydb.core.internal.resolver.sql.SqlMigrationResolver.resolveMigrations(SqlMigrationResolver.java:50)\r\n\tat org.flywaydb.core.internal.resolver.CompositeMigrationResolver.collectMigrations(CompositeMigrationResolver.java:107)\r\n\tat org.flywaydb.core.internal.resolver.CompositeMigrationResolver.doFindAvailableMigrations(CompositeMigrationResolver.java:90)\r\n\tat org.flywaydb.core.internal.resolver.CompositeMigrationResolver.resolveMigrations(CompositeMigrationResolver.java:83)\r\n\tat org.flywaydb.core.internal.resolver.CompositeMigrationResolver.resolveMigrations(CompositeMigrationResolver.java:41)\r\n\tat org.flywaydb.core.internal.info.MigrationInfoServiceImpl.refresh(MigrationInfoServiceImpl.java:92)\r\n\tat org.flywaydb.core.internal.command.DbMigrate.migrateGroup(DbMigrate.java:173)\r\n\tat org.flywaydb.core.internal.command.DbMigrate.lambda$migrateAll$0(DbMigrate.java:141)\r\n\tat org.flywaydb.core.internal.jdbc.TableLockingExecutionTemplate$1.call(TableLockingExecutionTemplate.java:36)\r\n\tat org.flywaydb.core.internal.jdbc.TransactionalExecutionTemplate.execute(TransactionalExecutionTemplate.java:55)\r\n\tat org.flywaydb.core.internal.jdbc.TableLockingExecutionTemplate.execute(TableLockingExecutionTemplate.java:31)\r\n\tat org.flywaydb.core.internal.database.base.Connection.lock(Connection.java:102)\r\n\tat org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory.lock(JdbcTableSchemaHistory.java:139)\r\n\tat org.flywaydb.core.internal.command.DbMigrate.migrateAll(DbMigrate.java:141)\r\n\tat org.flywaydb.core.internal.command.DbMigrate.migrate(DbMigrate.java:98)\r\n\tat org.flywaydb.core.Flyway$1.execute(Flyway.java:172)\r\n\tat org.flywaydb.core.Flyway$1.execute(Flyway.java:124)\r\n\tat org.flywaydb.core.FlywayExecutor.execute(FlywayExecutor.java:205)\r\n\tat org.flywaydb.core.Flyway.migrate(Flyway.java:124)\r\n\tat io.quarkus.flyway.runtime.devconsole.FlywayDevConsoleRecorder$1.handlePost(FlywayDevConsoleRecorder.java:34)\r\n\tat io.quarkus.devconsole.runtime.spi.DevConsolePostHandler.dispatch(DevConsolePostHandler.java:47)\r\n\tat io.quarkus.devconsole.runtime.spi.DevConsolePostHandler$1.handle(DevConsolePostHandler.java:39)\r\n\tat io.quarkus.devconsole.runtime.spi.DevConsolePostHandler$1.handle(DevConsolePostHandler.java:36)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n\tat io.vertx.core.http.impl.HttpEventHandler.handleEnd(HttpEventHandler.java:76)\r\n\tat io.vertx.core.http.impl.Http1xServerRequest.onEnd(Http1xServerRequest.java:561)\r\n\tat io.vertx.core.http.impl.Http1xServerRequest.lambda$pendingQueue$1(Http1xServerRequest.java:126)\r\n\tat io.vertx.core.streams.impl.InboundBuffer.handleEvent(InboundBuffer.java:240)\r\n\tat io.vertx.core.streams.impl.InboundBuffer.drain(InboundBuffer.java:227)\r\n\tat io.vertx.core.streams.impl.InboundBuffer.lambda$fetch$0(InboundBuffer.java:280)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:38)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\n\n### Expected behavior\n\nThe method `QuarkusClassLoader#getResources(String)` is only expected to throw an NPE, when the given `String` argument is `null`. In the particular case where I stumbled across this, I think the method should have returned an empty `Enumeration` result.\n\n### Actual behavior\n\nSee description.\n\n### How to Reproduce?\n\nThe reproduction is not as easy as it could be:\r\n\r\n1. Check out the PR #25280\r\n2. Build Quarkus\r\n3. Create a test application with the extensions `flyway`, `jdbc-h2`, and `resteasy-reactive`\r\n4. Add a SQL migration script to `src/main/resources/db/migration` (e.g. `V1.1__foo.sql`)\r\n5. Start the application in dev mode\r\n6. Open the Flyway Dev UI and run _Clean_ and _Migrate_\r\n7. Remove the SQL migration script\r\n8. Run _Clean_ and _Migrate_ again\r\n9. Now then NPE should be reported\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25294/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25294/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37168",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37168/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37168/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37168/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37168",
+  "id": 1998590564,
+  "node_id": "I_kwDOCFbutM53IBJk",
+  "number": 37168,
+  "title": "Mongodb panache with multiple clients and reactive client not working",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-11-17T08:55:48Z",
+  "updated_at": "2023-11-17T11:46:27Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm using quarkus panache to access mongodb in my project. I need to connect to two different clusters and so I need to have different connection-string. This is what I'm doing right now\r\n\r\napplication.yaml\r\n```\r\nquarkus:\r\n  mongodb:\r\n    db1:\r\n      connection-string: ${DB1_MONGODB_URI}\r\n      database: ${DB1_MONGODB_DB}\r\n    db2:\r\n      connection-string: ${DB2_MONGODB_URI}\r\n      database: ${DB2_MONGODB_DB}\r\n```\r\n\r\nFirst entity\r\n```\r\n@MongoEntity(collection = \"log\", clientName = \"db1\")\r\npublic class Log extends PanacheMongoEntityBase {\r\n    @BsonId\r\n    public ObjectId id;\r\n    public LogType type;\r\n    public String message;\r\n    public Instant createdOn;\r\n}\r\n```\r\n\r\nSecond entity\r\n```\r\n@MongoEntity(collection = \"order\", clientName = \"db2\")\r\npublic class Order extends PanacheMongoEntityBase {\r\n    @BsonId\r\n    public ObjectId id;\r\n    public BigDecimal total;\r\n    public BigDecimal subtotal;\r\n    ...\r\n}\r\n```\r\n\r\nThe problem seems to arise when I use also the reactive client with the @MongoClientName annotation. Something like this:\r\n\r\n```\r\n@ApplicationScoped\r\npublic class FirstRepository {\r\n\r\n    @Inject\r\n    @MongoClientName(\"db1\")\r\n    ReactiveMongoClient client;\r\n\r\n    @ConfigProperty(name = \"quarkus.mongodb.db1.database\")\r\n    String databaseName;\r\n\r\n    public boolean existsOrder(ObjectId id) {\r\n        return getCollection(\"order\")\r\n                .countDocuments(\r\n                        Filters.eq(\"_id\", id)\r\n\r\n                )\r\n                .await().atMost(Duration.ofSeconds(15)) > 0;\r\n    }\r\n\r\n    private ReactiveMongoCollection<Document> getCollection(String collectionName) {\r\n        return client.getDatabase(databaseName).getCollection(collectionName);\r\n    }\r\n}\r\n```\r\n\r\nIf I have also this class in the project and I try to call the persist(); method of the entity annotated with the clientName that is also used for the ReactiveMongoClient than I receive that error.\r\n\r\n> 2023-11-15 11:31:11,268 ERROR [com.test.resource.Resource] (executor-thread-1) java.lang.IllegalStateException: Unable to find MongoClient bean for entity @io.quarkus.mongodb.panache.common.MongoEntity(readPreference=\"\", database=\"\", collection=\"log\", clientName=\"db1\")\r\n\tat io.quarkus.mongodb.panache.common.runtime.BeanUtils.clientFromArc(BeanUtils.java:58)\r\n\tat io.quarkus.mongodb.panache.common.runtime.MongoOperations.mongoDatabase(MongoOperations.java:395)\r\n\tat io.quarkus.mongodb.panache.common.runtime.MongoOperations.mongoCollection(MongoOperations.java:193)\r\n\tat io.quarkus.mongodb.panache.common.runtime.MongoOperations.mongoCollection(MongoOperations.java:391)\r\n\tat io.quarkus.mongodb.panache.common.runtime.MongoOperations.persist(MongoOperations.java:73)\r\n\tat io.quarkus.mongodb.panache.PanacheMongoEntityBase.persist(PanacheMongoEntityBase.java:36)\r\n\r\n\r\nIf I remove the double connections and work with entities without the clientName in the annotation everything works perfectly.\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nI should be able to use both the panache entities and the reactive client when there are multiple clientName in the same way it is possible to do with only one clientName.\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nDownload this project and set up the two connection in the application.yaml and call the api to fire the persist method of one of the two entities.\r\n\r\nhttps://file.io/Fmohi0hRqvY3\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMINGW64_NT-10.0-19045 DESKTOP-UC2UQJ1 3.0.7-338.x86_64 2019-07-03 15:16 UTC x86_64 Msys\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10) OpenJDK 64-Bit Server VM Temurin-17.0.6+10 (build 17.0.6+10, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3 (21122926829f1ead511c958d89bd2f672198ae9f)\r\nMaven home: C:\\Program Files\\Maven\\apache-maven-3.9.3\r\nJava version: 17.0.7, vendor: Oracle Corporation, runtime: C:\\Program Files\\Java\\graalvm-jdk-17.0.7+8.1\r\nDefault locale: it_IT, platform encoding: UTF-8\r\nOS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37168/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37168/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

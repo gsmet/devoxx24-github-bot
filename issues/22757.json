@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22757",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22757/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22757/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22757/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22757",
+  "id": 1097200860,
+  "node_id": "I_kwDOCFbutM5BZfTc",
+  "number": 22757,
+  "title": "Native image memory leaks?",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2022-01-09T13:47:22Z",
+  "updated_at": "2022-01-24T11:21:57Z",
+  "closed_at": "2022-01-24T11:21:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi Quarkus team & community!\r\n\r\nWhile taking a look again on the recent developments on Quarkus space and started reading a recently published book, initially I played with the native image by just keep pressing F5 (browser reload) on a simple GET /accounts and discovered that the memory was keep increasing.\r\n\r\nSo, just being genuinely curious about it, I started to do it in a more \"standard\" way, but simple enough to illustrate the point.\r\nSee _How to Reproduce_ section for all the figures.\r\n\r\nThe app is a bare bone simple service that has an API and returns some data from memory, no disk nor database. The complete example can be found [here](https://github.com/dxps/quarkus_playground/tree/master/knative_quarkus_bank/account_svc).\r\n\r\nThe \"stress test\" is done using cURL and it is this [/tests/account_svc_local_stress_1.sh](https://github.com/dxps/quarkus_playground/blob/master/knative_quarkus_bank/tests/account_svc_local_stress_1.sh) file. In all ll the screenshots below you'll see there is no bottleneck anywhere else (script nor system).\r\n\r\nObviously, a native image is not that efficient as a JVM based running app, but still the concerning part is that it keeps increasing the memory usage although there are no real reasons to do it except of some memory leak in the framework internals or the JAX-RS implementation. And most probably the only solution for now would be to recycle the instances from time to time.\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nInitially:\r\n```shell\r\n$ ./target/account_svc-1.0.0-SNAPSHOT-runner \r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2022-01-09 15:08:06,648 INFO  [io.quarkus] (main) account_svc 1.0.0-SNAPSHOT native (powered by Quarkus 2.6.1.Final) started in 0.034s. Listening on: http://0.0.0.0:8080\r\n2022-01-09 15:08:06,648 INFO  [io.quarkus] (main) Profile prod activated. \r\n2022-01-09 15:08:06,648 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, resteasy, resteasy-jsonb, smallrye-context-propagation, vertx]\r\n\r\n```\r\n\r\nIt starts quickly and the memory usage is very low. Of course, it's not that relevant in a grand perspective, but that's the \"starting point\".\r\n\r\n![image](https://user-images.githubusercontent.com/14140226/148683493-6ecf7a11-e367-407a-83c6-e733a2430a9c.png)\r\n\r\nAfter running a first test using `./account_svc_local_stress_1.sh -a http://localhost:8080/accounts` the result is:\r\n\r\n![image](https://user-images.githubusercontent.com/14140226/148683556-9a0f61c8-33d6-4ee7-a866-c07073d8fcf1.png)\r\n\r\nAfter running `./account_svc_local_stress_1.sh -r 10000 -a http://localhost:8080/accounts`\r\n\r\n![image](https://user-images.githubusercontent.com/14140226/148683629-ad38faca-06ee-4fca-b215-add5b36bae1f.png)\r\n\r\nContinue with another test that would take longer by sending 1 million requests using\r\n`./account_svc_local_stress_1.sh -r 1000000 -a http://localhost:8080/accounts`.\r\n\r\nDuring this one, sometimes the CPU usage increases a little bit for short durations (like 3 sec) from ~20 to ~26%, while the memory still increases in a very small steps but kinda consistent.\r\n\r\n![image](https://user-images.githubusercontent.com/14140226/148683889-df187918-81da-472e-844f-87676e95bb64.png)\r\n\r\nAnd the result is:\r\n\r\n![image](https://user-images.githubusercontent.com/14140226/148684228-7fb9d3dd-55be-4a74-b996-2c32b11d6bc1.png)\r\n\r\nRunning again the same 1M requests test and the result is:\r\n\r\n![image](https://user-images.githubusercontent.com/14140226/148684697-ea4d420e-d25c-409e-846b-be8ace6469fd.png)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux dxps 5.15.8-76051508-generic #202112141040~1639505278~21.10~0ede46a SMP Tue Dec 14 22:38:29 U x86_64 x86_64 x86_64 GNU/Linux",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22757/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22757/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

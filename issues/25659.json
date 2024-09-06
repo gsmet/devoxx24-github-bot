@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25659",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25659/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25659/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25659/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25659",
+  "id": 1240045929,
+  "node_id": "I_kwDOCFbutM5J6Zlp",
+  "number": 25659,
+  "title": "Keycloak-authorization extension: exception in integration tests using combination of native image and container",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-05-18T14:21:54Z",
+  "updated_at": "2022-05-19T17:46:01Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen running integration tests for applications that make use of the keycloak-authorization extension fail when the following is true:\r\n* Dev Services enabled (`quarkus.devservices.enabled=true`)\r\n* Native profile activated (`-Pnative`)\r\n* Container build enabled (`quarkus.container-image.build=true`)\r\n\r\nThe failure suggests that `org.keycloak.adapters.authorization.PolicyEnforcer` cannot connect to the authServerUrl.  Exception provided below.\r\n\n\n### Expected behavior\n\nIntegration tests that pass when`quarkus.container-image.build=false` would pass when `quarkus.container-image.build=true`\n\n### Actual behavior\n\nIntegration test fails with the following exception:\r\n\r\n```\r\njava.net.ConnectException: Connection refused (Connection refused)\r\n\tat com.oracle.svm.jni.JNIJavaCallWrappers.jniInvoke_VA_LIST_ConnectException_constructor_026ed3e065cc052585fca43de83265b2d1381f28(JNIJavaCallWrappers.java:0)\r\n\tat java.net.PlainSocketImpl.socketConnect(PlainSocketImpl.java)\r\n\tat java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:412)\r\n\tat java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:255)\r\n\tat java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:237)\r\n\tat java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)\r\n\tat java.net.Socket.connect(Socket.java:609)\r\n\tat org.apache.http.conn.scheme.PlainSocketFactory.connectSocket(PlainSocketFactory.java:121)\r\n\tat org.apache.http.impl.conn.DefaultClientConnectionOperator.openConnection(DefaultClientConnectionOperator.java:180)\r\n\tat org.apache.http.impl.conn.AbstractPoolEntry.open(AbstractPoolEntry.java:144)\r\n\tat org.apache.http.impl.conn.AbstractPooledConnAdapter.open(AbstractPooledConnAdapter.java:134)\r\n\tat org.apache.http.impl.client.DefaultRequestDirector.tryConnect(DefaultRequestDirector.java:605)\r\n\tat org.apache.http.impl.client.DefaultRequestDirector.execute(DefaultRequestDirector.java:440)\r\n\tat org.apache.http.impl.client.AbstractHttpClient.doExecute(AbstractHttpClient.java:835)\r\n\tat org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)\r\n\tat org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)\r\n\tat org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)\r\n\tat org.keycloak.authorization.client.util.HttpMethod.execute(HttpMethod.java:84)\r\n\tat org.keycloak.authorization.client.util.HttpMethodResponse$2.execute(HttpMethodResponse.java:50)\r\n\tat org.keycloak.authorization.client.resource.ProtectedResource$4.call(ProtectedResource.java:175)\r\n\tat org.keycloak.authorization.client.resource.ProtectedResource$4.call(ProtectedResource.java:172)\r\n\tat org.keycloak.authorization.client.resource.ProtectedResource.find(ProtectedResource.java:179)\r\n\tat org.keycloak.authorization.client.resource.ProtectedResource.findAll(ProtectedResource.java:246)\r\n\tat org.keycloak.adapters.authorization.PolicyEnforcer.configureAllPathsForResourceServer(PolicyEnforcer.java:225)\r\n\tat org.keycloak.adapters.authorization.PolicyEnforcer.configurePaths(PolicyEnforcer.java:153)\r\n\tat org.keycloak.adapters.authorization.PolicyEnforcer.<init>(PolicyEnforcer.java:76)\r\n\tat io.quarkus.keycloak.pep.runtime.KeycloakPolicyEnforcerRecorder.createPolicyEnforcer(KeycloakPolicyEnforcerRecorder.java:102)\r\n\tat io.quarkus.keycloak.pep.runtime.KeycloakPolicyEnforcerRecorder.setup(KeycloakPolicyEnforcerRecorder.java:37)\r\n\tat io.quarkus.deployment.steps.KeycloakPolicyEnforcerBuildStep$setup1036344509.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.KeycloakPolicyEnforcerBuildStep$setup1036344509.deploy(Unknown Source)\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:103)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n```\n\n### How to Reproduce?\n\n1. Using the [security-keycloak-authorization-quickstart](https://github.com/quarkusio/quarkus-quickstarts/tree/main/security-keycloak-authorization-quickstart), apply the following patch to the existing `pom.xml`:\r\n\r\n```\r\ndiff --git a/security-keycloak-authorization-quickstart/pom.xml b/security-keycloak-authorization-quickstart/pom.xml\r\nindex 5f53d82e..9476ee55 100644\r\n--- a/security-keycloak-authorization-quickstart/pom.xml\r\n+++ b/security-keycloak-authorization-quickstart/pom.xml\r\n@@ -17,6 +17,11 @@\r\n         <maven.compiler.source>11</maven.compiler.source>\r\n         <maven.compiler.target>11</maven.compiler.target>\r\n         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\r\n+\r\n+        <!-- Added for bug test -->\r\n+        <quarkus.container-image.group>${project.groupId}</quarkus.container-image.group>\r\n+        <quarkus.container-image.name>${project.artifactId}</quarkus.container-image.name>\r\n+        <quarkus.container-image.build>true</quarkus.container-image.build>\r\n     </properties>\r\n \r\n     <dependencyManagement>\r\n@@ -45,6 +50,12 @@\r\n             <artifactId>quarkus-resteasy-reactive-jackson</artifactId>\r\n         </dependency>\r\n \r\n+        <!-- Added for bug test -->\r\n+        <dependency>\r\n+            <groupId>io.quarkus</groupId>\r\n+            <artifactId>quarkus-container-image-jib</artifactId>\r\n+        </dependency>\r\n+\r\n         <!-- Test -->\r\n         <dependency>\r\n             <groupId>io.rest-assured</groupId>\r\n```\r\n\r\n2. Run `./mvnw clean verify -Pnative -Dquarkus.container-image.build=false`.  See that both `PolicyEnforcerTest` and `NativePolicyEnforcerIT` pass.\r\n3. Run `./mvnw clean verify -Pnative -Dquarkus.container-image.build=true`.  See `PolicyEnforcerTest` passes, but `NativePolicyEnforcerIT` fails.\n\n### Output of `uname -a` or `ver`\n\nLinux ubuntu 5.13.0-41-generic #46~20.04.1-Ubuntu SMP Wed Apr 20 13:16:21 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.15\" 2022-04-19\n\n### GraalVM version (if different from Java)\n\nGraalVM 22.0.0.2 Java 11 CE\n\n### Quarkus version or git rev\n\n2.9.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25659/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25659/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

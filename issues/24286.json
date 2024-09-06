@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24286",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24286/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24286/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24286/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24286",
+  "id": 1167724097,
+  "node_id": "I_kwDOCFbutM5Fmg5B",
+  "number": 24286,
+  "title": "LookUpIfProperty not working in Kotlin",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-03-13T23:19:47Z",
+  "updated_at": "2022-03-28T06:10:17Z",
+  "closed_at": "2022-03-15T05:45:34Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI am working with quarkus in Kotlin. I would like to use LookupIfProperty. Following the quarkus documentation, this is the equivalent in Kotlin.\r\n```Kotlin\r\nimport io.quarkus.arc.lookup.LookupIfProperty\r\nimport io.quarkus.runtime.QuarkusApplication\r\nimport io.quarkus.runtime.annotations.QuarkusMain\r\nimport javax.enterprise.context.ApplicationScoped\r\nimport javax.inject.Inject\r\n\r\n\r\ninterface Service {\r\n    fun name(): String\r\n}\r\n\r\n@LookupIfProperty(name = \"task\", stringValue = \"scheduler\")\r\n@ApplicationScoped\r\nclass ServiceBar: Service {\r\n    override fun name(): String {\r\n        return \"bar\"\r\n    }\r\n}\r\n@ApplicationScoped\r\nclass ServiceFoo : Service {\r\n    override fun name(): String {\r\n        return \"foo\"\r\n    }\r\n}\r\n\r\n@ApplicationScoped\r\nclass Client {\r\n\r\n    @Inject\r\n    lateinit var service: Service\r\n    fun printServiceName() {\r\n        // This would print \"bar\" if the property of name \"service.foo.enabled\" was set to false\r\n        // Note that service.get() would normally result in AmbiguousResolutionException\r\n        println(service.name())\r\n    }\r\n}\r\n\r\n@QuarkusMain\r\nclass Main : QuarkusApplication {\r\n    @Inject\r\n    lateinit var client: Client\r\n\r\n    override fun run(vararg args: String?): Int {\r\n        println(\"Started\")\r\n        println(client.printServiceName())\r\n        return 0\r\n    }\r\n}\r\n```\r\n\n\n### Expected behavior\n\n```\r\nStarted\r\nbar\r\n```\n\n### Actual behavior\n\n```Kotlin\r\nio.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        [error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: javax.enterprise.inject.spi.DeploymentException: javax.enterprise.inject.AmbiguousResolutionException: Ambiguous dependencies for type Service and qualifiers [@Default]\r\n        - java member: Client#service\r\n        - declared on CLASS bean [types=[Client, java.lang.Object], qualifiers=[@Default, @Any], target=Client]\r\n        - available beans:\r\n                - CLASS bean [types=[ServiceFoo, Service, java.lang.Object], qualifiers=[@Default, @Any], target=ServiceFoo]\r\n                - CLASS bean [types=[ServiceBar, Service, java.lang.Object], qualifiers=[@Default, @Any], target=ServiceBar]\r\n        at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1202)\r\n        at io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:272)\r\n        at io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:134)\r\n        at io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:462)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n        at io.quarkus.deployment.ExtensionLoader$2.execute(ExtensionLoader.java:882)\r\n        at io.quarkus.builder.BuildContext.run(BuildContext.java:277)\r\n        at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n        at java.base/java.lang.Thread.run(Thread.java:829)\r\n        at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n  Caused by: javax.enterprise.inject.AmbiguousResolutionException: Ambiguous dependencies for type Service and qualifiers [@Default]\r\n        - java member: Client#service\r\n        - declared on CLASS bean [types=[Client, java.lang.Object], qualifiers=[@Default, @Any], target=Client]\r\n        - available beans:\r\n                - CLASS bean [types=[ServiceFoo, Service, java.lang.Object], qualifiers=[@Default, @Any], target=ServiceFoo]\r\n                - CLASS bean [types=[ServiceBar, Service, java.lang.Object], qualifiers=[@Default, @Any], target=ServiceBar]\r\n        at io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:437)\r\n        at io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:524)\r\n        at io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:260)\r\n        ... 13 more\r\n```\n\n### How to Reproduce?\n\nSteps to reproduce the behaviour:\r\n1. `./gradlew build`\n\n### Output of `uname -a` or `ver`\n\nDarwin Ignacios-MBP 20.6.0 Darwin Kernel Version 20.6.0: Mon Aug 30 06:12:21 PDT 2021; root:xnu-7195.141.6~3/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\n11.0.12\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.3.3\n\n### Additional information\n\nI have a standard quarkus folder structure.\r\nIn my `application.yml` I have:\r\n`task: scheduler`\r\n\r\nIn my `gradle.properties` I have:\r\n```\r\n#Gradle properties\r\nquarkusPluginId=io.quarkus\r\nquarkusPluginVersion=2.7.2.Final\r\nquarkusPlatformGroupId=io.quarkus.platform\r\nquarkusPlatformArtifactId=quarkus-bom\r\nquarkusPlatformVersion=2.7.2.Final\r\nawsSdk2Version=2.17.69\r\n```\r\n\r\nIn my `build.gradle.kts` I have:\r\n```\r\nplugins {\r\n    id(\"org.jetbrains.kotlin.jvm\") version \"1.6.10\"\r\n    id(\"io.quarkus\")\r\n}\r\n\r\nrepositories {\r\n    mavenCentral()\r\n}\r\n\r\nval quarkusPlatformGroupId: String by project\r\nval quarkusPlatformArtifactId: String by project\r\nval quarkusPlatformVersion: String by project\r\n\r\ndependencies {\r\n    implementation(enforcedPlatform(\"$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion\"))\r\n// Quarkus\r\n    implementation(\"io.quarkus:quarkus-kotlin:$quarkusPlatformVersion\")\r\n    implementation(\"io.quarkus:quarkus-arc:$quarkusPlatformVersion\")\r\n\r\n// Kotlin\r\n    implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")\r\n\r\n}\r\n\r\njava {\r\n    sourceCompatibility = JavaVersion.VERSION_11\r\n    targetCompatibility = JavaVersion.VERSION_11\r\n}\r\n\r\n\r\ntasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {\r\n    kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()\r\n    kotlinOptions.javaParameters = true\r\n}\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24286/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24286/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

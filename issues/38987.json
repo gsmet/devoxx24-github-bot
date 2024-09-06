@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38987",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38987/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38987/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38987/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38987",
+  "id": 2151845583,
+  "node_id": "I_kwDOCFbutM6AQo7P",
+  "number": 38987,
+  "title": "Mockito fails to mock non-public inner class in continuous testing due to classloading issues",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955098535,
+      "node_id": "MDU6TGFiZWwyOTU1MDk4NTM1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/continuous-testing",
+      "name": "area/continuous-testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-02-23T21:38:14Z",
+  "updated_at": "2024-03-14T13:12:42Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe following primitive test (and tested class):\r\n```java\r\n@ExtendWith(MockitoExtension.class)\r\npublic class FooTest {\r\n\r\n    @Mock\r\n    private Foo.Inner mock;\r\n\r\n    @Test\r\n    public void test() {\r\n\r\n    }\r\n}\r\n```\r\n```java\r\npublic class Foo {\r\n\r\n    static class Inner {\r\n    }\r\n}\r\n```\r\nworks fine in IDE or mvn, but fails with `mvn quarkus:test`:\r\n```\r\nERROR [io.qua.test] (Test runner thread) Test FooTest#test() failed \r\n: org.mockito.exceptions.base.MockitoException: \r\nMockito cannot mock this class: class org.acme.Foo$Inner.\r\n\r\nMockito can only mock non-private & non-final classes, but the root cause of this error might be different.\r\nPlease check the full stacktrace to understand what the issue is.\r\nIf you're still not sure why you're getting this error, please open an issue on GitHub.\r\n\r\n\r\nJava               : 17\r\nJVM vendor name    : Azul Systems, Inc.\r\nJVM vendor version : 17.0.9+8-LTS\r\nJVM name           : OpenJDK 64-Bit Server VM\r\nJVM version        : 17.0.9+8-LTS\r\nJVM info           : mixed mode, emulated-client, sharing\r\nOS name            : Linux\r\nOS version         : 5.15.0-94-generic\r\n\r\n\r\nUnderlying exception : org.mockito.exceptions.base.MockitoException: \r\nCannot create mock for class org.acme.Foo$Inner\r\n\r\nThe type is not public and its mock class is loaded by a different class loader.\r\nThis can have multiple reasons:\r\n - You are mocking a class with additional interfaces of another class loader\r\n - Mockito is loaded by a different class loader than the mocked type (e.g. with OSGi)\r\n - The thread's context class loader is different than the mock's class loader\r\n\tat org.mockito.junit.jupiter.MockitoExtension.beforeEach(MockitoExtension.java:160)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tSuppressed: java.lang.NullPointerException: Cannot invoke \"java.util.Set.forEach(java.util.function.Consumer)\" because the return value of \"org.junit.jupiter.api.extension.ExtensionContext$Store.remove(Object, java.lang.Class)\" is null\r\n\t\tat org.mockito.junit.jupiter.MockitoExtension.afterEach(MockitoExtension.java:194)\r\n\t\t... 2 more\r\nCaused by: org.mockito.exceptions.base.MockitoException: \r\nCannot create mock for class org.acme.Foo$Inner\r\n\r\nThe type is not public and its mock class is loaded by a different class loader.\r\nThis can have multiple reasons:\r\n - You are mocking a class with additional interfaces of another class loader\r\n - Mockito is loaded by a different class loader than the mocked type (e.g. with OSGi)\r\n - The thread's context class loader is different than the mock's class loader\r\n\tat net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:168)\r\n\tat net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:399)\r\n\tat net.bytebuddy.TypeCache.findOrInsert(TypeCache.java:190)\r\n\tat net.bytebuddy.TypeCache$WithInlineExpunction.findOrInsert(TypeCache.java:410)\r\n\t... 3 more\r\n\r\n\r\nERROR [io.qua.test] (Test runner thread) >>>>>>>>>>>>>>>>>>>> Summary: <<<<<<<<<<<<<<<<<<<<\r\nFooTest#test()\r\n```\n\n### Expected behavior\n\nNo failure, should work as in IDE or mvn.\n\n### Actual behavior\n\nFails with classloading issue.\n\n### How to Reproduce?\n\n1. clone https://github.com/famod/q_ctest-inner\r\n2. `mvn clean verify` (passes)\r\n3. `mvn quarkus:test` fails\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n3.7.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nThe problem vanishes after adding `public` to the inner class.\r\n\r\nI have another case where adding `public` helps, but that's not an inner class.\r\n\r\nIt has been an issue for many releases now, I just haven't found the time to report it.\r\nI'm rather sure (IIRC) it was actually working some months ago.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38987/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38987/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

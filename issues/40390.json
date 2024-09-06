@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40390",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40390/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40390/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40390/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40390",
+  "id": 2273401448,
+  "node_id": "I_kwDOCFbutM6HgVpo",
+  "number": 40390,
+  "title": "Native Gradle build with pulsar fail",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2024-05-01T12:05:36Z",
+  "updated_at": "2024-08-29T08:39:12Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMy app contains the pulsar-extension, when i try to build it in native it fails:\r\n```\r\n[1/8] Initializing...                                                                                    (0,0s @ 0,36GB)\r\n------------------------------------------------------------------------------------------------------------------------\r\nError: Substitution target for io.quarkus.pulsar.runtime.graal.Target_com_scurrilous_circe_checksum_Crc32cIntChecksum is not loaded. Use field `onlyWith` in the `TargetClass` annotation to make substitution only active when needed.\r\ncom.oracle.svm.core.util.UserError$UserException: Substitution target for io.quarkus.pulsar.runtime.graal.Target_com_scurrilous_circe_checksum_Crc32cIntChecksum is not loaded. Use field `onlyWith` in the `TargetClass` annotation to make substitution only active when needed.\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:73)\r\n```\r\n\r\nPerhaps link to:\r\nhttps://github.com/quarkusio/quarkus/issues/39935\r\nhttps://github.com/smallrye/smallrye-reactive-messaging/discussions/2567\r\nhttps://github.com/quarkusio/quarkus/pull/34378\r\n\r\nPerhaps ( If I understood the behavior) could be fixed by adding:\r\n\r\n```\r\n@TargetClass(className = \"com.scurrilous.circe.checksum.Crc32cIntChecksum\", onlyWith = Crc32cIntChecksumAvailable.class)\r\nfinal class Target_com_scurrilous_circe_checksum_Crc32cIntChecksum {\r\n\r\n    @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FromAlias)\r\n    @Alias\r\n    private static IntHash CRC32C_HASH = new Java8IntHash();\r\n\r\n}\r\n\r\nfinal class Crc32cIntChecksumAvailable implements BooleanSupplier {\r\n    @Override\r\n    public boolean getAsBoolean() {\r\n        return isPresent(\"com.scurrilous.circe.checksum.Crc32cIntChecksum\",\r\n                Thread.currentThread().getContextClassLoader());\r\n    }\r\n\r\n    public static boolean isPresent(String className, ClassLoader classLoader) {\r\n        try {\r\n            classLoader.loadClass(className);\r\n            return true;\r\n        } catch (Throwable var3) {\r\n            return false;\r\n        }\r\n    }\r\n}\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40390/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40390/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

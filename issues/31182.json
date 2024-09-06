@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31182",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31182/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31182/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31182/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31182",
+  "id": 1585700661,
+  "node_id": "I_kwDOCFbutM5eg981",
+  "number": 31182,
+  "title": "Map configuration from both parent/default and selected profile is loaded",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-02-15T11:34:53Z",
+  "updated_at": "2023-02-24T12:45:00Z",
+  "closed_at": "2023-02-24T12:44:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen using multiple profiles and mapping a `Map` property I see that instead of using only the configuration values of the selected profile, it actually merges the values from the selected profile and the default profile.\r\n\r\nExample:\r\n\r\nUsing the `@ConfigMapping`\r\n```java\r\n@ConfigMapping(prefix = \"example\")\r\npublic interface ExampleConfig {\r\n\r\n    Map<String, Repository> repositories();\r\n\r\n    interface Repository {\r\n        String name();\r\n\r\n        @WithDefault(\"config.yaml\")\r\n        String configFile();\r\n    }\r\n}\r\n```\r\n\r\nwith a `application.yml` like:\r\n```yaml\r\nexample:\r\n  repositories:\r\n    default:\r\n      name: \"default/default\"\r\n```\r\n\r\nand a `application-local.yml` like:\r\n```yaml\r\nexample:\r\n  repositories:\r\n    local:\r\n      name: \"local/local\"\r\n```\r\n\r\nWhen running the application with `local` profile, I would expect  `ExampleConfig#repositories` to contain only 1 entry: the one loaded from `application-local.yml`. However both entries from `application.yml` and `application-local.yml` are loaded to the resulting `Map`.\r\n\r\nIs this an issue with my setup or a bug?\r\n\r\nThank you!\n\n### Expected behavior\n\nOnly properties from `application-local.yml` are loaded to `Map` property\n\n### Actual behavior\n\nProperties from both `application.yml` and `application-local.yml` are loaded to `Map` property\n\n### How to Reproduce?\n\nUsing small example to reproduce the issue:\r\n\r\n1. Clone https://github.com/ntfc/quarkus-config-mapping-map-issue\r\n2. Check the code in `src/test/java/org/acme/ExampleConfigTest.java`\r\n3. Run `mvn test -Dquarkus.test.profile=local -Dtest=ExampleConfigTest#testWithLocalProfile` \r\n    - this fails because it configuration from both `application.yml` and `application-local.yml` is loaded\r\n4. Additionally there is a `mvn test -Dquarkus.test.profile=default -Dtest=ExampleConfigTest#testWithDefaultProfile` that loads data only from `application.yml`\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nbuild 17.0.5+1\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31182/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31182/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

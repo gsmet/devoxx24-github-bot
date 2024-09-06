@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28801",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28801/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28801/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28801/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28801",
+  "id": 1421467936,
+  "node_id": "I_kwDOCFbutM5UueEg",
+  "number": 28801,
+  "title": "SSE with comment only fails when using resteasy reactive ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-10-24T21:22:14Z",
+  "updated_at": "2022-11-16T09:17:00Z",
+  "closed_at": "2022-11-16T09:17:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAn error is thrown when trying to send a comment-only SSE event.\r\nThis was not the case when using the non-reactive version.\r\n\r\nComment-only events should be possible according to the MDN docs\r\nhttps://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events\r\n_The comment line can be used to prevent connections from timing out; a server can send a comment periodically to keep the connection alive._\r\n\r\nAs a workaround I was able to fix the issue by overriding a resteasy class.\r\nhttps://github.com/quarkusio/quarkus/blob/main/independent-projects/resteasy-reactive/server/runtime/src/main/java/org/jboss/resteasy/reactive/server/core/SseUtil.java\r\n\r\nWrapping the data serialization in a null check solved the issue for me\r\n```\r\nif (event.getData() != null) {\r\n  String data = serialiseDataToString(context, event, eventMediaType);\r\n  serialiseField(context, sb, \"data\", data, true);\r\n}\r\n```\r\n\r\nStack trace of the error\r\n```\r\njava.lang.NullPointerException: Cannot invoke \"java.lang.Class.getInterfaces()\" because \"currentClass\" is null\r\n  at org.jboss.resteasy.reactive.common.core.Serialisers.findResourceWriters(Serialisers.java:180)\r\n  at org.jboss.resteasy.reactive.common.core.Serialisers.findWriters(Serialisers.java:256)\r\n  at org.jboss.resteasy.reactive.common.core.Serialisers.findWriters(Serialisers.java:234)\r\n  at org.jboss.resteasy.reactive.server.core.SseUtil.serialiseDataToString(SseUtil.java:127)\r\n  at org.jboss.resteasy.reactive.server.core.SseUtil.serialiseEvent(SseUtil.java:70)\r\n  at org.jboss.resteasy.reactive.server.core.SseUtil.send(SseUtil.java:36)\r\n  at org.jboss.resteasy.reactive.server.jaxrs.SseEventSinkImpl.send(SseEventSinkImpl.java:33)\r\n```\n\n### Expected behavior\n\nA comment-only SSE event can be sent.\n\n### Actual behavior\n\nSending a comment-only SSE event throws an error.\n\n### How to Reproduce?\n\nSend a comment-only SSE\r\n\r\n```\r\nOutboundSseEvent sseEvent = sse.newEventBuilder().comment(\"keepalive\").build();\r\nsseEventSink.send(sseEvent);\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.12.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28801/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28801/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

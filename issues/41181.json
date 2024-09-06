@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41181",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41181/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41181/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41181/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41181",
+  "id": 2349912425,
+  "node_id": "I_kwDOCFbutM6MENFp",
+  "number": 41181,
+  "title": "Kubernetes Job does not inherit customization made to the Kubernetes deployment",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-06-13T00:50:04Z",
+  "updated_at": "2024-06-14T12:19:44Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nPer the documentation of init tasks https://quarkus.io/guides/init-tasks#controlling-the-generated-job:\r\n\r\n> The image, image pull policy, service account, volumes, mounts and additional environment variables are inherited/copied from the deployment resource. Any customization to the original deployment resource (via configuration or extension) will also be reflected in the job.\r\n\r\nHowever this does not seem to be the case.\r\n\r\nGiven the following config in `application.yaml`:\r\n\r\n```\r\nquarkus:\r\n  container-image:\r\n    registry: 123456789012.dkr.ecr.us-east-1.amazonaws.com\r\n    group: \"\"\r\n    name: myapp\r\n    push: true\r\n  kubernetes:\r\n    namespace: myapp\r\n    deployment-target: kubernetes\r\n    deploy: true\r\n    rbac:\r\n      service-accounts:\r\n        myapp:\r\n          namespace: ${quarkus.kubernetes.namespace}\r\n          use-as-default: true\r\n```\r\n\r\nWhen adding the following to the `src/main/kubernetes/kubernetes.yml`:\r\n\r\n```\r\n---\r\napiVersion: apps/v1\r\nkind: Deployment\r\nmetadata:\r\n  name: my-app\r\nspec:\r\n  template:\r\n    spec:\r\n      containers:\r\n      - name: my-app\r\n        securityContext:\r\n          allowPrivilegeEscalation: false\r\n          capabilities:\r\n            drop:\r\n              - ALL\r\n          readOnlyRootFilesystem: true\r\n          runAsNonRoot: true\r\n          seccompProfile:\r\n            type: RuntimeDefault\r\n      initContainers:\r\n      - name: my-app\r\n        securityContext:\r\n          allowPrivilegeEscalation: false\r\n          capabilities:\r\n            drop:\r\n              - ALL\r\n          readOnlyRootFilesystem: true\r\n          runAsNonRoot: true\r\n          seccompProfile:\r\n            type: RuntimeDefault\r\n```\r\n\r\nThe resulting job does not inherit the `securityContext` customization:\r\n\r\n```\r\napiVersion: batch/v1\r\nkind: Job\r\nmetadata:\r\n  name: myapp-flyway-init\r\n  namespace: myapp\r\nspec:\r\n  completionMode: NonIndexed\r\n  template:\r\n    metadata:\r\n      namespace: myapp\r\n    spec:\r\n      containers:\r\n        - env:\r\n            - name: QUARKUS_INIT_AND_EXIT\r\n              value: \"true\"\r\n            - name: QUARKUS_FLYWAY_ENABLED\r\n              value: \"true\"\r\n          image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/myapp:1.0.0-SNAPSHOT\r\n          name: myapp-flyway-init\r\n      restartPolicy: OnFailure\r\n      serviceAccountName: myapp\r\n```\r\n\r\nWhen trying to bring the customization to the Job itself in `src/main/kubernetes/kubernetes.yml`:\r\n\r\n```\r\napiVersion: batch/v1\r\nkind: Job\r\nmetadata:\r\n  name: myapp-flyway-init\r\nspec:\r\n  template:\r\n    spec:\r\n      containers:\r\n      - name: myapp-flyway-init\r\n        securityContext:\r\n          allowPrivilegeEscalation: false\r\n          capabilities:\r\n            drop:\r\n            - ALL\r\n          readOnlyRootFilesystem: true\r\n          runAsNonRoot: true\r\n          seccompProfile:\r\n            type: RuntimeDefault\r\n```\r\n\r\nThe resulting yaml misses the `spec.template.spec.container.[0].image` and the `spec.template.spec.restartPolicy`:\r\n\r\n```\r\napiVersion: batch/v1\r\nkind: Job\r\nmetadata:\r\n  name: myapp-flyway-init\r\n  namespace: myapp\r\nspec:\r\n  template:\r\n    metadata:\r\n      namespace: myapp\r\n    spec:\r\n      containers:\r\n        - env:\r\n            - name: QUARKUS_FLYWAY_ENABLED\r\n              value: \"true\"\r\n            - name: QUARKUS_INIT_AND_EXIT\r\n              value: \"true\"\r\n          name: myapp-flyway-init\r\n          securityContext:\r\n            allowPrivilegeEscalation: false\r\n            capabilities:\r\n              drop:\r\n                - ALL\r\n            readOnlyRootFilesystem: true\r\n            runAsNonRoot: true\r\n            seccompProfile:\r\n              type: RuntimeDefault\r\n      serviceAccountName: myapp\r\n```\n\n### Implementation ideas\n\nIt does not seem possible to customize the `securityContext` of the generated `Job`. \r\nNo configuration option for this. \r\nNot possible via `src/main/kubernetes/kubernetes.yml` because of the missing attributes when doing so.\r\nCustomization made to the deployment via `src/main/kubernetes/kubernetes.yml` is not reflected to the job.\r\n\r\nThis could probably be improved. The job spec should maybe be reflecting the deployment spec, after all customization. Spec such as the pod securityContext or container securityContext make sense at least.\r\n\r\nAlso when customized via `src/main/kubernetes/kubernetes.yml, the job generation should set the `spec.template.spec.container.[0].image` and the `spec.template.spec.restartPolicy` if not customized.. That maybe is a bug.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41181/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41181/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

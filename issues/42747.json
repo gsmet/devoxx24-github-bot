@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42747",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42747/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42747/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42747/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42747",
+  "id": 2485344785,
+  "node_id": "I_kwDOCFbutM6UI1oR",
+  "number": 42747,
+  "title": "OpenShift:  improve triggering of Deployment from ImageStream",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-08-25T15:51:24Z",
+  "updated_at": "2024-08-25T15:51:28Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nThe main reason for opening this issue is that the [deploying-to-openshift](https://quarkus.io/guides/deploying-to-openshift) docs page says the following:\r\n> Since Deployment is a Kubernetes resource and not OpenShift specific, it can’t possibly leverage ImageStream resources, as is the case with DeploymentConfig.\r\n\r\nI don't think this is _entirely_ correct to say: it's possible to set the `image.openshift.io/triggers` annotation in a Deployment (also works with other resource types like CronJob/Job, StatefulSet, DaemonSet, Pod) such that it will be updated with the new image reference, when the ImageStreamTag is updated.\r\n\r\nI think past releases of Quarkus defaulted to using DeploymentConfig, and the latest image in the ImageStreamTag was automatically deployed, no matter if the image was updated by something that the developer did outside Quarkus (such as manually triggering a BuildConfig that updated it), or by using one of the quarkus conveniences (such as the `quarkus build -Dquarkus.openshift.deploy=true` in the docs that seems like it waits for the build to finish, then modifies the Deployment with the new image reference). Now that Quarkus appears to default to Deployment, the Deployment doesn't appear to get updated with the new image reference if the ImageStreamTag is updated outside of Quarkus.\r\n\r\nNow that DeploymentConfig is deprecated since OpenShift 4.14 and Deployment is the default in Quarkus, I think this would be a nice improvement\n\n### Implementation ideas\n\nPer the [OpenShift docs on triggering updates on ImageStream changes](https://docs.openshift.com/container-platform/4.16/openshift_images/triggering-updates-on-imagestream-changes.html), an annotation can be added like this to appropriate Kubernetes resources:\r\n\r\n```yaml\r\n    image.openshift.io/triggers:\r\n      [\r\n       {\r\n         \"from\": {\r\n           \"kind\": \"ImageStreamTag\", \r\n           \"name\": \"example:latest\", \r\n           \"namespace\": \"myapp\" \r\n         },\r\n         \"fieldPath\": \"spec.template.spec.containers[?(@.name==\\\"web\\\")].image\", \r\n         \"paused\": false \r\n       },\r\n      # ...\r\n      ]\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42747/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42747/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

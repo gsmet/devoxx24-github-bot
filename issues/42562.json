@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42562",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42562/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42562/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42562/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42562",
+  "id": 2467007021,
+  "node_id": "I_kwDOCFbutM6TC4ot",
+  "number": 42562,
+  "title": "Listen on Unix Domain Socket passed via FD",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-08-14T23:59:23Z",
+  "updated_at": "2024-08-27T11:13:50Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nSome process managers, most importantly systemd, support passing an opened socket as a file descriptor to services which they can inherit and listen on. This allows the process to run without superuser privileges or the CAP_NET_BIND_SERVICE capability while still being able to listen on ports < 1024.\r\nAnother advantage is that this allows the service manager to create the socket and start listening without starting the service directly. This can be advantageous for ad-hoc services (like SSH) where the server must not always run saving more resources.\r\n\r\nTraditionally (x)inetd has supported something quite similar though that was limited to spawning a new process instance for each incoming connection and connecting the stream to stdin/stdout of the process. The systemd variant simply passes a socket (usually TCP/IP but supports others) as a FD upon which the process can call `accept` as usual\n\n### Implementation ideas\n\nQuarkus needs to be able to construct a server accepting connections on a Server socket constructed from a file descriptior. Ideally this gets auto-detected when `$LISTEN_FDS` is set but a manual variant would already be a great improvement.\r\n\r\nFor inetd style socket passing this should be possible using `System.inheritedChannel`, however, that channel is directly bound to a client and a new process would need to be started for each connection. It is more desirable to create a ServerSocket/ServerChannel which would allow accepting incoming connections as usual.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42562/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42562/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

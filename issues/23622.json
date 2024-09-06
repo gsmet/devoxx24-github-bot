@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23622",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23622/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23622/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23622/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23622",
+  "id": 1132922980,
+  "node_id": "I_kwDOCFbutM5Dhwhk",
+  "number": 23622,
+  "title": "\"BlockingNotAllowedException: Attempting a blocking read on io thread\" when @RestQuery is missing",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-02-11T18:01:46Z",
+  "updated_at": "2022-02-21T17:55:34Z",
+  "closed_at": "2022-02-21T15:29:28Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI was trying to use query parameters with RestEasy reactive, but was missing the `@RestQuery` annotation at first.\r\n\r\n\r\nThis led to the following exception, which is in my opinion very misleading and took me a lot of time to get to the actual reason.\r\n\r\n```\r\norg.jboss.resteasy.reactive.common.core.BlockingNotAllowedException: Attempting a blocking read on io thread\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream$VertxBlockingInput.readBlocking(VertxInputStream.java:242)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream.readIntoBuffer(VertxInputStream.java:120)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream.read(VertxInputStream.java:82)\r\n\tat org.jboss.resteasy.reactive.server.vertx.VertxInputStream.read(VertxInputStream.java:70)\r\n\tat org.jboss.resteasy.reactive.common.providers.serialisers.PrimitiveBodyHandler.readFrom(PrimitiveBodyHandler.java:21)\r\n\tat org.jboss.resteasy.reactive.server.providers.serialisers.ServerStringMessageBodyHandler.readFrom(ServerStringMessageBodyHandler.java:37)\r\n\tat org.jboss.resteasy.reactive.server.providers.serialisers.ServerStringMessageBodyHandler.readFrom(ServerStringMessageBodyHandler.java:14)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RequestDeserializeHandler.readFrom(RequestDeserializeHandler.java:108)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RequestDeserializeHandler.handle(RequestDeserializeHandler.java:68)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RequestDeserializeHandler.handle(RequestDeserializeHandler.java:25)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:141)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:49)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:17)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:7)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1212)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:163)\r\n\tat io.vertx.ext.web.impl.RoutingContextWrapper.next(RoutingContextWrapper.java:201)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:67)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:55)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1212)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:126)\r\n\tat io.vertx.ext.web.impl.RoutingContextWrapper.next(RoutingContextWrapper.java:201)\r\n\tat io.vertx.ext.web.handler.impl.StaticHandlerImpl.lambda$sendStatic$1(StaticHandlerImpl.java:274)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\n\n### Expected behavior\n\nA nice annotation that says something like \"@RestQuery annotation missing\" or as no annotation means, it assumes the argument is a path param according to here https://quarkus.io/guides/resteasy-reactive#accessing-request-parameters \r\n\r\n> the [@RestPath](https://javadoc.io/doc/io.quarkus.resteasy.reactive/resteasy-reactive-common/2.0.0.Final/org/jboss/resteasy/reactive/RestPath.html) annotation is optional: any parameter whose name matches an existing URI template variable will be automatically assumed to have [@RestPath](https://javadoc.io/doc/io.quarkus.resteasy.reactive/resteasy-reactive-common/2.0.0.Final/org/jboss/resteasy/reactive/RestPath.html).\r\n\r\n\r\nOr something like `Path parameter requires placeholder in @Path as well`\r\n\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23622/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23622/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

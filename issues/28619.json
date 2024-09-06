@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28619",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28619/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28619/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28619/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28619",
+  "id": 1410311917,
+  "node_id": "I_kwDOCFbutM5UD6bt",
+  "number": 28619,
+  "title": "Agroal Connection Leak with Panache Streaming and without @Transaction",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2955097332,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3MzMy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/agroal",
+      "name": "area/agroal",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-10-15T22:54:55Z",
+  "updated_at": "2023-10-23T12:11:16Z",
+  "closed_at": "2023-10-23T10:04:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThere's a connection leak when use hibernate stream without transaction.\r\n\r\nThe leak occur even when stream is closed.\r\n\r\nThere's no connection leak with `@Transaction`.\r\n\r\nI started having this problem in version 2.13.2, but I don't know if it happens in older version.\r\n\r\n### Expected behavior\r\n\r\nThe connection should be closed (return to the pool) in the end of request or at least when stream is closed.\r\n\r\nIn case of non closed stream, the connection should be closed also. I think a warning message can be printed istead.\r\n\r\n### Actual behavior\r\n\r\nThe connection still allocated and when reach 20 connections an exception is throwed: `Sorry, acquisition timeout!`.\r\n\r\n### How to Reproduce?\r\n\r\nI using postgres with non reactive api of ORM with Panache.\r\n\r\nFrom Resource class:\r\n```\r\n@ApplicationScoped\r\npublic class ...\r\n\r\n    @POST\r\n    @Path(\"thePath\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public List<Dto> list() {\r\n        return service.list();\r\n    }\r\n```\r\n\r\nFrom Service class:\r\n```\r\n@ApplicationScoped\r\npublic class ...\r\n\r\n    public List<Dto> list() {\r\n            try (Stream<Ent> stream = repository.myQuery().stream()) {\r\n                return stream .map(ent -> mapper.toDto(ent))\r\n                        .collect(Collectors.toList());\r\n            }\r\n    }\r\n```\r\n\r\nPanache Class:\r\n```\r\n@ApplicationScoped\r\npublic class RepositoryX implements PanacheRepository<Ent> {\r\n\r\n    public PanacheQuery<Ent> myQuery() {\r\n            return findAll(Sort.ascending(\"myField\"));\r\n    }\r\n```\r\n\r\n- Call the endpoint 21 times.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [versão 10.0.19043.2006]\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Zulu15.36+13-CA (build 15.0.5+3-MTS)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\ngradle-7.4.1\r\n\r\n### Additional information\r\n\r\nExtra: sometimes a have tried to return Stream direct from endpoint but when response takes long time, the transaction is closed by timeout. There's some way to \"revalidate\" transaction timeout? It'll work with munity? ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28619/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28619/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

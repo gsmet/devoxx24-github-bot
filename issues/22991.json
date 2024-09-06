@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22991",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22991/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22991/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22991/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22991",
+  "id": 1107347329,
+  "node_id": "I_kwDOCFbutM5CAMeB",
+  "number": 22991,
+  "title": "ScramLoginModule failed when using env vars",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-01-18T20:46:47Z",
+  "updated_at": "2022-05-01T15:17:20Z",
+  "closed_at": "2022-05-01T15:17:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen you use **ScramLoginModule** you get the following error:\r\n\r\n```\r\nIllegalArgumentException: Value not specified for key ' password=' in JAAS config\r\nat org.apache.kafka.common.security.JaasConfig.parseAppConfigurationEntry(JaasConfig:116)\r\n```\r\n\r\nconfig:\r\n\r\n```\r\n%prod.mp.messaging.connector.smallrye-kafka.security.protocol=SASL_SSL\r\n%prod.mp.messaging.connector.smallrye-kafka.sasl.mechanism=SCRAM-SHA-512\r\n%prod.mp.messaging.connector.smallrye-kafka.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username=\"${KAFKA_USERNAME}\" password=\"${KAFKA_PASSWORD}\";\r\n```\r\n\r\nENV:\r\n\r\n```\r\nKAFKA_USERNAME: alice\r\nKAFKA_PASSWORD: alice-secret\r\n```\r\n\r\nI tried different ways in order to get value setted properly inside app, as follows:\r\n\r\n```\r\nusername=\\\"${KAFKA_USERNAME}\\\" password=\\\"${KAFKA_PASSWORD}\\\"\r\nusername=\"${kafka.username}\" password=\"${kafka.password}\"\r\n```\r\n\r\nUsing PlainLoginModule env vars was set properly as expected.\r\n\r\nI tried to create Kafka cluster with SASL_SSL to made your life easy to reproduce this issue but I was not able to do that.\r\nI got this error in Amazon MSK.\r\n\r\nDockerfile\r\n\r\n```\r\n## Stage 1: build native sources\r\nFROM gradle:7.3-jdk11 AS gradle-build\r\nUSER root\r\nCOPY build.gradle /code/\r\nCOPY settings.gradle /code/\r\nCOPY gradle.properties /code/\r\n\r\nWORKDIR /code\r\nCOPY src /code/src\r\n\r\nRUN gradle clean build\r\n\r\n\r\nFROM registry.access.redhat.com/ubi8/openjdk-11-runtime:1.10\r\n\r\nUSER root\r\nENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'\r\n\r\n# Configure the JAVA_OPTIONS, you can add -XshowSettings:vm to also display the heap size.\r\nENV JAVA_OPTIONS=\"-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager\"\r\n\r\n# We make four distinct layers so if there are application changes the library layers can be re-used\r\nCOPY --chown=185 --from=gradle-build /code/build/quarkus-app/lib/ /deployments/lib/\r\nCOPY --chown=185 --from=gradle-build /code/build/quarkus-app/*.jar /deployments/\r\nCOPY --chown=185 --from=gradle-build /code/build/quarkus-app/app/ /deployments/app/\r\nCOPY --chown=185 --from=gradle-build /code/build/quarkus-app/quarkus/ /deployments/quarkus/\r\n\r\nEXPOSE 8080\r\nUSER 185\r\n\r\nENTRYPOINT [ \"java\", \"-jar\", \"/deployments/quarkus-run.jar\" ]\r\n```\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk-11-runtime:1.10\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n7.3-jdk11\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22991/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22991/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30846",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30846/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30846/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30846/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30846",
+  "id": 1569706362,
+  "node_id": "I_kwDOCFbutM5dj9F6",
+  "number": 30846,
+  "title": "Removing javax.decorator.Decorator annoation on class in AnnotationsTransformerBuildItem has no effect",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2023-02-03T11:39:37Z",
+  "updated_at": "2023-06-26T10:39:53Z",
+  "closed_at": "2023-06-26T10:39:53Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nRemoving `javax.decorator.Decorator` in extension with AnnotationsTransformerBuildItem has no effect as `io.quarkus.arc.processor.BeanDeployment` uses only `beanArchiveImmutableIndex `and doesn't check against AnnotationStore (which actually applies annotation transformations) if decorator annotation was removed within some `AnnotationsTransformerBuildItem ` build step. \r\n\r\nSee here:\r\nhttps://github.com/quarkusio/quarkus/blob/6faf038f8964c9685a2028d2fa56d3b13205e2b2/independent-projects/arc/processor/src/main/java/io/quarkus/arc/processor/BeanDeployment.java#L1287\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nWrite quarkus extension with following deployment processor\r\n\r\n```java\r\nimport io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;\r\nimport io.quarkus.arc.processor.AnnotationsTransformer;\r\nimport io.quarkus.arc.processor.DotNames;\r\nimport io.quarkus.deployment.annotations.BuildStep;\r\nimport io.quarkus.deployment.builditem.FeatureBuildItem;\r\n\r\npublic class MyDeploymentProcessor {\r\n\r\n    public static final String FEATURE_NAME = \"mytest\";\r\n\r\n    @BuildStep\r\n    FeatureBuildItem feature() {\r\n        return new FeatureBuildItem(FEATURE_NAME);\r\n    }\r\n\r\n    @BuildStep\r\n    public AnnotationsTransformerBuildItem removeDecorators() {\r\n        return new AnnotationsTransformerBuildItem(new AnnotationsTransformer() {\r\n\r\n            @Override\r\n            public boolean appliesTo(org.jboss.jandex.AnnotationTarget.Kind kind) {\r\n                return true;\r\n            }\r\n\r\n            @Override\r\n            public void transform(TransformationContext context) {\r\n                context.transform()\r\n                        .remove(ann -> DotNames.DECORATOR.equals(ann.name()))\r\n                        .done();\r\n            }\r\n\r\n        });\r\n    }\r\n}\r\n```\r\nAnd implement decorators\r\ne.g.:\r\n\r\n```java\r\n \r\nimport static org.junit.jupiter.api.Assertions.assertEquals;\r\n\r\nimport javax.annotation.Priority;\r\nimport javax.decorator.Decorator;\r\nimport javax.decorator.Delegate;\r\nimport javax.enterprise.context.Dependent;\r\nimport javax.inject.Inject;\r\n\r\nimport org.jboss.shrinkwrap.api.ShrinkWrap;\r\nimport org.jboss.shrinkwrap.api.asset.EmptyAsset;\r\nimport org.jboss.shrinkwrap.api.spec.JavaArchive;\r\nimport org.junit.jupiter.api.Test;\r\nimport org.junit.jupiter.api.extension.RegisterExtension;\r\n\r\nimport io.quarkus.test.QuarkusUnitTest;\r\n\r\npublic class DecoratorTest {\r\n\r\n    @RegisterExtension\r\n    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()\r\n            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)\r\n                    .addAsManifestResource(EmptyAsset.INSTANCE, \"beans.xml\"));\r\n\r\n    public interface TestInterface {\r\n        String getValue();\r\n    }\r\n\r\n    @Dependent\r\n    public static class DefaultBean implements TestInterface {\r\n\r\n        @Override\r\n        public String getValue() {\r\n            return \"Default\";\r\n        }\r\n\r\n    }\r\n\r\n    @Priority(1)\r\n    @Decorator\r\n    public static class MyDecorator implements TestInterface {\r\n\r\n        @Inject\r\n        @Delegate\r\n        TestInterface delegate;\r\n\r\n        @Override\r\n        public String getValue() {\r\n            return \"Decorator \" + delegate.getValue();\r\n        }\r\n\r\n    }\r\n\r\n    @Inject\r\n    TestInterface bean;\r\n\r\n    @Test\r\n    public void decorator_is_ignored() {\r\n        //fails with DecoratorTest.decorator_is_ignored:60 expected: <Default> but was: <Decorator Default>\r\n        assertEquals(\"Default\", bean.getValue());\r\n    }\r\n\r\n}\r\n\r\n```\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30846/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30846/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

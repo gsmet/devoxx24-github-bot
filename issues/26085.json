@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26085",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26085/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26085/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26085/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26085",
+  "id": 1269391352,
+  "node_id": "I_kwDOCFbutM5LqV_4",
+  "number": 26085,
+  "title": "Quarkus Test fails due to a ClassCastException while deserializing Avro generated object",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-06-13T12:51:02Z",
+  "updated_at": "2022-09-01T09:32:35Z",
+  "closed_at": "2022-08-22T09:12:21Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe issue: I have a Quarkus microservice that uses kafka for sending cloud events.\r\nThe dependencies are:\r\n\r\n```xml\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-arc</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-rest-client</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-rest-client-jackson</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-openapi</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-apicurio-registry-avro</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-jwt-build</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-junit5</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.smallrye.reactive</groupId>\r\n      <artifactId>smallrye-reactive-messaging-in-memory</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n```\r\n\r\nAfter upgrading from quarkus version 2.5.0.Final to 2.8.2.Final, my Quarkus Test fails due to a ClassCastException while deserializing an Avro generated object.\r\n\r\n### Expected behavior\r\n\r\nSuccessful deserialization of Avro generated objects and successful QuarkusTests.\r\n\r\n### Actual behavior\r\n\r\nQuarkus Tests for consuming services fail:\r\n\r\n```posh\r\n2022-05-23 07:04:02,195 WARN  [io.sma.rea.mes.kafka] (smallrye-kafka-consumer-thread-6) SRMSG18228: A failure has been reported for Kafka topics '[xxxxxxxxxxxxxxxx]': java.lang.IllegalStateException: Error getting schema [com.avro.generated.Object]: com.avro.generated.Object\r\n\tat io.apicurio.registry.serde.avro.DefaultAvroDatumProvider.lambda$getReaderSchema$0(DefaultAvroDatumProvider.java:66)\r\n\tat java.base/java.util.concurrent.ConcurrentHashMap.computeIfAbsent(ConcurrentHashMap.java:1705)\r\n\tat io.apicurio.registry.serde.avro.DefaultAvroDatumProvider.getReaderSchema(DefaultAvroDatumProvider.java:60)\r\n\tat io.apicurio.registry.serde.avro.DefaultAvroDatumProvider.createDatumReader(DefaultAvroDatumProvider.java:94)\r\n\tat io.apicurio.registry.serde.avro.AvroKafkaDeserializer.readData(AvroKafkaDeserializer.java:110)\r\n\tat io.apicurio.registry.serde.AbstractKafkaDeserializer.readData(AbstractKafkaDeserializer.java:142)\r\n\tat io.apicurio.registry.serde.AbstractKafkaDeserializer.deserialize(AbstractKafkaDeserializer.java:122)\r\n\tat io.smallrye.reactive.messaging.kafka.fault.DeserializerWrapper.lambda$deserialize$1(DeserializerWrapper.java:74)\r\n\tat io.smallrye.reactive.messaging.kafka.fault.DeserializerWrapper.wrapDeserialize(DeserializerWrapper.java:106)\r\n\tat io.smallrye.reactive.messaging.kafka.fault.DeserializerWrapper.deserialize(DeserializerWrapper.java:74)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher.parseRecord(Fetcher.java:1439)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher.access$3400(Fetcher.java:135)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher$CompletedFetch.fetchRecords(Fetcher.java:1671)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher$CompletedFetch.access$1900(Fetcher.java:1507)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher.fetchRecords(Fetcher.java:733)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher.fetchedRecords(Fetcher.java:684)\r\n\tat org.apache.kafka.clients.consumer.KafkaConsumer.pollForFetches(KafkaConsumer.java:1304)\r\n\tat org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:1238)\r\n\tat org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:1211)\r\n\tat io.smallrye.reactive.messaging.kafka.impl.ReactiveKafkaConsumer.lambda$poll$4(ReactiveKafkaConsumer.java:141)\r\n\tat io.smallrye.reactive.messaging.kafka.impl.ReactiveKafkaConsumer.lambda$runOnPollingThread$0(ReactiveKafkaConsumer.java:108)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromItemSupplier.subscribe(UniCreateFromItemSupplier.java:28)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniRunSubscribeOn.lambda$subscribe$0(UniRunSubscribeOn.java:27)\r\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)\r\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\r\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\nCaused by: java.lang.ClassCastException: class com.avro.generated.Object cannot be cast to class org.apache.avro.specific.SpecificRecord (com.avro.generated.Object is in unnamed module of loader 'app'; org.apache.avro.specific.SpecificRecord is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @336f1079)\r\n\tat io.apicurio.registry.serde.avro.DefaultAvroDatumProvider.lambda$getReaderSchema$0(DefaultAvroDatumProvider.java:64)\r\n\t... 30 more\r\n```\r\n\r\n(the avro generated object's path name, as well als the kafka topic name were altered for the purpose of hiding internal information)\r\n\r\n\r\n### How to Reproduce?\r\n\r\n1. A service based on Quarkus 2.8.2.Final which uses smallrye-kafka for sending kafka cloud events to a kafka topic\r\n2. Another service which consume kafka events from this topic\r\n3. A QuarkusTest using io.smallrye.reactive.messaging.connectors.public interface InMemorySink to verify that kafka events sent by the producing service are consumed by the other service\r\n\r\nAlthough kafka-console shows that kafka events are pushed correctly to the topic, the QuarkusTest fails with above ClassCastException when deserializing the kafka data.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux 5.11.0-27-generic #29~20.04.1-Ubuntu SMP Wed Aug 11 15:58:17 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.14.1\" 2022-02-08 OpenJDK Runtime Environment (build 11.0.14.1+1-Ubuntu-0ubuntu1.20.04) OpenJDK 64-Bit Server VM (build 11.0.14.1+1-Ubuntu-0ubuntu1.20.04, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.8.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26085/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26085/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

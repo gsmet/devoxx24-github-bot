@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25026",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25026/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25026/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25026/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25026",
+  "id": 1209344994,
+  "node_id": "I_kwDOCFbutM5IFSPi",
+  "number": 25026,
+  "title": "Resteasy ContainerResponseFilter not executed in case of exception which is not a WebApplicationException",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2022-04-20T08:25:24Z",
+  "updated_at": "2022-04-20T13:42:02Z",
+  "closed_at": "2022-04-20T13:39:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm registering a custom `ContainerResponseFilter` that adds a custom header through an extension:\r\n\r\n```\r\npublic class MyResponseFilter implements ContainerResponseFilter {\r\n  @Override\r\n  public void filter(\r\n      ContainerRequestContext requestContext, ContainerResponseContext responseContext) {\r\n    MultivaluedMap<String, Object> responseHeaders = responseContext.getHeaders();\r\n    responseHeaders.putSingle(\"X-Test\", \"123\");\r\n}\r\n```\r\n\r\n```\r\n@Provider\r\npublic class ResteasyMyDynamicFeature implements DynamicFeature {\r\n  @Override\r\n  public void configure(ResourceInfo resourceInfo, FeatureContext context) {\r\n    context.register(MyResponseFilter.class);\r\n  }\r\n}\r\n```\r\n\r\n```\r\n@BuildStep\r\npublic void setupFilter(\r\n      BuildProducer<ResteasyJaxrsProviderBuildItem> providers, Capabilities capabilities) {\r\n  if (capabilities.isPresent(Capability.RESTEASY)) {\r\n    providers.produce(\r\n        new ResteasyJaxrsProviderBuildItem(ResteasyMyDynamicFeature.class.getName()));\r\n  }\r\n}\r\n```\r\n\r\nThis works fine in the case where a controller/resource method returns, but in the case of the method throwing any kind of exception (checked, runtime) the header is not added, only in the case of a WebApplicationException is the filter executed.\r\n\r\n### Expected behavior\r\n\r\nThe ContainerResponseFilter is executed in case of any exception being thrown\r\n\r\n### Actual behavior\r\n\r\nThe ContainerResponseFilter is **not** executed in case of an exception being thrown, unless it is a WebApplicationException.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nmacOS 12.3.1\r\n\r\n### Output of `java -version`\r\n\r\n17.0.2\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.8.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.2\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25026/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25026/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

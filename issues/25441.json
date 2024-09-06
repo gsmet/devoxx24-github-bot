@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25441",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25441/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25441/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25441/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25441",
+  "id": 1228963532,
+  "node_id": "I_kwDOCFbutM5JQH7M",
+  "number": 25441,
+  "title": "Test containers create a new network per integration test when using different test resources per test",
+  "labels": [
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-05-08T19:06:21Z",
+  "updated_at": "2022-06-09T10:42:53Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWithin our project, we build our app as a docker image, and execute integration tests against it. It is mostly the case that each integration test has different test resources using `@QuarkusTestResource`. As such, each time a new integration test class is run by failsafe, a fresh docker container will be started - instead of reusing the same one.\r\n\r\nEach time this happens, due to the way the class loading works, we will get a new `org.testcontainers.containers.Network.SHARED`  instance for each test class, meaning that test containers creates a brand new docker network each time an integration test class is run. \r\n\r\nWe have a lot of integration test classes and the creation of a new network for each one is causing our bitbucket pipeline to reach some level of saturation and causes resolution of host names to start failing.\r\n\r\nI have created a simple work around for our project by adding the test containers dependency to our POM and adding it to `quarkus.class-loading.parent-first-artifacts`\n\n### Expected behavior\n\nOnly one network is created by test containers for all integration tests - even if they all use different test resources.\n\n### Actual behavior\n\nA new network is created for each integration test class that runs.\n\n### How to Reproduce?\n\nI am afraid I cannot share our codebase with, but I have created a simple reference to demonstrate the problem which you can find here: https://bitbucket.org/mcassidy/quarkusdockernetworkissue/src/master/\r\n\r\nIf you have a look at the pipeline output for it, https://bitbucket.org/mcassidy/quarkusdockernetworkissue/addon/pipelines/home#!/results/5 you can see, that I have got 2 integration tests GreetingResourceIT and SecondGreetingResourceIT, each runs a `docker run` command to start the container and each passes a different `--net` argument each time. Whilst there are only 2 integration test classes in this example, so the saturation does not occur this does demonstrate the creation of a new network per test class. Given a sufficient volume of integration test classes too many networks will be created and the problem will occur. \n\n### Output of `uname -a` or `ver`\n\nDarwin Martins-MBP 20.6.0 Darwin Kernel Version 20.6.0: Tue Feb 22 21:10:41 PST 2022; root:xnu-7195.141.26~1/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\njava version \"13\" 2019-09-17 Java(TM) SE Runtime Environment (build 13+33) Java HotSpot(TM) 64-Bit Server VM (build 13+33, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.8.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.6.2 (40f52333136460af0dc0d7232c0dc0bcf0d9e117; 2019-08-27T16:06:16+01:00)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25441/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25441/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

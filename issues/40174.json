@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40174",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40174/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40174/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40174/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40174",
+  "id": 2255113065,
+  "node_id": "I_kwDOCFbutM6Gaktp",
+  "number": 40174,
+  "title": "Unable to see database changes in tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-04-21T14:43:31Z",
+  "updated_at": "2024-07-02T18:04:21Z",
+  "closed_at": "2024-07-02T18:04:21Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nQuerying for a record after making a change using the `#update`, from `PanacheRepository<T>` method doesn't reflect the change.\r\n\r\nHere's an example (the same as in the reproducer artefact attached): \r\n\r\n### 1 Test\r\n\r\n```java\r\n@Test\r\n@TestTransaction\r\nvoid changes_fruit_name() throws Exception {\r\n   repository.persist(new Fruit(\"apple\", \"description\", \"a1\"));\r\n   repository.changeName(\"Apple: Gala\", \"a1\");\r\n\r\n    var fruit = repository.find(\"reference\", \"a1\").firstResult();\r\n\r\n    assertThat(fruit.getName()).isEqualTo(\"Apple: Gala\");\r\n}\r\n```\r\n\r\n### 2 The implementation of `#changeName`\r\n\r\n```java\r\n@Transactional\r\npublic void changeName(String name, String reference) {\r\n    update(\r\n            \"name = :name where reference = :reference\",\r\n            Parameters\r\n                    .with(\"name\", name)\r\n                    .and(\"reference\", reference));\r\n\r\n}\r\n```\r\n\r\n### 3 Seeing the correct output\r\n\r\nThe interesting, _or weird part is_, the expected result is correct when using the entity manager directly, as shown below:\r\n\r\n```java\r\n@Test\r\n@TestTransaction\r\nvoid changes_fruit_name_checking_natively() throws Exception {\r\n   repository.persist(new Fruit(\"apple\", \"description\", \"a1\"));\r\n   repository.changeName(\"Apple: Gala\", \"a1\");\r\n\r\n    var fruit = (Object[]) repository.getEntityManager()\r\n            .createNativeQuery(\"select * from Fruit where reference = ?\")\r\n            .setParameter(1, \"a1\")\r\n            .getSingleResult();\r\n\r\n    assertThat(fruit[1]).isEqualTo(\"Apple: Gala\");\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\nExpect to see the record changed when retrieving with `#find` or other framework methods.\r\n\r\n\r\n### Actual behavior\r\n\r\nThe record returned has the information from the first time it was persisted, as part of the setup.\r\n\r\n### How to Reproduce?\r\n\r\n[reproducer-repository-test.tgz](https://github.com/quarkusio/quarkus/files/15052318/reproducer-repository-test.tgz)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin NDg2Nwo 23.3.0 Darwin Kernel Version 23.3.0: Thu Jan  4 13:56:14 PST 2024; root:xnu-10002.81.5~13/RELEASE_ARM64_T8112 arm64 arm Darwin\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 21.0.2 2024-01-16 LTS OpenJDK Runtime Environment Zulu21.32+17-CA (build 21.0.2+13-LTS) OpenJDK 64-Bit Server VM Zulu21.32+17-CA (build 21.0.2+13-LTS, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.9.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nopenjdk 21.0.2 2024-01-16 LTS OpenJDK Runtime Environment Zulu21.32+17-CA (build 21.0.2+13-LTS) OpenJDK 64-Bit Server VM Zulu21.32+17-CA (build 21.0.2+13-LTS, mixed mode, sharing)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40174/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40174/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

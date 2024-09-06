@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36875",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36875/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36875/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36875/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36875",
+  "id": 1977588370,
+  "node_id": "I_kwDOCFbutM5135qS",
+  "number": 36875,
+  "title": "Feature Request - default CoroutineContext",
+  "labels": [
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-11-05T01:44:02Z",
+  "updated_at": "2024-06-07T05:18:59Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Discussed in https://github.com/quarkusio/quarkus/discussions/36738\r\n\r\n<div type='discussions-op-text'>\r\n\r\n<sup>Originally posted by **pkozakCC** October 27, 2023</sup>\r\nThere are cases where the default `CoroutineContext` has to be modified for all suspendable RestEasy Resource method calls, for example in order to add a custom `CoroutineContext.Element` for every request, that would hold application-specific details, such as tenant ID (which is precisely my case btw).\r\n\r\nThis can be done manually, but it's tedious and error-prone.\r\n\r\nIt would be nice to introduce a mechanism that would make it possible to modify the default CoroutineContext.\r\nIt can be either of a form CoroutineWebFilter, that would return a suspendable function and would respect the context in the downstream, e.g.:\r\n\r\n```kotlin\r\n    suspend fun filter(\r\n        serverWebExchange: ServerWebExchange,\r\n        webFilterChain: CoroutineWebFilterChain,\r\n    ): Mono<Void> {\r\n        return withContext(MyCustomCoroutineContextElement()) {\r\n            webFilterChain.filter(serverWebExchange)\r\n        }\r\n    }\r\n\r\n    interface CoroutineWebFilterChain {\r\n        suspend fun filter(serverWebExchange: ServerWebExchange): Mono<Void>\r\n    }\r\n```\r\n\r\nOr similarly to the Spring approach (links below) - registering a list of `CoroutineContext.Element` in a filter (per request)\r\n\r\n\r\nAfter: \r\n- https://stackoverflow.com/questions/77370339/quarkus-default-coroutines-context?noredirect=1#comment136401015_77370339\r\n\r\nSpring Webflux approach for the issue (which will be released in 6.1) - current implementation of CoWebFilter does not respect the `CoroutineContext` changes:\r\n- https://github.com/spring-projects/spring-framework/issues/27522\r\n- https://github.com/spring-projects/spring-framework/commit/b0aa004d9db74b42d7d17883ed490388261ed96e</div>",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36875/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36875/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

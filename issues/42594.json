@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42594",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42594/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42594/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42594/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42594",
+  "id": 2470414525,
+  "node_id": "I_kwDOCFbutM6TP4i9",
+  "number": 42594,
+  "title": "Swagger UI Config for Implicit Auth Broken in Native Build",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 1688349292,
+      "node_id": "MDU6TGFiZWwxNjg4MzQ5Mjky",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/swagger-ui",
+      "name": "area/swagger-ui",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2024-08-16T14:42:30Z",
+  "updated_at": "2024-08-22T13:40:56Z",
+  "closed_at": "2024-08-22T13:40:56Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe are using Azure AD to authenticate the API. We are using the Oauth2 implicit flow.\r\n\r\nI'd like to allow users to login via the Swagger UI to authenticate to test APIs. When I run the app as a jar, it works as expected. The native build however does not load `quarkus.smallrye-openapi.oauth2-implicit-authorization-url` from the `application.properties` file. That value is missing in the Swagger UI and missing in the results from the Swagger UI calling the `/q/openapi` endpoint.\r\n\r\n### Expected behavior\r\n\r\nThe window pops up, accepts the Client ID and starts an authentication flow in the browser. The user logs in and is redirected back to the Swagger UI. Subsequent API calls in the UI attach the bearer token correctly.\r\n\r\n<img width=\"671\" alt=\"java\" src=\"https://github.com/user-attachments/assets/1ea234af-e73c-4a66-9011-12f1c0b1d073\">\r\n\r\nIn the endpoint call to `/q/openapi` I expect to find the URL configured at `quarkus.smallrye-openapi.oauth2-implicit-authorization-url` in `application.properties`:\r\n\r\n```\r\n\"components\" : {\r\n    \"securitySchemes\" : {\r\n      \"Azure AD\" : {\r\n        \"type\" : \"oauth2\",\r\n        \"description\" : \"Authentication\",\r\n        \"flows\" : {\r\n          \"implicit\" : {\r\n            \"authorizationUrl\" : \"https://login.microsoftonline.com/<tenantid>f/oauth2/v2.0/authorize\"\r\n          }\r\n        }\r\n      }\r\n    }\r\n```\r\n\r\n\r\n### Actual behavior\r\n\r\nThe window pops up. and the authorization URL is blank on the popup. Entering the Client ID and clicking the button causes a JavaScript error in the browser:\r\n\r\n`TypeError: Cannot read properties of undefined (reading 'indexOf')`\r\n\r\nNo redirects happen and the user cannot log in.\r\n\r\n<img width=\"670\" alt=\"native\" src=\"https://github.com/user-attachments/assets/06479644-08f4-4012-9ac2-b14368f00c75\">\r\n\r\nThe call to  the`/q/openapi` endpoint are missing the value for the URL in the JSON returned:\r\n\r\n```\r\n\"components\" : {\r\n    \"securitySchemes\" : {\r\n      \"Azure AD\" : {\r\n        \"type\" : \"oauth2\",\r\n        \"description\" : \"Authentication\",\r\n        \"flows\" : {\r\n          \"implicit\" : { }\r\n        }\r\n      }\r\n    }\r\n  }\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nI made a [repo with the minimum configuration](https://github.com/davetrux/quarkus-issue) that caused the problem, but to run it requires an app registration in Azure.\r\n\r\n1. I created a simple Quarkus app using the [web interface](https://code.quarkus.io/). I included REST, OpenID Connect, and SmallRye with Gradle compiling against Java 17.\r\n2. Added `@Authenticated`  to the `/hello` endpoint\r\n3. Added the following in `application.properties`:\r\n```\r\nquarkus.swagger-ui.title=Demo API\r\nquarkus.smallrye-openapi.info-title=Issue Demo API\r\nquarkus.smallrye-openapi.info-version=1.0.0\r\nquarkus.smallrye-openapi.info-description=API for demonstrating a config problem\r\nquarkus.swagger-ui.always-include=true\r\nquarkus.swagger-ui.operations-sorter=alpha\r\n\r\nquarkus.oidc.auth-server-url=https://sts.windows.net//${TENANT_ID}\r\nquarkus.smallrye-openapi.security-scheme=oauth2-implicit\r\nquarkus.smallrye-openapi.security-scheme-name=Azure AD\r\nquarkus.swagger-ui.oauth-scopes=openid\r\nquarkus.smallrye-openapi.oauth2-implicit-authorization-url=https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/authorize\r\nquarkus.oidc.token.customizer-name=azure-access-token-customizer\r\n```\r\n4. Build the native app: `./gradlew clean build -x test -Dquarkus.native.enabled=true -Dquarkus.package.jar.enabled=false`\r\n5. Run the native app: `TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx ./build/implicit-issue-1.0.0-SNAPSHOT-runner` where TENANT_ID is a UUID obtained from Azure.\r\n6. Visit the Swagger UI page: [http://localhost:8080/q/swagger-ui/](http://localhost:8080/q/swagger-ui/)\r\n7. Click the \"Authorize\" button\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin trux.local 23.6.0 Darwin Kernel Version 23.6.0: Mon Jul 29 21:13:04 PDT 2024; root:xnu-10063.141.2~1/RELEASE_ARM64_T6020 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 22.0.2 2024-07-16 OpenJDK Runtime Environment GraalVM CE 22.0.2+9.1 (build 22.0.2+9-jvmci-b01) OpenJDK 64-Bit Server VM GraalVM CE 22.0.2+9.1 (build 22.0.2+9-jvmci-b01, mixed mode, sharing)\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.13.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n------------------------------------------------------------ Gradle 8.8 ------------------------------------------------------------  Build time:   2024-05-31 21:46:56 UTC Revision:     4bd1b3d3fc3f31db5a26eecb416a165b8cc36082  Kotlin:       1.9.22 Groovy:       3.0.21 Ant:          Apache Ant(TM) version 1.10.13 compiled on January 4 2023 JVM:          22.0.2 (GraalVM Community 22.0.2+9-jvmci-b01) OS:           Mac OS X 14.6.1 aarch64\r\n\r\n### Additional information\r\n\r\nWe discovered the problem running in a container in K8s, but I was able to reproduce it locally with a simpler app. The container version is compiled for amd64 so the issue does not seem to be platform-specific.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42594/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42594/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

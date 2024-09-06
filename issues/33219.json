@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33219",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33219/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33219/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33219/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33219",
+  "id": 1701818274,
+  "node_id": "I_kwDOCFbutM5lb6-i",
+  "number": 33219,
+  "title": "GRPC health endpoint is always succesfull on OCP and leads to \"Type already defined\" exception in dev mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    },
+    {
+      "id": 2236032169,
+      "node_id": "MDU6TGFiZWwyMjM2MDMyMTY5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/health",
+      "name": "area/health",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2023-05-09T10:34:20Z",
+  "updated_at": "2023-05-26T09:20:32Z",
+  "closed_at": "2023-05-26T09:20:31Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have an application, which is deployed on Openshift. After I added GRPC health endpoint[1] to the app, I noticed, that health probes are always successful, even when endpoint should be throwing exceptions. When the application is started in dev mode locally, it throws exception `java.lang.IllegalStateException: Type already defined: grpc.health.v1.HealthCheckRequest` and doesn't not serve any endpoints. OpenShift logs for the same app doesn't contain the error.\r\n\r\n\r\n[1] https://github.com/quarkusio/quarkus/pull/32113\n\n### Expected behavior\n\nApplication should start in dev mode without exceptions. Health probes should fail on exceptions/error codes\n\n### Actual behavior\n\nStartup/readiness/liveness probes on Openshift are successful. In dev mode, the application throws this exception:\r\n\r\n```\r\n2023-05-09 11:46:43,349 ERROR [io.qua.run.Application] (Quarkus Main Thread) Failed to start application (with profile [dev]): java.lang.IllegalStateException: Type already defined: grpc.health.v1.HealthCheckRequest\r\n\tat io.quarkus.grpc.runtime.reflection.GrpcServerIndex.processType(GrpcServerIndex.java:144)\r\n\tat io.quarkus.grpc.runtime.reflection.GrpcServerIndex.processFileDescriptor(GrpcServerIndex.java:115)\r\n\tat io.quarkus.grpc.runtime.reflection.GrpcServerIndex.<init>(GrpcServerIndex.java:64)\r\n\tat io.quarkus.grpc.runtime.reflection.ReflectionService.<init>(ReflectionService.java:32)\r\n\tat io.quarkus.grpc.runtime.GrpcServerRecorder.buildServer(GrpcServerRecorder.java:494)\r\n\tat io.quarkus.grpc.runtime.GrpcServerRecorder.devModeStart(GrpcServerRecorder.java:250)\r\n\tat io.quarkus.grpc.runtime.GrpcServerRecorder.initializeGrpcServer(GrpcServerRecorder.java:119)\r\n\tat io.quarkus.deployment.steps.GrpcServerProcessor$initializeServer1019312497.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.GrpcServerProcessor$initializeServer1019312497.deploy(Unknown Source)\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:104)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\n\n### How to Reproduce?\n\n1. Create an application.\r\n2.  Add `quarkus-openshift` and `quarkus-grpc` dependencies\r\n3. Add this `health.proto` file to `src/main/proto/`:\r\n```\r\nsyntax = \"proto3\";\r\n\r\noption java_multiple_files = true;\r\noption java_package = \"io.quarkus.example\";\r\n\r\npackage grpc.health.v1;\r\n\r\nmessage HealthCheckRequest {\r\n    string service = 1;\r\n}\r\n\r\nmessage HealthCheckResponse {\r\n    enum ServingStatus {\r\n        UNKNOWN = 0;\r\n        SERVING = 1;\r\n        NOT_SERVING = 2;\r\n        SERVICE_UNKNOWN = 3;  // Used only by the Watch method.\r\n    }\r\n    ServingStatus status = 1;\r\n}\r\n\r\nservice HealthService {\r\n    rpc Check(HealthCheckRequest) returns (HealthCheckResponse);\r\n    rpc Watch(HealthCheckRequest) returns (stream HealthCheckResponse);\r\n}\r\n```\r\n2. Add this service: \r\n```\r\nimport io.quarkus.example.HealthCheckRequest;\r\nimport io.quarkus.example.HealthCheckResponse;\r\nimport io.quarkus.example.HealthService\r\nimport io.quarkus.grpc.GrpcService;\r\nimport io.smallrye.mutiny.Multi;\r\nimport io.smallrye.mutiny.Uni;\r\n\r\n@GrpcService\r\npublic class GrpcHealthService implements HealthService {\r\n\r\n    @Override\r\n    public Uni<HealthCheckResponse> check(HealthCheckRequest request) {\r\n        return Uni.createFrom().failure(new RuntimeException(\"Error!\"));\r\n    }\r\n\r\n    @Override\r\n    public Multi<HealthCheckResponse> watch(HealthCheckRequest request) {\r\n        return Multi.createFrom().failure(new RuntimeException(\"Error!\"));\r\n    }\r\n}\r\n```\r\n4.  Run in devmode: `mvn clean quarkus:dev`. This fails\r\n5. Add deployment options for Openshift into application.properties :\r\n```\r\nquarkus.openshift.readiness-probe.grpc-action=9000:grpc.health.v1.HealthService\r\nquarkus.openshift.startup-probe.grpc-action=9000:grpc.health.v1.HealthService\r\nquarkus.openshift.liveness-probe.grpc-action=9000:grpc.health.v1.HealthService\r\nquarkus.kubernetes-client.trust-certs=true\r\n```\r\n6. Deploy on openshift: `mvn clean install -Dquarkus.kubernetes.deploy=true`\r\n7. Check status:\r\n```\r\n$ oc get pods\r\nNAME                         READY   STATUS      RESTARTS   AGE\r\ncode-with-quarkus-1-build    0/1     Completed   0          12m\r\ncode-with-quarkus-1-deploy   0/1     Completed   0          12m\r\ncode-with-quarkus-1-wkpg8    1/1     Running     0          11m\r\n\r\n$ oc describe pod code-with-quarkus-1-wkpg8\r\nName:         code-with-quarkus-1-wkpg8\r\nNamespace:    fd-check\r\n<...>\r\nStart Time:   Tue, 09 May 2023 09:57:28 +0200\r\nLabels:       app.kubernetes.io/managed-by=quarkus\r\n              app.kubernetes.io/name=code-with-quarkus\r\n              app.kubernetes.io/version=1.0.0-SNAPSHOT\r\n              app.openshift.io/runtime=quarkus\r\n              deployment=code-with-quarkus-1\r\n              deploymentconfig=code-with-quarkus\r\nControlled By:  ReplicationController/code-with-quarkus-1\r\nContainers:\r\n  code-with-quarkus:\r\n<...>\r\n    Ports:          9000/TCP, 8443/TCP, 8080/TCP\r\n    Host Ports:     0/TCP, 0/TCP, 0/TCP\r\n    State:          Running\r\n      Started:      Tue, 09 May 2023 09:57:31 +0200\r\n    Ready:          True\r\n    Restart Count:  0\r\n    Liveness:       grpc <pod>:9000 grpc.health.v1.HealthService delay=5s timeout=10s period=10s #success=1 #failure=3\r\n    Readiness:      grpc <pod>:9000 grpc.health.v1.HealthService delay=5s timeout=10s period=10s #success=1 #failure=3\r\n    Startup:        grpc <pod>:9000 grpc.health.v1.HealthService delay=5s timeout=10s period=10s #success=1 #failure=3\r\n    Environment:\r\n      KUBERNETES_NAMESPACE:  fd-check (v1:metadata.namespace)\r\n      JAVA_APP_JAR:          /deployments/quarkus-run.jar\r\n    Mounts:\r\n   <...>\r\nConditions:\r\n  Type              Status\r\n  Initialized       True \r\n  Ready             True \r\n  ContainersReady   True \r\n  PodScheduled      True \r\n\r\nQoS Class:                   BestEffort\r\nNode-Selectors:              <none>\r\nTolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s\r\n                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s\r\nEvents:\r\n  Type    Reason          Age   From               Message\r\n  ----    ------          ----  ----               -------\r\n  Normal  Scheduled       12m   default-scheduler  Successfully assigned fd-check/code-with-quarkus-1-wkpg8 to <...>\r\n  Normal  AddedInterface  12m   multus             Add eth0 <...> from openshift-sdn\r\n  Normal  Pulling         12m   kubelet            Pulling image \"<...>\"\r\n  Normal  Pulled          12m   kubelet            Successfully pulled image <...>\r\n  Normal  Created         12m   kubelet            Created container code-with-quarkus\r\n  Normal  Started         12m   kubelet            Started container code-with-quarkus\r\n```\r\n\r\nA repriducer can be found here: https://github.com/fedinskiy/reproducer/tree/grpc-probes\n\n### Output of `uname -a` or `ver`\n\n4.18.0-425.19.2.el8_7.x86_64\n\n### Output of `java -version`\n\n11.0.18, vendor: Red Hat, Inc\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\n\n### Additional information\n\n```\r\n$ oc version\r\nClient Version: 4.11.0-202208020706.p0.g7075089.assembly.stream-7075089\r\nKustomize Version: v4.5.4\r\nKubernetes Version: v1.25.7+eab9cc9\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33219/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33219/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23420",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23420/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23420/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23420/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23420",
+  "id": 1123394536,
+  "node_id": "I_kwDOCFbutM5C9aPo",
+  "number": 23420,
+  "title": "Implement Auditable feature to MongoDB Panache, similar to Hibernate Envers",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-02-03T18:00:16Z",
+  "updated_at": "2023-09-11T12:02:14Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nHi guys, hope all is well.\r\n\r\nI'm working in a project where we need the audit capability for some entities.\r\nOur project is using MongoDB Panache.\r\n\r\nMy propose for us is implementing something similar what we have in hibernate envers, we just annotate any `@MongoEntity` with the `@Audited` and for every change we take a snapshot of the entity.\r\n\r\nA entity can be like:\r\n\r\n```\r\n@MongoEntity\r\n@Auditable\r\npublic static class Car {\r\n}\r\n``` \r\n\r\nBy default we persist the snapshots in a collection with a suffix `_AUD` like in Envers, in the previous scenario it will be `Car_AUD`. In addition to that, the `@Auditable` accept the `@MongEntity`, for instance:\r\n`@Auditable(@MongoEntity(collection = \"CarAuditable\", database = \"anotherDB\", clientName = \"client2\"))`\r\n\r\nIn this way we can define the collection, database, and clientName without reinventing the well.\r\n\r\nThe structure of the snapshots can be some like:\r\n```\r\npublic class AuditableEntity {\r\n\r\n\tpublic final Long createdTime;\r\n\tpublic final RevType revType;\r\n\tpublic Document content;\r\n\t\r\n\tpublic enum RevType {\r\n\t\tADD,\r\n\t\tMOD,\r\n\t\tDEL;\r\n\t}\r\n}\r\n```\r\n\r\nRevType here indicates which operation generates the snapshot.\r\n\r\nBasically, that is it. I know we could user Javers, but I'd like to make this native to Quarkus/MongoDB panache.\r\n\r\nIt is important to notice that there is \"a kind of issue here\", who take care of the persist/persistOrUpdate/update/delete is the `MongoOperations`, and there is the method `public void persistOrUpdate(Iterable<?> entities) {` that at the end executes a `collection.bulkWrite(bulk);`, and there is no way to know which one was updated, at least I think there is no way. In this case we can ignore this method for audit.\r\n\r\nWhat do you think?\r\n\r\nI can work and code a prototype of this idea if you think it is doable.\r\n\r\nBest regards.\r\n\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23420/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23420/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

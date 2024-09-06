@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20524",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20524/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20524/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20524/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20524",
+  "id": 1015304580,
+  "node_id": "I_kwDOCFbutM48hFGE",
+  "number": 20524,
+  "title": "Kafka Extension - Key appended with weird characters after calling KStream.join()",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1449536431,
+      "node_id": "MDU6TGFiZWwxNDQ5NTM2NDMx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka-streams",
+      "name": "area/kafka-streams",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2021-10-04T15:10:52Z",
+  "updated_at": "2021-10-05T09:22:36Z",
+  "closed_at": "2021-10-05T09:22:35Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nNot sure this is caused by Quarkus Kafka extension or Kafka itself. \r\n\r\nThe Kafka key seems to be changed after calling `kstream.join()` in Quarkus.\r\n\r\nThe following key is correct when an aggregate is performed on 2 topics, `kafcat` result on the aggregate changelog topic looks normal:\r\n\r\n`key:` 1-20211004-215212694-36981\r\n\r\nWhen the aggregated `KStream<String, ValidationResult>` is used by `KStream<String, CasaEventData>` to perform a inner join operation, the `...-JOINOTHER-0000000019-store-changelog` shows the following key with some weird characters appended on the key, that's which causing the join not matching, as you can see from the following:\r\n\r\n`key:` 1-20211004-215212694-36981|MNT?\r\n\r\nOther example keys in the join `...-JOINOTHER-0000000019-store-changelog` topic:\r\n\r\n`key:` 1-20211004-213945241-19438|M???\r\n\r\n`key:` 1-20211004-214019778-91623|M@?\r\n\r\n`key:` 1-20211004-214316121-83469|MB͙\r\n\r\n`key:` 1-20211004-211227769-74358|M&?{\r\n\r\nThe same key behaviour is observed for topic `-JOINTHIS-0000000018-store-changelog` as well.\r\n\r\nOutput of the keys using `peek()` for both `checkFraudStream` and `casaEventStream` looks normal without the weird characters.\r\n\r\nThe code snippet for the aggregate DSL:\r\n```\r\nKStream<String, ValidationResult> checkFraudStream =  builder.stream(\r\n            topics,\r\n            Consumed.with(Serdes.String(), checkResponseSerde))\r\n            .groupBy( \r\n                (id, value) -> value.getTransactionId(),\r\n                Grouped.with(Serdes.String(), checkResponseSerde)\r\n            )\r\n            .aggregate(\r\n                ValidationResult::new,\r\n                (key, value, aggregate) -> aggregate.addResponse(value),\r\n                Materialized.with(Serdes.String(), validationResultSerde)\r\n            )\r\n            .toStream()\r\n            .peek(\r\n                (key, value) -> {\r\n                    System.out.print(\">>>>>>> checkFraudStream -> key = \", key);\r\n                }\r\n            )\r\n            ;\r\n```\r\nThe code snippet for the 3rd KStream:\r\n\r\n```\r\nKStream<String, CasaEventData>  casaEventStream = builder.stream(\r\n            KAFKA_TOPIC_CASA_NEW, \r\n            Consumed.with(Serdes.String(), Serdes.String())\r\n        )\r\n        .map(\r\n            (key, value) -> {\r\n                \r\n                LOGGER.debug(\"casaEventStream -> key = \" + key + \", value = \" + value);\r\n                \r\n                ObjectMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();\r\n                CasaEventData casaEventData = null;\r\n                try{\r\n                    casaEventData = mapper.readValue(mapper.readValue(value, String.class), CasaEventData.class);\r\n                }catch (JsonProcessingException e) {\r\n                    LOGGER.error(\"Casa Event Data format is not in proper JSON format.\", e);\r\n                } \r\n                key = cleanTextContent(key);\r\n                key = key.substring(1, key.length() -1);\r\n                return KeyValue.pair(key, casaEventData);     \r\n            }\r\n        )\r\n        .peek(\r\n            (key, value) -> {\r\n                LOGGER.debug(\"casaEventStream -> key = \" + key + \", value.id = \" + value.getId());\r\n            }\r\n        )\r\n        ;\r\n```\r\nThe code snippet for the join DSL:\r\n```\r\ncheckFraudStream\r\n            .peek(\r\n                (key, value) -> {\r\n                    LOGGER.debug(\"Joining ... checkFraudStream -> key = \" + key + \", value.status = \" + value.isStatus());\r\n                }\r\n            )\r\n            .join(\r\n            casaEventStream,\r\n            (validationResult, casaEventData) -> {\r\n                // the process never reach here caused by the key problem\r\n                ...\r\n\r\n                return casaEventData;\r\n            }\r\n            ,\r\n            JoinWindows.of(Duration.ofMinutes(5)),\r\n            StreamJoined.with(Serdes.String(), validationResultSerde, casaEventDataSerde)\r\n        )\r\n        .peek(\r\n            (key, value) -> {\r\n                LOGGER.debug(\"Join Result -> key = \" + key + \", value = \" + value + \", value.getId() = \" + value.getId() + \", status = \" + value.getStatus());\r\n            }\r\n        )\r\n```\r\n\r\n### Expected behavior\r\n\r\nThe kafka message key after the `KStream.join()` should remain the same as per the original message key before the `join()` operation.\r\n\r\n### Actual behavior\r\n\r\nThe message keys changed unexpectedly after the `KStream.join()` with some appended weird characters.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\n\r\n1. Create 3 separate topics.\r\n2. Aggregate the 2 topics with similar data structure and change the key using `groupBy()` DSL. As per the sample codes in description. (In my case, the original message from the sources does not generate message key for the respective topic, thus, need to perform a `groupBy()`)\r\n3. Consume 3rd topic into `KStream` \r\n4. Convert the `KTable` from (2) into `KStream`, and use this to perform a `join()` operation with the `KStream` from (3), as per sample code given. These 2 `KStream` should have the similar key.\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\narwin Chengs-MacBook-Pro.local 20.6.0 Darwin Kernel Version 20.6.0: Wed Jun 23 00:26:31 PDT 2021; root:xnu-7195.141.2~5/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.2\" 2019-01-15 OpenJDK Runtime Environment 18.9 (build 11.0.2+9) OpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nOpenJDK Runtime Environment GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08) OpenJDK 64-Bit Server VM GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n<compiler-plugin.version>3.8.1</compiler-plugin.version>     <maven.compiler.parameters>true</maven.compiler.parameters>     <maven.compiler.source>11</maven.compiler.source>     <maven.compiler.target>11</maven.compiler.target>     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>     <quarkus-plugin.version>2.2.1.Final</quarkus-plugin.version>     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>     <quarkus.platform.version>2.2.1.Final</quarkus.platform.version>     <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.6.3 (cecedd343002696d0abb50b32b541b8a6ba2883f) Maven home: /Users/ganck/Apps/apache-maven-current Java version: 11.0.2, vendor: Oracle Corporation, runtime: /Library/Java/JavaVirtualMachines/jdk-11.0.2.jdk/Contents/Home Default locale: en_GB, platform encoding: UTF-8 OS name: \"mac os x\", version: \"10.16\", arch: \"x86_64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20524/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20524/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

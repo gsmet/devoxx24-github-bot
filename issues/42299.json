@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42299",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42299/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42299/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42299/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42299",
+  "id": 2445192770,
+  "node_id": "I_kwDOCFbutM6Rvq5C",
+  "number": 42299,
+  "title": "Redis pub/sub does not reuse connections",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-08-02T15:15:24Z",
+  "updated_at": "2024-08-02T15:37:53Z",
+  "closed_at": "2024-08-02T15:37:53Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nLooks like unsubscribing from pubsub does not return connection to the pool. This test shows the issue. \r\n`ConnectionPoolTooBusyException` is thrown and some of `Received message` are skipped after that\r\n\r\n```\r\n@QuarkusTest\r\nclass RedisPubSubTest : BaseTest() {\r\n\r\n    private val CHANNEL = \"TEST_CHANNEL\"\r\n\r\n    @Test\r\n    fun redisPubSub() = runTest {\r\n        // reproducing\r\n        // io.vertx.core.http.ConnectionPoolTooBusyException: Connection pool reached max wait queue size of 24\r\n        val pubsub = redisDS.pubsub(String::class.java)\r\n        for (i in 1..50) {\r\n            val redisSubscriber: Uni<ReactiveRedisSubscriber>? = redisDS.subscribe<String>(CHANNEL) { msg ->\r\n                Log.info(\"Received message: $i $msg\")\r\n            }\r\n            redisSubscriber?.background()\r\n            pubsub.publish(CHANNEL, \"testmsg$i\").background()\r\n            RedisUtil.unsubscribeInBackground(redisSubscriber, CHANNEL)\r\n        }\r\n    }\r\n}\r\n```\n\n### Expected behavior\n\nExpected behavior is reuse connections\n\n### Actual behavior\n\nThe pools is exchaused even after unsubscribe\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nany\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42299/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42299/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

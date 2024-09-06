@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35221",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35221/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35221/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35221/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35221",
+  "id": 1837712911,
+  "node_id": "I_kwDOCFbutM5tiUYP",
+  "number": 35221,
+  "title": "`QuarkusUnitTest` throws \"No config found for class\" when writing extension using Kotlin",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2023-08-05T11:34:11Z",
+  "updated_at": "2023-08-08T17:35:48Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen I write a Quarkus extension using Kotlin, I could't get `QuarkusUnitTest` mechanism working properly if I have a config class defined in `runtime` module and used in a build step in `deployment` module.\r\n\r\nIf I changed to Java, works fine.\r\n\r\nCurrent workaround is manually creating a file `META-INF/quarkus-config-roots.list` and list the config class there, but as described in the following link this file is not supposed to be edited manually: https://quarkus.io/guides/extension-metadata#quarkus-config-roots\r\n\r\nApart from this issue, defining config class using Kotlin isn't nice experience, e.g. can't use data class and Kotlin native types, has to put @JvmField on each field and make sure the field is declared using `var` instead of `val`, etc.\r\n\n\n### Expected behavior\n\nShould not throw error\n\n### Actual behavior\n\nCan't find config class, throw exception:\r\n\r\n> Caused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n> \t[error]: Build step demo.DemoProcessor#helloServlet threw an exception: java.lang.IllegalStateException: No config found for class demo.HelloConfig\r\n> \tat io.quarkus.deployment.configuration.BuildTimeConfigurationReader$ReadResult.requireObjectForClass(BuildTimeConfigurationReader.java:1274)\r\n> \tat io.quarkus.deployment.ExtensionLoader.lambda$loadStepsFromClass$55(ExtensionLoader.java:591)\r\n> \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:860)\r\n> \tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n> \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n> \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n> \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n> \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n> \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n> \r\n> \tat app//io.quarkus.builder.Execution.run(Execution.java:123)\r\n> \tat app//io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:79)\r\n> \tat app//io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:160)\r\n> \tat app//io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:332)\r\n> \t... 59 more\r\n> Caused by: java.lang.IllegalStateException: No config found for class demo.HelloConfig\r\n> \tat io.quarkus.deployment.configuration.BuildTimeConfigurationReader$ReadResult.requireObjectForClass(BuildTimeConfigurationReader.java:1274)\r\n> \tat io.quarkus.deployment.ExtensionLoader.lambda$loadStepsFromClass$55(ExtensionLoader.java:591)\r\n> \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:860)\r\n> \tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n> \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n> \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n> \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n> \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n> \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\n\n### How to Reproduce?\n\nExample project demo this issue:\r\n\r\nhttps://github.com/jeffawx/quarkus-ext-test\r\n\r\nIf this file is removed: https://github.com/jeffawx/quarkus-ext-test/blob/main/deployment/src/main/resources/META-INF/quarkus-config-roots.list\r\n\r\nbuild will fail: `./gradlew clean build`\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk 17.0.7 2023-04-18 OpenJDK Runtime Environment Temurin-17.0.7+7 (build 17.0.7+7) OpenJDK 64-Bit Server VM Temurin-17.0.7+7 (build 17.0.7+7, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.0\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35221/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35221/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

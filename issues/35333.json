@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35333",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35333/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35333/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35333/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35333",
+  "id": 1848644791,
+  "node_id": "I_kwDOCFbutM5uMBS3",
+  "number": 35333,
+  "title": "Narayana transaction recovery doesn't work with Oracle 23",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1633508165,
+      "node_id": "MDU6TGFiZWwxNjMzNTA4MTY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/narayana",
+      "name": "area/narayana",
+      "color": "0366d6",
+      "default": false,
+      "description": "Transactions / Narayana"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-08-13T15:52:48Z",
+  "updated_at": "2023-09-29T09:31:29Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI use Quarkus Narayana and JDBC Oracle with JDBC object store. When testing my application, I use Oracle 23 as that is default Dev Services for Oracle docker image and I didn't find anywhere which Oracle version is supported for Narayana. Well, strictly speaking I found here https://www.narayana.io/platform-support/index.html _Oracle 8.1.7, 9i and 10g_ which I am hesitant to believe considering that we are now on 23 (and rising :-)).\r\n\r\n### Expected behavior\r\n\r\nTransaction recovery works with Oracle 23 or it is documented which Oracle version is supported (in Quarkus Narayana documentation please).\r\n\r\n### Actual behavior\r\n\r\nException is logged and recovery is not accomplished\r\n\r\n```\r\n2023-08-13 17:40:17,293 WARN  [com.arj.ats.jta] (Periodic Recovery) ARJUNA016027: Local XARecoveryModule.xaRecovery got XA exception XAException.XAER_RMERR: javax.transaction.xa.XAException\r\n\tat oracle.jdbc.xa.OracleXAResource.recover(OracleXAResource.java:764)\r\n\tat io.agroal.narayana.RecoveryXAResource.recover(RecoveryXAResource.java:31)\r\n\tat com.arjuna.ats.internal.jta.recovery.arjunacore.XARecoveryModule.xaRecoveryFirstPass(XARecoveryModule.java:735)\r\n\tat com.arjuna.ats.internal.jta.recovery.arjunacore.XARecoveryModule.periodicWorkFirstPass(XARecoveryModule.java:249)\r\n\tat com.arjuna.ats.internal.jta.recovery.arjunacore.XARecoveryModule.getNewXAResource(XARecoveryModule.java:357)\r\n\tat com.arjuna.ats.internal.jta.recovery.arjunacore.XARecoveryModule.getNewXAResource(XARecoveryModule.java:449)\r\n\tat com.arjuna.ats.internal.jta.resources.arjunacore.XAResourceRecord.getNewXAResource(XAResourceRecord.java:1263)\r\n\tat com.arjuna.ats.internal.jta.resources.arjunacore.XAResourceRecord.topLevelCommit(XAResourceRecord.java:459)\r\n\tat com.arjuna.ats.arjuna.coordinator.BasicAction.doCommit(BasicAction.java:2906)\r\n\tat com.arjuna.ats.arjuna.coordinator.BasicAction.doCommit(BasicAction.java:2822)\r\n\tat com.arjuna.ats.arjuna.coordinator.BasicAction.phase2Commit(BasicAction.java:1878)\r\n\tat com.arjuna.ats.arjuna.recovery.RecoverAtomicAction.replayPhase2(RecoverAtomicAction.java:71)\r\n\tat com.arjuna.ats.internal.arjuna.recovery.AtomicActionRecoveryModule.doRecoverTransaction(AtomicActionRecoveryModule.java:152)\r\n\tat com.arjuna.ats.internal.arjuna.recovery.AtomicActionRecoveryModule.processTransactionsStatus(AtomicActionRecoveryModule.java:253)\r\n\tat com.arjuna.ats.internal.arjuna.recovery.AtomicActionRecoveryModule.periodicWorkSecondPass(AtomicActionRecoveryModule.java:109)\r\n\tat com.arjuna.ats.internal.arjuna.recovery.PeriodicRecovery.doWorkInternal(PeriodicRecovery.java:816)\r\n\tat com.arjuna.ats.internal.arjuna.recovery.PeriodicRecovery.run(PeriodicRecovery.java:382)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\n\r\n1. `git clone git@github.com:michalvavrik/quarkus-narayana-crash-recovery.git`\r\n2. `cd quarkus-narayana-crash-recovery`\r\n3. follow README, it has detailed steps and previous logs https://github.com/michalvavrik/quarkus-narayana-crash-recovery\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux fedora 6.4.7-200.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC Thu Jul 27 20:01:18 UTC 2023 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Temurin-17.0.7+7 (build 17.0.7+7)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n22.3\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.4.Final and 999-SNAPSHOT\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35333/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35333/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

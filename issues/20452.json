@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20452",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20452/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20452/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20452/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20452",
+  "id": 1010898677,
+  "node_id": "I_kwDOCFbutM48QRb1",
+  "number": 20452,
+  "title": "Gradle plugin resp. `quarkusBuild` task does not honor toolchain definitions",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 21,
+  "created_at": "2021-09-29T12:31:34Z",
+  "updated_at": "2024-03-30T17:38:19Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nGiven a Gradle project that specifies a [`toolchain`](https://docs.gradle.org/current/userguide/toolchains.html), the `quarkusBuild` task fails if the Java version used to *run* Gradle differs from the version used to *compile* sources. In particular this bug has been observed when\r\n```gradle\r\njava {\r\n\ttoolchain {\r\n\t\tlanguageVersion = JavaLanguageVersion.of(17)\r\n\t}\r\n}\r\n```\r\nwas specified in a `build.gradle` file (i.e., use Java 17 to compile (and test) sources while Gradle itself ran with Java 11; i.e.,\r\n```\r\n$ gradle --version\r\n------------------------------------------------------------\r\nGradle 6.9.1\r\n------------------------------------------------------------\r\n\r\nBuild time:   2021-08-20 11:15:18 UTC\r\nRevision:     f0ddb54aaae0e44f0a7209c3c0274d506ea742a0\r\n\r\nKotlin:       1.4.20\r\nGroovy:       2.5.12\r\nAnt:          Apache Ant(TM) version 1.10.9 compiled on September 27 2020\r\nJVM:          11.0.12 (Oracle Corporation 11.0.12+8-LTS-237)\r\nOS:           Mac OS X 11.5 x86_64\r\n```\r\n\r\nIn such a situation the `quarkusBuild` task fails with the following message:\r\n```\r\n> Task :foo:quarkusBuild FAILED\r\nbuilding quarkus jar\r\n\r\nFAILURE: Build failed with an exception.\r\n\r\n* What went wrong:\r\nExecution failed for task ':foo:quarkusBuild'.\r\n> io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        [error]: Build step io.quarkiverse.cxf.deployment.QuarkusCxfProcessor#build threw an exception: java.lang.UnsupportedClassVersionError: ch**TaxService has been compiled by a more recent version of the Java Runtime (class file version 61.0), this version of the Java Runtime only recognizes class file versions up to 55.0\r\n        at java.base/java.lang.ClassLoader.defineClass1(Native Method)\r\n        at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1016)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:445)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:405)\r\n        at io.quarkiverse.cxf.deployment.QuarkusCxfProcessor.createQuarkusJaxWsServiceFactoryBean(QuarkusCxfProcessor.java:379)\r\n        at io.quarkiverse.cxf.deployment.QuarkusCxfProcessor.build(QuarkusCxfProcessor.java:271)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n        at io.quarkus.deployment.ExtensionLoader$2.execute(ExtensionLoader.java:820)\r\n        at io.quarkus.builder.BuildContext.run(BuildContext.java:277)\r\n        at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n        at java.base/java.lang.Thread.run(Thread.java:834)\r\n        at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```\r\n\r\n### Expected behavior\r\n\r\nThe Quarkus Gradle plugin/tasks should execute using the Java version specified by the toolchain, rather than the version that Gradle runs with.\r\n\r\n### Actual behavior\r\n\r\nThe Quarkus Gradle plugin/tasks execute using the Java version that Gradle runs with (which is not necessarily the same as that of a Gradle toolchain).\r\n\r\n### How to Reproduce?\r\n\r\nSee bug description.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nsee bug description\r\n\r\n### Output of `java -version`\r\n\r\nsee bug description\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n-\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 6.9.1, see bug description\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20452/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20452/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

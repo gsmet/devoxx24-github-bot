@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34408",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34408/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34408/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34408/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34408",
+  "id": 1780288474,
+  "node_id": "I_kwDOCFbutM5qHQva",
+  "number": 34408,
+  "title": "@HeaderParam annotation not detected on interface in external JAR",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-06-29T07:30:58Z",
+  "updated_at": "2023-06-30T09:17:36Z",
+  "closed_at": "2023-06-30T09:17:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe following was working in Quarkus 2.X and fails in 3.X\r\n\r\nWhen an Interface defined in external JAR with Jandex\r\n\r\n```java\r\n@Path(\"email\")\r\npublic interface EmailSenderMicroService {\r\n\r\n        @POST\r\n    @Path(\"/send\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public Response sendEmail(MailRequestJsonDto request, @HeaderParam(value = \"Authorization\") final String accessToken);\r\n\r\n}\r\n```\r\n\r\nAnd the implementation is implemented like this:\r\n```java    \r\n    @Override\r\n    @POST\r\n    @Path(\"/send\")\r\n    public Response sendEmail(final MailRequestJsonDto request, final String accessToken) {\r\n\t//...\r\n    }\r\n```\r\n\r\nCalling the service gives the following error:\r\n``` \r\njava.io.IOException: Stream is closed\r\n\tat io.quarkus.vertx.http.runtime.VertxInputStream.read(VertxInputStream.java:78)\r\n\tat org.jboss.resteasy.plugins.providers.ProviderHelper.readString(ProviderHelper.java:68)\r\n\tat org.jboss.resteasy.plugins.providers.StringTextStar.readFrom(StringTextStar.java:44)\r\n\tat org.jboss.resteasy.plugins.providers.StringTextStar.readFrom(StringTextStar.java:28)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.AbstractReaderInterceptorContext.readFrom(AbstractReaderInterceptorContext.java:99)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.ServerReaderInterceptorContext.readFrom(ServerReaderInterceptorContext.java:60)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.AbstractReaderInterceptorContext.proceed(AbstractReaderInterceptorContext.java:81)\r\n\tat org.jboss.resteasy.core.MessageBodyParameterInjector.inject(MessageBodyParameterInjector.java:192)\r\n\tat org.jboss.resteasy.core.MethodInjectorImpl.injectArguments(MethodInjectorImpl.java:87)\r\n\tat org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:116)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.internalInvokeOnTarget(ResourceMethodInvoker.java:560)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTargetAfterFilter(ResourceMethodInvoker.java:452)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.lambda$invokeOnTarget$2(ResourceMethodInvoker.java:413)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:415)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:378)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:356)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:70)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:429)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:240)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:154)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:157)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:229)\r\n\tat io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:82)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:147)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:93)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\n### Expected behavior\r\n\r\nTo automatically detect @HeaderParam from the interface and not fail if @HeaderParam is not added on the override method.\r\n\r\n### Actual behavior\r\n\r\nIt fails on Quarkus 3.X\r\n\r\n### How to Reproduce?\r\n\r\nCreate a dependency with the interface and Jandex index with a @HeaderParam parameter.\r\nAdd this dependency to main project.\r\nCall the service witch has the @HeaderParam\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n6.2.0-20-generic #20-Ubuntu SMP PREEMPT_DYNAMIC\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.7 2023-04-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.1\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34408/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34408/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

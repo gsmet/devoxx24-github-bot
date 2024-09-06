@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39853",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39853/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39853/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39853/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39853",
+  "id": 2222210921,
+  "node_id": "I_kwDOCFbutM6EdD9p",
+  "number": 39853,
+  "title": "Quarkus crashes and the pod can't restart",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2024-04-03T08:04:50Z",
+  "updated_at": "2024-08-26T12:44:00Z",
+  "closed_at": "2024-08-26T12:44:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nDear all, \r\nI'm using quarkus version 3.9.1/openjdk 21 with Docker container and K8s.\r\nSome of our micro-services crashed without a known reason but the real problem is the pod can't restart well because quarkus continues to crash at startup with this error and we have a lot af restarts until the crashloopbackoff:\r\n\r\n> Starting the Java application using /opt/jboss/container/java/run/run-java.sh ...\r\n> INFO exec -a \"java\" java -Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp \".\" -jar /deployments/quarkus-run.jar\r\n> INFO running in /deployments\r\n> __  ____  __  _____   ___  __ ____  ______\r\n>  --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n>  -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n> --\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n> 2024-04-02 16:04:23.311 [] WARN  traceId=, parentId=, spanId=, sampled= [io.qu.config] (main) Unrecognized configuration key \"quarkus.jacoco.excludes\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n> 2024-04-02 16:04:23.311 [] WARN  traceId=, parentId=, spanId=, sampled= [io.qu.config] (main) Unrecognized configuration key \"quarkus.grpc.server.enable\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n> 2024-04-02 16:04:23.312 [] WARN  traceId=, parentId=, spanId=, sampled= [io.qu.config] (main) Unrecognized configuration key \"quarkus.cache.caffeine.\"expressionLanguage\"maximum-size\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n> 2024-04-02 16:04:23.312 [] WARN  traceId=, parentId=, spanId=, sampled= [io.qu.config] (main) Unrecognized configuration key \"quarkus.jacoco.includes\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n> 2024-04-02 16:04:42.210 [] WARN  traceId=, parentId=, spanId=, sampled= [io.qu.ru.co.DeprecatedRuntimePropertiesRecorder] (main) The 'quarkus.log.console.color' config property is deprecated and should not be used anymore\r\n> 2024-04-02 16:04:49.901 [] WARN  traceId=, parentId=, spanId=, sampled= [io.qu.gr.ru.GrpcServerRecorder] (main) Using legacy gRPC support, with separate new HTTP server instance. Switch to single HTTP server instance usage with quarkus.grpc.server.use-separate-server=false property\r\n> 2024-04-02 16:04:51.206 [] INFO  traceId=, parentId=, spanId=, sampled= [io.qu.gr.ru.GrpcServerRecorder] (vert.x-eventloop-thread-1) Started gRPC server on 0.0.0.0:9000 [TLS enabled: false]\r\n> 2024-04-02 16:04:52.312 [] INFO  traceId=, parentId=, spanId=, sampled= [io.quarkus] (main) dossier 1.0-SNAPSHOT on JVM (powered by Quarkus 3.9.1) started in 35.798s. Listening on: http://0.0.0.0:8080\r\n> 2024-04-02 16:04:52.313 [] INFO  traceId=, parentId=, spanId=, sampled= [io.quarkus] (main) Profile prod activated.\r\n> 2024-04-02 16:04:52.402 [] INFO  traceId=, parentId=, spanId=, sampled= [io.quarkus] (main) Installed features: [agroal, cache, cdi, grpc-client, grpc-server, hibernate-validator, kubernetes, micrometer, mongodb-client, mongodb-panache, narayana-jta, opentelemetry, resteasy, resteasy-client, resteasy-jackson, scheduler, security, smallrye-context-propagation, smallrye-health, smallrye-jwt, vertx]\r\n> 2024-04-02 16:04:52.406 [] DEBUG traceId=, parentId=, spanId=, sampled= [be.di.do.se.DossierService] (executor-thread-128) checkDossierScaduti: Starting to remove old dessiers\r\n> 2024-04-02 16:04:53.414 [] ERROR traceId=, parentId=, spanId=, sampled= [be.di.do.se.DossierService] (executor-thread-128) checkDossierScaduti: Error to update invalid dossiers [Error Occurred After Shutdown]:java.lang.NullPointerException: Cannot invoke \"io.quarkus.arc.ArcContainer.instance(java.lang.Class, java.lang.annotation.Annotation[])\" because the return value of \"io.quarkus.arc.Arc.container()\" is null\r\n>         at io.quarkus.mongodb.panache.common.runtime.BeanUtils.clientFromArc(BeanUtils.java:35)\r\n>         at io.quarkus.mongodb.panache.common.runtime.MongoOperations.mongoDatabase(MongoOperations.java:399)\r\n>         at io.quarkus.mongodb.panache.common.runtime.MongoOperations.mongoCollection(MongoOperations.java:193)\r\n>         at io.quarkus.mongodb.panache.common.runtime.MongoOperations.executeUpdate(MongoOperations.java:775)\r\n>         at io.quarkus.mongodb.panache.common.runtime.MongoOperations.update(MongoOperations.java:765)\r\n>         at be.digitech.dossier.entity.Dossier.update(Dossier.java)\r\n>         at be.digitech.dossier.service.DossierService.checkDossierScaduti(DossierService.java:1027)\r\n>         at be.digitech.dossier.service.DossierService_Subclass.checkDossierScaduti$$superforward(Unknown Source)\r\n>         at be.digitech.dossier.service.DossierService_Subclass$$function$$38.apply(Unknown Source)\r\n>         at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:73)\r\n>         at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:62)\r\n>         at io.quarkus.micrometer.runtime.MicrometerTimedInterceptor.timedMethod(MicrometerTimedInterceptor.java:79)\r\n>         at io.quarkus.micrometer.runtime.MicrometerTimedInterceptor_Bean.intercept(Unknown Source)\r\n>         at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n>         at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n>         at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n>         at be.digitech.dossier.service.DossierService_Subclass.checkDossierScaduti(Unknown Source)\r\n>         at be.digitech.dossier.service.DossierService_ClientProxy.checkDossierScaduti(Unknown Source)\r\n>         at be.digitech.dossier.service.DossierService_ScheduledInvoker_checkDossierScaduti_69b335ef1dded47c824a851ecb4049b50416cc31.invokeBean(Unknown Source)\r\n>         at io.quarkus.scheduler.common.runtime.DefaultInvoker.invoke(DefaultInvoker.java:24)\r\n>         at io.quarkus.scheduler.common.runtime.StatusEmitterInvoker.invoke(StatusEmitterInvoker.java:35)\r\n>         at io.quarkus.scheduler.runtime.SimpleScheduler$ScheduledTask.doInvoke(SimpleScheduler.java:443)\r\n>         at io.quarkus.scheduler.runtime.SimpleScheduler$ScheduledTask$2.call(SimpleScheduler.java:425)\r\n>         at io.quarkus.scheduler.runtime.SimpleScheduler$ScheduledTask$2.call(SimpleScheduler.java:422)\r\n>         at io.vertx.core.impl.ContextImpl.lambda$executeBlocking$0(ContextImpl.java:178)\r\n>         at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:279)\r\n>         at io.vertx.core.impl.ContextImpl.lambda$internalExecuteBlocking$2(ContextImpl.java:210)\r\n>         at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:604)\r\n>         at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n>         at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n>         at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n>         at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:11)\r\n>         at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:11)\r\n>         at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n>         at java.base/java.lang.Thread.run(Thread.java:1583)\r\n> \r\n> 2024-04-02 16:04:53.701 [] INFO  traceId=, parentId=, spanId=, sampled= [io.quarkus] (main) dossier stopped in 1.100s\r\n\r\n\r\nWe must destroy the pod and create a new one (kubectl scale ... --replicas=0  kubectl scale ... --replicas=1), The old pod still unusable.\r\n\r\nThe starting problem, at the moment, is not known because the pod restart clears logs.\r\n\r\n\r\nWe are using this docker image\r\n\r\n> FROM registry.access.redhat.com/ubi8/openjdk-21:1.19\r\n> \r\n> ENV LANGUAGE='en_US:en'\r\n> \r\n> \r\n> # We make four distinct layers so if there are application changes the library layers can be re-used\r\n> COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/\r\n> COPY --chown=185 target/quarkus-app/*.jar /deployments/\r\n> COPY --chown=185 target/quarkus-app/app/ /deployments/app/\r\n> COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/\r\n> \r\n> EXPOSE 8080\r\n> USER 185\r\n> ENV JAVA_OPTS=\"-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager\"\r\n> ENV JAVA_APP_JAR=\"/deployments/quarkus-run.jar\"\r\n> \r\n\r\n\n\n### Expected behavior\n\nAfter the crash the restarted pod must work fine.\n\n### Actual behavior\n\nThe pod restart continuously because quarkus goes in error (see above) unitl the K8s error crashloopbackoff.\n\n### How to Reproduce?\n\nI can't reproduce the case, it's not clear at the moment the cause of the first crash and it is random\n\n### Output of `uname -a` or `ver`\n\nLinux dossier-dpl-5d6fb76c64-8zxph 5.10.210-201.855.amzn2.x86_64 #1 SMP Tue Mar 12 19:03:26 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk 21.0.2 2024-01-16 LTS\n\n### Quarkus version or git rev\n\n3.9.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven 3.9.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39853/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39853/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

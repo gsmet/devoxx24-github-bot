@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37040",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37040/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37040/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37040/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37040",
+  "id": 1990419683,
+  "node_id": "I_kwDOCFbutM52o2Tj",
+  "number": 37040,
+  "title": "The flyway extension generates Kubernetes resources as if quarkus.flyway.enabled was a runtime property",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1897325810,
+      "node_id": "MDU6TGFiZWwxODk3MzI1ODEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/flyway",
+      "name": "area/flyway",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-11-13T11:05:04Z",
+  "updated_at": "2024-07-15T06:26:08Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI noticed that when generating Kubernetes resource with the flyway extension in the classpath, an [initialization task is created](https://quarkus.io/guides/init-tasks) (as expected), but then the main container containing the application defines the `QUARKUS_FLYWAY_ENABLED` as false, which cannot have any effect since the [quarkus.flyway.enabled](https://quarkus.io/guides/all-config#quarkus-flyway_quarkus.flyway.enabled) is now a build time property.\n\n### Expected behavior\n\nEither the variable is removed if it's useless anymore, or the logic is changed.\n\n### Actual behavior\n\nWith the variable set, at startup, Quarkus will warn that a change on a build property has no effect at runtime. \r\nI cannot say if it breaks a previous workflow since I detected this while playing around with the extension, I suspect it's not breaking anything but it's not optimal since migration logic will try to run in any application container.\r\n\r\n\n\n### How to Reproduce?\n\nTo reproduce:\r\n\r\n* generate a project on code with quarkus using this link https://code.quarkus.io/?g=eu.pierrebeitz&a=quarkus-flyway-build-property-issue&e=flyway&e=kubernetes&e=jdbc-h2&extension-search=origin:platform%20jdbc (it selects the flyway, kubernetes and jdbc-h2 extensions).\r\n* run `mvn package` on the project and `cat target/kubernetes/kubernetes.yml`\r\n* observe the injection of the QUARKUS_FLYWAY_ENABLED variable in the application container:\r\n\r\n```\r\n    spec:\r\n      containers:\r\n        - env:\r\n            - name: KUBERNETES_NAMESPACE\r\n              valueFrom:\r\n                fieldRef:\r\n                  fieldPath: metadata.namespace\r\n            - name: QUARKUS_FLYWAY_ENABLED\r\n              value: \"false\"\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin ** 23.1.0 Darwin Kernel Version 23.1.0: Mon Oct  9 21:27:24 PDT 2023; root:xnu-10002.41.9~6/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.4\" 2022-07-19 OpenJDK Runtime Environment Temurin-17.0.4+8 (build 17.0.4+8) OpenJDK 64-Bit Server VM Temurin-17.0.4+8 (build 17.0.4+8, mixed mode)\n\n### Quarkus version or git rev\n\n3.5.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546)\n\n### Additional information\n\nNote that the same is true for the init task (which sets the variable to true):\r\n\r\n```\r\n- env:\r\n    - name: QUARKUS_INIT_AND_EXIT\r\n      value: \"true\"\r\n    - name: QUARKUS_FLYWAY_ENABLED\r\n      value: \"true\"\r\n```\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37040/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37040/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

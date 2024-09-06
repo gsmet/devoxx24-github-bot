@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28217",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28217/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28217/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28217/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28217",
+  "id": 1387267803,
+  "node_id": "I_kwDOCFbutM5SsAbb",
+  "number": 28217,
+  "title": "Mongo Dev Services do not Support v6+",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 4147701997,
+      "node_id": "LA_kwDOCFbutM73OOjt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/m1",
+      "name": "env/m1",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Apple M1 machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-09-27T07:34:25Z",
+  "updated_at": "2022-12-20T16:08:18Z",
+  "closed_at": "2022-12-20T16:08:06Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nYou can change the version of MongoDB used by dev services using the configuration property:\r\n```\r\nquarkus.mongodb.devservices.image-name=mongo:5\r\n```\r\n\r\nThis works well for all versions of MongoDB up to version 6, in which they have retired the old mongo client in favour of a new client mongosh.\n\n### Expected behavior\n\nAdd this config:\r\n```\r\nquarkus.mongodb.devservices.image-name=mongo:6\r\n```\r\n\r\nShould work just as 5 would have.\n\n### Actual behavior\n\nAn exception is thrown on start, when the container manager tries to run the mongo shell in order to configure a replica set (which is very cool by the way!):\r\n```\r\n2022-09-27 17:25:58,237 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (main) Failed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.mongodb.deployment.DevServicesMongoProcessor#startMongo threw an exception: java.lang.RuntimeException: org.testcontainers.containers.ContainerLaunchException: Container startup failed\r\n\tat io.quarkus.mongodb.deployment.DevServicesMongoProcessor.startMongo(DevServicesMongoProcessor.java:106)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\nCaused by: org.testcontainers.containers.ContainerLaunchException: Container startup failed\r\n\tat org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:349)\r\n\tat org.testcontainers.containers.GenericContainer.start(GenericContainer.java:322)\r\n\tat io.quarkus.mongodb.deployment.DevServicesMongoProcessor.startMongo(DevServicesMongoProcessor.java:171)\r\n\tat io.quarkus.mongodb.deployment.DevServicesMongoProcessor.startMongo(DevServicesMongoProcessor.java:96)\r\n\t... 11 more\r\nCaused by: org.rnorth.ducttape.RetryCountExceededException: Retry limit hit with exception\r\n\tat org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:88)\r\n\tat org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:334)\r\n\t... 14 more\r\nCaused by: org.testcontainers.containers.ContainerLaunchException: Could not create/start container\r\n\tat org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:542)\r\n\tat org.testcontainers.containers.GenericContainer.lambda$doStart$0(GenericContainer.java:344)\r\n\tat org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:81)\r\n\t... 15 more\r\nCaused by: org.testcontainers.containers.MongoDBContainer$ReplicaSetInitializationException: An error occurred: OCI runtime exec failed: exec failed: unable to start container process: exec: \"mongo\": executable file not found in $PATH: unknown\r\n\r\n\tat org.testcontainers.containers.MongoDBContainer.checkMongoNodeExitCode(MongoDBContainer.java:97)\r\n\tat org.testcontainers.containers.MongoDBContainer.initReplicaSet(MongoDBContainer.java:132)\r\n\tat org.testcontainers.containers.MongoDBContainer.containerIsStarted(MongoDBContainer.java:86)\r\n\tat org.testcontainers.containers.GenericContainer.containerIsStarted(GenericContainer.java:701)\r\n\tat org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:521)\r\n\t... 17 more\r\n\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:332)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:252)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.firstStart(IsolatedDevModeMain.java:87)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:448)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:60)\r\n\tat io.quarkus.bootstrap.app.CuratedApplication.runInCl(CuratedApplication.java:148)\r\n\tat io.quarkus.bootstrap.app.CuratedApplication.runInAugmentClassLoader(CuratedApplication.java:103)\r\n\tat io.quarkus.deployment.dev.DevModeMain.start(DevModeMain.java:131)\r\n\tat io.quarkus.deployment.dev.DevModeMain.main(DevModeMain.java:62)\r\nCaused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.mongodb.deployment.DevServicesMongoProcessor#startMongo threw an exception: java.lang.RuntimeException: org.testcontainers.containers.ContainerLaunchException: Container startup failed\r\n\tat io.quarkus.mongodb.deployment.DevServicesMongoProcessor.startMongo(DevServicesMongoProcessor.java:106)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\nCaused by: org.testcontainers.containers.ContainerLaunchException: Container startup failed\r\n\tat org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:349)\r\n\tat org.testcontainers.containers.GenericContainer.start(GenericContainer.java:322)\r\n\tat io.quarkus.mongodb.deployment.DevServicesMongoProcessor.startMongo(DevServicesMongoProcessor.java:171)\r\n\tat io.quarkus.mongodb.deployment.DevServicesMongoProcessor.startMongo(DevServicesMongoProcessor.java:96)\r\n\t... 11 more\r\nCaused by: org.rnorth.ducttape.RetryCountExceededException: Retry limit hit with exception\r\n\tat org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:88)\r\n\tat org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:334)\r\n\t... 14 more\r\nCaused by: org.testcontainers.containers.ContainerLaunchException: Could not create/start container\r\n\tat org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:542)\r\n\tat org.testcontainers.containers.GenericContainer.lambda$doStart$0(GenericContainer.java:344)\r\n\tat org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:81)\r\n\t... 15 more\r\nCaused by: org.testcontainers.containers.MongoDBContainer$ReplicaSetInitializationException: An error occurred: OCI runtime exec failed: exec failed: unable to start container process: exec: \"mongo\": executable file not found in $PATH: unknown\r\n\r\n\tat org.testcontainers.containers.MongoDBContainer.checkMongoNodeExitCode(MongoDBContainer.java:97)\r\n\tat org.testcontainers.containers.MongoDBContainer.initReplicaSet(MongoDBContainer.java:132)\r\n\tat org.testcontainers.containers.MongoDBContainer.containerIsStarted(MongoDBContainer.java:86)\r\n\tat org.testcontainers.containers.GenericContainer.containerIsStarted(GenericContainer.java:701)\r\n\tat org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:521)\r\n\t... 17 more\r\n\r\n\tat io.quarkus.builder.Execution.run(Execution.java:123)\r\n\tat io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:79)\r\n\tat io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:158)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:328)\r\n\t... 9 more\r\nCaused by: java.lang.RuntimeException: org.testcontainers.containers.ContainerLaunchException: Container startup failed\r\n\tat io.quarkus.mongodb.deployment.DevServicesMongoProcessor.startMongo(DevServicesMongoProcessor.java:106)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\nCaused by: org.testcontainers.containers.ContainerLaunchException: Container startup failed\r\n\tat org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:349)\r\n\tat org.testcontainers.containers.GenericContainer.start(GenericContainer.java:322)\r\n\tat io.quarkus.mongodb.deployment.DevServicesMongoProcessor.startMongo(DevServicesMongoProcessor.java:171)\r\n\tat io.quarkus.mongodb.deployment.DevServicesMongoProcessor.startMongo(DevServicesMongoProcessor.java:96)\r\n\t... 11 more\r\nCaused by: org.rnorth.ducttape.RetryCountExceededException: Retry limit hit with exception\r\n\tat org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:88)\r\n\tat org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:334)\r\n\t... 14 more\r\nCaused by: org.testcontainers.containers.ContainerLaunchException: Could not create/start container\r\n\tat org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:542)\r\n\tat org.testcontainers.containers.GenericContainer.lambda$doStart$0(GenericContainer.java:344)\r\n\tat org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:81)\r\n\t... 15 more\r\nCaused by: org.testcontainers.containers.MongoDBContainer$ReplicaSetInitializationException: An error occurred: OCI runtime exec failed: exec failed: unable to start container process: exec: \"mongo\": executable file not found in $PATH: unknown\r\n\r\n\tat org.testcontainers.containers.MongoDBContainer.checkMongoNodeExitCode(MongoDBContainer.java:97)\r\n\tat org.testcontainers.containers.MongoDBContainer.initReplicaSet(MongoDBContainer.java:132)\r\n\tat org.testcontainers.containers.MongoDBContainer.containerIsStarted(MongoDBContainer.java:86)\r\n\tat org.testcontainers.containers.GenericContainer.containerIsStarted(GenericContainer.java:701)\r\n\tat org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:521)\r\n\t... 17 more\r\n```\n\n### How to Reproduce?\n\n1. Add this config:\r\n```\r\nquarkus.mongodb.devservices.image-name=mongo:6\r\n```\r\n\r\n2. Run ./mvnw compile quarkus:dev\r\n(on any project with the quarkus-mongodb-client extension)\n\n### Output of `uname -a` or `ver`\n\nDarwin Lukes-M1-MBP.lan 21.6.0 Darwin Kernel Version 21.6.0: Mon Aug 22 20:20:05 PDT 2022; root:xnu-8020.140.49~2/RELEASE_ARM64_T8101 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.4\" 2022-07-19 OpenJDK Runtime Environment GraalVM CE 22.2.0 (build 17.0.4+8-jvmci-22.2-b06) OpenJDK 64-Bit Server VM GraalVM CE 22.2.0 (build 17.0.4+8-jvmci-22.2-b06, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.13.0.CR1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Maven home: /Users/lthompson/.m2/wrapper/dists/apache-maven-3.8.4-bin/52ccbt68d252mdldqsfsn03jlf/apache-maven-3.8.4 Java version: 17.0.4, vendor: GraalVM Community, runtime: /Library/Java/JavaVirtualMachines/graalvm-ce-java17-22.2.0/Contents/Home Default locale: en_AU, platform encoding: UTF-8 OS name: \"mac os x\", version: \"12.6\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28217/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28217/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

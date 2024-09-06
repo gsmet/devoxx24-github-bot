@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32218",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32218/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32218/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32218/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32218",
+  "id": 1645547493,
+  "node_id": "I_kwDOCFbutM5iFQ_l",
+  "number": 32218,
+  "title": "org.apache.commons.lang3 library functions doesn't work in Quarkus native build",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-03-29T10:54:23Z",
+  "updated_at": "2023-03-29T11:23:35Z",
+  "closed_at": "2023-03-29T11:23:34Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe use SerializationUtils.clone() method of org.apache.commons.lang3 library in an Apache Kafka Stream application.\r\nThere are no problems when running in jvm mode, but when we launch the application in native mode and insert a message in the input topic, the following error occurs:\r\n\r\n```posh\r\n2023-03-29 10:11:48,933 ERROR [org.apa.kaf.str.pro.int.TaskExecutor] (outbound-stream-9bc4e44e-3670-47f1-9a34-b98c349c9198-StreamThread-1) stream-thread [outbound-stream-9bc4e44e-3670-47f1-9a34-b98c349c9198-StreamThread-1] Failed to process stream task 1_0 due to the following error:: org.apache.kafka.streams.errors.StreamsException: Exception caught in process. taskId=1_0, processor=KSTREAM-SOURCE-0000000004, topic=picking-event, partition=0, offset=0, stacktrace=org.apache.commons.lang3.SerializationException: IOException while reading or closing cloned object data\r\n        at org.apache.commons.lang3.SerializationUtils.clone(SerializationUtils.java:155)\r\n        at eu.my.application.stream.TopologyProducer.lambda$buildTopology$35(TopologyProducer.java:521)\r\n        at java.base@17.0.5/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\r\n        ...\r\n        at org.apache.kafka.streams.processor.internals.StreamThread.run(StreamThread.java:551)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.thread.PlatformThreads.threadStartRoutine(PlatformThreads.java:775)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.posix.thread.PosixPlatformThreads.pthreadStartRoutine(PosixPlatformThreads.java:203)\r\nCaused by: java.io.InvalidClassException: eu.my.application.maserdata.PickingEvent; no valid constructor\r\n        at java.base@17.0.5/java.io.ObjectStreamClass$ExceptionInfo.newInvalidClassException(ObjectStreamClass.java:172)\r\n        at java.base@17.0.5/java.io.ObjectStreamClass.checkDeserialize(ObjectStreamClass.java:790)\r\n        at java.base@17.0.5/java.io.ObjectInputStream.readOrdinaryObject(ObjectInputStream.java:2225)\r\n        at java.base@17.0.5/java.io.ObjectInputStream.readObject0(ObjectInputStream.java:1733)\r\n        at java.base@17.0.5/java.io.ObjectInputStream.readObject(ObjectInputStream.java:509)\r\n        at java.base@17.0.5/java.io.ObjectInputStream.readObject(ObjectInputStream.java:467)\r\n        at org.apache.commons.lang3.SerializationUtils.clone(SerializationUtils.java:149)\r\n        ... 45 more\r\n\r\n        at org.apache.kafka.streams.processor.internals.StreamTask.process(StreamTask.java:737)\r\n        at org.apache.kafka.streams.processor.internals.TaskExecutor.processTask(TaskExecutor.java:100)\r\n        at org.apache.kafka.streams.processor.internals.TaskExecutor.process(TaskExecutor.java:81)\r\n        at org.apache.kafka.streams.processor.internals.TaskManager.process(TaskManager.java:1177)\r\n        at org.apache.kafka.streams.processor.internals.StreamThread.runOnce(StreamThread.java:769)\r\n        at org.apache.kafka.streams.processor.internals.StreamThread.runLoop(StreamThread.java:589)\r\n        at org.apache.kafka.streams.processor.internals.StreamThread.run(StreamThread.java:551)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.thread.PlatformThreads.threadStartRoutine(PlatformThreads.java:775)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.posix.thread.PosixPlatformThreads.pthreadStartRoutine(PosixPlatformThreads.java:203)\r\nCaused by: org.apache.commons.lang3.SerializationException: IOException while reading or closing cloned object data\r\n        at org.apache.commons.lang3.SerializationUtils.clone(SerializationUtils.java:155)\r\n        ...\r\n        at org.apache.kafka.streams.processor.internals.metrics.StreamsMetricsImpl.maybeMeasureLatency(StreamsMetricsImpl.java:809)\r\n        at org.apache.kafka.streams.processor.internals.StreamTask.doProcess(StreamTask.java:780)\r\n        at org.apache.kafka.streams.processor.internals.StreamTask.process(StreamTask.java:711)\r\n        ... 8 more\r\nCaused by: java.io.InvalidClassException: eu.my.application.maserdata.PickingEvent; no valid constructor\r\n        at java.base@17.0.5/java.io.ObjectStreamClass$ExceptionInfo.newInvalidClassException(ObjectStreamClass.java:172)\r\n        at java.base@17.0.5/java.io.ObjectStreamClass.checkDeserialize(ObjectStreamClass.java:790)\r\n        at java.base@17.0.5/java.io.ObjectInputStream.readOrdinaryObject(ObjectInputStream.java:2225)\r\n        at java.base@17.0.5/java.io.ObjectInputStream.readObject0(ObjectInputStream.java:1733)\r\n        at java.base@17.0.5/java.io.ObjectInputStream.readObject(ObjectInputStream.java:509)\r\n        at java.base@17.0.5/java.io.ObjectInputStream.readObject(ObjectInputStream.java:467)\r\n        at org.apache.commons.lang3.SerializationUtils.clone(SerializationUtils.java:149)\r\n        ... 45 more\r\n```\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\nThe error seems to refer to org.apache.commons.lang3.SerializationUtils.ClassLoaderAwareObjectInputStream.class, at\r\n```\r\nClassLoaderAwareObjectInputStream(InputStream in, ClassLoader classLoader) throws IOException {\r\n    super(in);\r\n    this.classLoader = classLoader;\r\n}\r\n```\r\n\r\nSo I think it's due to a problem with the reflection of some library classes, or to a strategy used by the classLoader for GraalVM native images, but I don't know what to try.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nQuarkus native-image plugin on native-image 22.3.0.1-Final Mandrel Distribution (Java Version 17.0.5+8)\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.6.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n./mvnw clean package -Dnative -Dquarkus.native.container-build=true -DskipTest\r\n\r\n### Additional information\r\n\r\n I also tried adding following to the reflection class configuration:\r\n```\r\n@RegisterForReflection(targets = {\r\n    PickingEvent.class,\r\n    SerializationUtils.class\r\n})\r\npublic class QuarkusConfiguration {\r\n}\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32218/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32218/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

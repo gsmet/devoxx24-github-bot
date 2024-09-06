@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25793",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25793/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25793/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25793/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25793",
+  "id": 1248292175,
+  "node_id": "I_kwDOCFbutM5KZ21P",
+  "number": 25793,
+  "title": "CloudBuild (GCP) Failed to authenticate with registry when using Jib",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2022-05-25T15:41:37Z",
+  "updated_at": "2022-06-01T12:20:20Z",
+  "closed_at": "2022-06-01T12:19:39Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn CloudBuild environment, i try to deploy an image with Jib on Artifact Registry. I set authentication but i still have an issue  `403 Forbidden`.\r\nWhen we use `quarkus.container-image.push=true`, I need more information on the different platforms used to publish our images and in particular in the case that interests me on GAR\r\n\r\n### Expected behavior\r\n\r\nImage has been published on artifact registry using Jib\r\n\r\n### Actual behavior\r\n\r\n`{\"errors\":[{\"code\":\"DENIED\",\"message\":\"Permission \\\"artifactregistry.repositories.downloadArtifacts\\\" denied on resource ... }\"`\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux 84592f6948b9 4.19.104-microsoft-standard #1 SMP Wed Feb 19 06:37:35 UTC 2020 x86_64 Linux\r\n\r\n### Output of `java -version`\r\n\r\n17.0.3\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmaven 3.8.3, Docker version 20.10.12, build e91ed57\r\n\r\n### Additional information\r\n\r\n**1. Application.properties**\r\n\r\n```\r\nquarkus.native.container-build=true\r\nquarkus.native.container-runtime=docker\r\nquarkus.native.native-image-xmx=4G\r\nquarkus.native.enable-https-url-handler=true\r\nquarkus.native.report-exception-stack-traces=true\r\n\r\nquarkus.jib.base-native-image=registry.access.redhat.com/ubi8/ubi-minimal\r\nquarkus.container-image.build=true\r\nquarkus.container-image.builder=jib\r\nquarkus.container-image.push=true\r\nquarkus.container-image.image=${GCP_IMAGE_NAME}\r\n```\r\n\r\n2. cloudbuild.yaml\r\n\r\n```\r\nsteps:\r\n- id: packageApp\r\n  name: docker.io/anthonydenecheau/quarkus-maven-build-native-image:1.0\r\n  entrypoint: bash\r\n  args:\r\n    - '-c'\r\n    - |\r\n      echo -e $(gcloud --quiet \\\r\n        --impersonate-service-account project-service-account@scc-build-docker.iam.gserviceaccount.com \\\r\n        auth configure-docker $_REGION-docker.pkg.dev)\r\n\r\n      echo \"************  ~/.docker/config.json ************\"\r\n      cat ~/.docker/config.json\r\n\r\n      mvn clean package -Pnative -Dnative-image.docker-build=true \\\r\n      -Dmaven.test.skip=true -Dquarkus.profile=prod \\\r\n      -Dquarkus.native.additional-build-args=--initialize-at-run-time=jdk.internal.platform.cgroupv2.CgroupV2Subsystem\r\n  env:\r\n  - \"SHORT_SHA=$SHORT_SHA\"\r\n  - \"GCP_IMAGE_NAME=$_REGION-docker.pkg.dev/$PROJECT_ID/$_SERVICE_NAME/$_SERVICE_NAME:$SHORT_SHA\"\r\n  - \"DOCKER_CONFIG=~/.docker/config.json\"\r\n```\r\n\r\n3. trace/logs\r\n\r\n```\r\nAdding credentials for: europe-west3-docker.pkg.dev\r\nDocker configuration file updated.\r\n\r\n************  ~/.docker/config.json ************\r\n{\r\n  \"auths\": {\r\n    \"europe-west3-docker.pkg.dev\": {\r\n      \"auth\": \"b2F1dGgyYWNjZXNzdG9rZW46eWEyOS5jLmIwQVh2MHpUTmt5OE9rYU...\"\r\n    },\r\n   (....)\r\n}\r\n```\r\n\r\n```\r\n[ERROR] Caused by: com.google.cloud.tools.jib.http.ResponseException: 403 Forbidden\r\n[ERROR] GET https://europe-west3-docker.pkg.dev/v2/token?service=europe-west3-docker.pkg.dev&scope=repository:scc-build-docker/show-service/show-service:pull,push\r\n[ERROR] {\"errors\":[{\"code\":\"DENIED\",\"message\":\"Permission \\\"artifactregistry.repositories.downloadArtifacts\\\" denied on resource \\\"projects/scc-build-docker/locations/europe-west3/repositories/show-service\\\" (or it may not exist)\"}]}\r\n[ERROR]\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25793/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25793/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

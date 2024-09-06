@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42210",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42210/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42210/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42210/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42210",
+  "id": 2436377727,
+  "node_id": "I_kwDOCFbutM6ROCx_",
+  "number": 42210,
+  "title": "Quarkus 3 + JasperReports  - java.sql.SQLException: Enlisted connection used without active transaction",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1633508165,
+      "node_id": "MDU6TGFiZWwxNjMzNTA4MTY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/narayana",
+      "name": "area/narayana",
+      "color": "0366d6",
+      "default": false,
+      "description": "Transactions / Narayana"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-07-29T21:07:06Z",
+  "updated_at": "2024-08-29T19:59:45Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nDear Quarkus team,\r\nwe're having troubles while upgrading  Quarkus 2 -> Quarkus 3.. JasperReports library started to fail on active transaction issue. \r\n\r\nJasperReports executes subreports/tables in multi threads. Therefore I have a reason to think that my issue could be similiar to: https://stackoverflow.com/questions/68058274/transactional-does-not-work-in-sub-thread-in-quarkus\r\n\r\n**DESCRIPTION**\r\n- @ApplicationScoped class is calls JasperReports engine\r\n- the transaction is active until Jasper starts to work in sub-threads\r\n- instead of static JasperFillManager.fillReport() I tried to call non-static alternative, but without any difference\r\n- same code has worked for years with Quarkus 2 :( Error occurres for **Quarkus 3 (exactly: 3.7.4)** \r\n\r\n\r\n**MY QUESTIONS**\r\n- do you guys have any experience with combination Quarkus 3 + Jasper ? \r\n- Is there any resource to this multi-threading issue?\r\n- What shall I do? I am no able to execute any report because all of our reports have at least 1 subreport..\r\n\r\n\r\n**Thank you for your time and help!**  \r\n\r\n\r\n\r\n\r\nDetailed description of my issue: https://stackoverflow.com/questions/78793479/quarkus3-jasperreports-got-java-sql-sqlexception-enlisted-connection-used-wit\r\n\r\nERROR LOG: \r\n```\r\n2024-07-22T21:24:13.597381608Z executor-thread-1 23 2024-07-22 23:24:13.558  ERROR net.sf.jasperreports.engine.fill.JRFillSubreport Fill 1: exception: net.sf.jasperreports.engine.JRException: Error preparing statement for executing the report query:\r\n2024-07-22T21:24:13.597462370Z \r\n2024-07-22T21:24:13.597475177Z SELECT\r\n2024-07-22T21:24:13.597486237Z     *\r\n2024-07-22T21:24:13.597502662Z FROM\r\n2024-07-22T21:24:13.597519521Z     MY_TABLE\r\n2024-07-22T21:24:13.597530077Z ORDER BY\r\n2024-07-22T21:24:13.597538483Z     col\r\n2024-07-22T21:24:13.597547363Z \r\n2024-07-22T21:24:13.597555636Z \r\n2024-07-22T21:24:13.597574220Z  at net.sf.jasperreports.engine.query.JRJdbcQueryExecuter.createStatement(JRJdbcQueryExecuter.java:555)\r\n2024-07-22T21:24:13.597810783Z  at net.sf.jasperreports.engine.query.JRJdbcQueryExecuter.createDatasource(JRJdbcQueryExecuter.java:299)\r\n2024-07-22T21:24:13.598088743Z  at net.sf.jasperreports.engine.fill.JRFillDataset.createQueryDatasource(JRFillDataset.java:1317)\r\n2024-07-22T21:24:13.598244727Z  at net.sf.jasperreports.engine.fill.JRFillDataset.initDatasource(JRFillDataset.java:767)\r\n2024-07-22T21:24:13.598340997Z  at net.sf.jasperreports.engine.fill.BaseReportFiller.setParameters(BaseReportFiller.java:465)\r\n2024-07-22T21:24:13.598391111Z  at net.sf.jasperreports.engine.fill.JRBaseFiller.fill(JRBaseFiller.java:585)\r\n2024-07-22T21:24:13.598464565Z  at net.sf.jasperreports.engine.fill.BaseReportFiller.fill(BaseReportFiller.java:416)\r\n2024-07-22T21:24:13.598525214Z  at net.sf.jasperreports.engine.fill.JRFillSubreport.fillSubreport(JRFillSubreport.java:827)\r\n2024-07-22T21:24:13.598583947Z  at net.sf.jasperreports.engine.fill.JRSubreportRunnable.run(JRSubreportRunnable.java:61)\r\n2024-07-22T21:24:13.598621143Z  at net.sf.jasperreports.engine.fill.AbstractThreadSubreportRunner.run(AbstractThreadSubreportRunner.java:221)\r\n2024-07-22T21:24:13.598716311Z  at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\r\n2024-07-22T21:24:13.598803387Z  at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\r\n2024-07-22T21:24:13.598913843Z  at java.base/java.lang.Thread.run(Thread.java:840)\r\n2024-07-22T21:24:13.599023284Z Caused by: java.sql.SQLException: Enlisted connection used without active transaction\r\n2024-07-22T21:24:13.599110173Z  at io.agroal.pool.ConnectionHandler.verifyEnlistment(ConnectionHandler.java:398)\r\n2024-07-22T21:24:13.599149982Z  at io.agroal.pool.wrapper.ConnectionWrapper.getMetaData(ConnectionWrapper.java:452)\r\n2024-07-22T21:24:13.599212173Z  at net.sf.jasperreports.engine.query.OracleProcedureCallHandler.isOracle(OracleProcedureCallHandler.java:72)\r\n2024-07-22T21:24:13.599341106Z  at net.sf.jasperreports.engine.query.JRJdbcQueryExecuter.isProcedureCall(JRJdbcQueryExecuter.java:566)\r\n2024-07-22T21:24:13.599481640Z  at net.sf.jasperreports.engine.query.JRJdbcQueryExecuter.createStatement(JRJdbcQueryExecuter.java:389)\r\n2024-07-22T21:24:13.599597852Z  ... 12 more\r\n```\r\n\r\n**Output of `java -version`**\r\n17\r\n**Quarkus version or git rev**\r\n3.7.4",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42210/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42210/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

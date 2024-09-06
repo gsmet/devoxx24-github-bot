@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38595",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38595/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38595/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38595/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38595",
+  "id": 2119605298,
+  "node_id": "I_kwDOCFbutM5-Vpwy",
+  "number": 38595,
+  "title": "GraphQL TypeSafe Client in Quarkus Smallrye: Retaining WebSocket Connection Failure in Multi, preventing server reconnection on retry",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2024-02-05T22:48:31Z",
+  "updated_at": "2024-02-07T11:09:45Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using the Quarkus Smallry TypeSafe GraphQL client\r\n`io.quarkus.quarkus-smallrye-graphql-client`\r\n a caching issue is observed in the handling of WebSocket connection failures within the Multi. Specifically, the client retains the failure of the WebSocket connection loss, and during subsequent retries in the Multi, the same failure is reissued in the stream. This behavior prevents the client from attempting to reconnect to the server.\r\n\r\n\r\n### Expected behavior\r\n\r\nThe client should recognize the WebSocket connection loss, attempt to reconnect, and not cache the previous connection failure during retries in the Multi. The emitter of failure should be invalidated at retry.\r\n\r\n\r\n### Actual behavior\r\n\r\n1. Start the GraphQL server with a souscription endpoint\r\n2. Start the Graphql Client with a souscription\r\n3. Souscription OK, message received and logged\r\n4. Stop the Graphql server\r\n5. Failure on the graphql client =>OK \r\n6. Trying to subscribe to the Multi => logging the same failure instance again and again `Exception instance:java.net.SocketException@2006a90c` \r\n7. Restart the Graphql Server\r\n8. Trying to subscribe to the Multi => logging the same failure instance again and again `Exception instance:java.net.SocketException@2006a90c` \r\n9. Never reconnect\r\n\r\n```2024-02-05 23:01:12,018 ERROR [MASKED] (vert.x-eventloop-thread-3) Item received:Message 134\r\n2024-02-05 23:01:12,018 ERROR [MASKED] (vert.x-eventloop-thread-3) item:Message 134\r\n2024-02-05 23:01:17,007 ERROR [MASKED] (vert.x-eventloop-thread-3) Item received:Message 135\r\n2024-02-05 23:01:17,007 ERROR [MASKED] (vert.x-eventloop-thread-3) item:Message 135\r\n2024-02-05 23:01:19,419 ERROR [io.ver.cor.net.imp.ConnectionBase] (vert.x-eventloop-thread-3) Connection reset\r\n2024-02-05 23:01:19,421 ERROR [MASKED] (vert.x-eventloop-thread-3) Erreur: java.net.SocketException: Connection reset\r\n\r\n\r\n2024-02-05 23:01:19,428 ERROR [MASKED] (vert.x-eventloop-thread-3) Exception instance:java.net.SocketException@2006a90c\r\n2024-02-05 23:01:24,458 ERROR [MASKED] (vert.x-eventloop-thread-3) Erreur: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: no further information: /127.0.0.1:8081\r\nCaused by: java.net.ConnectException: Connection refused: no further information\r\n\r\n\r\n2024-02-05 23:01:24,459 ERROR [MASKED] (vert.x-eventloop-thread-3) Exception instance:io.netty.channel.AbstractChannel$AnnotatedConnectException@15462526\r\n2024-02-05 23:01:29,461 ERROR [MASKED] (executor-thread-1) Erreur: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: no further information: /127.0.0.1:8081\r\nCaused by: java.net.ConnectException: Connection refused: no further information\r\n\r\n\r\n2024-02-05 23:01:29,462 ERROR [MASKED] (executor-thread-1) Exception instance:io.netty.channel.AbstractChannel$AnnotatedConnectException@15462526\r\n2024-02-05 23:01:34,465 ERROR [MASKED] (executor-thread-1) Erreur: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: no further information: /127.0.0.1:8081\r\nCaused by: java.net.ConnectException: Connection refused: no further information\r\n\r\n\r\n2024-02-05 23:01:34,466 ERROR [MASKED] (executor-thread-1) Exception instance:io.netty.channel.AbstractChannel$AnnotatedConnectException@15462526\r\n2024-02-05 23:01:39,468 ERROR [MASKED] (executor-thread-1) Erreur: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: no further information: /127.0.0.1:8081\r\nCaused by: java.net.ConnectException: Connection refused: no further information```\r\n\r\n\r\n\r\n### How to Reproduce?\r\n\r\n1. Server part\r\n\r\n```\r\n          @GraphQLApi\r\n          @Slf4j\r\n          public class TestSubscription {\r\n              BroadcastProcessor<String> processor = BroadcastProcessor.create();\r\n          \r\n              int i=0;\r\n              @Scheduled(every = \"5s\")\r\n              public void test()\r\n              {\r\n                  processor.onNext(String.format(\"Message %s\",++i));\r\n              }\r\n          \r\n              @Subscription\r\n              public Multi<String> testSouscription() {\r\n                  return processor;\r\n              }\r\n          }\r\n```\r\n  \r\n2. Client part\r\n\r\n```\r\n        @Inject\r\n        TestClientApi clientApi;\r\n        private Multi<String> testSub()\r\n        {\r\n            return clientApi.testSouscription().onItem().invoke(s -> log.error(\"Item received:{}\",s)).onFailure().invoke(throwable -> {\r\n               log.error(\"Erreur\",throwable);\r\n               log.error(\"Exception instance:{}\", throwable.getClass().getName() + \"@\" + Integer.toHexString(throwable.hashCode()));\r\n            }).onFailure().call(() -> Uni.createFrom().voidItem().onItem().delayIt().by(Duration.ofSeconds(5))).onFailure()\r\n                  .recoverWithMulti(this::testSub);\r\n        }\r\n```\r\n\r\n3.  Actions\r\n   1. Start the GraphQL server with a souscription endpoint\r\n   2. Start the Graphql Client with a souscription\r\n   4. Stop the Graphql server\r\n   5. Restart the Graphql Server after 30 secondes\r\n \r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version 21.0.1\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus 3.5.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nI think that the problem come from that class:\r\n```\r\n          io.smallrye.graphql.client.vertx.typesafe.VertxTypesafeGrphaQLClientProxy\r\n            private Uni<WebSocketSubprotocolHandler> webSocketHandler() {\r\n                return webSocketHandler.updateAndGet(currentValue -> {\r\n                    if (currentValue == null) {\r\n                        return Uni.createFrom().<WebSocketSubprotocolHandler> emitter(handlerEmitter -> {\r\n                            List<String> subprotocolIds = subprotocols.stream().map(i -> i.getProtocolId()).collect(toList());\r\n                            MultiMap headers = HeadersMultiMap.headers()\r\n                                    .addAll(new HeaderBuilder(api, null, additionalHeaders).build());\r\n                            websocketUrl.get().subscribe().with(wsUrl -> {\r\n                                httpClient.webSocketAbs(wsUrl, headers, WebsocketVersion.V13, subprotocolIds,\r\n                                        result -> {\r\n                                            if (result.succeeded()) {\r\n                                                WebSocket webSocket = result.result();\r\n                                                WebSocketSubprotocolHandler handler = BuiltinWebsocketSubprotocolHandlers\r\n                                                        .createHandlerFor(webSocket.subProtocol(), webSocket,\r\n                                                                subscriptionInitializationTimeout, initPayload, () -> {\r\n                                                                    webSocketHandler.set(null);\r\n                                                                });\r\n                                                handlerEmitter.complete(handler);\r\n                                                log.debug(\"Using websocket subprotocol handler: \" + handler);\r\n                                            } else {\r\n                                                handlerEmitter.fail(result.cause());\r\n                                            }\r\n                                        });\r\n                            });\r\n                        }).memoize().indefinitely();\r\n                    } else {\r\n                        return currentValue;\r\n                    }\r\n                });\r\n\r\n```\r\nThe `webSocketHandler` is set to null when an error occured with the websocket, but the returned Uni is based on an emmiter that will failed when trying to connect multiple times. Then subsequent subscribe of this websocket handler will result in the same Failure been propagated.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38595/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38595/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

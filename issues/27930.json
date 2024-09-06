@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27930",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27930/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27930/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27930/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27930",
+  "id": 1372919104,
+  "node_id": "I_kwDOCFbutM5R1RVA",
+  "number": 27930,
+  "title": "Wrong dependency version provided with Maven 3.8.5",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-09-14T12:39:32Z",
+  "updated_at": "2022-09-15T09:09:12Z",
+  "closed_at": "2022-09-15T09:09:11Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe encountered an interesting bug, which may or may not be a problem of the Quarkus Maven plugin, but might deserve verification to prevent similar problems to occur in the future, because the plugin relies on some subtleties that break under some circumstances.\r\n\r\nThe build produced a deliverable with a lower `com.fasterxml.jackson.core.jackson-core` library version than Maven dependency tree reported. As the result, the application crashed in runtime since some methods/classes were missing.\r\n\r\nObservations:\r\n\r\n* The problem occurs when `flatten-maven-plugin` is used with the default `flattenDependencyMode` option.\r\n* If the dependency was specified in a more explicit way (e.g., adding `quarkus-jackson` as well), the version was resolved correctly.\r\n* If `flattenDependencyMode` is set to `all`, so that the flattened POM includes even transitive dependencies, the version is resolved correctly too.\r\n* If a different Maven version was used, the problem went away.\r\n\r\nIt therefore seems that the interaction with `flatten-maven-plugin` confuses the Quarkus plugin and results in wrong version resolution. Unfortunately, the problem is well-hidden and subtle, we discovered it just accidentally and we were astonished that the result contains a different dependency version that Maven reports as the dependency to be used.\r\n\n\n### Expected behavior\n\nThe dependencies gathered in the result should always have the same versions that Maven dependency tree reports.\r\n\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n[Here](https://github.com/quarkusio/quarkus/files/9566282/wrong-version.zip) is a small application that produces the wrong version in the result when built with Maven 3.8.5. I recommend using a Docker image for that, for some reason, the problem may not appear with a locally installed Maven on some systems, while official Maven images seem to provide consistent results.\r\n\r\n```\r\n$ docker run -it --rm -v /path-to-the-reproducer/wrong-version:/build maven:3.8.4-openjdk-17 /bin/sh\r\n$ cd /build\r\n$ mvn clean package\r\n$ ls target/quarkus-app/lib/main\r\n# Contains com.fasterxml.jackson.core.jackson-core-2.13.3.jar\r\n```\r\n\r\nTry running the reproducer with `maven:3.8.5-openjdk-17` instead. The result would contain then `com.fasterxml.jackson.core.jackson-core-2.12.6.jar` instead, while `mvn dependency:tree` reports `com.fasterxml.jackson.core:jackson-core:jar:2.13.3`.\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27930/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27930/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

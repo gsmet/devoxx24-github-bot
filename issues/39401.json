@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39401",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39401/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39401/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39401/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39401",
+  "id": 2183791518,
+  "node_id": "I_kwDOCFbutM6CKgOe",
+  "number": 39401,
+  "title": "Missing validation of javax validations inside subclasses",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1305687763,
+      "node_id": "MDU6TGFiZWwxMzA1Njg3NzYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-validator",
+      "name": "area/hibernate-validator",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Validator"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-03-13T11:42:30Z",
+  "updated_at": "2024-04-01T15:11:06Z",
+  "closed_at": "2024-04-01T15:11:06Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a payload object used in a HTTP PUT resource method as follows:\r\n`@Path(\"/{id}\")\r\n@PUT\r\npublic Dto update(@PathParam(\"id\") String id, @NotNull @Valid UpdateEntityPayload payload)\r\n`\r\nThis payload object contains a `List<ParameterDto>` field where ParameterDto class contains a field of an abstract class called `SchemaDto` which contains jackson annotations as follows:\r\n\r\n`@JsonInclude(JsonInclude.Include.NON_NULL)\r\n@JsonIgnoreProperties(ignoreUnknown = true)\r\n@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = \"type\", visible = true)\r\n@JsonSubTypes({\r\n        @JsonSubTypes.Type(value = StringSchemaDto.class, name = StringSchemaDto.TYPE),\r\n        @JsonSubTypes.Type(value = BooleanSchemaDto.class, name = BooleanSchemaDto.TYPE)\r\n})\r\npublic abstract class SchemaDto {} \r\n`\r\nStringSchemaDto object contains a mandatory field as follows:\r\n\r\n`\r\npublic class StringSchemaDto extends SchemaDto {\r\n\r\n    public static final String TYPE = \"string\";\r\n\r\n    @NotBlank(message = \"Value can not be blank!\")\r\n    @JsonProperty(\"value\")\r\n    private String value;\r\n\r\n    // getters and setters\r\n}\r\n`\r\n\r\nWhen a client sends a request containing a string schema typed field without any value, the request is passed into my method's code block. I have noticed that, if I add a dummy StringSchemaDto field in my payload class, then it properly returns 400 HTTP response code. I have proper `@Valid` annotations through the path and I have validated that if I don't send a mandatory value in ParameterDto class, it returns 400 HTTP response code as well.\r\n\r\n### Expected behavior\r\n\r\nQuarkus resource should return 400 response code and should not invoke my resource method `update`.\r\n\r\n### Actual behavior\r\n\r\nMy resource method `update` is invoked by Quarkus.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\n1) Define a PUT resource containing a payload annotated with `@Valid`\r\n2) Define an abstract class deserialized via Jackson and have at least one implementor of this class which contains a mandatory field i.e. string field\r\n3) Send an HTTP request to this resource which does not contain the mandatory string field of this type.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.1\" 2021-10-19 LTS\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.7.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n3.8.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39401/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39401/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

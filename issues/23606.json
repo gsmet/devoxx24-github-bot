@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23606",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23606/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23606/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23606/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23606",
+  "id": 1132505918,
+  "node_id": "I_kwDOCFbutM5DgKs-",
+  "number": 23606,
+  "title": "AWS Lambda extension doesn't work with @QuarkusIntegrationTest",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2022-02-11T12:16:15Z",
+  "updated_at": "2024-07-16T14:23:35Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello,\r\n\r\nI'm trying to run an integration test on a Windows machine, against a natively built Quarkus application that has a REST API and uses the AWS Lambda extension.\r\nThe test itself is using RestAssured to make requests against the app, so it's a real integration test, no mocking or anything special needed.\r\nGiven that the app is using native build, and Windows can't build or run the produced binary directly, I'm using the `quarkus.native.container-build` and `quarkus.container-image.build` features, with the `quarkus-container-image-jib` dependency.\r\nI'm using the @QuarkusIntegrationTest annotation, to actually run the test in the `verify` phase with maven failsafe. I need this annotation to work for testing the containerized native build, as far as I understand, this should be supported.\r\n\r\n### Expected behavior\r\n\r\nWhen `LambdaHandlerTestIT` is ran by failsafe with the native profile, it should succeed.\r\n\r\n### Actual behavior\r\n\r\nWhen `LambdaHandlerTestIT` is ran by failsafe with the native profile, it shows:\r\n\r\n```\r\n[INFO] --- maven-failsafe-plugin:3.0.0-M5:integration-test (default) @ code-with-quarkus ---\r\n[INFO] \r\n[INFO] -------------------------------------------------------\r\n[INFO]  T E S T S\r\n[INFO] -------------------------------------------------------\r\n[INFO] Running org.acme.lambda.LambdaHandlerTestIT\r\n2022-02-11 12:29:29,248 INFO  [org.jbo.threads] (main) JBoss Threads version 3.4.2.Final\r\n2022-02-11 12:29:29,693 INFO  [io.qua.ama.lam.run.MockEventServer] (build-2) Mock Lambda Event Server Started\r\nExecuting \"docker run --name quarkus-integration-test-EMhUN --rm -p 8081:8081 -p 8444:8444 --net=quarkus-integration-test-FwKOi --env QUARKUS_INTERNAL_AWS_LAMBDA_TEST_API=localhost:8081/_lambda_ borda/code-with-quarkus:1.0.0-SNAPSHO\r\nT\"\r\nWaited 60 seconds for target\\quarkus.log to contain info about the listening port and protocol but no such info was found\r\nFailed to launch the application. The application logs can be found at: C:\\Users\\Borda\\Downloads\\code-with-quarkus\\target\\quarkus.log\r\n[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 63.192 s <<< FAILURE! - in org.acme.lambda.LambdaHandlerTestIT\r\n[ERROR] org.acme.lambda.LambdaHandlerTestIT.testSimpleLambdaSuccess  Time elapsed: 0.007 s  <<< ERROR!\r\njava.lang.RuntimeException: java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details\r\nCaused by: java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details\r\n\r\n[INFO] \r\n[INFO] Results:\r\n[INFO]\r\n[ERROR] Errors: \r\n[ERROR]   LambdaHandlerTestIT.testSimpleLambdaSuccess » Runtime java.lang.IllegalStateEx...\r\n[INFO]\r\n[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0\r\n```\r\n\r\nThe `quarkus.log` file contains:\r\n```\r\ndocker: Error response from daemon: Ports are not available: listen tcp 0.0.0.0:8081: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.\r\ntime=\"2022-02-11T12:29:33+01:00\" level=error msg=\"error waiting for container: context canceled\"\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Go to: https://code.quarkus.io/\r\n2. Check AWS Lambda extension.\r\n3. Generate the application, unzip the file.\r\n4. Add the following lines to the `pom.xml`, under the properties of the native profile, under the line `<quarkus.package.type>native</quarkus.package.type>`:\r\n```\r\n<quarkus.native.container-build>true</quarkus.native.container-build>\r\n<quarkus.container-image.build>true</quarkus.container-image.build>\r\n<quarkus.container-image.push>false</quarkus.container-image.push>\r\n```\r\n5. Add the following dependency:\r\n```\r\n<dependency>\r\n  <groupId>io.quarkus</groupId>\r\n  <artifactId>quarkus-container-image-jib</artifactId>\r\n</dependency>\r\n```\r\n6. Change the annotation of `LambdaHandlerTestIT` from `@NativeImageTest` to `@QuarkusIntegrationTest` to support the containerized build.\r\n7. Run `mvn verify -Pnative`  <- this should work, but it doesn't.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.19043.1526]\r\n\r\n### Output of `java -version`\r\n\r\njava version \"11.0.7\" 2020-04-14 LTS Java(TM) SE Runtime Environment 18.9 (build 11.0.7+8-LTS) Java HotSpot(TM) 64-Bit Server VM 18.9 (build 11.0.7+8-LTS, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08) OpenJDK 64-Bit Server VM GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Maven home: C:\\Users\\Borda\\.m2\\wrapper\\dists\\apache-maven-3.8.4-bin\\52ccbt68d252mdldqsfsn03jlf\\apache-maven-3.8.4 Java version: 11.0.7, vendor: Oracle Corporation, runtime: C:\\DEVEL\\jdk-11 Default locale: en_GB, platform encoding: Cp1252 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\nFollowing the steps to reproduce, it should be easy enough to get the sample project, but I can attach the full sample upon request if that helps.\r\nIf I'm doing something wrong, please help steer me in the right direction, because documentation is really lacking in this area.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23606/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23606/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

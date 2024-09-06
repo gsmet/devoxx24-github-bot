@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37789",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37789/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37789/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37789/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37789",
+  "id": 2044863533,
+  "node_id": "I_kwDOCFbutM554iQt",
+  "number": 37789,
+  "title": "URL decoding fails silently when the URL contains illegal characters",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-12-16T17:13:09Z",
+  "updated_at": "2024-02-07T13:24:19Z",
+  "closed_at": "2024-02-07T13:24:18Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhilst working with Quinoa + SvelteKit, I've discovered that certain calls would fail with an empty `400` response and nothing being logged in the CLI output (see https://github.com/quarkiverse/quarkus-quinoa/issues/591).\r\n\r\n<details>\r\n<summary>Old text</summary>\r\n\r\n> I managed to track it down to the `uriValid` method of the `VetxHttpRecorder.java` file:\r\n> https://github.com/quarkusio/quarkus/blob/7cf3e4e8f484aefed9ea97b08ebb2164093baa4e/extensions/vertx-http/runtime/src/main/java/io/quarkus/vertx/http/runtime/VertxHttpRecorder.java#L151\r\n> \r\n> Unfortunately, [RFC 3986's Section 2.2](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) defines `[` and `]` as being reserved characters, thus leaving it up to the decoder implementation to decide how to handle them. In practice, this means that whilst NodeJS doesn't attribute special meaning to them, Java seems to do.\r\n> \r\n> This also means that using Quinoa, and perhaps other extensions, which directly or indirectly rely on these characters being present in the URL is not possible.\r\n> \r\n> This shouldn't pose an issue in production, where such URLs are not used by SvelteKit, but it does impact development-time DX. This can be worked-around by disabling URI validation by setting the `vertx.disableURIValidation` to `true` in development environments, though this is less than ideal.\r\n> \r\n> Furthermore, it might be useful to print / throw the exception when a `URISyntaxException` occurs, rather than failing silently.\r\n\r\n</details>\r\n\r\nThis troubleshooting was made more difficult due to the URL validity check failing silently, rather than throwing to output or logging some form of error message.\r\n\r\n**EDIT 18/12:** Updated description to better match the scope of this issue, as the ability to disable URL validation in development is handled as part of #37804\r\n\r\n### Expected behavior\r\n\r\nA `URISyntaxException` is thrown in log output\r\n\r\n~`[` and `]` are accepted as part of the URL, though this might require changing how URI validation is done.~\r\n\r\n### Actual behavior\r\n\r\nThe call fails silently with a `400` response\r\n\r\n### How to Reproduce?\r\n\r\n1. Attempt to access a route that has `[` and/or `]` in the URL\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux workstation-lnx 6.6.4-200.fc39.x86_64 #1 SMP PREEMPT_DYNAMIC Sun Dec  3 18:13:11 UTC 2023 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.1\" 2023-10-17 LTS\r\nOpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12-LTS)\r\nOpenJDK 64-Bit Server VM Temurin-21.0.1+12 (build 21.0.1+12-LTS, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.6.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n------------------------------------------------------------ Gradle 8.5 ------------------------------------------------------------ \r\n\r\nBuild time:   2023-11-29 14:08:57 UTC\r\nRevision:     28aca86a7180baa17117e0e5ba01d8ea9feca598\r\nKotlin:       1.9.20\r\nGroovy:       3.0.17\r\nAnt:          Apache Ant(TM) version 1.10.13 compiled on January 4 2023\r\nJVM:          21.0.1 (Eclipse Adoptium 21.0.1+12-LTS)\r\nOS:           Linux 6.6.4-200.fc39.x86_64 amd64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37789/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37789/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26937",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26937/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26937/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26937/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26937",
+  "id": 1318284159,
+  "node_id": "I_kwDOCFbutM5Ok2t_",
+  "number": 26937,
+  "title": "FormPost request using go 1.13 & HTTP/2 causes resteasy exception with TLS in 2.7.6.Final",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282147660,
+      "node_id": "MDU6TGFiZWwxMjgyMTQ3NjYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/resteasy-classic",
+      "name": "area/resteasy-classic",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 20,
+  "created_at": "2022-07-26T13:55:55Z",
+  "updated_at": "2022-10-03T14:13:38Z",
+  "closed_at": "2022-09-09T06:20:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen I do a `POST` request from go 1.13 on a quarkus 2.7.6 resteasy classic endpoint that consumes `MediaType.APPLICATION_FORM_URLENCODED` **and** uses SSL/TLS, the request causes an exception. See the added reproducer for more details.  \r\n\r\n### Expected behavior\r\n\r\nResponse is sent normally, no exception occurs.\r\n\r\n### Actual behavior\r\n\r\nException: \r\n```\r\nCaused by: java.lang.RuntimeException: java.io.IOException: Underlying input stream returned zero bytes\r\n\tat org.jboss.resteasy.plugins.server.BaseHttpRequest.getFormParameters(BaseHttpRequest.java:61)\r\n\tat org.jboss.resteasy.plugins.server.BaseHttpRequest.getDecodedFormParameters(BaseHttpRequest.java:74)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n\tat org.jboss.resteasy.core.ContextParameterInjector$GenericDelegatingProxy.invoke(ContextParameterInjector.java:166)\r\n\tat com.sun.proxy.$Proxy45.getDecodedFormParameters(Unknown Source)\r\n\tat com.example.ExampleResource.processPostFormRequest(ExampleResource.java:67)\r\n\tat com.example.ExampleResource_Subclass.processPostFormRequest$$superforward1(Unknown Source)\r\n\tat com.example.ExampleResource_Subclass$$function$$4.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)\r\n\tat io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n\t...\r\n\t\r\nCaused by: java.io.IOException: Underlying input stream returned zero bytes\r\n\tat java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:288)\r\n\tat java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:326)\r\n\tat java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:178)\r\n\tat java.base/java.io.InputStreamReader.read(InputStreamReader.java:181)\r\n\tat java.base/java.io.BufferedReader.fill(BufferedReader.java:161)\r\n\tat java.base/java.io.BufferedReader.read1(BufferedReader.java:212)\r\n\tat java.base/java.io.BufferedReader.read(BufferedReader.java:287)\r\n\tat org.jboss.resteasy.plugins.providers.FormUrlEncodedProvider.parseForm(FormUrlEncodedProvider.java:88)\r\n\tat org.jboss.resteasy.plugins.server.BaseHttpRequest.getFormParameters(BaseHttpRequest.java:57)\r\n\t... 48 more\r\n```\r\n, response not sent.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: https://github.com/DGuhr/reproducer/tree/formPostRequest_ssl_exception\r\n\r\nSteps: See Readme.md on that branch\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin dguhr-mac 20.6.0 Darwin Kernel Version 20.6.0: Tue Apr 19 21:04:45 PDT 2022; root:xnu-7195.141.29~1/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.15\" 2022-04-19 OpenJDK Runtime Environment Temurin-11.0.15+10 (build 11.0.15+10) OpenJDK 64-Bit Server VM Temurin-11.0.15+10 (build 11.0.15+10, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n-\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.6.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\r\n\r\n### Additional information\r\n\r\nThe error is not happening with a newer go version like 1.16, but over at Keycloak we had some other issues not related to go but with the same exception, that I will list here, so maybe worth looking into it to make quarkus SSL / HTTP2 \"more compatible\":\r\n\r\n- https://github.com/keycloak/keycloak/issues/11010 (windows related, could not reproduce here sadly)\r\n- https://github.com/keycloak/keycloak/discussions/10931 (discussion of 11010)\r\n- https://github.com/keycloak/keycloak/issues/13315 (Issue we created after experiencing the same and investigate it in the go context for our legacy operator)\r\n\r\nApart from that: Not sure if somehow related to #26878 but may be by chance that I found 2 HTTPS/SSL-related bugs in that short time frame 🥲 ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26937/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26937/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

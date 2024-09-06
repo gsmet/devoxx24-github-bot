@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36825",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36825/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36825/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36825/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36825",
+  "id": 1973752912,
+  "node_id": "I_kwDOCFbutM51pRRQ",
+  "number": 36825,
+  "title": "Nested transactions do not affect the entity cache",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 1633508165,
+      "node_id": "MDU6TGFiZWwxNjMzNTA4MTY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/narayana",
+      "name": "area/narayana",
+      "color": "0366d6",
+      "default": false,
+      "description": "Transactions / Narayana"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-11-02T08:32:18Z",
+  "updated_at": "2023-11-02T17:01:58Z",
+  "closed_at": "2023-11-02T17:01:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have found following strange situation.\r\nMy app uses postgres as database, which has the read commited isolation level (default)\r\nhttps://www.postgresql.org/docs/current/transaction-iso.html#XACT-READ-COMMITTED\r\n```When a transaction uses this isolation level, a SELECT query (without a FOR UPDATE/SHARE clause) sees only data committed before the query began; it never sees either uncommitted data or changes committed by concurrent transactions during the query's execution.```\r\n\r\nSo far so good.\r\nNot to my situation.\r\n\r\nService a with Transactional(Requires_new)\r\n- calls Service b which again has a Transactional(Requires_new)\r\n-- service b now loads an entity by id\r\n-- service b does some funky stuff with the entity (does not matter for us).\r\n-- In the meantime, another process deletes the entity. Thanks to read commited isolation level though, we can still fully read every part of the entity and childs\r\n- back to service a\r\n- service a now also load the entity by id. It can still find it\r\n- why?\r\n\r\nThe last question, the why the entity could still be found is my main problem.\r\n\r\nSo far 2 parts out:\r\n1) The databse transaction does not start at the point where the method of service a gets called. The DB TX only starts on the first query. Okay, I can live with that. Not surer if everyone expects this behaviour though, is this documented somewhere?\r\n\r\n2) ORM holds the entity in some kind of cache I believe. At least the em.find in Service b and Service a both return objects with the entities identity.\r\n\r\n### Expected behavior\r\n\r\nI would expect that the entity cache of em is clear on a transaction boundary.\r\n\r\n### Actual behavior\r\n\r\nI get a half loaded entity from the cache, which fails to load its childs because they are deleted in db.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: \r\n[pc-cache.zip](https://github.com/quarkusio/quarkus/files/13236177/pc-cache.zip)\r\n\r\n1) mvn clean compile quarkus:dev\r\n2) Set breakpoints in GrettingResource#hello and SomeService#doSth.\r\n3) Open http://localhost:8080/hello\r\n4) Notice that the MyEntity instances both have the same identity.\r\n5) Also notice, that the entity was loaded at all, even though it gets deleted\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMINGW64_NT-10.0-19045\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.4 2022-07-19 OpenJDK Runtime Environment Temurin-17.0.4+8 (build 17.0.4+8) OpenJDK 64-Bit Server VM Temurin-17.0.4+8 (build 17.0.4+8, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\r\nMaven home: C:\\eclipse\\tools\\java\\maven\r\nJava version: 17.0.4, vendor: Eclipse Adoptium, runtime: C:\\eclipse\\tools\\java\\17\r\nDefault locale: de_DE, platform encoding: Cp1252\r\nOS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36825/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36825/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

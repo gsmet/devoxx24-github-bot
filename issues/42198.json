@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42198",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42198/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42198/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42198/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42198",
+  "id": 2435165607,
+  "node_id": "I_kwDOCFbutM6RJa2n",
+  "number": 42198,
+  "title": "Picocli: subcommands do not work when the `@TopLevelCommand` has `..., helpCommand = true, ...` set",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 3232344833,
+      "node_id": "MDU6TGFiZWwzMjMyMzQ0ODMz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/picocli",
+      "name": "area/picocli",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-07-29T11:27:51Z",
+  "updated_at": "2024-07-29T12:55:21Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen the `@TopLevelCommand` has `..., helpCommand = true, ...` set on annotation `@CommandLine.Command`, the sub-commands are displayed on the `--help` menu, but not executable.\r\n\r\n### Expected behavior\r\n\r\nSubcommands are executable.\r\n\r\n### Actual behavior\r\n\r\nSubcommands ar enot executable.\r\n\r\n### How to Reproduce?\r\n\r\n1. Clone `https://github.com/turing85/quarkus-picocli-subcommands`:\r\n```bash\r\ngit clone https://github.com/turing85/quarkus-picocli-subcommands.git\r\ncd quarkus-picocli-subcommands\r\n```\r\n2. Build the application:\r\n```bash\r\n./mvnw clean package\r\n```\r\n3. Run the `--help` subcommand, observe that the `bar` subcommand is present:\r\n```bash\r\njava -jar target/quarkus-app/quarkus-run.jar --help\r\n...\r\nUsage: <main class> [-hV] [COMMAND]\r\n  -h, --help      Show this help message and exit.\r\n  -V, --version   Print version information and exit.\r\nCommands:\r\n  bar\r\n...\r\n```\r\n4. Try running the `bar` subcommand, observe that the `@TopLevelCommand` (`FooCommand`) is executed instead:\r\n```bash\r\njava -jar target/quarkus-app/quarkus-run.jar bar --name=baz\r\n...\r\n2024-07-29 13:10:10,401 INFO  [de.tur.qua.pic.sub.FooCommand] (main) Hello from foo!\r\n...\r\n```\r\n5. Apply the following patch, which removes the `helpCommand = true` from the `@TopLevelCommand` (`FooCommand`):\r\n```patch\r\nSubject: [PATCH] Remove helpCommand = true\r\n---\r\nIndex: src/main/java/de/turing85/quarkus/picocli/subcommands/FooCommand.java\r\nIDEA additional info:\r\nSubsystem: com.intellij.openapi.diff.impl.patch.CharsetEP\r\n<+>UTF-8\r\n===================================================================\r\ndiff --git a/src/main/java/de/turing85/quarkus/picocli/subcommands/FooCommand.java b/src/main/java/de/turing85/quarkus/picocli/subcommands/FooCommand.java\r\n--- a/src/main/java/de/turing85/quarkus/picocli/subcommands/FooCommand.java\t(revision c2fd475897d8ab82d9367fbc7ba297aa5ce5a5e5)\r\n+++ b/src/main/java/de/turing85/quarkus/picocli/subcommands/FooCommand.java\t(date 1722251603976)\r\n@@ -8,8 +8,7 @@\r\n import picocli.CommandLine;\r\n\r\n @TopCommand\r\n-@CommandLine.Command(mixinStandardHelpOptions = true, helpCommand = true,\r\n-    subcommands = BarCommand.class)\r\n+@CommandLine.Command(mixinStandardHelpOptions = true, subcommands = BarCommand.class)\r\n @ApplicationScoped\r\n @RequiredArgsConstructor\r\n @Slf4j\r\n```\r\n6. Rebuild the application, rerun the `bar` subcommand, observe that it works:\r\n```bash\r\n./mvnw clean package && java -jar target/quarkus-app/quarkus-run.jar bar --name=baz\r\n...\r\n2024-07-29 13:15:38,790 INFO  [de.tur.qua.pic.sub.BarCommand] (main) Hello from Bar to baz!\r\n...\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n```\r\nLinux xxx 5.15.0-52-generic #58-Ubuntu SMP Thu Oct 13 08:03:55 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n```\r\n\r\n### Output of `java -version`\r\n\r\n```\r\nopenjdk version \"21.0.3\" 2024-04-16 LTS\r\nOpenJDK Runtime Environment Temurin-21.0.3+9 (build 21.0.3+9-LTS)\r\nOpenJDK 64-Bit Server VM Temurin-21.0.3+9 (build 21.0.3+9-LTS, mixed mode, sharing)\r\n```\r\n\r\n### Quarkus version or git rev\r\n\r\na least `3.8.5+`\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n```\r\nApache Maven 3.9.8 (36645f6c9b5079805ea5009217e36f2cffd34256)\r\nMaven home: /home/marco/.m2/wrapper/dists/apache-maven-3.9.8-bin/337e6d14/apache-maven-3.9.8\r\nJava version: 21.0.3, vendor: Eclipse Adoptium, runtime: /opt/java/mandrel/23.1.3.1-java21\r\nDefault locale: en_US, platform encoding: UTF-8\r\nOS name: \"linux\", version: \"5.15.0-52-generic\", arch: \"amd64\", family: \"unix\"\r\n\r\n```\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42198/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42198/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

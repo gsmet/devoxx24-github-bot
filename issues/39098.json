@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39098",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39098/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39098/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39098/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39098",
+  "id": 2162890334,
+  "node_id": "I_kwDOCFbutM6A6xZe",
+  "number": 39098,
+  "title": "Kafka MutinyEmitter.sendAndAwait sometimes ruins blocking DB transaction. #context-propagation, smallrye-kafka, narayana",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3700813587,
+      "node_id": "LA_kwDOCFbutM7cle8T",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/context-propagation",
+      "name": "area/context-propagation",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-03-01T08:36:45Z",
+  "updated_at": "2024-03-04T22:09:02Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nA very simple reproducer example can be found here:\r\nhttps://github.com/MatejPucihar/kafka-db-tx\r\n![image](https://github.com/quarkusio/quarkus/assets/20385863/b56f6b05-3955-4c9e-81ba-60569d24ee03)\r\n\r\n\r\nScenario: \r\n- send rest http request (from test, every 1ms, to force exception)\r\n- rest request is handler is a `@Transactional` method, which inserts something in DB and sends something to kafka. It must be blocking send, we want to commit out DB TX only if kafka message is ACKed. \r\n\r\nThere is ~1:1000 chance that the handler will fail dramatically:\r\n```\r\n2024-03-01 08:32:55,162 WARN  [com.arj.ats.arjuna] (executor-thread-2) ARJUNA012094: Commit of action id 0:ffff0a010a48:e441:65e18477:d1d0 invoked while multiple threads active within it.\r\n2024-03-01 08:32:55,163 WARN  [com.arj.ats.arjuna] (executor-thread-2) ARJUNA012107: CheckedAction::check - atomic action 0:ffff0a010a48:e441:65e18477:d1d0 commiting with 2 threads active!\r\n2024-03-01 08:32:55,163 WARN  [com.arj.ats.jta] (executor-thread-2) ARJUNA016039: onePhaseCommit on < formatId=131077, gtrid_length=35, bqual_length=36, tx_uid=0:ffff0a010a48:e441:65e18477:d1d0, node_name=quarkus, branch_uid=0:ffff0a010a48:e441:65e18477:d1d3, subordinatenodename=null, eis_name=0 > (io.agroal.narayana.LocalXAResource@2ea67dc) failed with exception XAException.XA_RBROLLBACK: javax.transaction.xa.XAException: Error trying to transactionCommit local transaction: Enlisted connection used without active transaction\r\n```\r\n\r\nI first saw the exception in quarkus 3.5, when we implemented a feature using it. I decided it is time to solve it now, before we go live :)\r\n\r\nI investigated a bit further, placing breakpoints here:\r\n- `/Users/matejpucihar/.m2/repository/org/jboss/narayana/jta/narayana-jta/7.0.0.Final/narayana-jta-7.0.0.Final.jar!/com/arjuna/ats/arjuna/logging/arjunaI18NLogger_$logger.class:693` \r\n- `com.arjuna.ats.arjuna.coordinator.BasicAction.checkChildren`\r\n![image](https://github.com/quarkusio/quarkus/assets/20385863/c975e3e1-cd2c-406e-b0b5-156c9df0e4fc)\r\nIt shows that transaction, that was propagated to kafka-producer-thread is still bound to that thread, after message was ACKED(blocking sendAndAwait). That should not happen?\r\n\r\nThe exception can be solved using a thread without propagated transaction, e.g. `@ManagedExecutorConfig(cleared = ThreadContext.TRANSACTION)`\r\n\r\nI know the concept of `write to kafka, wait for message to be ACKed and then commit DB tx` is weird at best. \r\nBut, still this must be a pretty ugly bug. \r\n\r\n### Expected behavior\r\n\r\nException should never occur\r\n\r\n### Actual behavior\r\n\r\nException \r\n\r\n### How to Reproduce?\r\n\r\nclone https://github.com/MatejPucihar/kafka-db-tx\r\nrun `./mvnw test`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nhappens on multiple OS/ARCHITECTURES. Linux amd64, Mac M1, K8s cluster... My uname -a outputs Darwin Matejs-MBP-2.medius 23.2.0 Darwin Kernel Version 23.2.0: Wed Nov 15 21:53:18 PST 2023; root:xnu-10002.61.3~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\n21.0.2\" 2024-01-16\r\n\r\n### Quarkus version or git rev\r\n\r\n3.8.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /Users/matejpucihar/.m2/wrapper/dists/apache-maven-3.9.6-bin/3311e1d4/apache-maven-3.9.6 Java version: 21.0.2, vendor: Oracle Corporation, runtime: /Users/matejpucihar/Library/Java/JavaVirtualMachines/openjdk-21.0.2/Contents/Home Default locale: sl_SI, platform encoding: UTF-8 OS name: \"mac os x\", version: \"14.2.1\", arch: \"aarch64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\nError is present for at least a few major quarkus versions.\r\n\r\nError can be bypassed with disabled tx propagation to kafka-producer-thread (e.g. `@ManagedExecutorConfig(cleared = ThreadContext.TRANSACTION)`)",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39098/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39098/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

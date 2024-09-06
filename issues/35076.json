@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35076",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35076/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35076/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35076/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35076",
+  "id": 1825870479,
+  "node_id": "I_kwDOCFbutM5s1JKP",
+  "number": 35076,
+  "title": "Redirect to static content not working in production mode when using RESTEasy, quarkus.http.root-path and no trailing slash",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-07-28T07:30:18Z",
+  "updated_at": "2023-09-07T07:14:51Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nQuarkus behaves differently in development mode compared to production mode when using RESTEasy, a custom `quarkus.http.root-path` and static content.\r\n\r\nMy `application.properties` contains\r\n```properties\r\nquarkus.http.root-path=/testing\r\nquarkus.swagger-ui.always-include=true\r\n```\r\nand I have one REST service:\r\n```java\r\npackage my.problem;\r\n\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\nimport jakarta.ws.rs.Produces;\r\nimport jakarta.ws.rs.core.MediaType;\r\n\r\n@Path(\"\")\r\npublic class ExampleResource {\r\n\r\n    @GET\r\n    @Path(\"/hello\")\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello() {\r\n        return \"hello\";\r\n    }\r\n}\r\n```\r\n\r\nI also have an `index.html` in `src/main/resources/META-INF/resources` that has a link to Swagger UI.\r\nWhen Quarkus runs in development mode (`mvn quarkus:dev`) `localhost:8080/testing` redirects to `localhost:8080/testing/` and `index.html` is shown in my browser. But when Quarkus runs in production mode (`java -jar target\\quarkus-app\\quarkus-run.jar`),  `localhost:8080/testing` returns HTTP status code 404.\r\n\r\nThe following urls behave the same in both modes:\r\n`localhost:8080/testing/`\r\n`localhost:8080/testing/q/swagger-ui`\r\n`localhost:8080/testing/q/swagger-ui/`\r\n`localhost:8080/testing/hello`\r\n`localhost:8080/testing/hello/`\r\n\r\n### Expected behavior\r\n\r\nIn production mode, `curl localhost:8080/testing -i` should show HTTP status code 301 and a redirect to `/testing/`.\r\n\r\n### Actual behavior\r\n\r\nIn production mode, `curl localhost:8080/testing -i` shows HTTP status code 404.\r\n\r\n### How to Reproduce?\r\n\r\n[my-redirect-problem.zip](https://github.com/quarkusio/quarkus/files/12191045/my-redirect-problem.zip)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.22621.1992]\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17\" 2021-09-14 OpenJDK Runtime Environment (build 17+35-2724) OpenJDK 64-Bit Server VM (build 17+35-2724, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3 (21122926829f1ead511c958d89bd2f672198ae9f) Maven home: C:\\Progs\\apache-maven-3.9.3 Java version: 17, vendor: Oracle Corporation, runtime: C:\\Progs\\Java\\jdk-17 Default locale: nl_NL, platform encoding: Cp1252 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\nWhen `quarkus-undertow` is added as a dependency, production mode behaves the same as development mode.\r\nBut `curl localhost:8080/testing -i` shows HTTP 302 instead of 301, and the redirect is to `http://localhost:8080/testing/` instead of `/testing/`.\r\n\r\n\r\nThis problem is similar to https://github.com/quarkusio/quarkus/issues/3091, https://github.com/quarkusio/quarkus/issues/6760 and https://github.com/quarkusio/quarkus/issues/19492",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35076/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35076/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

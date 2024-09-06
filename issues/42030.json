@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42030",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42030/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42030/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42030/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42030",
+  "id": 2422274471,
+  "node_id": "I_kwDOCFbutM6QYPmn",
+  "number": 42030,
+  "title": "Cache manager does not see caches created at runtime in Infinispan",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282122953,
+      "node_id": "MDU6TGFiZWwxMjgyMTIyOTUz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/infinispan",
+      "name": "area/infinispan",
+      "color": "0366d6",
+      "default": false,
+      "description": "Infinispan"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-07-22T08:31:23Z",
+  "updated_at": "2024-07-22T09:53:24Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello,\r\n\r\nI don't really know if it is a bug or a limitation but it seems that the CacheManager is not able to see any cache that is created at runtime in Infinispan.\r\n\r\nI'm using quarkus-infinispan-cache as the cache implementation and would like to create caches using the programmatic API if they don't exist (I cannot know in advance my caches names in my application).\r\n\r\nSo I tried to use infinispan RemoteCacheManager  to dynamically create a cache at runtime (which works as I can see the cache in the Infinispan console. But when I later call cacheManager.getCache(...) it tells me that the cache does not exist : \r\n\r\n> 2024-07-22 10:17:10,661 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-1) HTTP Request to /cache failed, error id: 881330ad-a87e-421e-8aa8-bf34ad8d7876-1: java.util.NoSuchElementException: No value present\r\n> \tat java.base/java.util.Optional.get(Optional.java:143)\r\n> \tat com.test.CacheTestResource.getCache(CacheTestResource.java:38)\r\n> \tat com.test.CacheTestResource.get(CacheTestResource.java:26)\r\n> \tat com.test.CacheTestResource$quarkusrestinvoker$get_27e4bb4bc80a4dcd94a463bacd9cb253d64feafb.invoke(Unknown Source)\r\n> \tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n> \tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:141)\r\n> \tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n\r\nHere is a simple example to demonstrate the problem : \r\n\r\n```\r\npackage com.test;\r\n\r\nimport java.util.Optional;\r\nimport org.infinispan.client.hotrod.RemoteCacheManager;\r\nimport io.quarkus.cache.Cache;\r\nimport io.quarkus.cache.CacheManager;\r\nimport io.quarkus.infinispan.client.runtime.InfinispanClientProducer;\r\nimport io.quarkus.logging.Log;\r\nimport jakarta.inject.Inject;\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\n\r\n\r\n@Path(\"/cache\")\r\npublic class CacheTestResource {\r\n\r\n    @Inject\r\n    CacheManager cacheManager;\r\n\r\n    @Inject\r\n    RemoteCacheManager remoteCacheManager;\r\n\r\n    @GET\r\n    public void get() {\r\n       getCache(\"test\");\r\n    }\r\n\r\n    private Cache getCache(String cacheName) {\r\n        Optional<Cache> cache = cacheManager.getCache(cacheName);\r\n\r\n        if (cache.isPresent()) {\r\n            return cache.get();\r\n        } else {\r\n            Log.info(\"Cache not found: \" + cacheName + \". Creating it...\");\r\n            remoteCacheManager.administration().getOrCreateCache(cacheName, InfinispanClientProducer.DEFAULT_CONFIG);\r\n            Log.info(\"Cache created: \" + cacheName);\r\n            return cacheManager.getCache(cacheName).get(); // Not working, cache is not available though CacheManager\r\n        }\r\n    }\r\n}\r\n```\r\n\n\n### Expected behavior\n\nCacheManager should correctly return the created cache\n\n### Actual behavior\n\nCacheManager is not returning the created cache\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n21.0.3\n\n### Quarkus version or git rev\n\n3.12.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42030/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42030/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31247",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31247/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31247/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31247/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31247",
+  "id": 1589162583,
+  "node_id": "I_kwDOCFbutM5euLJX",
+  "number": 31247,
+  "title": "[ORM6] Hibernate Search - Class loading issue when loading services",
+  "labels": [
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1664142960,
+      "node_id": "MDU6TGFiZWwxNjY0MTQyOTYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-search",
+      "name": "area/hibernate-search",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Search / Elasticsearch"
+    },
+    {
+      "id": 3941059466,
+      "node_id": "LA_kwDOCFbutM7q58uK",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jakarta",
+      "name": "area/jakarta",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-02-17T10:49:30Z",
+  "updated_at": "2023-03-03T14:14:27Z",
+  "closed_at": "2023-03-03T14:14:27Z",
+  "active_lock_reason": null,
+  "body": "Most of the Hibernate Search tests pass but some of them are failing when loading services.\r\nThe following is an example of the issue but there are others with the same symptoms.\r\n\r\n:warning: **Note that this is with Hibernate Search 6.2.0.Alpha2 as I thought it would be the version to use to be compatible with ORM 6.2. In the end, we downgraded to 6.1.7.Final.**\r\n\r\nAlso see @marko-bekhta 's comments below.\r\n\r\nHow to reproduce:\r\n- Get branch from: https://github.com/quarkusio/quarkus/pull/31235\r\n- Update Hibernate Search version to 6.2.0.Alpha2 (we downgraded to 6.1.7.Final as the tests are all passing with this version)\r\n- Make sure you have a fresh Hibernate ORM 6.2.0-SNAPSHOT around (that means building a fresh 6.2 branch from ORM)\r\n- `./mvnw -Dquickly -pl :quarkus-hibernate-search-orm-elasticsearch-deployment -am`\r\n- `./mvnw -f extensions/hibernate-search-orm-elasticsearch/deployment/ clean verify -Dtest-containers -Dstart-containers -Dtest=SinglePersistenceUnitsCdiTest`\r\n\r\nYou then get the following error (and I suspect a class loading issue):\r\n```\r\nCaused by: java.util.ServiceConfigurationError: org.hibernate.search.engine.environment.bean.spi.BeanConfigurer: org.hibernate.search.backend.elasticsearch.impl.ElasticsearchBeanConfigurer not a subtype\r\n\tat java.base/java.util.ServiceLoader.fail(ServiceLoader.java:589)\r\n\tat java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNextService(ServiceLoader.java:1237)\r\n\tat java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNext(ServiceLoader.java:1265)\r\n\tat java.base/java.util.ServiceLoader$2.hasNext(ServiceLoader.java:1300)\r\n\tat java.base/java.util.ServiceLoader$ProviderSpliterator.tryAdvance(ServiceLoader.java:1484)\r\n\tat java.base/java.util.Spliterator.forEachRemaining(Spliterator.java:326)\r\n\tat java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:658)\r\n\tat java.base/java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:274)\r\n\tat java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)\r\n\tat java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1655)\r\n\tat java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:484)\r\n\tat java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)\r\n\tat java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:150)\r\n\tat java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:173)\r\n\tat java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\r\n\tat java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:497)\r\n\tat org.hibernate.search.engine.environment.classpath.spi.DefaultServiceResolver$ClassPathAndModulePathServiceResolver.loadJavaServices(DefaultServiceResolver.java:157)\r\n\tat org.hibernate.search.engine.environment.classpath.spi.DefaultServiceResolver$ClassPathAndModulePathServiceResolver.loadJavaServices(DefaultServiceResolver.java:127)\r\n\tat org.hibernate.search.mapper.orm.bootstrap.impl.HibernateOrmClassLoaderServiceClassAndResourceAndServiceResolver.loadJavaServices(HibernateOrmClassLoaderServiceClassAndResourceAndServiceResolver.java:78)\r\n\tat org.hibernate.search.engine.environment.bean.impl.BeanResolverImpl.create(BeanResolverImpl.java:52)\r\n\tat org.hibernate.search.engine.common.spi.SearchIntegrationEnvironment.<init>(SearchIntegrationEnvironment.java:72)\r\n\tat org.hibernate.search.engine.common.spi.SearchIntegrationEnvironment.<init>(SearchIntegrationEnvironment.java:26)\r\n\tat org.hibernate.search.engine.common.spi.SearchIntegrationEnvironment$Builder.build(SearchIntegrationEnvironment.java:167)\r\n\tat org.hibernate.search.mapper.orm.bootstrap.impl.HibernateSearchPreIntegrationService$Initiator.createEnvironment(HibernateSearchPreIntegrationService.java:167)\r\n\tat org.hibernate.search.mapper.orm.bootstrap.impl.HibernateSearchPreIntegrationService$Initiator.lambda$initiateService$0(HibernateSearchPreIntegrationService.java:135)\r\n\tat org.hibernate.search.mapper.orm.bootstrap.spi.HibernateOrmIntegrationBooterBehavior.bootFirstPhase(HibernateOrmIntegrationBooterBehavior.java:17)\r\n\tat org.hibernate.search.mapper.orm.bootstrap.impl.HibernateSearchPreIntegrationService$Initiator.initiateService(HibernateSearchPreIntegrationService.java:133)\r\n\tat org.hibernate.search.mapper.orm.bootstrap.impl.HibernateSearchPreIntegrationService$Initiator.initiateService(HibernateSearchPreIntegrationService.java:80)\r\n\tat org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.initiateService(StandardServiceRegistryImpl.java:119)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:264)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:239)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:216)\r\n\tat io.quarkus.hibernate.orm.runtime.boot.FastBootMetadataBuilder.<init>(FastBootMetadataBuilder.java:182)\r\n\tat io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.createMetadata(PersistenceUnitsHolder.java:99)\r\n\tat io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.constructMetadataAdvance(PersistenceUnitsHolder.java:73)\r\n\tat io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.initializeJpa(PersistenceUnitsHolder.java:40)\r\n\tat io.quarkus.hibernate.orm.runtime.HibernateOrmRecorder$1.created(HibernateOrmRecorder.java:76)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.initBeanContainer(ArcRecorder.java:73)\r\n\tat io.quarkus.deployment.steps.ArcProcessor$generateResources844392269.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.ArcProcessor$generateResources844392269.deploy(Unknown Source)\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31247/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31247/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28790",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28790/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28790/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28790/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28790",
+  "id": 1420727367,
+  "node_id": "I_kwDOCFbutM5UrpRH",
+  "number": 28790,
+  "title": "Offer `AnnotationLiteralProcessor` as an API usable before `ArcProcessor.initialize()`",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2022-10-24T12:09:34Z",
+  "updated_at": "2022-10-24T12:09:34Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nAs we found in #28767 / #28789, there are some extensions out there that cannot use ArC's `AnnotationLiteralProcessor` because it isn't available before `ArcProcessor.initialize()`.\r\n\r\nSpecifically, the 2 extensions known to do this (Quarkus GitHub App and Quarkus GitHub Action) generate beans during build (which needs to happen before `ArcProcessor.initialize()`) and those beans fire events, which requires instantiating qualifiers. These extensions implement a limited form of `AnnotationLiteralProcessor`, just enough to be able to instantiate very simple annotations. ArC's `AnnotationLiteralProcessor`, on the other hand, is a complete solution that can instantiate arbitrary annotations, including annotations with nested annotations, and it generates optimized code. We should find a way to offer this API to consumers that need the functionality before `ArcProcessor.initialize()`.\n\n### Implementation ideas\n\nCurrently, `AnnotationLiteralProcessor` requires 2 things:\r\n\r\n- the bean archive index\r\n- the \"is application class?\" predicate\r\n\r\nThe app class predicate isn't really used by `AnnotationLiteralProcessor`, it's just stored to the intermediate representation for later consumption by `AnnotationLiteralGenerator`. That would be pretty easy to refactor. So the bean archive index remains.\r\n\r\nMaybe we could have 2 instances of `AnnotationLiteralProcessor`, one that would be ArC-aware and use the bean archive index, and another for pre-ArC usage that would use the combined index (?).",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28790/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28790/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

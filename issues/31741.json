@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31741",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31741/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31741/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31741/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31741",
+  "id": 1617652188,
+  "node_id": "I_kwDOCFbutM5ga2nc",
+  "number": 31741,
+  "title": "Error: Detected use of the reactive Session from a different Thread than the one which was used to open the reactive Session",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-03-09T17:10:23Z",
+  "updated_at": "2023-03-29T12:15:09Z",
+  "closed_at": "2023-03-29T12:15:09Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a peace of code similar to the following:\r\n```java\r\n//repository class\r\n@ApplicationScoped\r\npublic class SomeRepository implements PanacheRepositoryBase<SomeEntity, Long> {\r\n\r\n  public Uni<SomeEntity> findByUniqueId(String uniqueId) {\r\n    return find(\"uniqueId\", uniqueId).singleResult();\r\n  }\r\n}\r\n```\r\n\r\n```java\r\n//service class\r\n@ApplicationScoped\r\npublic final class SomeRequestHandler extends AbstractRequestHandler {\r\n  private final SomeRepository repository;\r\n  \r\n  public SomeRequestHandler(SomeRepository repository) {\r\n    this.repository = repository;\r\n  }\r\n\r\n  @Override\r\n  @ReactiveTransactional\r\n  protected Uni<SomeResponse> doHandle(SomeRequest request) {\r\n    return repository.findByUniqueId(request.uniqueId())\r\n        .flatMap(entity -> {\r\n          entity.status = Status.CONNECTED;\r\n          return repository.persistAndFlush(entity);\r\n        })\r\n        .replaceWith(() -> SomeResponse.builder().ok().build())\r\n        .onFailure(javax.persistence.NoResultException.class)\r\n        .recoverWithItem(() -> SomeResponse.builder().error().build())\r\n        ;\r\n  }\r\n}\r\n```\r\n\r\nwhen I call the `SomeRequestHandler::doHandler` it works, but at some point, it also logs the error:\r\n`ERROR [io.qua.arc.imp.AbstractInstanceHandle] (sdk-async-response-0-12) Error occurred while destroying instance of bean [io.quarkus.hibernate.reactive.runtime.ReactiveSessionProducer_ProducerMethod_createMutinySession_1321d110ee9e92bda147899150401e0a136779c7_Bean]: java.util.concurrent.CompletionException: java.lang.IllegalStateException: HR000069: Detected use of the reactive Session from a different Thread than the one which was used to open the reactive Session - this suggests an invalid integration; original thread [180]: 'vert.x-eventloop-thread-0' current Thread [258]: 'vert.x-eventloop-thread-9'`\r\n\r\nI tried different \"solutions\", like running everything inside  `Panache.withTransaction()`, but the issue remains. I also injected the `Mutiny.SessionFactory` and ran everything inside a new session `sessionFactory.openSession().chain(session -> executeSameLogic(request.uniqueId()).eventually(session::close));`.\r\nBut none of those solutions fixed the issue.\r\n\r\nHow do I solve this issue? How do I execute the entire operation in a transaction correctly? What do am I doing wrong here?\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux precision3571 5.19.0-35-generic #36~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Feb 17 15:17:25 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\n```\r\nopenjdk version \"17.0.6\" 2023-01-17\r\nOpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.6+10 (build 17.0.6+10, mixed mode, sharing)\r\n```\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n```\r\n------------------------------------------------------------\r\nGradle 7.6\r\n------------------------------------------------------------\r\n\r\nBuild time:   2022-11-25 13:35:10 UTC\r\nRevision:     daece9dbc5b79370cc8e4fd6fe4b2cd400e150a8\r\n\r\nKotlin:       1.7.10\r\nGroovy:       3.0.13\r\nAnt:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021\r\nJVM:          17.0.6 (Eclipse Adoptium 17.0.6+10)\r\nOS:           Linux 5.19.0-35-generic amd64\r\n```\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31741/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31741/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

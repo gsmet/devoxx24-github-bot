@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42064",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42064/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42064/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42064/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42064",
+  "id": 2424667595,
+  "node_id": "I_kwDOCFbutM6QhX3L",
+  "number": 42064,
+  "title": "Self changes of column names to non-exist column names by PanacheJpaUtil#getFastCountQuery ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-07-23T09:06:31Z",
+  "updated_at": "2024-08-14T15:10:44Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nBug appears in version 3.12.0.CR1 https://github.com/quarkusio/quarkus/releases/tag/3.12.0.CR1\r\nand in all higher versions.\r\nIt is likely caused by the change introduced in this pull request:\r\nhttps://github.com/quarkusio/quarkus/pull/38931\r\n, specifically in  `io.quarkus.panache.hibernate.common.runtime.PanacheJpaUtil#getFastCountQuery`:\r\nhttps://github.com/quarkusio/quarkus/pull/38931/commits/d3e578eb7f2f5e068ec03347990609b14ddb6fe2#diff-88f819be30dca99e30b631c785af5ac15b5ff4b5b91a0ffbace7a5d361ae2b6bR55\r\n\r\nWhen I call the `hasNextPage()` method (io.quarkus.hibernate.orm.panache.PanacheQuery#hasNextPage) on a query in HQL , which contains an entity field with name written in camel case (eg. groupId)), I receive the following error:\r\n```\r\nCould not interpret path expression 'groupid'\r\norg.hibernate.query.SemanticException: Could not interpret path expression 'groupid'\r\n\tat org.hibernate.query.hql.internal.BasicDotIdentifierConsumer$BaseLocalSequencePart.resolvePathPart(BasicDotIdentifierConsumer.java:241)\r\n\tat org.hibernate.query.hql.internal.BasicDotIdentifierConsumer.consumeIdentifier(BasicDotIdentifierConsumer.java:92)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSimplePath(SemanticQueryBuilder.java:5259)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitIndexedPathAccessFragment(SemanticQueryBuilder.java:5218)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitGeneralPathFragment(SemanticQueryBuilder.java:5193)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitGeneralPathExpression(SemanticQueryBuilder.java:1886)\r\n\tat org.hibernate.grammars.hql.HqlParser$GeneralPathExpressionContext.accept(HqlParser.java:7967)\r\n\tat org.antlr.v4.runtime.tree.AbstractParseTreeVisitor.visitChildren(AbstractParseTreeVisitor.java:46)\r\n\tat org.hibernate.grammars.hql.HqlParserBaseVisitor.visitBarePrimaryExpression(HqlParserBaseVisitor.java:777)\r\n\tat org.hibernate.grammars.hql.HqlParser$BarePrimaryExpressionContext.accept(HqlParser.java:7425)\r\n\tat org.antlr.v4.runtime.tree.AbstractParseTreeVisitor.visitChildren(AbstractParseTreeVisitor.java:46)\r\n\tat org.hibernate.grammars.hql.HqlParserBaseVisitor.visitExpressionOrPredicate(HqlParserBaseVisitor.java:917)\r\n\tat org.hibernate.grammars.hql.HqlParser$ExpressionOrPredicateContext.accept(HqlParser.java:8195)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitFinalFunctionArgument(SemanticQueryBuilder.java:4296)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitGenericFunctionArguments(SemanticQueryBuilder.java:4273)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitGenericFunctionArguments(SemanticQueryBuilder.java:275)\r\n\tat org.hibernate.grammars.hql.HqlParser$GenericFunctionArgumentsContext.accept(HqlParser.java:12784)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.getFunctionArguments(SemanticQueryBuilder.java:4176)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitGenericFunction(SemanticQueryBuilder.java:4041)\r\n\tat org.hibernate.grammars.hql.HqlParser$GenericFunctionContext.accept(HqlParser.java:12413)\r\n\tat org.antlr.v4.runtime.tree.AbstractParseTreeVisitor.visitChildren(AbstractParseTreeVisitor.java:46)\r\n\tat org.hibernate.grammars.hql.HqlParserBaseVisitor.visitFunction(HqlParserBaseVisitor.java:1309)\r\n\tat org.hibernate.grammars.hql.HqlParser$FunctionContext.accept(HqlParser.java:11891)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitFunctionExpression(SemanticQueryBuilder.java:1897)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitFunctionExpression(SemanticQueryBuilder.java:275)\r\n\tat org.hibernate.grammars.hql.HqlParser$FunctionExpressionContext.accept(HqlParser.java:7847)\r\n\tat org.antlr.v4.runtime.tree.AbstractParseTreeVisitor.visitChildren(AbstractParseTreeVisitor.java:46)\r\n\tat org.hibernate.grammars.hql.HqlParserBaseVisitor.visitBarePrimaryExpression(HqlParserBaseVisitor.java:777)\r\n\tat org.hibernate.grammars.hql.HqlParser$BarePrimaryExpressionContext.accept(HqlParser.java:7425)\r\n\tat org.antlr.v4.runtime.tree.AbstractParseTreeVisitor.visitChildren(AbstractParseTreeVisitor.java:46)\r\n\tat org.hibernate.grammars.hql.HqlParserBaseVisitor.visitExpressionOrPredicate(HqlParserBaseVisitor.java:917)\r\n\tat org.hibernate.grammars.hql.HqlParser$ExpressionOrPredicateContext.accept(HqlParser.java:8195)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSelectableNode(SemanticQueryBuilder.java:1430)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSelection(SemanticQueryBuilder.java:1407)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSelectClause(SemanticQueryBuilder.java:1400)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitQuery(SemanticQueryBuilder.java:1249)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitQuerySpecExpression(SemanticQueryBuilder.java:1035)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitQuerySpecExpression(SemanticQueryBuilder.java:275)\r\n\tat org.hibernate.grammars.hql.HqlParser$QuerySpecExpressionContext.accept(HqlParser.java:2132)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSimpleQueryGroup(SemanticQueryBuilder.java:1020)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSimpleQueryGroup(SemanticQueryBuilder.java:275)\r\n\tat org.hibernate.grammars.hql.HqlParser$SimpleQueryGroupContext.accept(HqlParser.java:2003)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSelectStatement(SemanticQueryBuilder.java:490)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitStatement(SemanticQueryBuilder.java:449)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.buildSemanticModel(SemanticQueryBuilder.java:322)\r\n\tat org.hibernate.query.hql.internal.StandardHqlTranslator.translate(StandardHqlTranslator.java:71)\r\n\tat org.hibernate.query.internal.QueryInterpretationCacheStandardImpl.createHqlInterpretation(QueryInterpretationCacheStandardImpl.java:145)\r\n\tat org.hibernate.query.internal.QueryInterpretationCacheStandardImpl.resolveHqlInterpretation(QueryInterpretationCacheStandardImpl.java:132)\r\n\tat org.hibernate.internal.AbstractSharedSessionContract.interpretHql(AbstractSharedSessionContract.java:802)\r\n\tat org.hibernate.internal.AbstractSharedSessionContract.interpretAndCreateSelectionQuery(AbstractSharedSessionContract.java:779)\r\n\tat org.hibernate.internal.AbstractSharedSessionContract.createSelectionQuery(AbstractSharedSessionContract.java:770)\r\n\tat io.quarkus.hibernate.orm.runtime.session.TransactionScopedSession.createSelectionQuery(TransactionScopedSession.java:1269)\r\n\tat org.hibernate.engine.spi.SessionLazyDelegator.createSelectionQuery(SessionLazyDelegator.java:744)\r\n\tat org.hibernate.Session_OpdLahisOZ9nWRPXMsEFQmQU03A_Synthetic_ClientProxy.createSelectionQuery(Unknown Source)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.CommonPanacheQueryImpl.count(CommonPanacheQueryImpl.java:279)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.CommonPanacheQueryImpl.pageCount(CommonPanacheQueryImpl.java:229)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.CommonPanacheQueryImpl.hasNextPage(CommonPanacheQueryImpl.java:219)\r\n\tat io.quarkus.hibernate.orm.panache.runtime.PanacheQueryImpl.hasNextPage(PanacheQueryImpl.java:81)\r\n\t\r\n```\r\n\r\nIt seems that this issue is caused by converting the part of the query to lowercase, which is later used in the target query::\r\n`String firstSelection = selectMatcher.group(1).trim().toLowerCase(Locale.ROOT);`\r\n\r\nThis string is then used in:\r\n`countQuery = “SELECT COUNT(” + firstSelection + “) ” + selectMatcher.group(3);`\r\n\r\n\r\n### Expected behavior\r\n\r\nMethod does not modify column name in query\r\n\r\n### Actual behavior\r\n\r\nMetod modify column name in query\r\n\r\n### How to Reproduce?\r\n\r\n1. Use entity/table with column named in camelCase:\r\nSmeEntity:\r\n```\r\n@Entity\r\n@Table(name = \"some_entity\")\r\npublic class SomeEntity extends PanacheEntityBase {\r\n    @Id\r\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\r\n    Long id;\r\n    @Column(name = \"group_id\")\r\n    String groupId;\r\n}\r\n```\r\n\r\n2. Create an HQL query containing a camel case entity field (e.g., groupId) eg.:\r\n```\r\nPanacheQuery<String> query = SomeEntity.find(\"select distinct groupId from SomeEntity\")\r\n                                                             .project(String.class)\r\n                                                             .page(Page.ofSize(2));\r\n```\r\n3. Call the hasNextPage() method on this query.  For example as I did::\r\n```\r\nboolean doNext;\r\n        do {\r\n            // some code\r\n            doNext = query.hasNextPage();\r\n            if (doNext)\r\n                query = query.nextPage();\r\n        } while (doNext);\r\n ```\r\n \r\n4. Observe the error related to the path expression.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMINGW64_NT-10.0-22631 Tytan 3.4.10-87d57229.x86_64 2024-02-14 20:17 UTC x86_64 Msys\r\n\r\n### Output of `java -version`\r\n\r\njava version \"17.0.9\" 2023-10-17 LTS Java(TM) SE Runtime Environment (build 17.0.9+11-LTS-201) Java HotSpot(TM) 64-Bit Server VM (build 17.0.9+11-LTS-201, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42064/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42064/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

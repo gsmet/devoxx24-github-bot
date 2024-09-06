@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40114",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40114/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40114/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40114/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40114",
+  "id": 2247670716,
+  "node_id": "I_kwDOCFbutM6F-Lu8",
+  "number": 40114,
+  "title": "UpdateTimestamp(source = SourceType.DB) + @SoftDelete produces an error",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-04-17T08:14:05Z",
+  "updated_at": "2024-05-17T11:34:23Z",
+  "closed_at": "2024-05-17T11:34:23Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAdding the @SoftDelete annotation to an entity AND declaring an attribute like the following one breaks Hibernate:\r\n\r\n`@UpdateTimestamp(source = SourceType.DB)\r\n    private LocalDateTime lastUpdateOn;`\r\n\r\nApparently, it is specifically the `SourceType.DB` that breaks. `SourceType.VM` seems okay.\r\n\r\n### Expected behavior\r\n\r\nWhen adding both annotations, we expect the app to start without error.\r\n\r\n### Actual behavior\r\n\r\n```bash\r\n2024-04-17 10:05:47,014 ERROR [io.qua.run.Application] (Quarkus Main Thread) Failed to start application (with profile [dev]): java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:113)\r\n        at java.base/java.lang.Thread.run(Thread.java:840)\r\nCaused by: jakarta.persistence.PersistenceException: [PersistenceUnit: <default>] Unable to build Hibernate SessionFactory\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.persistenceException(FastBootEntityManagerFactoryBuilder.java:129)\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:89)\r\n        at io.quarkus.hibernate.orm.runtime.FastBootHibernatePersistenceProvider.createEntityManagerFactory(FastBootHibernatePersistenceProvider.java:72)\r\n        at jakarta.persistence.Persistence.createEntityManagerFactory(Persistence.java:80)\r\n        at jakarta.persistence.Persistence.createEntityManagerFactory(Persistence.java:55)\r\n        at io.quarkus.hibernate.orm.runtime.JPAConfig$LazyPersistenceUnit.get(JPAConfig.java:154)\r\n        at io.quarkus.hibernate.orm.runtime.JPAConfig$1.run(JPAConfig.java:61)\r\n        ... 1 more\r\nCaused by: java.lang.IllegalStateException: PostInitCallback queue could not be processed...\r\n        - PostInitCallbackEntry - Entity(org.acme.Shop) `staticFetchableList` generator\r\n\r\n        at org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess.executePostInitCallbacks(MappingModelCreationProcess.java:144)\r\n        at org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess.execute(MappingModelCreationProcess.java:88)\r\n        at org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess.process(MappingModelCreationProcess.java:42)\r\n        at org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl.finishInitialization(MappingMetamodelImpl.java:198)\r\n        at org.hibernate.internal.SessionFactoryImpl.initializeMappingModel(SessionFactoryImpl.java:364)\r\n        at org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:293)\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:87)\r\n        ... 6 more\r\n        Suppressed: java.lang.NullPointerException: Cannot load from object array because \"this.tableMappings\" is null\r\n                at org.hibernate.persister.entity.AbstractEntityPersister.getTableMapping(AbstractEntityPersister.java:2889)\r\n                at org.hibernate.persister.entity.SingleTableEntityPersister.getIdentifierTableDetails(SingleTableEntityPersister.java:470)\r\n                at org.hibernate.persister.entity.AbstractEntityPersister.getSoftDeleteTableDetails(AbstractEntityPersister.java:5907)\r\n                at org.hibernate.persister.entity.AbstractEntityPersister.createRootTableGroup(AbstractEntityPersister.java:3113)\r\n                at org.hibernate.loader.ast.internal.LoaderSelectBuilder.buildRootTableGroup(LoaderSelectBuilder.java:578)\r\n                at org.hibernate.loader.ast.internal.LoaderSelectBuilder.generateSelect(LoaderSelectBuilder.java:494)\r\n                at org.hibernate.loader.ast.internal.LoaderSelectBuilder.createSelect(LoaderSelectBuilder.java:257)\r\n                at org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor.<init>(GeneratedValuesProcessor.java:71)\r\n                at org.hibernate.persister.entity.AbstractEntityPersister.createGeneratedValuesProcessor(AbstractEntityPersister.java:2012)\r\n                at org.hibernate.persister.entity.AbstractEntityPersister.lambda$prepareMappingModel$12(AbstractEntityPersister.java:5033)\r\n                at org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess$PostInitCallbackEntry.process(MappingModelCreationProcess.java:246)\r\n                at org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess.executePostInitCallbacks(MappingModelCreationProcess.java:106)\r\n                ... 12 more\r\n\r\n\r\n2024-04-17 10:05:47,046 INFO  [io.qua.dep.dev.IsolatedDevModeMain] (main) Attempting to start live reload endpoint to recover from previous Quarkus startup failure\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Create a new Quarkus project\r\n2. Add `quarkus-hibernate-orm-panache` to pom.xml\r\n3. Add `quarkus-jdbc-postgresql` to pom.xml\r\n4. Deploy a PostgreSQL DB like this one:\r\n\r\n```docker\r\nversion: '3.8'\r\n\r\nservices:\r\n  ephemeria-db:\r\n    container_name: test-db\r\n    image: postgres:latest\r\n    environment:\r\n      POSTGRES_DB: root\r\n      POSTGRES_USER: root\r\n      POSTGRES_PASSWORD: root\r\n      POSTGRES_ROOT_PASSWORD: root\r\n    ports:\r\n      - '5432:5432'\r\n    volumes:\r\n      - ./data:/var/lib/postgresql/data\r\n```\r\n\r\n5. Add the following `application.properties` file:\r\n```bash\r\n%dev.quarkus.datasource.db-kind=postgresql\r\n%dev.quarkus.datasource.username=root\r\n%dev.quarkus.datasource.password=root\r\n%dev.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/test-db\r\n%dev.quarkus.hibernate-orm.database.generation=drop-and-create\r\n%dev.quarkus.hibernate-orm.dialect=org.hibernate.dialect.PostgreSQLDialect\r\n%dev.quarkus.hibernate-orm.log.sql=true\r\n```\r\n\r\n6. Add your entity\r\n```java\r\npackage org.acme;\r\n\r\nimport jakarta.persistence.*;\r\n\r\nimport java.time.LocalDateTime;\r\nimport java.util.UUID;\r\nimport org.hibernate.annotations.SoftDelete;\r\nimport org.hibernate.annotations.SourceType;\r\nimport org.hibernate.annotations.UpdateTimestamp;\r\n\r\n@Entity\r\n@SoftDelete\r\npublic class Shop {\r\n    @Id\r\n    @GeneratedValue\r\n    private UUID idShop;\r\n\r\n    @UpdateTimestamp(source = SourceType.DB)\r\n    private LocalDateTime lastUpdateOn;\r\n}\r\n```\r\n7. Run the application with `quarkus dev`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux zbook-wme 5.15.146.1-microsoft-standard-WSL2 #1 SMP Thu Jan 11 04:09:03 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.10 2024-01-16 OpenJDK Runtime Environment (build 17.0.10+7-Ubuntu-122.04.1) OpenJDK 64-Bit Server VM (build 17.0.10+7-Ubuntu-122.04.1, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.9.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40114/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40114/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

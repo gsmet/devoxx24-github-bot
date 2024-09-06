@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33957",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33957/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33957/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33957/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33957",
+  "id": 1751476204,
+  "node_id": "I_kwDOCFbutM5oZWfs",
+  "number": 33957,
+  "title": "The repairing error message is not correct and bug of custom-quarkus-extension continue exists.",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2023-06-11T15:18:47Z",
+  "updated_at": "2023-06-13T08:23:03Z",
+  "closed_at": "2023-06-12T11:00:28Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI wrote the simple Quarkus extension to “play” with code. And after compile I receive: \r\n```\r\n\"You cannot invoke beanInstance() directly on an object returned from the byte code recorder, you can only pass it back into the recorder as a parameter\"\r\n```\r\nbut i don't invoke it into Recorder.\r\nRecorder is:\r\n```java\r\npublic class MergeableClassRecorder {\r\n\r\n    Logger log = Logger.getLogger(\"org.mapins.cloud\");\r\n\r\n\r\n    void cacheMergeableClasses(MergeUtil mergeUtil, List<String> classPaths){\r\n        log.debugf(\"List of mergeable items found by Quarkus deployment: %n%s\", classPaths);\r\n\r\n        classPaths.stream()\r\n                .filter(Objects::nonNull)\r\n                .map(\r\n                    n -> {\r\n                        try {return Class.forName(n);}\r\n                        catch (Throwable ignore) { return null;}\r\n                    })\r\n                .filter(Objects::nonNull)\r\n                .forEach(mergeUtil::cacheClass);\r\n\r\n        log.infof(\"%n%s classes cached\", classPaths);\r\n    }\r\n}\r\n```\r\nand @BuidlStep is:\r\n```java\r\n    @BuildStep\r\n    @Record(ExecutionTime.RUNTIME_INIT)\r\n    void CacheAllMergeableClasses(List<MergeableClassCacheItem> classes,\r\n                                  MergeableClassRecorder recorder,\r\n                                  BeanContainerBuildItem containerItem){\r\n\r\n        final List<String> listOfCachedClasses = classes.stream().map(e -> e.get().name().toString()).toList();\r\n\r\n        MergeUtil mergeUtilObj = containerItem.getValue().beanInstance(MergeUtil.class);\r\n\r\n        recorder.cacheMergeableClasses(mergeUtilObj, listOfCachedClasses);\r\n    }\r\n```\r\n\r\n\r\nEarlier I try to make code by [example](https://www.baeldung.com/quarkus-extension-java) like this:\r\n```java\r\n    @BuildStep\r\n    @Record(ExecutionTime.RUNTIME_INIT)\r\n    void createMergeUtilClass(List<MergeableClassCacheItem> classes,\r\n                              BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,\r\n                              BuildProducer<BeanContainerListenerBuildItem> containerListener,\r\n                              MergeableClassRecorder recorder) {\r\n\r\n        additionalBeanProducer.produce(\r\n                AdditionalBeanBuildItem.builder()\r\n                        .addBeanClass(MergeUtil.class)\r\n                        .setUnremovable()\r\n                        .setDefaultScope(DotNames.SINGLETON)\r\n                        .build()\r\n        );\r\n\r\n        final List<String> listOfCachedClasses = classes.stream().map(e -> e.get().name().toString()).toList();\r\n\r\n        containerListener.produce(\r\n                new BeanContainerListenerBuildItem(\r\n                        recorder.cacheMergeableClasses(listOfCachedClasses)\r\n                )\r\n        );\r\n    }\r\n```\r\nand this @Recorder:\r\n```java\r\n\r\n@Recorder\r\npublic class MergeableClassRecorder {\r\n    Logger log = Logger.getLogger(\"org.mapins.cloud\");\r\n\r\n    BeanContainerListener cacheMergeableClasses(List<String> classPaths){\r\n\r\n        return container -> {\r\n            log.debugf(\"List of mergeable items found by Quarkus deployment: %n%s\", classPaths);\r\n\r\n            MergeUtil mergeUtil = container.beanInstance(MergeUtil.class);\r\n\r\n            classPaths.stream()\r\n                    .filter(Objects::nonNull)\r\n                    .map(\r\n                            n -> {\r\n                                try {return Class.forName(n);}\r\n                                catch (Throwable ignore) { return null;}\r\n                            })\r\n                    .filter(Objects::nonNull)\r\n                    .forEach(mergeUtil::cacheClass);\r\n\r\n            log.infof(\"%n%s classes cached\", classPaths);\r\n        };\r\n    }\r\n}\r\n```\r\nbut in result had other exception like:\r\n```\r\nUnable to serialize objects of type class org.test.mapins.MergeableClassRecorder$$Lambda$15232/0x000000080253b040 to bytecode as it has no default constructor\r\n```\r\n\r\nSo what wrong I do?\n\n### Expected behavior\n\nThe program compiles without exceptions and continue to run the app.\n\n### Actual behavior\n\nFails with \r\n```\r\nExecution failed for task ':quarkusBuild'.\r\n> io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n  \t[error]: Build step org.test.mapins.MergeToolResourceProcessor#CacheAllMergeableClasses threw an exception: java.lang.RuntimeException: You cannot invoke beanInstance() directly on an object returned from the bytecode recorder, you can only pass it back into the recorder as a parameter\r\n  \tat io.quarkus.deployment.recording.BytecodeRecorderImpl$3.invoke(BytecodeRecorderImpl.java:444)\r\n  \tat io.quarkus.deployment.recording.BytecodeRecorderImpl$$ReturnValueProxy107.beanInstance(Unknown Source)\r\n  \tat org.test.mapins.MergeToolResourceProcessor.CacheAllMergeableClasses(MergeToolResourceProcessor.java:112)\r\n  \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n  \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n  \tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n  \tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n  \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n  \tat io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n  \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n  \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n  \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n  \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n  \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\n```\n\n### How to Reproduce?\n\nReproducer:\r\n\r\n1) Get code from https://github.com/Ferrociraptus/quarkus-bug-publication\r\n2) Install application to maven local and try to use or write the simple test for quarkus extension\n\n### Output of `uname -a` or `ver`\n\nLinux ferri 6.2.13-100.fc36.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Apr 26 20:11:01 UTC 2023 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 OpenJDK Runtime Environment (Red_Hat-17.0.7.0.7-4.fc38) (build 17.0.7+7) OpenJDK 64-Bit Server VM (Red_Hat-17.0.7.0.7-4.fc38) (build 17.0.7+7, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\nhttps://github.com/Ferrociraptus/quarkus-bug-publication\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n------------------------------------------------------------ Gradle 8.1.1 ------------------------------------------------------------  Build time:   2023-04-21 12:31:26 UTC Revision:     1cf537a851c635c364a4214885f8b9798051175b  Kotlin:       1.8.10 Groovy:       3.0.15 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          17.0.7 (Red Hat, Inc. 17.0.7+7) OS:           Linux 6.2.13-100.fc36.x86_64 amd64\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33957/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33957/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

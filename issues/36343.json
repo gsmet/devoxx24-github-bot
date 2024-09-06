@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36343",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36343/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36343/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36343/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36343",
+  "id": 1931943532,
+  "node_id": "I_kwDOCFbutM5zJx5s",
+  "number": 36343,
+  "title": "REST Client with generic subresource fails with InvalidRestClientDefinitionException",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2023-10-08T17:39:19Z",
+  "updated_at": "2023-10-10T15:07:38Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nGiven the following REST client definition:\r\n\r\n```java\r\n@Path(\"api\")\r\n@RegisterRestClient\r\npublic interface TestApi {\r\n\r\n\tinterface GenericFunction<R> {\r\n\r\n\t\t@GET\r\n\t\tR get();\r\n\t}\r\n\r\n\t@Path(\"get\")\r\n\tGenericFunction<String> subresource();\r\n}\r\n```\r\n\r\nfails during invocation (not deployment, yikes) with:\r\n```posh\r\nCaused by: org.jboss.resteasy.reactive.client.api.InvalidRestClientDefinitionException: Failed to generate client for class interface org.acme.TestApi : Sub resource type is not a class: org.acme.TestApi$GenericFunction\r\n        at org.jboss.resteasy.reactive.client.impl.ClientProxies.get(ClientProxies.java:29)\r\n        at org.jboss.resteasy.reactive.client.impl.WebTargetImpl.proxy(WebTargetImpl.java:449)\r\n        at io.quarkus.rest.client.reactive.runtime.RestClientBuilderImpl.build(RestClientBuilderImpl.java:386)\r\n        ... 38 more\r\n```\r\n\r\nDue to the fact, that the actual type argument is a very concrete class, I suspect the extension the unresolved `GenericFunction#get` method of the class itself being checked (returning a type variable of course) instead of the actual parameterized type, which is returned by `TestApi#subresource`.\r\n\r\nIf I change the REST client definition to the following, everything works of course:\r\n```java\r\n@Path(\"api\")\r\n@RegisterRestClient\r\npublic interface TestApi {\r\n\r\n\tinterface SimpleFunction {\r\n\r\n\t\t@GET\r\n\t\tString get();\r\n\t}\r\n\r\n\t@Path(\"get\")\r\n\tSimpleFunction subresource();\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\nAs the given generic subresource is a valid subresource locator with a valid subresource method when implementing this API as an API provider, I would expect this API interface being a valid defintion for a REST client too. For this generic use case, all static information are available to resolve the the subresource method's type variable at deployment time to String, not some unbound type variable. The `quarkus-resteasy-reactive` extension is able to do so, but not the `quarkus-rest-client-reactive` extension.\r\n\r\n### Actual behavior\r\n\r\nFails with the beforementioned exception during invocation time :/ \r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin sl-macbook.fritz.box 22.6.0 Darwin Kernel Version 22.6.0: Fri Sep 15 13:39:54 PDT 2023; root:xnu-8796.141.3.700.8~1/RELEASE_ARM64_T8112 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.8.1\" 2023-08-24 OpenJDK Runtime Environment Homebrew (build 17.0.8.1+0) OpenJDK 64-Bit Server VM Homebrew (build 17.0.8.1+0, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.4.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36343/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36343/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40118",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40118/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40118/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40118/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40118",
+  "id": 2248082733,
+  "node_id": "I_kwDOCFbutM6F_wUt",
+  "number": 40118,
+  "title": "Reactive messaging Emitter stops working correctly in dev and test modes",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 30,
+  "created_at": "2024-04-17T11:41:01Z",
+  "updated_at": "2024-08-22T12:29:38Z",
+  "closed_at": "2024-08-22T12:29:38Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe have an application that uses AMQ broker for async message processing and were experiencing test failures in our test suite where messages are not being passed to the AMQ broker via `quarkus-smallrye-reactive-messaging-amqp` client\r\n\r\nOur test suite uses an AMQ broker that is automatically provisioned by dev services\r\n\r\nWhat I noticed was when we called `org.eclipse.microprofile.reactive.messaging.Emitter.send()` with a msg payload, the messages were being enqueued in a buffer, but not delivered to the underlying AMQ client.  Therefore the messages were not delivered to the broker.  \r\n\r\nIn order to reproduce this issue, I created a sample application from code.quarkus.io, just selecting the `Messaging - AMQP Connector [quarkus-messaging-amqp]` extension. \r\n\r\nI found that if I start that application in dev mode the messages are processed as expected, but if i restart dev mode 3-4 times (by pressing `s` in the dev console) the messages are no longer delivered to the broker and they are buffered in a queue, in the same way our test suites behaves.\r\n\r\nThere appears to be a race/bug where the `requested` counter in `io.smallrye.mutiny.operators.multi.builders.BufferItemMultiEmitter` is set to `0` during a restart and in test mode and prevents the call to `drain()` from emitting the messages\r\n\r\nThis does not appear to happen on all machines. I see this issue in Fedora 39 on x86_64 , but our CI environment (github) or Mac M2 does not demonstrate this behaviour. \n\n### Expected behavior\n\nThe messages in the sample app to be outputted every time quarkus is restarted in dev mode:\r\n\r\n```\r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2024-04-17 12:31:03,893 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16201: AMQP broker configured to localhost:33036 for channel words-out\r\n2024-04-17 12:31:03,917 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16212: Establishing connection with AMQP broker\r\n2024-04-17 12:31:03,929 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16212: Establishing connection with AMQP broker\r\n2024-04-17 12:31:03,932 INFO  [io.quarkus] (Quarkus Main Thread) amq-client-msg-buffer 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.9.3) started in 6.970s. \r\n2024-04-17 12:31:03,933 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2024-04-17 12:31:03,933 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, messaging, messaging-amqp, smallrye-context-propagation, vertx]\r\n2024-04-17 12:31:04,176 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-0) SRMSG16213: Connection with AMQP broker established\r\n2024-04-17 12:31:04,186 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-0) SRMSG16213: Connection with AMQP broker established\r\n2024-04-17 12:31:04,250 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-0) SRMSG16203: AMQP Receiver listening address words\r\n>> HELLO\r\n>> WITH\r\n>> QUARKUS\r\n>> MESSAGING\r\n>> MESSAGE\r\n```\n\n### Actual behavior\n\nAfter 1-2 restarts, the messages are no longer dispatched to the AMQ broker:\r\n\r\n```\r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2024-04-17 12:31:03,893 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16201: AMQP broker configured to localhost:33036 for channel words-out\r\n2024-04-17 12:31:03,917 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16212: Establishing connection with AMQP broker\r\n2024-04-17 12:31:03,929 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16212: Establishing connection with AMQP broker\r\n2024-04-17 12:31:03,932 INFO  [io.quarkus] (Quarkus Main Thread) amq-client-msg-buffer 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.9.3) started in 6.970s. \r\n2024-04-17 12:31:03,933 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2024-04-17 12:31:03,933 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, messaging, messaging-amqp, smallrye-context-propagation, vertx]\r\n2024-04-17 12:31:04,176 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-0) SRMSG16213: Connection with AMQP broker established\r\n2024-04-17 12:31:04,186 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-0) SRMSG16213: Connection with AMQP broker established\r\n2024-04-17 12:31:04,250 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-0) SRMSG16203: AMQP Receiver listening address words\r\n>> HELLO\r\n>> WITH\r\n>> QUARKUS\r\n>> MESSAGING\r\n>> MESSAGE\r\n2024-04-17 12:31:07,800 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (Aesh InputStream Reader) Restarting as requested by the user.\r\n2024-04-17 12:31:07,808 INFO  [io.quarkus] (Quarkus Main Thread) amq-client-msg-buffer stopped in 0.006s\r\n2024-04-17 12:31:07,886 INFO  [io.qua.sma.dep.processor] (build-2) Configuring the channel 'words-in' to be managed by the connector 'smallrye-amqp'\r\n2024-04-17 12:31:07,886 INFO  [io.qua.sma.dep.processor] (build-2) Configuring the channel 'words-out' to be managed by the connector 'smallrye-amqp'\r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2024-04-17 12:31:08,071 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16201: AMQP broker configured to localhost:33036 for channel words-in\r\n2024-04-17 12:31:08,072 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16201: AMQP broker configured to localhost:33036 for channel words-out\r\n2024-04-17 12:31:08,074 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16212: Establishing connection with AMQP broker\r\n2024-04-17 12:31:08,075 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16212: Establishing connection with AMQP broker\r\n2024-04-17 12:31:08,076 INFO  [io.quarkus] (Quarkus Main Thread) amq-client-msg-buffer 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.9.3) started in 0.266s. \r\n2024-04-17 12:31:08,076 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2024-04-17 12:31:08,076 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, messaging, messaging-amqp, smallrye-context-propagation, vertx]\r\n2024-04-17 12:31:08,076 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (Aesh InputStream Reader) Live reload total time: 0.278s \r\n2024-04-17 12:31:08,082 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-1) SRMSG16213: Connection with AMQP broker established\r\n2024-04-17 12:31:08,083 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-1) SRMSG16213: Connection with AMQP broker established\r\n2024-04-17 12:31:08,086 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-1) SRMSG16203: AMQP Receiver listening address words\r\n2024-04-17 12:31:09,292 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (Aesh InputStream Reader) Restarting as requested by the user.\r\n2024-04-17 12:31:09,294 INFO  [io.quarkus] (Quarkus Main Thread) amq-client-msg-buffer stopped in 0.001s\r\n2024-04-17 12:31:09,375 INFO  [io.qua.sma.dep.processor] (build-19) Configuring the channel 'words-in' to be managed by the connector 'smallrye-amqp'\r\n2024-04-17 12:31:09,375 INFO  [io.qua.sma.dep.processor] (build-19) Configuring the channel 'words-out' to be managed by the connector 'smallrye-amqp'\r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2024-04-17 12:31:09,528 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16201: AMQP broker configured to localhost:33036 for channel words-in\r\n2024-04-17 12:31:09,529 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16201: AMQP broker configured to localhost:33036 for channel words-out\r\n2024-04-17 12:31:09,531 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16212: Establishing connection with AMQP broker\r\n2024-04-17 12:31:09,532 INFO  [io.sma.rea.mes.amqp] (Quarkus Main Thread) SRMSG16212: Establishing connection with AMQP broker\r\n2024-04-17 12:31:09,533 INFO  [io.quarkus] (Quarkus Main Thread) amq-client-msg-buffer 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.9.3) started in 0.238s. \r\n2024-04-17 12:31:09,533 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2024-04-17 12:31:09,533 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, messaging, messaging-amqp, smallrye-context-propagation, vertx]\r\n2024-04-17 12:31:09,533 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (Aesh InputStream Reader) Live reload total time: 0.243s \r\n2024-04-17 12:31:09,539 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-2) SRMSG16213: Connection with AMQP broker established\r\n2024-04-17 12:31:09,540 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-2) SRMSG16213: Connection with AMQP broker established\r\n2024-04-17 12:31:09,543 INFO  [io.sma.rea.mes.amqp] (vert.x-eventloop-thread-2) SRMSG16203: AMQP Receiver listening address words\r\n2024-04-17 12:31:12,554 INFO  [io.quarkus] (Shutdown thread) amq-client-msg-buffer stopped in 0.002s\r\n```\n\n### How to Reproduce?\n\n1. Create a new Application from code.quakus.io\r\n2. Select `Messaging - AMQP Connector [quarkus-messaging-amqp]` extension\r\n3. Download and start application in dev mode\r\n4. restart the application in dev mode by pressing `s` in the terminal\n\n### Output of `uname -a` or `ver`\n\nLinux fedora 6.8.4-200.fc39.x86_64 #1 SMP PREEMPT_DYNAMIC Thu Apr  4 20:45:21 UTC 2024 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"21.0.1\" 2023-10-17 LTS OpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12-LTS) OpenJDK 64-Bit Server VM Temurin-21.0.1+12 (build 21.0.1+12-LTS, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.9.3\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40118/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40118/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

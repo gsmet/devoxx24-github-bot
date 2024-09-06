@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36099",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36099/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36099/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36099/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36099",
+  "id": 1909028418,
+  "node_id": "I_kwDOCFbutM5xyXZC",
+  "number": 36099,
+  "title": "Minimal /lib/boot directory in built applications",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2023-09-22T14:34:39Z",
+  "updated_at": "2023-09-26T07:56:52Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nToday when packaging an application in the \"fast-jar\" mode (our default and preferred format), we organize the jar files in this particular structure:\r\n\r\n```\r\n.\r\n├── app\r\n│   └── compiled-usercode.jar\r\n├── lib\r\n│   ├── boot\r\n│   │   ├── io.quarkus.quarkus-bootstrap-runner-999-SNAPSHOT.jar\r\n│   │   ├── io.quarkus.quarkus-development-mode-spi-999-SNAPSHOT.jar\r\n│   │   └── [ ... other jars on the bootstrap classpath]\r\n│   └── main\r\n│       ├── extension1.jar\r\n│       ├── extension1-runtime-dependency.jar\r\n│       ├── extension2.jar\r\n│       ├── extension2-runtime-dependency...\r\n│       └── [ .. all runtime extensions and dependencies]\r\n├── quarkus\r\n│   ├── generated-bytecode.jar\r\n│   ├── quarkus-application.dat\r\n│   └── transformed-bytecode.jar\r\n├── quarkus-app-dependencies.txt\r\n└── quarkus-run.jar\r\n```\r\n\r\nTechnically we have multiple classloaders, but for production mode in this format only two are relevant:\r\n - the JVM boostrap classloader\r\n - the Quarkus runtime classloader\r\n\r\n## JVM boostrap classloader\r\nThis one if fully controlled by the JVM and can not be overriden, as a safety precaution; it's great and stable, but is general purpose and can't take advantage of the details we have about the built application.\r\nWe use it to load the so called \"Parent First Dependencies\":\r\n\r\n1. our custom Quarkus Runtime Classloader\r\n2. any code that's a dependency of the Quarkus Runtime Classloader, or needs to be loaded before (e.g. the Logging system)\r\n3. there's some exceptions made for some particular libraries which break if they are not loaded by this root classloader; these are workarounds and ideally non-existing in practice.\r\n\r\n## Quarkus Runtime Classloader\r\nThis one is used to load the majority of the application (hopefully), as it can apply several optimisations to help both with fast startup and lower memory consumption in the long term, and also lower memory consumption during the bootstrap process.\r\n\r\n# What to improve\r\nIdeally we'd want all classes to be loaded by the optimised Quarkus Runtime Classloader; now of course this isn't possible as at least the code of this classloader needs to be loaded by the JVM classloader, but we can strife to minimise the amount of code that is sourced this way.\r\n\r\n## Number of jars\r\nBeyond looking at the mere amount of classes that are being loaded by each classloader, it's also relevant to minimize the amount of jar files: each jar is a separate compressed zip stream stored in a file, and for each such zip stream a relatively heavyweight buffer needs to be allocated to help with efficient decompression.\r\nSuch zip streams and file handles are not closed by the JVM classloader until the app is shutdown, as the general purpose nature of the standard classloader is assuming that classloading might happen again at any point in time, while we believe this is unlikely after steady state - especially when dealing with small services whose code is all defined at bootstrap time.\r\n\r\nNot so long ago, we had only a couple jars on the bootstrap classpath.\r\nToday we have:\r\n\r\n```\r\n├── lib\r\n│   ├── boot\r\n│   │   ├── io.github.crac.org-crac-0.1.3.jar\r\n│   │   ├── io.quarkus.quarkus-bootstrap-runner-999-SNAPSHOT.jar\r\n│   │   ├── io.quarkus.quarkus-development-mode-spi-999-SNAPSHOT.jar\r\n│   │   ├── io.quarkus.quarkus-vertx-latebound-mdc-provider-999-SNAPSHOT.jar\r\n│   │   ├── io.smallrye.common.smallrye-common-constraint-2.1.2.jar\r\n│   │   ├── io.smallrye.common.smallrye-common-cpu-2.1.2.jar\r\n│   │   ├── io.smallrye.common.smallrye-common-expression-2.1.2.jar\r\n│   │   ├── io.smallrye.common.smallrye-common-function-2.1.2.jar\r\n│   │   ├── io.smallrye.common.smallrye-common-io-2.1.2.jar\r\n│   │   ├── io.smallrye.common.smallrye-common-net-2.1.2.jar\r\n│   │   ├── io.smallrye.common.smallrye-common-os-2.1.2.jar\r\n│   │   ├── io.smallrye.common.smallrye-common-ref-2.1.2.jar\r\n│   │   ├── org.jboss.logging.jboss-logging-3.5.3.Final.jar\r\n│   │   └── org.jboss.logmanager.jboss-logmanager-3.0.2.Final.jar\r\n```\r\n\r\n\r\n\r\n\r\n\r\n### Implementation ideas\r\n\r\n# Suggestions\r\n\r\n## Reduce the number of jars on /lib/boot\r\n\r\nThe first and most obvious one is to shade all dependencies in /lib/boot into a single jar file.\r\nThis will reduce the number of zip streams that need to stay open for the while lifespan of the application; beyond reducing the number of file handles, this could improve bootstrap performance, and will have an impact on the number of wasted buffers for those zip streams.\r\n\r\n## Ignore exceptional dependencies\r\n\r\nSome extensions, and some user provided configuration options, have the ability to request for additional jars to be moved to the `lib/boot` directory.\r\nI believe we should ignore this case; it will be suboptimal but hopefully rare.\r\n\r\n## Ship an optimized bootstrap\r\n\r\nSo I'm suggesting to not shade all dependencies in `/lib/boot` during each build, but shade these artifacts into a single \"quarkus-bootstrap\" artifact which we actually release to Maven Central.\r\nThis would help:\r\n- quality testing as we'll all be using the same, no strange conflicts during shading.\r\n- build times as this step already happened\r\n- download times: less artifacts to fetch\r\n- allow for future optimisations, e.g. removing dead code from some of such dependencies when we only need them partially, or repackaging this particular artifact in a more efficient format than the traditional JAR.\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36099/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36099/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

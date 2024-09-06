@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38769",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38769/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38769/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38769/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38769",
+  "id": 2133111452,
+  "node_id": "I_kwDOCFbutM5_JLKc",
+  "number": 38769,
+  "title": "Quarkus Quartz Extension not working with Micosoft SQL server since 3.2.x ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2024-02-13T20:54:41Z",
+  "updated_at": "2024-02-16T14:47:48Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe use Quartz scheduler for our cronjob executions. We started with Quarkus 2.6.x, and it is working until 3.1.x. When we migrated to 3.2.x, we see startup failures with the below exception. I tried with the latest 3.7.x, any help will be greatly appreciated.\r\n\r\nIt worked fine until 3.1.x, getting below exception anything 3.2.x beyond; I see some refactoring in the Quartz package with 3.2.x, but I need help finding the exact issue.\r\n\r\nCan reproduce with docker mssql server container; we are on Java 17 with Hibernate.\r\n\r\n15:47:11 ERROR {} [io.qu.ru.Application] (Quarkus Main Thread) (null) IP= reqId= Failed to start application (with profile {0}): java.lang.RuntimeException: Failed to start quarkus\r\nat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\nat io.quarkus.runtime.Application.start(Application.java:101)\r\nat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\nat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\nat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\nat io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\nat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\nat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\nat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\nat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\nat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\nat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:113)\r\nat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.IllegalStateException: Unable to start Scheduler\r\nat io.quarkus.quartz.runtime.QuartzSchedulerImpl.start(QuartzSchedulerImpl.java:511)\r\nat io.quarkus.quartz.runtime.QuartzSchedulerImpl_Observer_start_H-6XoNLvj3wcGgHUsn1YAKHoJeM.notify(Unknown Source)\r\nat io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:346)\r\nat io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:328)\r\nat io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:82)\r\nat io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:155)\r\nat io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:106)\r\nat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(Unknown Source)\r\nat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy(Unknown Source)\r\n... 13 more\r\nCaused by: org.quartz.SchedulerConfigException: Failure occured during job recovery. [See nested exception: org.quartz.impl.jdbcjobstore.LockException: Failure obtaining db row lock: Line 1: FOR UPDATE clause allowed only for DECLARE CURSOR. [See nested exception: com.microsoft.sqlserver.jdbc.SQLServerException: Line 1: FOR UPDATE clause allowed only for DECLARE CURSOR.]]\r\nat org.quartz.impl.jdbcjobstore.JobStoreSupport.schedulerStarted(JobStoreSupport.java:697)\r\nat org.quartz.core.QuartzScheduler.start(QuartzScheduler.java:539)\r\nat org.quartz.impl.StdScheduler.start(StdScheduler.java:142)\r\nat io.quarkus.quartz.runtime.QuartzSchedulerImpl.start(QuartzSchedulerImpl.java:509)\n\n### Expected behavior\n\nQuartz Scheduler should work with Microsoft SQL Servers\n\n### Actual behavior\n\nHaving startup issues with Quarkus 3.2.x and beyond\n\n### How to Reproduce?\n\nUse Quartz Scheduler extension\r\nCreate latest Microsoft SQL server docker container\r\nload initial SQL server db scripts\r\nstartup the Quarkus servever\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38769/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38769/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

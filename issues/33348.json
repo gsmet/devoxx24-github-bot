@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33348",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33348/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33348/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33348/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33348",
+  "id": 1708878181,
+  "node_id": "I_kwDOCFbutM5l22ll",
+  "number": 33348,
+  "title": "Contextualizing problem when using panache count operation",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-05-14T09:29:42Z",
+  "updated_at": "2023-05-16T11:14:56Z",
+  "closed_at": "2023-05-16T11:14:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nNot sure if I'm missing something, but tried finding anything related in the docs and online but couldn't find anything. In the docs it says:\r\n\r\n>It takes fragments of HQL (JP-QL) queries and contextualizes the rest. \r\n\r\nI have no idea where the contextualizing starts and what the limits are:\r\n- there seems to be a problem contextualizing the query fed to `count` - didn't test with other operations\r\n- contextualized queries lack aliases (and no way to introduce them?) meaning we can get attribute-conflicts\r\n\r\nFor example:\r\n\r\n\r\n### Given (simplified):\r\n```\r\nclass Fruit  {\r\n    int id;\r\n    @ManyToOne\r\n    Basket basket;\r\n    LocalDateTime createdAt;\r\n\r\nclass Basket {\r\n    int id;\r\n    boolean isOpen;\r\n    LocalDateTime createdAt;\r\n}\r\n\r\nclass FruitRepository implements PanacheRepository<Fruit> {}\r\n```\r\n\r\n### When:\r\nquerying the amount of fruits in open baskets created since 10 minutes ago could be something like this:\r\n\r\n```\r\nFruit.count(\"join basket b where createdAt >= ?1 and b.isOpen = true\", now().minusMinutes(10));\r\n```\r\n\r\n### Then:\r\nSELECT COUNT(*) \r\nFROM org.acme.Fruit SOMEALIASHERE\r\nJOIN basket b\r\nWHERE SOMEALIASHERE.createdAt >= ?1\r\nAND b.isOpen= true\r\n\r\n### This is what actually happens:\r\nSELECT COUNT(*) \r\nFROM org.acme.Fruit \r\nWHERE <<< query is contextualized as WHERE part, wouldn't be valid JPQL\r\nJOIN basket b\r\nWHERE createdAt >= ?1 <<< alias is missing here\r\nAND b.isOpen= true\r\n\r\nAnd the actual exception:\r\n```\r\njava.lang.IllegalStateException: Multiple from-elements expose unqualified attribute : createdAt\r\n```\r\n\r\nProbably because the duplicate `createdAt` reference is detected before the invalid JPQL is. At this point I could find no way to supply an alias to use in queries.\r\n\r\n### Workaround\r\nWriting the query like this works but would be nice (and expected?) if it would work as described above as we already type-hinted to `Fruit`:\r\n```\r\nFruit.count(\"from Fruit f join basket b where f.createdAt >= ?1 and b.isOpen = true\", now().minusMinutes(10));\r\n```\r\n\r\nClosest related is maybe #23343 which seems to have a similar problem: when letting operations generate JPQL, difficulties arise when conflicts arise due to conflicting names in entities.\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.2",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33348/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33348/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

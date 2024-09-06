@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41051",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41051/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41051/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41051/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41051",
+  "id": 2339965488,
+  "node_id": "I_kwDOCFbutM6LeQow",
+  "number": 41051,
+  "title": "Resteasy client: Setting new output stream to the `ClientWriterInterceptorContextImpl` results in the body not being sent",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-06-07T09:08:08Z",
+  "updated_at": "2024-06-10T14:52:09Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nConsider the following code in java, creating a WriterInterceptor for logging purposes:\r\n\r\n```java\r\npublic class ExampleInterceptor implements WriterInterceptor {\r\n    private static Logger logger = org.slf4j.LoggerFactory.getLogger(ExampleInterceptor.class);\r\n\r\n    public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {\r\n\r\n        OutputStream originalStream = context.getOutputStream();\r\n        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {\r\n            context.setOutputStream(baos);\r\n            context.proceed();\r\n            var output = baos.toString(StandardCharsets.UTF_8);\r\n            logger.info(output);\r\n            baos.writeTo(originalStream);\r\n        }\r\n        context.setOutputStream(originalStream);\r\n    }\r\n}\r\n```\r\n\r\nThis code works fine in the server context (meaning that both the body is logged AND the response is given to the client). However, in the case of logging the request body of resteasy-client, the body is logged, but the body is **not** propagated from the client to the external service.\r\n\r\n### Expected behavior\r\n\r\nThe body should be propagated to the external service when setting a new output stream\r\n\r\n### Actual behavior\r\n\r\nThe body is not propagated to the external service from the client when using an interceptor.\r\n\r\n### How to Reproduce?\r\n\r\nDownload the attached file.\r\nSetup something like Mockoon, or another proxy **where you can log the body of the request received**, in port 4001.\r\nRun the service. \r\nCall `GET http://localhost:8080/hello`\r\nNotice that the body that the mock service received is empty, although the client was supposed to send \"this is a sample body\"\r\n\r\nIf you remove the `@RegisterProvider(ExampleInterceptor.class)` line from the `MyRestClient` interface, the body will be sent correctly in the mock service\r\n[problemdemo.zip](https://github.com/user-attachments/files/15728382/problemdemo.zip)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nall java versions\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus Version 3.8.4LTS until quarkus 3.11.\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nIt seems that the problem lies in the ~~`ClientReaderInterceptorContextImpl`~~ `ClientWriterInterceptorContextImpl` class. \r\n\r\n```java\r\neffectiveWriter.writeTo(entity, entityClass, entityType,\r\n                    annotations, mediaType, headers, outputStream);\r\n            outputStream.close();\r\n            result = Buffer.buffer(baos.toByteArray());\r\n```\r\nIt seems that the `result` is always set to the contents of the `baos` object, however, the `setOutputStream` will change the `outputStream` property of the Interceptor. Therefore, if `setOutputStream` is called the internal `baos` property will remain intact \r\n\r\nI am not sure why there are two properties for the same functionality, but I believe the Interceptor could do away with one of them.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41051/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41051/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

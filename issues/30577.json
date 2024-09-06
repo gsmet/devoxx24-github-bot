@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30577",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30577/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30577/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30577/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30577",
+  "id": 1555060753,
+  "node_id": "I_kwDOCFbutM5csFgR",
+  "number": 30577,
+  "title": "RESTEasy Reactive: paths not properly uri-decoded before matching",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-01-24T14:11:40Z",
+  "updated_at": "2023-08-14T15:06:22Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nOur URI-matching does not properly match uri-encoded values that are legal path segments. We rely on Vert.x `RoutingContext.normalizedPath()` which only decodes percent-encoded chars from the `unreserved` category (see https://www.rfc-editor.org/rfc/rfc3986#section-2.4) but other values which are allowed as part of the path segment will not be decoded prior to matching:\r\n\r\n```\r\n   segment       = *pchar\r\n   segment-nz    = 1*pchar\r\n   segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / \"@\" )\r\n                 ; non-zero-length segment without any colon \":\"\r\n\r\n   pchar         = unreserved / pct-encoded / sub-delims / \":\" / \"@\"\r\n\r\n   query         = *( pchar / \"/\" / \"?\" )\r\n\r\n   fragment      = *( pchar / \"/\" / \"?\" )\r\n\r\n   pct-encoded   = \"%\" HEXDIG HEXDIG\r\n\r\n   unreserved    = ALPHA / DIGIT / \"-\" / \".\" / \"_\" / \"~\"\r\n   reserved      = gen-delims / sub-delims\r\n   gen-delims    = \":\" / \"/\" / \"?\" / \"#\" / \"[\" / \"]\" / \"@\"\r\n   sub-delims    = \"!\" / \"$\" / \"&\" / \"'\" / \"(\" / \")\"\r\n                 / \"*\" / \"+\" / \",\" / \";\" / \"=\"\r\n```\r\n\r\nIn theory, in a segment, the characters `\"!\" / \"$\" / \"&\" / \"'\" / \"(\" / \")\" / \"*\" / \"+\" / \",\" / \";\" / \"=\" / \":\" / \"@\"` do not need to be encoded, but they can, and so if we have an endpoint declared for `/$` we should match both `/$` and `/%24` which decodes to the same thing.\r\n\r\nTo reproduce:\r\n\r\n```java\r\n@Path(\"/\")\r\npublic class Endpoint {\r\n @GET\r\n @Path(\"$\")\r\n public String ok() { return \"OK\"; }\r\n}\r\n```\r\n\r\nNow call `wget 'http://localhost:8080/$'` and `wget 'http://localhost:8080/%24'`, both should return `OK` and match the same endpoint.\r\n\r\nAt the moment, only the first one works. This probably fails for all the other characters I've listed above.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30577/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30577/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

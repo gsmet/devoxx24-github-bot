@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42006",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42006/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42006/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42006/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42006",
+  "id": 2419135903,
+  "node_id": "I_kwDOCFbutM6QMRWf",
+  "number": 42006,
+  "title": "Regression in 3.13.0.CR1: Lambda expression from custom serializable interface used as `@QuarkusTest` method parameter fails with `ClassNotFoundException`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1314203975,
+      "node_id": "MDU6TGFiZWwxMzE0MjAzOTc1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/regression",
+      "name": "triage/regression",
+      "color": "d73a4a",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-07-19T14:48:10Z",
+  "updated_at": "2024-07-22T07:11:37Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nUp until 3.12.3 you can create a lambda expression from something like:\r\n```java\r\n    public interface SerializableCustom extends Serializable {\r\n        String get();\r\n    }\r\n```\r\nand pass it over to a `@QuarkusTest` method as a parameter, e.g.:\r\n```java\r\n@QuarkusTest\r\npublic class LambdaParamTest {\r\n\r\n    @ParameterizedTest\r\n    @ArgumentsSource(LambdaProvider.class)\r\n    void test(final SerializableCustom lambda) {\r\n        // ...\r\n    }\r\n\r\n    private static class LambdaProvider implements ArgumentsProvider {\r\n\r\n        @Override\r\n        public Stream<? extends Arguments> provideArguments(final ExtensionContext context) {\r\n            return Stream.of(Arguments.of((SerializableCustom) () -> \"foobar\"));\r\n        }\r\n    }\r\n```\r\nbut with 3.13.0.CR1 you'll get:\r\n```\r\njava.lang.IllegalStateException: java.lang.ClassNotFoundException: org.acme.LambdaParamTest$LambdaProvider$$Lambda/0x00007fa1844f3158\r\n\tat io.quarkus.test.junit.internal.NewSerializingDeepClone.clone(NewSerializingDeepClone.java:132)\r\n\t[...]\r\n```\r\n\r\n### Expected behavior\r\n\r\nCloning works for lambdas created from custom serializable interfaces.\r\n\r\n### Actual behavior\r\n\r\nException is thrown.\r\n\r\n### How to Reproduce?\r\n\r\n[q_test-lambda.zip](https://github.com/user-attachments/files/16313547/q_test-lambda.zip)\r\n\r\n- `./mvnw clean test` fails\r\n- `./mvnw clean test -Dquarkus.platform.version=3.12.3` passes\r\n\r\nNote that the reproducer also includes a working lambda example for both versions (using a subclass of `java.util.function.Supplier<T>`).\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.13.0.CR1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nI suppose this is related to #40906, /cc @holly-cummins \r\n\r\nWorkaround: Use anonymous class instead.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42006/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42006/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29162",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29162/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29162/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29162/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29162",
+  "id": 1442806676,
+  "node_id": "I_kwDOCFbutM5V_3uU",
+  "number": 29162,
+  "title": "OIDC state cookie re-validated on any endpoint",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2022-11-09T22:01:42Z",
+  "updated_at": "2022-11-11T17:04:32Z",
+  "closed_at": "2022-11-10T10:32:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIf my redirect request fails for whatever reason, q_state cookie will remain. On any next request to any endpoint, it will try to redo the code flow... This is, of course, impossible, as there's no state parameter present and will always return an error.\r\n\r\nMethod\r\n\r\n```\r\npublic Uni<SecurityIdentity> authenticate(RoutingContext context,\r\n            IdentityProviderManager identityProviderManager, OidcTenantConfig oidcTenantConfig)\r\n```\r\n\r\n`CodeAuthenticationMechanism` says:\r\n\r\n```\r\n        // if the state cookie is available then try to complete the code flow and start a new session\r\n        if (stateCookie != null) {\r\n            LOG.debug(\"State cookie is present, processing an expected redirect from the OIDC provider\");\r\n```\r\n\r\nHowever, this does not make sense on any endpoint than the configured redirect url as defined by\r\n\r\n`quarkus.oidc.authentication.redirect-path`\r\n\r\nAt the moment, it tries to re-do the authentication on any endpoint, which is wrong. A call to index.html or any other endpoint that is not the redirect path will throw an error in the console\r\n\r\n```\r\n2022-11-09 22:52:13,663 ERROR [io.qua.oid.run.CodeAuthenticationMechanism] (vert.x-eventloop-thread-3) State verification has failed, completing the code flow with HTTP status 401\r\n```\n\n### Expected behavior\n\nCookie is only used on the redirect URI path defined by configuration.\n\n### Actual behavior\n\nCookie is read and disaster occurs on any path\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.13.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29162/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29162/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

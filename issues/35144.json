@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35144",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35144/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35144/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35144/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35144",
+  "id": 1831484412,
+  "node_id": "I_kwDOCFbutM5tKjv8",
+  "number": 35144,
+  "title": "HV000151: A method overriding another method must not redefine the parameter constraint configuration",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1305687763,
+      "node_id": "MDU6TGFiZWwxMzA1Njg3NzYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-validator",
+      "name": "area/hibernate-validator",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Validator"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-08-01T15:06:02Z",
+  "updated_at": "2024-08-20T14:28:20Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "**I use** \r\n- reactivity (quarkus-resteasy-reactive-jackson, quarkus-rest-client-reactive-jackson)\r\n- Java 11\r\n- Quarkus 3.2.2.Final\r\n\r\nWhen I try to run the application, , I end up with following error:\r\n\r\n> Caused by: jakarta.validation.ConstraintDeclarationException: **HV000151: A method overriding another method must not redefine the parameter constraint configuration, but method TestServiceInterface$$CDIWrapper#doSomething(String) redefines the configuration of TestServiceInterface#doSomething(String)**.\r\n\tat org.hibernate.validator.internal.metadata.aggregated.rule.OverridingMethodMustNotAlterParameterConstraints.apply(OverridingMethodMustNotAlterParameterConstraints.java:24)\r\n\tat org.hibernate.validator.internal.metadata.aggregated.ExecutableMetaData$Builder.assertCorrectnessOfConfiguration(ExecutableMetaData.java:462)\r\n\tat org.hibernate.validator.internal.metadata.aggregated.ExecutableMetaData$Builder.build(ExecutableMetaData.java:380)\r\n\tat org.hibernate.validator.internal.metadata.aggregated.BeanMetaDataBuilder$BuilderDelegate.build(BeanMetaDataBuilder.java:260)\r\n\tat org.hibernate.validator.internal.metadata.aggregated.BeanMetaDataBuilder.build(BeanMetaDataBuilder.java:133)\r\n\tat org.hibernate.validator.internal.metadata.PredefinedScopeBeanMetaDataManager.createBeanMetaData(PredefinedScopeBeanMetaDataManager.java:155)\r\n\tat org.hibernate.validator.internal.metadata.PredefinedScopeBeanMetaDataManager.<init>(PredefinedScopeBeanMetaDataManager.java:100)\r\n\tat org.hibernate.validator.internal.engine.PredefinedScopeValidatorFactoryImpl.<init>(PredefinedScopeValidatorFactoryImpl.java:206)\r\n\tat org.hibernate.validator.PredefinedScopeHibernateValidator.buildValidatorFactory(PredefinedScopeHibernateValidator.java:42)\r\n\tat org.hibernate.validator.internal.engine.AbstractConfigurationImpl.buildValidatorFactory(AbstractConfigurationImpl.java:435)\r\n\tat io.quarkus.hibernate.validator.runtime.HibernateValidatorRecorder$2.created(HibernateValidatorRecorder.java:178)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.initBeanContainer(ArcRecorder.java:79)\r\n\tat io.quarkus.deployment.steps.ArcProcessor$generateResources844392269.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.ArcProcessor$generateResources844392269.deploy(Unknown Source)\r\n\t... 15 more\r\n\r\n\r\nI have an interface, with parameter annotated `@ConvertGroup(to = Error.class)` and I have an implementation of that interface:\r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/18206019/55e62824-3fa4-4ce3-98d4-6dcdc6fe2ab3)\r\n![image](https://github.com/quarkusio/quarkus/assets/18206019/6e014615-692b-4079-9a24-8570ba222aed)\r\n\r\nI understand that there are $$CDIWrapper classes which are generated from the interface.\r\nI have noticed, that when applying OverridingMethodMustNotAlterParameterConstraints, there is an issue that callable \r\n`TestServiceInterface$$CDIWrapper#doSomething(String)` has empty **groupConversions** while `TestServiceInterface#doSomething(String)` have exactly one... \r\n\r\nI think this is a bug. \r\nWhat is interesting, I tried to dump all generated classes with (`-Dquarkus.debug.generated-classes-dir=dump-classes`) and I can see, that the ConvertGroup annotation is present on that $$CDIWrapper class:\r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/18206019/cb112264-34da-40bb-84e0-be4f9316615f)\r\n\r\n**Here is a project to reproduce the error https://github.com/dntichy/convert-group-minimal-example**\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nException should not be thrown and app should start properly\r\n\r\n### Actual behavior\r\n\r\nException is thrown upon startup\r\n\r\n### How to Reproduce?\r\n\r\n**Here is a project to reproduce the error https://github.com/dntichy/convert-group-minimal-example**\r\n\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.19\" 2023-04-18 LTS\r\nOpenJDK Runtime Environment Corretto-11.0.19.7.1 (build 11.0.19+7-LTS)\r\nOpenJDK 64-Bit Server VM Corretto-11.0.19.7.1 (build 11.0.19+7-LTS, mixed mode)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.2.Final",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35144/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35144/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

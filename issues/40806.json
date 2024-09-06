@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40806",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40806/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40806/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40806/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40806",
+  "id": 2312119921,
+  "node_id": "I_kwDOCFbutM6J0CZx",
+  "number": 40806,
+  "title": "Behavior unexpected sending bytes compressed with gzip setting property  'resteasy.gzip.max.input'",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282147660,
+      "node_id": "MDU6TGFiZWwxMjgyMTQ3NjYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/resteasy-classic",
+      "name": "area/resteasy-classic",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-05-23T07:03:58Z",
+  "updated_at": "2024-06-03T21:45:38Z",
+  "closed_at": "2024-06-03T20:09:49Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm encountering a `java.net.SocketTimeoutException: Read timed out ` exception when I send Gzip compressed data from my test to a Quarkus endpoint.\r\nI've configured my application.properties with: \r\n\r\n```\r\nquarkus.resteasy.gzip.enabled=true\r\n\r\nquarkus.resteasy.gzip.max-input=1k\r\n``` \r\nI've created ` byte[] gzip_max_input_1K = new byte[1000];` that after I compress in gzip data then I send to the Quarkus endpoint and then in the logs, I can see the error mentioned.\r\n\r\nMy reproducer:  `git clone -b gzip-input-bytes-reproducer https://github.com/jcarranzan/quarkus-reproducer.git`\r\n\r\nLogs with the error: \r\n```\r\n07:35:54,742 INFO  ## Running test GzipMaxInputIT.testGzipAboveTheMaxLimit()\r\nHTTP/1.1 500 Internal Server Error\r\ncontent-type: application/json; charset=utf-8\r\ncontent-length: 72\r\n\r\n{\r\n    \"details\": \"Error id 7c94905c-e232-43d8-ba81-08e8de910e59-1\",\r\n    \"stack\": \"\"\r\n}\r\n07:36:26,451 [app] 07:36:25,366 HTTP Request to /gzip failed, error id: 7c94905c-e232-43d8-ba81-08e8de910e59-3: org.jboss.resteasy.spi.UnhandledException: jakarta.ws.rs.ProcessingException: RESTEASY004655: Unable to invoke request: java.net.SocketTimeoutException: Read timed out\r\n07:36:26,451 INFO  [app] 07:36:25,366 HTTP Request to /gzip failed, error id: 7c94905c-e232-43d8-ba81-08e8de910e59-3: org.jboss.resteasy.spi.UnhandledException: jakarta.ws.rs.ProcessingException: RESTEASY004655: Unable to invoke request: java.net.SocketTimeoutException: Read timed out\r\n07:36:26,451 [app] \tat org.jboss.resteasy.core.ExceptionHandler.handleApplicationException(ExceptionHandler.java:107)\r\n07:36:26,451 INFO  [app] \tat org.jboss.resteasy.core.ExceptionHandler.handleApplicationException(ExceptionHandler.java:107)\r\n07:36:26,451 [app] \tat org.jboss.resteasy.core.ExceptionHandler.handleException(ExceptionHandler.java:344)\r\n07:36:26,451 INFO  [app] \tat org.jboss.resteasy.core.ExceptionHandler.handleException(ExceptionHandler.java:344)\r\n07:36:26,452 [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.writeException(SynchronousDispatcher.java:205)\r\n07:36:26,452 INFO  [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.writeException(SynchronousDispatcher.java:205)\r\n07:36:26,452 [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:452)\r\n07:36:26,452 INFO  [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:452)\r\n07:36:26,452 [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$invokePropagateNotFound$6(SynchronousDispatcher.java:275)\r\n07:36:26,452 INFO  [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$invokePropagateNotFound$6(SynchronousDispatcher.java:275)\r\n07:36:26,452 [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:154)\r\n07:36:26,452 INFO  [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:154)\r\n07:36:26,452 [app] \tat org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n07:36:26,452 INFO  [app] \tat org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n07:36:26,452 [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:157)\r\n07:36:26,452 INFO  [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:157)\r\n07:36:26,453 [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.invokePropagateNotFound(SynchronousDispatcher.java:260)\r\n07:36:26,453 INFO  [app] \tat org.jboss.resteasy.core.SynchronousDispatcher.invokePropagateNotFound(SynchronousDispatcher.java:260)\r\n07:36:26,453 [app] \tat io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:84)\r\n07:36:26,453 INFO  [app] \tat io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:84)\r\n07:36:26,453 [app] \tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:151)\r\n07:36:26,453 INFO  [app] \tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:151)\r\n07:36:26,453 [app] \tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:97)\r\n07:36:26,453 INFO  [app] \tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:97)\r\n07:36:26,453 [app] \tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:599)\r\n07:36:26,453 INFO  [app] \tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:599)\r\n07:36:26,453 [app] \tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n07:36:26,453 INFO  [app] \tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n07:36:26,453 [app] \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n07:36:26,453 INFO  [app] \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n07:36:26,454 [app] \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1495)\r\n07:36:26,454 INFO  [app] \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1495)\r\n07:36:26,454 [app] \tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:11)\r\n07:36:26,454 INFO  [app] \tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:11)\r\n07:36:26,454 [app] \tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:11)\r\n07:36:26,454 INFO  [app] \tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:11)\r\n07:36:26,454 [app] \tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n07:36:26,454 INFO  [app] \tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n07:36:26,454 [app] \tat java.base/java.lang.Thread.run(Thread.java:840)\r\n07:36:26,454 INFO  [app] \tat java.base/java.lang.Thread.run(Thread.java:840)\r\n07:36:26,454 [app] Caused by: jakarta.ws.rs.ProcessingException: RESTEASY004655: Unable to invoke request: java.net.SocketTimeoutException: Read timed out\r\n07:36:26,454 INFO  [app] Caused by: jakarta.ws.rs.ProcessingException: RESTEASY004655: Unable to invoke request: java.net.SocketTimeoutException: Read timed out\r\n07:36:26,454 [app] \tat org.jboss.resteasy.client.jaxrs.engines.ManualClosingApacheHttpClient43Engine.invoke(ManualClosingApacheHttpClient43Engine.java:361)\r\n07:36:26,454 INFO  [app] \tat org.jboss.resteasy.client.jaxrs.engines.ManualClosingApacheHttpClient43Engine.invoke(ManualClosingApacheHttpClient43Engine.java:361)\r\n07:36:26,455 [app] \tat org.jboss.resteasy.client.jaxrs.internal.ClientInvocation.invoke(ClientInvocation.java:427)\r\n07:36:26,455 INFO  [app] \tat org.jboss.resteasy.client.jaxrs.internal.ClientInvocation.invoke(ClientInvocation.java:427)\r\n07:36:26,455 [app] \tat org.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.invokeSync(ClientInvoker.java:134)\r\n07:36:26,455 INFO  [app] \tat org.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.invokeSync(ClientInvoker.java:134)\r\n07:36:26,455 [app] \tat org.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.invoke(ClientInvoker.java:103)\r\n07:36:26,455 INFO  [app] \tat org.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.invoke(ClientInvoker.java:103)\r\n07:36:26,455 [app] \tat org.jboss.resteasy.client.jaxrs.internal.proxy.ClientProxy.invoke(ClientProxy.java:61)\r\n07:36:26,455 INFO  [app] \tat org.jboss.resteasy.client.jaxrs.internal.proxy.ClientProxy.invoke(ClientProxy.java:61)\r\n07:36:26,455 [app] \tat jdk.proxy2/jdk.proxy2.$Proxy27.gzip(Unknown Source)\r\n```\n\n### Expected behavior\n\nThe server successfully processes Gzip data sent from the test and response 200 OK.\n\n### Actual behavior\n\n`org.jboss.resteasy.spi.UnhandledException: jakarta.ws.rs.ProcessingException: RESTEASY004655: Unable to invoke request: java.net.SocketTimeoutException: Read timed out`\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40806/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40806/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42713",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42713/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42713/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42713/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42713",
+  "id": 2481560901,
+  "node_id": "I_kwDOCFbutM6T6Z1F",
+  "number": 42713,
+  "title": "OIDC Dynamic TenantConfigResolver issue in dev mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-08-22T19:31:30Z",
+  "updated_at": "2024-08-22T20:55:18Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAs requested by @sberyozkin, a bug report for a few issues which are going wrong when using OIDC Config Resolver, also known as dynamic clients.\r\n\r\n## Dev Services won't start when default tenant disabled\r\nThe dev-services won't start when the default tenant is disabled. But they should start as normal as it could be the\r\ncase you want only dynamic configurations and no default configuration. A realm import for dev services could supply\r\nall needed dynamic clients.\r\n\r\nI worked around this by disabling the default tenant on boot in this reproducer, see the `DummyTenantIdHeaderFilter`\r\n\r\n## Resolved Tenant ID not backed by actual OIDC client\r\nThe `OidcUtils.TENANT_ID_ATTRIBUTE` offered through the `RoutingContext` in the `public Uni<OidcTenantConfig> resolve(RoutingContext context, OidcRequestContext<OidcTenantConfig> requestContext)` method of the `TenantConfigResolver` is\r\nused by Quarkus to notify us of an earlier resolved tenant-id. It fails however to verify if the OidcTenantConfig for\r\nthat specific tenant-id is still present. Use the following steps to reproduce the issue:\r\n\r\n1. Start the application in dev-mode \r\n2. Clear all cookies for http://localhost:8080\r\n3. Open http://localhost:8080\r\n4. Log in with bob/bob\r\n5. Restart the application in dev-mode\r\n6. Reload http://localhost:8080\r\n7. You now get a status 401, where you would expect to get a login screen.\r\n\r\nThe only way to fix it is to fully restart Quarkus in dev-mode.\r\n\r\n## Hot Code Reload in Dev Mode breaks dynamic configuration\r\nIf you alter code e.g. change the string in `GreetingResource` and reload the page dev-mode will perform a hot code\r\nreload and you end up with a `ID token verification has failed: Client is closed` log message and a status 401. Use\r\nthe following steps to reproduce the issue:\r\n\r\n1. Start, (restart if still running) the application in dev-mode.\r\n2. Clear all cookies for http://localhost:8080\r\n3. Go to http://localhost:8080\r\n4. Login with bob/bob\r\n5. Alter the test in `GreetingResource`\r\n6. Reload http://localhost:8080\r\n7. You now get a status 401 and the `ID token verification has failed: Client is closed` message in the logs.\r\n\r\nThe only way to fix it is to fully restart Quarkus in dev-mode.\r\n\r\n### Expected behavior\r\n\r\nThe expected behavior in this case should be the reproducer steps should not give failures.\r\n\r\n### Actual behavior\r\n\r\nSee the reproducer project here [https://github.com/bpasson/quarkus-issue-42713](https://github.com/bpasson/quarkus-issue-42713)\r\n\r\n### How to Reproduce?\r\n\r\nSee the reproducer project here [https://github.com/bpasson/quarkus-issue-42713](https://github.com/bpasson/quarkus-issue-42713)\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kernel Version 23.6.0: Mon Jul 29 21:14:30 PDT 2024; root:xnu-10063.141.2~1/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.4\" 2024-07-16 LTS\r\n\r\n### Quarkus version or git rev\r\n\r\n3.13.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.8 (36645f6c9b5079805ea5009217e36f2cffd34256)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42713/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42713/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

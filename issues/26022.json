@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26022",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26022/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26022/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26022/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26022",
+  "id": 1265799811,
+  "node_id": "I_kwDOCFbutM5LcpKD",
+  "number": 26022,
+  "title": "Configuration validation fails when setting property using environment variable",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-06-09T08:44:50Z",
+  "updated_at": "2022-06-22T06:58:54Z",
+  "closed_at": "2022-06-20T17:30:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI experience a weird problem/bug when setting configuration properties using environment variables. I originally experienced the problem in an OpenShift environment using extraEnv in a values.yaml file, but I can replicate it locally using an .env file.\r\n\r\nThe problem appears to be a function of the number of properties and also the specific key of the property. See below for more details.\r\n\r\nHaving\r\n\r\n```java\r\npackage org.acme.config;\r\n\r\nimport io.smallrye.config.ConfigMapping;\r\nimport io.smallrye.config.WithDefault;\r\nimport io.smallrye.config.WithParentName;\r\n\r\nimport java.util.Map;\r\nimport java.util.Optional;\r\n\r\n@ConfigMapping(prefix = \"clients\", namingStrategy = ConfigMapping.NamingStrategy.VERBATIM)\r\npublic interface ClientsConfiguration {\r\n    enum ClientId { ROEDTKORT, SOS_DAH  }\r\n\r\n    @WithParentName\r\n    Map<ClientId, ClientConfiguration> clients();\r\n\r\n    interface ClientConfiguration {\r\n//        @WithDefault(\"NA\")\r\n//        String organization();\r\n//        OrderProperties order();\r\n        EnabledProperties callback();\r\n        EnabledProperties task();\r\n        Optional<CiscoProperties> cisco();\r\n        CreatedByProperties web();\r\n//        CreatedByProperties app();\r\n        MediumProperties medium();\r\n        Features feature();\r\n    }\r\n\r\n    interface OrderProperties {\r\n        @WithDefault(\"swan\")\r\n        String caseSystem();\r\n        @WithDefault(\"false\")\r\n        boolean sendServiceOrderDamageTypeInDescription();\r\n    }\r\n\r\n    interface EnabledProperties {\r\n        @WithDefault(\"false\")\r\n        boolean enabled();\r\n    }\r\n\r\n    interface CiscoProperties {\r\n        String feed();\r\n        String customerId();\r\n        @WithDefault(\"RoadRunner\")\r\n        String taskCustomerId();\r\n        @WithDefault(\"AAR01\")\r\n        String taskCallcenter();\r\n    }\r\n\r\n    interface CreatedByProperties {\r\n        @WithDefault(\"RoadrunnerWeb\")\r\n        String createdByApplication();\r\n    }\r\n\r\n    interface MediumProperties {\r\n        boolean web();\r\n        @WithDefault(\"false\")\r\n        boolean app();\r\n        @WithDefault(\"false\")\r\n        boolean inapp();\r\n        @WithDefault(\"false\")\r\n        boolean ivr();\r\n    }\r\n\r\n    interface Features {\r\n        boolean followTruck();\r\n        boolean orderRsa();\r\n        @WithDefault(\"false\")\r\n        boolean truckConsent();\r\n        @WithDefault(\"false\")\r\n        boolean orderRsaMemberId();\r\n        @WithDefault(\"false\")\r\n        boolean orderRsaState();\r\n        @WithDefault(\"false\")\r\n        boolean orderRsaDiagnose();\r\n        @WithDefault(\"false\")\r\n        boolean orderRsaReviewCase();\r\n    }\r\n\r\n}\r\n```\r\n\r\nand resources/application.properties\r\n\r\n```\r\nclients.SOS_DAH.callback.enabled=false\r\nclients.SOS_DAH.task.enabled=true\r\nclients.SOS_DAH.cisco.feed=100101\r\nclients.SOS_DAH.cisco.customerId=36936471\r\nclients.SOS_DAH.cisco.taskCustomerId=DAH\r\nclients.SOS_DAH.cisco.taskCallcenter=AAR01\r\n#clients.SOS_DAH.customerProductId=21522258\r\n#clients.SOS_DAH.organization=DAH\r\n#clients.SOS_DAH.order.caseSystem=swan\r\nclients.SOS_DAH.web.createdByApplication=RoadrunnerWeb\r\n#clients.SOS_DAH.app.createdByApplication=Roadrunner\r\nclients.SOS_DAH.feature.followTruck=true\r\nclients.SOS_DAH.feature.orderRsa=true\r\nclients.SOS_DAH.feature.orderRsaMemberId=false\r\nclients.SOS_DAH.feature.orderRsaDiagnose=true\r\nclients.SOS_DAH.feature.orderRsaState=true\r\nclients.SOS_DAH.feature.orderRsaReviewCase=true\r\nclients.SOS_DAH.feature.truckConsent=false\r\nclients.SOS_DAH.medium.web=true\r\nclients.SOS_DAH.medium.app=true\r\n\r\nclients.ROEDTKORT.callback.enabled=true\r\nclients.ROEDTKORT.task.enabled=false\r\nclients.ROEDTKORT.cisco.feed=100103\r\nclients.ROEDTKORT.cisco.customerId=36936471\r\nclients.ROEDTKORT.cisco.taskCustomerId=ROEDTKORT\r\nclients.ROEDTKORT.cisco.taskCallcenter=AAR01\r\n#clients.ROEDTKORT.customerProductId=21641375\r\n#clients.ROEDTKORT.organization=DAH\r\n#clients.ROEDTKORT.order.caseSystem=swan\r\nclients.ROEDTKORT.web.createdByApplication=RoadrunnerWebRoedtkort\r\nclients.ROEDTKORT.feature.followTruck=false\r\nclients.ROEDTKORT.feature.orderRsa=true\r\nclients.ROEDTKORT.feature.orderRsaMemberId=false\r\nclients.ROEDTKORT.feature.orderRsaDiagnose=true\r\nclients.ROEDTKORT.feature.orderRsaState=false\r\nclients.ROEDTKORT.feature.truckConsent=false\r\nclients.ROEDTKORT.medium.web=true\r\nclients.ROEDTKORT.medium.inapp=true\r\nclients.ROEDTKORT.medium.ivr=true\r\n```\r\n\r\nA resource\r\n```java\r\npackage org.acme.config;\r\n\r\nimport javax.inject.Inject;\r\nimport javax.ws.rs.GET;\r\nimport javax.ws.rs.Path;\r\nimport javax.ws.rs.Produces;\r\nimport javax.ws.rs.core.MediaType;\r\n\r\nimport static org.acme.config.ClientsConfiguration.ClientId.ROEDTKORT;\r\n\r\n@Path(\"/greeting\")\r\npublic class GreetingResource {\r\n    @Inject\r\n    ClientsConfiguration clientsConfiguration;\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello() {\r\n        return \"feed \" + clientsConfiguration.clients().get(ROEDTKORT).cisco().get().feed();\r\n    }\r\n}\r\n```\r\n\r\nand .env file in the root of a project\r\n\r\n```\r\nclients.ROEDTKORT.cisco.feed=100104\r\n```\r\n\r\nThe app fails when starting with `./mwn quarkus:dev`\r\n```\r\n2022-06-09 09:25:24,567 ERROR [io.qua.run.Application] (Quarkus Main Thread) Failed to start application (with profile dev): io.smallrye.config.ConfigValidationException: Configuration validation failed:\r\n        java.util.NoSuchElementException: SRCFG00014: The config property clients.roedtkort.cisco.feed is required but it could not be found in any config source\r\n        java.util.NoSuchElementException: SRCFG00014: The config property clients.roedtkort.cisco.customerId is required but it could not be found in any config source\r\n        at io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:838)\r\n        at io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:794)\r\n        at io.smallrye.config.SmallRyeConfigBuilder.build(SmallRyeConfigBuilder.java:450)\r\n        at io.quarkus.runtime.generated.Config.readConfig(Unknown Source)\r\n        at io.quarkus.deployment.steps.RuntimeConfigSetup.deploy(Unknown Source)\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:103)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:103)\r\n        at java.base/java.lang.Thread.run(Thread.java:829)\r\n```\r\n\r\nIf I try to substitute the contents of .env with\r\n```\r\nclients.SOS_DAH.cisco.feed=100104\r\n```\r\n\r\nThe problem does not appear. \r\n\r\nOne further discovery:\r\n\r\nI tried setting a breakpoint in SmallRyeConfig.java line 760. The problem only appears when the total number of properties in the properties `Set` is above 151 the third and fourth time one hits the breakpoint (I hit 153 and 154 respectively). Dropping below that number and there is no problem. \r\n\r\nE.g. on my machine if I out-comment `MediumProperties medium();` or `Features feature();` in the `ClientConfiguration` interface and in application.properties the problem does not appear.\r\n\r\nThat also means that it depends on the number of environment variables in your shell/environment if one will experience the problem with this specific example.\r\n\r\n### Expected behavior\r\n\r\nSetting of configuration properties with environment variables should work when using allowed keys and not depending on the number of properties.\r\n\r\n### Actual behavior\r\n\r\nSetting of configuration properties with environment variables fails depending on the particular key and depending on the number of properties.\r\n\r\n### How to Reproduce?\r\n\r\ngit clone https://github.com/quarkusio/quarkus-quickstarts/tree/main/config-quickstart\r\ncd config-quickstart\r\n\r\nAdd the ClientsConfiguration.java to the org.acme.config package and the properties from the \"Describe the error\" section to application.properties. Add the .env file with the above contents the root of the project.\r\n`./mvnw quarkus:dev`\r\n\r\nor\r\n\r\ngit clone https://github.com/rudiger3d/quarkus-quickstarts.git and `cd config-quickstart` and run `./mwnw quarkus:dev`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 11.0.15 2022-04-19\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.9.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26022/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26022/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

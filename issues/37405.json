@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37405",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37405/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37405/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37405/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37405",
+  "id": 2017256454,
+  "node_id": "I_kwDOCFbutM54POQG",
+  "number": 37405,
+  "title": "Using ReactiveRedisDataSource Not Working",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-11-29T19:17:12Z",
+  "updated_at": "2023-11-29T20:27:14Z",
+  "closed_at": "2023-11-29T19:55:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI changed the redis-quickstart to use the ReactiveRedisDataSource and ReactiveValueCommand and it no longer stores the value. I also changed the service to store the Increment object instead of just the value.\r\n\r\nUsing the RedisDataSource and ValueCommand everything works correctly. \n\n### Expected behavior\n\nReactiveRedisDataSource and ReactiveValueCommand should work the same as using RedisDataSource and ValueCommand except work reactive\n\n### Actual behavior\n\nNo values are stored and none can be retrieved when ReactiveRedisDataSource and ReactiveValueCommand are used.\n\n### How to Reproduce?\n\nUse the redis-quickstart and change the get and set methods in the IncrementService to use the ReactiveValueCommand in those methods. \r\n\r\n=================================================================\r\npackage org.acme.redis;\r\n\r\nimport java.util.List;\r\n\r\nimport io.quarkus.redis.datasource.ReactiveRedisDataSource;\r\nimport io.quarkus.redis.datasource.keys.ReactiveKeyCommands;\r\nimport io.quarkus.redis.datasource.value.ReactiveValueCommands;\r\nimport io.smallrye.mutiny.Uni;\r\nimport jakarta.inject.Inject;\r\nimport jakarta.inject.Singleton;\r\n\r\n@Singleton\r\nclass IncrementService {\r\n\r\n\r\n    \r\n    private ReactiveKeyCommands<String> keys;\r\n    //private ValueCommands<String, Increment> counterCommand;\r\n    private ReactiveValueCommands<String, Increment> reactiveCounterCommand;\r\n\r\n    @Inject\r\n    public IncrementService(ReactiveRedisDataSource reactiveRedisDS) {\r\n    \t\r\n        keys = reactiveRedisDS.key();\r\n        //counterCommand = redisDS.value(Increment.class);\r\n        reactiveCounterCommand = reactiveRedisDS.value(Increment.class);\r\n    }\r\n\r\n\r\n    Uni<Void> del(String key) {\r\n        return keys.del(key)\r\n            .replaceWithVoid();\r\n            \r\n    }\r\n\r\n    Uni<Increment> get(String key) {\r\n        return reactiveCounterCommand.get(key);\r\n    }\r\n\r\n    void set(String key, Increment increment) {\r\n    \treactiveCounterCommand.set(key, increment);\r\n    }\r\n\r\n    void increment(String key, int incrementBy) {\r\n    \treactiveCounterCommand.incrby(key, incrementBy);\r\n    }\r\n\r\n    Uni<List<String>> keys() {\r\n    \t\r\n        return keys.keys(\"*\");\r\n    }\r\n}\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37405/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37405/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

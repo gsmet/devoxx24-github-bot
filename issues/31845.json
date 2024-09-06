@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31845",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31845/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31845/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31845/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31845",
+  "id": 1624089185,
+  "node_id": "I_kwDOCFbutM5gzaJh",
+  "number": 31845,
+  "title": "inconsistent nullable handling when generating Graphql schema",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-03-14T18:35:25Z",
+  "updated_at": "2023-08-02T07:02:04Z",
+  "closed_at": "2023-08-02T07:02:04Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using `?` Kotlin nullable types with `Uni`, the generated graphql schema set the nullable fields as required\r\n\r\neg. the following code\r\n```kotlin\r\nimport io.smallrye.mutiny.Uni\r\nimport org.eclipse.microprofile.graphql.GraphQLApi\r\nimport org.eclipse.microprofile.graphql.Query\r\nimport org.eclipse.microprofile.graphql.Source\r\nimport javax.json.bind.annotation.JsonbCreator\r\n\r\ndata class Foo @JsonbCreator constructor(val bar: String?)\r\n\r\n@GraphQLApi\r\nclass Example {\r\n  @Query\r\n  fun nullable(): Foo? = null\r\n\r\n  @Query\r\n  fun nullableItemInUni(): Uni<Foo?> = Uni.createFrom().nullItem()\r\n\r\n  @Query\r\n  fun nullableNestedItem(@Source foo: Foo): String? = foo.bar\r\n\r\n  @Query\r\n  fun nullableNestedItemInUni(@Source foo: Foo): Uni<String?> =\r\n    foo.bar?.let { Uni.createFrom().item(it) } ?: Uni.createFrom().nullItem()\r\n}\r\n\r\n```\r\n\r\ngenerates the following graphql schema\r\n\r\n```graphql\r\ntype query {\r\n  nullable: Foo\r\n  nullableItemInUni: Foo!\r\n  nullableNestedItem(foo: FooInput!): String\r\n  nullableNestedItemInUni(foo: FooInput!): String!\r\n}\r\n```\r\n\r\n#### Notes: \r\na workaround is to annotate the query with the `io.smallrye.graphql.api.@Nullable` annotation\r\n\r\n### Expected behavior\r\n\r\nexpecting the schema to be\r\n```graphql\r\ntype query {\r\n  nullable: Foo\r\n  nullableItemInUni: Foo\r\n  nullableNestedItem(foo: FooInput!): String\r\n  nullableNestedItemInUni(foo: FooInput!): String\r\n}\r\n```\r\n\r\n### Actual behavior\r\n\r\n```graphql\r\ntype query {\r\n  nullable: Foo\r\n  nullableItemInUni: Foo! #WRONG\r\n  nullableNestedItem(foo: FooInput!): String\r\n  nullableNestedItemInUni(foo: FooInput!): String! #WRONG\r\n}\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Ls-MacBook-Pro.local 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:03:51 PST 2022; root:xnu-8792.61.2~4/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.1\" 2021-10-19 LTS\r\nOpenJDK Runtime Environment Corretto-17.0.1.12.1 (build 17.0.1+12-LTS)\r\nOpenJDK 64-Bit Server VM Corretto-17.0.1.12.1 (build 17.0.1+12-LTS, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.4\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n------------------------------------------------------------\r\nGradle 7.3\r\n------------------------------------------------------------\r\n\r\nBuild time:   2021-11-09 20:40:36 UTC\r\nRevision:     96754b8c44399658178a768ac764d727c2addb37\r\n\r\nKotlin:       1.5.31\r\nGroovy:       3.0.9\r\nAnt:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021\r\nJVM:          17.0.1 (Amazon.com Inc. 17.0.1+12-LTS)\r\nOS:           Mac OS X 13.1 x86_64\r\n\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31845/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31845/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

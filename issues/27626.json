@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27626",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27626/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27626/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27626/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27626",
+  "id": 1357196824,
+  "node_id": "I_kwDOCFbutM5Q5S4Y",
+  "number": 27626,
+  "title": "[2.11.3.Final] Cannot create SOAPConnectionFactory in native mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-08-31T11:27:23Z",
+  "updated_at": "2022-08-31T12:08:50Z",
+  "closed_at": "2022-08-31T12:08:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi!\r\n\r\nI have an issue with following code snippet:\r\n\r\n```java\r\nimport javax.xml.soap.*;\r\n\r\n// Create SOAP Connection\r\nSOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();\r\nSOAPConnection soapConnection = soapConnectionFactory.createConnection();\r\nsoapConnection.call(message, url);\r\nsoapConnection.close();\r\n\r\nI have set reflect-config.json and resource-config.json files to resources/META-INF/native-image/ folder with the following contents:\r\n\r\nreflect-config.json\r\n\r\n[\r\n  {\r\n    \"name\" : \"com.sun.xml.messaging.saaj.soap.SAAJMetaFactoryImpl\",\r\n    \"allDeclaredConstructors\" : true,\r\n    \"allPublicMethods\" : true\r\n  },\r\n  {\r\n    \"name\" : \"com.sun.xml.messaging.saaj.soap.ver1_1.SOAPConnectionFactory1_1Impl\",\r\n    \"allDeclaredConstructors\" : true,\r\n    \"allPublicMethods\" : true\r\n  },\r\n  {\r\n    \"name\" : \"com.sun.xml.messaging.saaj.soap.ver1_1.SOAPFactory1_1Impl\",\r\n    \"allDeclaredConstructors\" : true,\r\n    \"allPublicMethods\" : true\r\n  },\r\n  {\r\n    \"name\" : \"com.sun.xml.messaging.saaj.soap.ver1_1.SOAPMessageFactory1_1Impl\",\r\n    \"allDeclaredConstructors\" : true,\r\n    \"allPublicMethods\" : true\r\n  },\r\n  {\r\n    \"name\" : \"com.sun.xml.messaging.saaj.soap.ver1_2.SOAPConnectionFactory1_2Impl\",\r\n    \"allDeclaredConstructors\" : true,\r\n    \"allPublicMethods\" : true\r\n  },\r\n  {\r\n    \"name\" : \"com.sun.xml.messaging.saaj.soap.ver1_2.SOAPFactory1_2Impl\",\r\n    \"allDeclaredConstructors\" : true,\r\n    \"allPublicMethods\" : true\r\n  },\r\n  {\r\n    \"name\" : \"com.sun.xml.messaging.saaj.soap.ver1_2.SOAPMessageFactory1_2Impl\",\r\n    \"allDeclaredConstructors\" : true,\r\n    \"allPublicMethods\" : true\r\n  },\r\n  {\r\n    \"name\":\"com.sun.xml.messaging.saaj.soap.impl.ElementImpl\",\r\n    \"methods\":[{\"name\":\"<init>\",\"parameterTypes\":[\"com.sun.xml.messaging.saaj.soap.SOAPDocumentImpl\",\"org.w3c.dom.Element\"] }]\r\n  }\r\n]\r\n\r\nresource-config.json\r\n\r\n{\r\n    \"resources\": {\r\n        \"includes\": [\r\n            {\r\n                \"pattern\": \"META-INF/services/javax.xml.soap.SAAJMetaFactory\"\r\n            },\r\n            {\r\n                \"pattern\": \"META-INF/services/javax.xml.soap.SOAPConnectionFactory\"\r\n            },\r\n            {\r\n                \"pattern\": \"META-INF/services/javax.xml.soap.SOAPFactory\"\r\n            },\r\n            {\r\n                \"pattern\": \"META-INF/services/javax.xml.soap.MessageFactory\"\r\n            }\r\n        ]\r\n    }\r\n}\r\n```\r\n\r\nThe maven command which is used to build: mvn clean package -Pnative -Dquarkus.native.container-build=true -Dquarkus.container-image.build=true\r\n\r\nI don't know if it matters, but I have quarkiverse imported to the project:\r\n\r\n<dependency>\r\n  <groupId>io.quarkiverse.cxf</groupId>\r\n  <artifactId>quarkus-cxf</artifactId>\r\n  <version>1.4.0</version>\r\n</dependency>\r\n\r\nThe following error message occurs, when I run the app in Docker:\r\n\r\nUnable to create SOAP connection factory: Error while searching for service [javax.xml.soap.SOAPConnectionFactory]: javax.xml.soap.SOAPException: Unable to create SOAP connection factory: Error while searching for service [javax.xml.soap.SOAPConnectionFactory]\r\n        at javax.xml.soap.SOAPConnectionFactory.newInstance(SOAPConnectionFactory.java:58)\r\n\r\nWhat am I missing?\r\n\r\nThank you,\r\nViktor\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27626/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27626/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

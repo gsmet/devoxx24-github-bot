@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40810",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40810/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40810/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40810/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40810",
+  "id": 2312427098,
+  "node_id": "I_kwDOCFbutM6J1NZa",
+  "number": 40810,
+  "title": "Since 3.10.1 RequestContext handling is broken on request cancle",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 19,
+  "created_at": "2024-05-23T09:31:53Z",
+  "updated_at": "2024-06-04T07:54:58Z",
+  "closed_at": "2024-06-04T07:35:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIssue was introduced with [Quarkus REST - reuse CDI request context if it exists](https://github.com/quarkusio/quarkus/pull/40408)\r\nhttps://github.com/quarkusio/quarkus/issues/40307#issuecomment-2088016466\r\n> What I think can become problematic is how we handle the end of the request processing in Quarkus REST.\r\n\r\nWell I think we found a constellation:\r\n\r\nThere is a Vertx RouteFilter and a ContainerRequestFilter which both access a `@RequestScoped` bean.\r\nThe logic of the reproducer application executes an uninterruptable process which takes a while (in this case a db operation).\r\nThe test provokes a request timeout hence a request cancle.\r\n \r\nOn a request cancle, the verx request context gets destroyed immediately but the uninterruptable code keeps executing and finally triggers a `ContextNotActiveException`.\r\n\r\nBefore 3.10.1 this wasn't an issue as the `ContainerRequestFilter` created a new request context, and therefor was not affected by a request cancle.\r\n\r\n\r\n### Expected behavior\r\n\r\nOn a request cancle the ActiveRequestContext gets destroyed while the request code is still running\r\n\r\n### Actual behavior\r\n\r\nWait for code completion before destroying the context\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: https://github.com/HerrDerb/quarkus-issue/tree/context-issue\r\nSteps:\r\n1. Execute GreetingServiceTest\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40810/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40810/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

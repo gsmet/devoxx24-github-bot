@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33211",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33211/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33211/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33211/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33211",
+  "id": 1701464507,
+  "node_id": "I_kwDOCFbutM5lakm7",
+  "number": 33211,
+  "title": "Failed to create a reactive rest client in Kotlin",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-05-09T06:51:29Z",
+  "updated_at": "2023-05-09T09:19:31Z",
+  "closed_at": "2023-05-09T09:19:23Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI got the following error when I followed this [guide](https://quarkus.io/guides/rest-client-reactive) to create a simple reactive rest client with Kotlin.\r\n```posh\r\nFailed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR]         [error]: Build step io.quarkus.rest.client.reactive.deployment.RestClientReactiveProcessor#addRestClientBeans threw an exception: org.eclipse.microprofile.rest.client.RestClientDefinitionException: Using Kotlin default methods on interfaces that are not backed by Java 8 default interface methods is not supported. See https://kotlinlang.org/docs/java-to-kotlin-interop.html#default-methods-in-interfaces for more details. Offending interface is 'com.test.backend.authorizations.clients.AuthServiceClient'.\r\n```\r\nand the code for the rest client is following:\r\n```kotlin\r\n@Path(\"/\")\r\n@RegisterRestClient(configKey = \"auth-service-rest-client\")\r\ninterface AuthServiceClient {\r\n\r\n    @GET\r\n    @Produces(APPLICATION_JSON)\r\n    @Path(\"/admin/realms/{realm}/clients/{client-id}/authz/resource-server/resource\")\r\n    fun getResources(\r\n        @HeaderParam(\"Authorization\") auth: String,\r\n        @PathParam(\"realm\") realm: String,\r\n        @PathParam(\"client-id\") clientId: String,\r\n        @QueryParam(\"name\") name: String?,\r\n    ): Collection<ResourcePojo>\r\n\r\n    @POST\r\n    @Produces(APPLICATION_JSON)\r\n    @Path(\"/admin/realms/{realm}/clients/{client-id}/authz/resource-server/resource\")\r\n    fun createResource(\r\n        @HeaderParam(\"Authorization\") auth: String,\r\n        @PathParam(\"realm\") realm: String,\r\n        @PathParam(\"client-id\") clientId: String,\r\n        resource: ResourcePojo,\r\n    ): ResourcePojo\r\n\r\n    @DELETE\r\n    @Produces(APPLICATION_JSON)\r\n    @Path(\"/admin/realms/{realm}/clients/{client-id}/authz/resource-server/resource/{resource-id}\")\r\n    fun deleteResource(\r\n        @HeaderParam(\"Authorization\") auth: String,\r\n        @PathParam(\"realm\") realm: String,\r\n        @PathParam(\"client-id\") clientId: String,\r\n        @PathParam(\"resource-id\") resourceId: String,\r\n    ): ResourcePojo\r\n\r\n    @PUT\r\n    @Produces(APPLICATION_JSON)\r\n    @Path(\"/admin/realms/{realm}/clients/{client-id}/authz/resource-server/resource/{resource-id}\")\r\n    fun updateResource(\r\n        @HeaderParam(\"Authorization\") auth: String,\r\n        @PathParam(\"realm\") realm: String,\r\n        @PathParam(\"client-id\") clientId: String,\r\n        @PathParam(\"resource-id\") resourceId: String,\r\n        resource: ResourcePojo,\r\n    ): ResourcePojo\r\n\r\n```\r\nWhen I added `-Xjvm-default=all` option in compile command then it says `org.apache.maven.lifecycle.LifecyclePhaseNotFoundException: Unknown lifecycle phase \"jvm-default=all\". `\r\n\r\nFYI: It worked with regacy rest client ( not reactive one) \r\n\r\n### Expected behavior\r\n\r\nIt can be compiled without any errors \r\n\r\n### Actual behavior\r\n\r\nAs described above, it produces errors\r\n\r\n### How to Reproduce?\r\n\r\nbuild the above code\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n Darwin Kernel Version 21.5.0\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"19.0.1\" 2022-10-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33211/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33211/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

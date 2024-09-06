@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34947",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34947/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34947/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34947/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34947",
+  "id": 1818072932,
+  "node_id": "I_kwDOCFbutM5sXZdk",
+  "number": 34947,
+  "title": "Quarkus Cache: @CacheKey does not work on interface methods",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-07-24T09:59:15Z",
+  "updated_at": "2023-07-24T10:24:27Z",
+  "closed_at": "2023-07-24T10:24:22Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen a `@CacheResult` annotated interface method has `@CacheKey` annotated parameters, Quarkus cache ignores the `@CacheKey` annotation. For example:\r\n\r\n```\r\n@RegisterRestClient\r\npublic interface MyRestClient {\r\n    @GET\r\n    @Path(\"/hello\")\r\n    String hello(\r\n        @QueryParam(\"c\") String c);\r\n\r\n    @CacheResult(cacheName = \"my-cache\")\r\n    default String hello(\r\n        @CacheKey @QueryParam(\"a\") String a, \r\n        @CacheKey @QueryParam(\"b\") String b,\r\n        @QueryParam(\"c\") String c) {\r\n        return hello(c);\r\n    }\r\n}\r\n```\n\n### Expected behavior\n\n`@CacheKey` is respected.\n\n### Actual behavior\n\n`@CacheKey` is ignored.\r\n\r\n`cacheKeyParameterPositions` in [`CacheInterceptor.getCacheKey`](https://github.com/quarkusio/quarkus/blob/000c18be66ffc8530b561f826fad03b88d69e939/extensions/cache/runtime/src/main/java/io/quarkus/cache/runtime/CacheInterceptor.java#L152C20-L152C20) is empty, thus resulting in the wrong cache key being generated.\n\n### How to Reproduce?\n\nI have made a reproducing project here https://github.com/AndreasPetersen/quarkus-cache-key-interface/tree/main.\r\n\r\nThe project includes a `MyRestClient` interface with an annotated `@CacheResult` method with `@CacheKey` annotated parameters. In the `GreetingResource`, the cached method is called first, and then a second call is made using the Quarkus Cache programmic API, where I make a `CompositeCacheKey` that should match the `@CacheKey` annotated parameters.\r\n\r\nA `GreetingResourceTest` is available, that verifies that the client REST endpoint is only called once, but the test fails because of the described bug.\n\n### Output of `uname -a` or `ver`\n\nLinux codespaces-8fce81 5.15.0-1041-azure #48-Ubuntu SMP Tue Jun 20 20:34:08 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 LTS OpenJDK Runtime Environment Microsoft-7626293 (build 17.0.7+7-LTS) OpenJDK 64-Bit Server VM Microsoft-7626293 (build 17.0.7+7-LTS, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.8.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle, see reproducer project\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34947/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34947/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42150",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42150/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42150/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42150/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42150",
+  "id": 2430958144,
+  "node_id": "I_kwDOCFbutM6Q5XpA",
+  "number": 42150,
+  "title": "Native Build is missing GRPC generated class",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-07-25T20:51:31Z",
+  "updated_at": "2024-07-26T12:11:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello,\r\nIm implementing Envoy ext_authz GRPC service - [here is proto file](https://github.com/envoyproxy/envoy/blob/ddaa2c331338e87f57639ad0bdb35b68a510d7b4/api/envoy/service/auth/v3/external_auth.proto).\r\n\r\nWhen running in quarkusDev all is working, once the native build is done and ran Im getting error. This error is displayed on grpcurl side:\r\n```\r\n\r\ngrpcurl -plaintext -d '\r\n{\r\n    \"attributes\": {\r\n        \"request\": {\r\n            \"http\": {\r\n                \"headers\": [\r\n                    {\r\n                        \"key\": \"token\",      \r\n                        \"value\": \"\"\r\n                    }\r\n                ]\r\n            }\r\n        }\r\n    }\r\n}\r\n'  localhost:8080 envoy.service.auth.v3.Authorization/Check\r\nERROR:\r\n  Code: Unknown\r\n  Message: java.lang.IllegalStateException - Generated message class \"com.google.protobuf.Timestamp\" missing method \"newBuilder\".\r\n ```\n\n### Expected behavior\n\nNative build should be running the same as dev mode.\n\n### Actual behavior\n\nNative build is missing some dependencies resulting in non working GRPC service.\n\n### How to Reproduce?\n\n1. Implement GRPC service from [this](https://github.com/envoyproxy/envoy/blob/ddaa2c331338e87f57639ad0bdb35b68a510d7b4/api/envoy/service/auth/v3/external_auth.proto) proto file\r\n2. Run native build\r\n3. Send this request\r\n```\r\ngrpcurl -plaintext -d '\r\n{\r\n    \"attributes\": {\r\n        \"request\": {\r\n            \"http\": {\r\n                \"headers\": [\r\n                    {\r\n                        \"key\": \"token\",      \r\n                        \"value\": \"\"\r\n                    }\r\n                ]\r\n            }\r\n        }\r\n    }\r\n}\r\n'  localhost:8080 envoy.service.auth.v3.Authorization/Check\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin MacBook-Air.local 23.4.0 Darwin Kernel Version 23.4.0: Fri Mar 15 00:12:41 PDT 2024; root:xnu-10063.101.17~1/RELEASE_ARM64_T8103 arm64\n\n### Output of `java -version`\n\njava 21.0.3 2024-04-16 LTS Java(TM) SE Runtime Environment Oracle GraalVM 21.0.3+7.1 (build 21.0.3+7-LTS-jvmci-23.1-b37) Java HotSpot(TM) 64-Bit Server VM Oracle GraalVM 21.0.3+7.1 (build 21.0.3+7-LTS-jvmci-23.1-b37, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.7.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n------------------------------------------------------------ Gradle 8.5 ------------------------------------------------------------  Build time:   2023-11-29 14:08:57 UTC Revision:     28aca86a7180baa17117e0e5ba01d8ea9feca598  Kotlin:       1.9.20 Groovy:       3.0.17 Ant:          Apache Ant(TM) version 1.10.13 compiled on January 4 2023 JVM:          21.0.3 (Oracle Corporation 21.0.3+7-LTS-jvmci-23.1-b37) OS:           Mac OS X 14.4.1 aarch64\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42150/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42150/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42236",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42236/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42236/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42236/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42236",
+  "id": 2439636812,
+  "node_id": "I_kwDOCFbutM6RaedM",
+  "number": 42236,
+  "title": "In a @Scheduled block Kotlin Coroutines run on the same vert.x worker, or eventloop threads, or DefaultDispatcher-worker with inconsistent behaviours",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-07-31T09:57:22Z",
+  "updated_at": "2024-08-12T14:17:00Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi\r\n\r\n- I have a long running operation - multiple `@RestClient` calls, non reactive, using classic Resteasy - called from a `@Scheduled` job\r\n- I'd like to use coroutines dispatched to a kotlin Dispatcher ThreadPool to split the operation in small multi concurrent blocks\r\n- It works and uses different Dispatcher worker threads under quarkus 3.9 using the TCCL workaround here : https://github.com/quarkusio/quarkus/issues/40245 . As mentioned in #40245 the TCCL workaround fixes the ClassNotFoundException, but it also allows the code block to run on the right worker thread.\r\n\r\nI'd like to run the coroutines asynchronously on different worker threads, being vertx or DefaultDispatcher ones.\r\n\r\nUsing the TCCL workaround + quarkus 3.9, asyncs run fine on different DefaultDispatcher-worker threads ; but I'd like to avoid the TCCL workaround.\r\n\r\nFull reproducer is attached below. Am I doing something wrong ?\r\n\r\nIt's ok for me to block the Scheduled method, but then, I can't manage to use different vert.x-worker threads, and if not using vertx.worker threads, then DefaultDispatcher-worker threads don't reach the @Injected client code at all.\r\n\r\nThe core code block from reproducer : \r\n\r\n   ```\r\n @Scheduled(cron = \"0 0 * * * ? *\")\r\n    fun schedule() { // n.b insert suspend keyword if withcontext() is used\r\n        val ids = (1 .. 128).toList()\r\n\r\n        // when NOT using suspend on parent method\r\n        // using runBlocking(Dispatchers.Unconfined) all run on same vert.x-worker-thread-XX\r\n        // using runBlocking(Dispatchers.Default) only one DefaultDispatcher-worker is used, only one \"in thread\" print stmt is shown, doSomething() is never called\r\n        // using runBlocking(Dispatchers.IO) only one DefaultDispatcher-worker is used, only one \"in thread\" print stmt is shown, doSomething() is never called\r\n        // withContext can't be called if 'suspend' is not used on parent method\r\n\r\n        // when using suspend on parent method\r\n        // using withcontext(Dispatchers.Unconfined) all run on same vert.x-eventloop-thread-XXX and we get an expected warning \"has been blocked for 3478 ms, time limit is 2000 ms: io.vertx.core.VertxException: Thread blocked\"\r\n        // using withcontext(Dispatchers.Default) all run on different DefaultDispatcher-worker-XXX threads, doSomething() is never called\r\n        // using withcontext(Dispatchers.IO) only one DefaultDispatcher-worker is used, only one \"in thread\" print stmt is shown, doSomething() is never called\r\n\r\n        // using runBlocking(Dispatchers.Unconfined) all run on same vert.x-eventloop-thread-XXX and we get has been blocked for 3478 ms, time limit is 2000 ms: io.vertx.core.VertxException: Thread blocked\r\n        // using runBlocking(Dispatchers.Default) all run on different DefaultDispatcher-worker-XXX threads, doSomething() is never called\r\n        // using runBlocking(Dispatchers.IO) all run on different DefaultDispatcher-worker-XXX threads, doSomething() is never called\r\n\r\n        runBlocking {\r\n            ids.map { id ->\r\n                async {\r\n                    println(\"in thread ${Thread.currentThread().name}#${Thread.currentThread().threadId()}\")\r\n                    service.doSomething(id.toString())\r\n                }\r\n            }.awaitAll()\r\n        }\r\n```\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\n- Every deferred id of `ids.map { id -> async code block} `runs either in a different vertx.worker thread or a different DefaulltDispatcher-worker thread\r\n\r\n### Actual behavior\r\n\r\n- see reproducer\r\n\r\n### How to Reproduce?\r\n\r\n- git clone https://github.com/laurentperez/reproducers/tree/main/schedcoroutinerestclient/schedcoroutinerestclient\r\n- quarkus dev\r\n- go to http://localhost:8080/q/dev-ui/io.quarkus.quarkus-scheduler/scheduled-methods\r\n- click on Execute Scheduled method\r\n- to reproduce outside a Scheduled method : curl http://localhost:8080/service\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n21\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42236/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42236/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

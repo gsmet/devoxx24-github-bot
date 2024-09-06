@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42219",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42219/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42219/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42219/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42219",
+  "id": 2437415460,
+  "node_id": "I_kwDOCFbutM6RSAIk",
+  "number": 42219,
+  "title": "ClassNotFound when a REST client is used in a @Scheduled kotlin coroutine scope, Quarkus 3.9.5",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-07-30T09:55:07Z",
+  "updated_at": "2024-08-12T14:13:58Z",
+  "closed_at": "2024-07-31T08:30:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello. I believe this may be a continuation of https://github.com/quarkusio/quarkus/issues/40245\r\n\r\nReproducer with pseudocode :\r\n\r\n```kotlin\r\n@ApplicationScoped\r\nclass JobService {\r\n@Inject\r\nlateinit var service: Service // Service itself is @ApplicationScoped and has a injected @RestClient \"MyRestClientAPIService\"\r\n@Scheduled\r\nfun foo() {service.call()}\r\n}\r\n```\r\n\r\n- when #foo is called is from the DEV UI http://localhost:8080/q/dev-ui/io.quarkus.quarkus-scheduler/scheduled-methods it will throw \r\n\r\n```\r\nCaused by: java.lang.ClassNotFoundException: com.xxx.xxx.autogen.authent.api.MyRestClientAPIService\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:491)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:468)\r\n\tat java.base/java.lang.Class.forName0(Native Method)\r\n\tat java.base/java.lang.Class.forName(Class.java:534)\r\n\tat java.base/java.lang.Class.forName(Class.java:513)\r\n\tat com.xxx.xxx.autogen.authent.api.MyRestClientAPIServicei_SKU7kPVCfXTrnWDieFY1BwYhem8_Synthetic_Bean.createSynthetic(Unknown Source)\r\n\tat com.xxx.xxx.autogen.authent.api.MyRestClientAPIService_SKU7kPVCfXTrnWDieFY1BwYhem8_Synthetic_Bean.doCreate(Unknown Source)\r\n\tat com.xxx.xxx.autogen.authent.api.MyRestClientAPIService_SKU7kPVCfXTrnWDieFY1BwYhem8_Synthetic_Bean.create(Unknown Source)\r\n```\r\n\r\n- I attempted to swap the TCCL as in https://github.com/quarkusio/quarkus/issues/40245#issuecomment-2074797202 : it works ;) \r\n\r\n```kotlin\r\n  var properTccl: ClassLoader? = null\r\n\r\n    fun onStart(@Observes ev: StartupEvent) {\r\n        properTccl = Thread.currentThread().contextClassLoader\r\n    }\r\n    then in @scheduled block : Thread.currentThread().contextClassLoader = properTccl\r\n\r\n```\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nREST client Class is found\r\n\r\n### Actual behavior\r\n\r\nsee above\r\n\r\n### How to Reproduce?\r\n\r\nsee above\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.9.5\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42219/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42219/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

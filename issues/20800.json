@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20800",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20800/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20800/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20800/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20800",
+  "id": 1027536826,
+  "node_id": "I_kwDOCFbutM49Pve6",
+  "number": 20800,
+  "title": "`quarkus.flyway.locations` re-read at runtime",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1897325810,
+      "node_id": "MDU6TGFiZWwxODk3MzI1ODEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/flyway",
+      "name": "area/flyway",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2021-10-15T15:06:36Z",
+  "updated_at": "2023-03-02T15:14:31Z",
+  "closed_at": "2023-03-02T15:14:30Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe `quarkus.flyway.locations` property is a build-time property and as such should only be read at build-time. We have however noticed that the property is re-read at run-time and as a result it is unclear exactly what the behavior will be.\r\n\r\nSince we actually have a use case where we would like to be able to change the property at run-time, I am unsure what the course of action should be. I think it would make sense to analyze and fix the bug in the scope of this issue and then if you think our use case makes sense, I can report a separate feature request to change the property into a run-time property.\r\n\r\nAs for the use case: We run integration tests where we run the Docker image produced by the Quarkus build. Here we sometimes want to add some database migrations (e.g. create test data), which we wouldn't do in production mode. Granted, we can already in the production value for `quarkus.flyway.locations` reference a file system location (within the Docker container) which doesn't even have to exist and then mount a volume for the migrations we need in our integration tests.\n\n### Expected behavior\n\nThe `quarkus.flyway.locations` property should not be overridable at runtime.\n\n### Actual behavior\n\nAt run-time the `quarkus.flyway.locations` property is re-read. So if it at launch of the application was set as a system property or environment variable, that value will be read.\n\n### How to Reproduce?\n\nI haven't created a reproducer, but if you need one I can look into that.\r\n\r\n1. Create a Quarkus application using the Flyway extension\r\n2. Build the application (producing the JAR)\r\n3. Set a breakpoint in the constructor of `FlywayContainerProducer`\r\n4. Start the application from the command line using `java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -Dquarkus.flyway.locations=foo -jar target/quarkus-app/quarkus-run.jar`\r\n5. Connect with the debugger\r\n6. When in the debugger inspecting the value of `flywayBuildConfig.defaultDataSource.locations` the value will be a list with a single entry `\"foo\"` in it\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.3.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20800/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20800/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36812",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36812/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36812/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36812/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36812",
+  "id": 1972162721,
+  "node_id": "I_kwDOCFbutM51jNCh",
+  "number": 36812,
+  "title": "Deserialization Errors Caused by Avro Classes being in the Wrong ClassLoader for Tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-11-01T11:09:23Z",
+  "updated_at": "2024-04-03T14:19:58Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe are previously using quarkus versions less that < 2.8 and are trying to upgrade to the latest version but we are having issues with the changes that have occurred with how AVRO is handled.\r\n\r\nWe are using gradle with a number of subprojects. As these services defined by these subprojects tend to communicate over kafka we separated out the avro (along with some related Java classes) to it's own subproject which the consumers and producers then add as an implementation dependency. Unfortunately when we try this on newer version of quarkus, specifically those that print an error message requiring us to import the quarkus-confluent-registry-avro extension things break.This seems to be after Quarkus 2.8\r\n\r\nIt appears that this is just a class loader issue related to tests as the service runs fine otherwise.\n\n### Expected behavior\n\nIntegration tests should be able to serialize and deserialize avro objects that are also used by non-test code.\n\n### Actual behavior\n\n```\r\njava.lang.ClassCastException: class org.acme.kafka.quarkus.Movie cannot be cast to class org.apache.avro.specific.SpecificRecord (org.acme.kafka.quarkus.Movie is in unnamed module of loader 'app'; org.apache.avro.specific.SpecificRecord is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @435871cb)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.getSpecificReaderSchema(AbstractKafkaAvroDeserializer.java:287)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.getReaderSchema(AbstractKafkaAvroDeserializer.java:253)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.getDatumReader(AbstractKafkaAvroDeserializer.java:193)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer$DeserializationContext.read(AbstractKafkaAvroDeserializer.java:392)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.deserialize(AbstractKafkaAvroDeserializer.java:114)\r\n\tat io.confluent.kafka.serializers.KafkaAvroDeserializer.deserialize(KafkaAvroDeserializer.java:53)\r\n\tat org.apache.kafka.common.serialization.Deserializer.deserialize(Deserializer.java:60)\r\n\tat io.smallrye.reactive.messaging.kafka.fault.DeserializerWrapper.lambda$deserialize$1(DeserializerWrapper.java:77)\r\n\tat io.smallrye.reactive.messaging.kafka.fault.DeserializerWrapper.wrapDeserialize(DeserializerWrapper.java:109)\r\n\tat io.smallrye.reactive.messaging.kafka.fault.DeserializerWrapper.deserialize(DeserializerWrapper.java:77)\r\n\tat org.apache.kafka.clients.consumer.internals.CompletedFetch.parseRecord(CompletedFetch.java:303)\r\n\tat org.apache.kafka.clients.consumer.internals.CompletedFetch.fetchRecords(CompletedFetch.java:264)\r\n\tat org.apache.kafka.clients.consumer.internals.AbstractFetch.fetchRecords(AbstractFetch.java:340)\r\n\tat org.apache.kafka.clients.consumer.internals.AbstractFetch.collectFetch(AbstractFetch.java:306)\r\n\tat org.apache.kafka.clients.consumer.KafkaConsumer.pollForFetches(KafkaConsumer.java:1330)\r\n\tat org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:1254)\r\n\tat org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:1227)\r\n\tat io.smallrye.reactive.messaging.kafka.impl.ReactiveKafkaConsumer.lambda$poll$4(ReactiveKafkaConsumer.java:187)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransform$UniOnItemTransformProcessor.onItem(UniOnItemTransform.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onItem(UniOperatorProcessor.java:47)\r\n\tat io.smallrye.mutiny.operators.uni.UniMemoizeOp.forwardTo(UniMemoizeOp.java:123)\r\n\tat io.smallrye.mutiny.operators.uni.UniMemoizeOp.subscribe(UniMemoizeOp.java:67)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniRunSubscribeOn.lambda$subscribe$0(UniRunSubscribeOn.java:27)\r\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\r\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\r\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\n\n### How to Reproduce?\n\nDownload the master branch of https://github.com/briancullen/quakus-avro-sample and run the integration tests for either the consumer or the producer.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.2\" 2022-01-18\n\n### Quarkus version or git rev\n\n3.5.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.2.1\n\n### Additional information\n\nThis was originally reported in https://github.com/quarkusio/quarkus/issues/31650 but I was unable to make the reproducer work at the time. In the end we didn't need to move the service involved but this has now become an issue with a different service.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36812/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36812/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

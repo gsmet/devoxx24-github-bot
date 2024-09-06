@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20952",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20952/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20952/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20952/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20952",
+  "id": 1033844084,
+  "node_id": "I_kwDOCFbutM49nzV0",
+  "number": 20952,
+  "title": "Cannot Stop Application Once It Is Started",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2021-10-22T18:24:52Z",
+  "updated_at": "2021-11-25T10:19:24Z",
+  "closed_at": "2021-11-25T10:19:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI created a simple application which starts to consume a stream of Tweets directly after the application startup with the annotation`@Startup`. It the publishes a selection of these Tweets to a Kafka topic. After I start the application in either dev mode or production mode (JAR or native), I cannot stop the application. Even though I close the terminal I started the application in, the application continues to consume tweets from the stream. When I run the application in dev mode through IntelliJ, I have to press the stop button twice to stop the application.\r\n\r\n### Expected behavior\r\n\r\nI want the application to stop when I press `Ctrl + C`.\r\n\r\n### Actual behavior\r\n\r\nThe application does not stop when I press `Ctrl + C` and have to restart my computer to stop the app.\r\n\r\n### How to Reproduce?\r\n\r\nThe relevant class which should be initiated automatically after application start:\r\n\r\n```java\r\n@Startup\r\n@ApplicationScoped\r\npublic class TwitterListener {\r\n\r\n  private static final Logger LOGGER = Logger.getLogger(TwitterListener.class);\r\n\r\n  @Inject\r\n  TwitterClient twitterClient;\r\n\r\n  @Inject\r\n  @Channel(\"tweets\")\r\n  Emitter<Tweet> tweetEmitter;\r\n\r\n  @PostConstruct\r\n  public void startListenerAfterConstruction() throws IOException, URISyntaxException {\r\n    final Map<String, String> rules = getRules();\r\n    final List<String> existingRules = twitterClient.getExistingRules();\r\n    if (!existingRules.isEmpty()) twitterClient.deleteRules(existingRules);\r\n    twitterClient.createRules(rules);\r\n\r\n    final Stream<Tweet> tweetStream = twitterClient.connectStream(1024); // Number defines size of BufferedStream\r\n    consumeStream(tweetStream);\r\n  }\r\n\r\n  private void consumeStream(final Stream<Tweet> tweetStream) {\r\n    tweetStream\r\n        .parallel()\r\n        .filter(tweet -> tweet.information().isPresent())\r\n        .peek(LOGGER::info)\r\n        .forEach(tweet -> tweetEmitter.send(tweet));\r\n  }\r\n}\r\n```\r\n\r\nA list of the dependencies:\r\n```xml\r\n  <dependencies>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-arc</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-rest-client-jackson</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.json</groupId>\r\n      <artifactId>json</artifactId>\r\n      <version>20210307</version>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.immutables</groupId>\r\n      <artifactId>value</artifactId>\r\n      <version>2.8.8</version>\r\n      <scope>provided</scope>\r\n    </dependency>\r\n\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-junit5</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.rest-assured</groupId>\r\n      <artifactId>rest-assured</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n  </dependencies>\r\n```\r\n\r\nThe rest of the `pom.xml` is standard and I did not any other plugins than the standard plugins.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux seifert-ubuntu 5.11.0-38-generic #42~20.04.1-Ubuntu SMP Tue Sep 28 20:41:07 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08) OpenJDK 64-Bit Server VM GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nGraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08)\r\n\r\n### Quarkus version or git rev\r\n\r\n2.3.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.1\r\n\r\n### Additional information\r\n\r\nIDE in which I can stop application after pressing stop twice: IntelliJ IDEA 2021.2.3 (Ultimate Edition)",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20952/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20952/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

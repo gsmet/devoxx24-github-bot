@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30537",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30537/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30537/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30537/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30537",
+  "id": 1552799406,
+  "node_id": "I_kwDOCFbutM5cjdau",
+  "number": 30537,
+  "title": "Environment variables don't appear to be properly processed in native binaries",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-01-23T09:52:10Z",
+  "updated_at": "2023-01-27T11:26:14Z",
+  "closed_at": "2023-01-27T11:26:14Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI use the following code to expand unexpanded values:\r\n```java\r\npublic static String expandedValueFrom(String unexpandedValue) {\r\n        final var context = new ConfigSourceInterceptorContext() {\r\n            private boolean firstLookup = true;\r\n\r\n            @Override\r\n            public ConfigValue proceed(final String name) {\r\n                if (firstLookup) {\r\n                    firstLookup = false;\r\n                    return ConfigValue.builder().withName(name).withValue(name).build();\r\n                } else {\r\n                    ConfigValue configValue = (ConfigValue) config.getConfigValue(name);\r\n                    return configValue.getValue() == null ? null : configValue;\r\n                }\r\n            }\r\n\r\n            @Override\r\n            public Iterator<String> iterateNames() {\r\n                throw new UnsupportedOperationException();\r\n            }\r\n\r\n            @Override\r\n            public Iterator<ConfigValue> iterateValues() {\r\n                throw new UnsupportedOperationException();\r\n            }\r\n        };\r\n        final var value = RESOLVER.getValue(context, unexpandedValue);\r\n        return value.getValue() == null ? unexpandedValue : value.getValue();\r\n    }\r\n```\r\n\r\nwhere `unexpandedValue` could be something like `${ENV_VAR_NAME}`.\r\nThis works just fine in JVM mode but doesn't when executing in a native binary. \r\nNot sure if this is a SmallRye Config issue, a Quarkus one or an interaction of both.\n\n### Expected behavior\n\nI'd expect the same behavior in both VM and native mode, with variables being expanded.\n\n### Actual behavior\n\n- VM mode:\r\n  `${NAMESPACE_FROM_ENV}` yields `ConfigValue{name='NAMESPACE_FROM_ENV', value='fromEnvVarNS', rawValue='fromEnvVarNS', profile='null', configSourceName='EnvConfigSource', configSourceOrdinal=300, configSourcePosition=3, lineNumber=-1}`\r\n- Native mode:\r\n  `${NAMESPACE_FROM_ENV}` yields `ConfigValue{name='NAMESPACE_FROM_ENV', value='null', rawValue='null', profile='null', configSourceName='null', configSourceOrdinal=0, configSourcePosition=0, lineNumber=-1}`\r\n\r\nEverything else being equivalent.\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"19.0.1\" 2022-10-18 OpenJDK Runtime Environment Temurin-19.0.1+10 (build 19.0.1+10) OpenJDK 64-Bit Server VM Temurin-19.0.1+10 (build 19.0.1+10, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30537/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30537/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

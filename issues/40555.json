@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40555",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40555/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40555/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40555/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40555",
+  "id": 2289744284,
+  "node_id": "I_kwDOCFbutM6Iermc",
+  "number": 40555,
+  "title": "Multiple `-H:+UnlockExperimentalVMOptions` and `-H:-UnlockExperimentalVMOptions` used when invoking `native-image` in the image build",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-05-10T13:32:25Z",
+  "updated_at": "2024-05-13T12:54:01Z",
+  "closed_at": "2024-05-13T12:54:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen building a Quarkus project to native, I noticed that the `native-image` command contains multiple `-H:+UnlockExperimentalVMOptions` and `-H:-UnlockExperimentalVMOptions`, which I believe are exclusive to each other.\r\n\r\nHere is the output:\r\n\r\n### GraalVM installed locally  \r\n\r\n```java\r\n$ mvn clean package -Dnative\r\n\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] /Users/ggastald/.sdkman/candidates/java/21.0.2-graalce/bin/native-image -J-DCoordinatorEnvironmentBean.transactionStatusManagerEnable=false -J-Dsun.nio.ch.maxUpdateArraySize=100 -J-Djava.util.logging.manager=org.jboss.logmanager.LogManager -J-Dlogging.initial-configurator.min-level=500 -J-Dvertx.logger-delegate-factory-class-name=io.quarkus.vertx.core.runtime.VertxLogDelegateFactory -J-Dvertx.disableDnsResolver=true -J-Dio.netty.leakDetection.level=DISABLED -J-Dio.netty.allocator.maxOrder=3 -J-Duser.language=en -J-Duser.country=BR -J-Dfile.encoding=UTF-8 --features=io.quarkus.caffeine.runtime.graal.CacheConstructorsFeature,io.quarkus.runner.Feature,io.quarkus.hibernate.orm.runtime.graal.DisableLoggingFeature,org.hibernate.graalvm.internal.GraalVMStaticFeature,io.quarkus.runtime.graal.DisableLoggingFeature -J--add-exports=java.security.jgss/sun.security.krb5=ALL-UNNAMED -J--add-opens=java.base/java.text=ALL-UNNAMED -J--add-opens=java.base/java.io=ALL-UNNAMED -J--add-opens=java.base/java.lang.invoke=ALL-UNNAMED -J--add-opens=java.base/java.util=ALL-UNNAMED -H:+UnlockExperimentalVMOptions -H:BuildOutputJSONFile=flyawy-sqlserver-native-reproducer-1.0.0-SNAPSHOT-runner-build-output-stats.json -H:-UnlockExperimentalVMOptions --strict-image-heap -H:+UnlockExperimentalVMOptions -H:+AllowFoldMethods -H:-UnlockExperimentalVMOptions -J-Djava.awt.headless=true --no-fallback --link-at-build-time -H:+UnlockExperimentalVMOptions -H:+ReportExceptionStackTraces -H:-UnlockExperimentalVMOptions -H:+AddAllCharsets --enable-url-protocols=http,https --enable-monitoring=heapdump -H:+UnlockExperimentalVMOptions -H:-UseServiceLoaderFeature -H:-UnlockExperimentalVMOptions -J--add-exports=org.graalvm.nativeimage/org.graalvm.nativeimage.impl=ALL-UNNAMED --exclude-config io\\.netty\\.netty-codec /META-INF/native-image/io\\.netty/netty-codec/generated/handlers/reflect-config\\.json --exclude-config io\\.netty\\.netty-handler /META-INF/native-image/io\\.netty/netty-handler/generated/handlers/reflect-config\\.json flyawy-sqlserver-native-reproducer-1.0.0-SNAPSHOT-runner -jar flyawy-sqlserver-native-reproducer-1.0.0-SNAPSHOT-runner.jar\r\n```\r\n\r\n### Building from a Docker Container \r\n\r\n```java \r\n$ mvn -Pnative clean package -Dquarkus.native.container-build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-22\r\n\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] docker run --env LANG=C --rm --user 501:20 -v /private/tmp/flyawy-sqlserver-native-reproducer/target/flyawy-sqlserver-native-reproducer-1.0.0-SNAPSHOT-native-image-source-jar:/project:z--name build-native-OxbFC quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-22 -J-Djava.util.logging.manager=org.jboss.logmanager.LogManager -J-Dlogging.initial-configurator.min-level=500 -J-DCoordinatorEnvironmentBean.transactionStatusManagerEnable=false -J-Dsun.nio.ch.maxUpdateArraySize=100 -J-Dvertx.logger-delegate-factory-class-name=io.quarkus.vertx.core.runtime.VertxLogDelegateFactory -J-Dvertx.disableDnsResolver=true -J-Dio.netty.leakDetection.level=DISABLED -J-Dio.netty.allocator.maxOrder=3 -J-Duser.language=en -J-Duser.country=BR -J-Dfile.encoding=UTF-8 --features=io.quarkus.runner.Feature,io.quarkus.runtime.graal.DisableLoggingFeature,org.hibernate.graalvm.internal.GraalVMStaticFeature,io.quarkus.hibernate.orm.runtime.graal.DisableLoggingFeature,io.quarkus.caffeine.runtime.graal.CacheConstructorsFeature -J--add-exports=java.security.jgss/sun.security.krb5=ALL-UNNAMED -J--add-opens=java.base/java.text=ALL-UNNAMED -J--add-opens=java.base/java.io=ALL-UNNAMED -J--add-opens=java.base/java.lang.invoke=ALL-UNNAMED -J--add-opens=java.base/java.util=ALL-UNNAMED -H:+UnlockExperimentalVMOptions -H:BuildOutputJSONFile=flyawy-sqlserver-native-reproducer-1.0.0-SNAPSHOT-runner-build-output-stats.json -H:-UnlockExperimentalVMOptions-H:+UnlockExperimentalVMOptions -H:+AllowFoldMethods -H:-UnlockExperimentalVMOptions -J-Djava.awt.headless=true --no-fallback --link-at-build-time -H:+UnlockExperimentalVMOptions -H:+ReportExceptionStackTraces -H:-UnlockExperimentalVMOptions -H:+AddAllCharsets --enable-url-protocols=http,https --enable-monitoring=heapdump -H:+UnlockExperimentalVMOptions -H:-UseServiceLoaderFeature -H:-UnlockExperimentalVMOptions -J--add-exports=org.graalvm.nativeimage/org.graalvm.nativeimage.impl=ALL-UNNAMED --exclude-config io\\.netty\\.netty-codec /META-INF/native-image/io\\.netty/netty-codec/generated/handlers/reflect-config\\.json --exclude-config io\\.netty\\.netty-handler /META-INF/native-image/io\\.netty/netty-handler/generated/handlers/reflect-config\\.json flyawy-sqlserver-native-reproducer-1.0.0-SNAPSHOT-runner -jar flyawy-sqlserver-native-reproducer-1.0.0-SNAPSHOT-runner.jar\r\n```\n\n### Expected behavior\n\nOnly `-H:+UnlockExperimentalVMOptions` is specified or nothing at all if no experimental VM options are set\n\n### Actual behavior\n\nSeveral `-H:+UnlockExperimentalVMOptions` and `-H:-UnlockExperimentalVMOptions` in the `native-image` invocation.\n\n### How to Reproduce?\n\n1. Generate a Quarkus project (using code.quarkus.io or the CLI) using the `quarkus-rest-jsonb` extension\r\n2. Build to native using `mvn clean package -Dnative`\r\n3. See the output. You may see the following warning: \r\n```\r\nWarning: The option '-H:IncludeResourceBundles=yasson-messages' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.\r\nWarning: Please re-evaluate whether any experimental option is required, and either remove or unlock it. The build output lists all active experimental options, including where they come from and possible alternatives. If you think an experimental option should be considered as stable, please file an issue.\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin MacBook-Pro-de-George 23.4.0 Darwin Kernel Version 23.4.0: Fri Mar 15 00:10:42 PDT 2024; root:xnu-10063.101.17~1/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"21.0.2\" 2024-01-16\n\n### Mandrel or GraalVM version (if different from Java)\n\nOpenJDK Runtime Environment GraalVM CE 21.0.2+13.1 (build 21.0.2+13-jvmci-23.1-b30)\n\n### Quarkus version or git rev\n\n3.10.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40555/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40555/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

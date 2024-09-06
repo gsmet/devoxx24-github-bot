@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36761",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36761/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36761/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36761/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36761",
+  "id": 1966747420,
+  "node_id": "I_kwDOCFbutM51Oi8c",
+  "number": 36761,
+  "title": "BlockingNotAllowedException with quarkus-rest-client-reactive when using gzip compression",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 18,
+  "created_at": "2023-10-28T21:38:41Z",
+  "updated_at": "2023-11-20T13:55:38Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nRESTEasy reactive client throws `BlockingNotAllowedException` when reading a GZIP compressed response. Whether the bug is triggered seems to depend on the operating system and the length of the response. The bug seems to appear only when the REST client's return type is `InputStream`.\r\n\r\n```\r\nquarkus.http.enable-compression=true\r\n```\r\n```java\r\n@GET\r\n@Path(\"/books\")\r\n@ClientHeaderParam(name = \"Accept-Encoding\", value = \"gzip\")\r\npublic InputStream getBooksStream(@QueryParam(\"input\") String input);\r\n```\n\n### Expected behavior\n\nNo BlockingNotAllowedException is thrown.\n\n### Actual behavior\n\nThe following exception is thrown:\r\n\r\n```\r\norg.jboss.resteasy.reactive.common.core.BlockingNotAllowedException: Attempting a blocking read on io thread\r\n        at org.jboss.resteasy.reactive.client.handlers.VertxClientInputStream$VertxBlockingInput.readBlocking(VertxClientInputStream.java:199)\r\n        at org.jboss.resteasy.reactive.client.handlers.VertxClientInputStream.readIntoBuffer(VertxClientInputStream.java:81)\r\n        at org.jboss.resteasy.reactive.client.handlers.VertxClientInputStream.read(VertxClientInputStream.java:62)\r\n        at org.jboss.resteasy.reactive.client.handlers.VertxClientInputStream.read(VertxClientInputStream.java:54)\r\n        at org.jboss.resteasy.reactive.client.handlers.VertxClientInputStream.read(VertxClientInputStream.java:45)\r\n        at java.base/java.util.zip.CheckedInputStream.read(CheckedInputStream.java:59)\r\n        at java.base/java.util.zip.GZIPInputStream.readUByte(GZIPInputStream.java:277)\r\n        at java.base/java.util.zip.GZIPInputStream.readUShort(GZIPInputStream.java:269)\r\n        at java.base/java.util.zip.GZIPInputStream.readHeader(GZIPInputStream.java:175)\r\n        at java.base/java.util.zip.GZIPInputStream.<init>(GZIPInputStream.java:79)\r\n        at java.base/java.util.zip.GZIPInputStream.<init>(GZIPInputStream.java:91)\r\n        at org.jboss.resteasy.reactive.client.interceptors.ClientGZIPDecodingInterceptor.aroundReadFrom(ClientGZIPDecodingInterceptor.java:26)\r\n        at org.jboss.resteasy.reactive.client.impl.ClientReaderInterceptorContextImpl.proceed(ClientReaderInterceptorContextImpl.java:133)\r\n        at org.jboss.resteasy.reactive.client.impl.ClientSerialisers.invokeClientReader(ClientSerialisers.java:160)\r\n        at org.jboss.resteasy.reactive.client.impl.RestClientRequestContext.readEntity(RestClientRequestContext.java:198)\r\n        at org.jboss.resteasy.reactive.client.handlers.ClientResponseCompleteRestHandler.mapToResponse(ClientResponseCompleteRestHandler.java:104)\r\n        at org.jboss.resteasy.reactive.client.handlers.ClientResponseCompleteRestHandler.handle(ClientResponseCompleteRestHandler.java:35)\r\n        at org.jboss.resteasy.reactive.client.handlers.ClientResponseCompleteRestHandler.handle(ClientResponseCompleteRestHandler.java:31)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.invokeHandler(AbstractResteasyReactiveContext.java:231)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualRunnable.run(SlowContextualRunnable.java:19)\r\n        at org.jboss.resteasy.reactive.client.handlers.ClientSwitchToRequestContextRestHandler$1$1.handle(ClientSwitchToRequestContextRestHandler.java:38)\r\n        at org.jboss.resteasy.reactive.client.handlers.ClientSwitchToRequestContextRestHandler$1$1.handle(ClientSwitchToRequestContextRestHandler.java:35)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:277)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:259)\r\n        at io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:566)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:1583)\r\n```\n\n### How to Reproduce?\n\nReproducer: [code-with-quarkus.zip](https://github.com/quarkusio/quarkus/files/13196747/code-with-quarkus.zip)\r\n\r\n1. Run `mvn -Dtest=\"org.acme.BookApiTest#testGetBooksStream\" test` to induce the error.\r\n\n\n### Output of `uname -a` or `ver`\n\nCYGWIN_NT-10.0-22000 DESKTOP 3.4.9-1.x86_64 2023-09-06 11:19 UTC x86_64 Cygwin\n\n### Output of `java -version`\n\nopenjdk version \"21\" 2023-09-19\n\n### Quarkus version or git rev\n\n3.5.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.4\n\n### Additional information\n\nAlso reproducible with Java 17.0.8 on Linux and Windows.\r\n\r\nThe problem proved somewhat tricky to reproduce on Windows where the test code needs to send multiple requests with different response lengths to find one that triggers the bug. On Linux (Debian 4.19.289-2) any response length seems to trigger it.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36761/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36761/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

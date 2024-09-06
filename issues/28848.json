@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28848",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28848/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28848/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28848/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28848",
+  "id": 1423766097,
+  "node_id": "I_kwDOCFbutM5U3PJR",
+  "number": 28848,
+  "title": "Nested enums in avro schema may be produced but not consumed",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-10-26T10:05:29Z",
+  "updated_at": "2022-11-14T08:08:30Z",
+  "closed_at": "2022-11-14T08:08:30Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have an avro schema, that defines a record, that contains another record with a field of type enum:\r\n\r\n```\r\n\"type\": \"record\",\r\n  \"name\": \"PersonUpdated\",\r\n  \"namespace\": \"ch.abraxas.steuern.polaris.personenregister.api.event\",\r\n  \"fields\": [\r\n    {\r\n      \"name\": \"partner\",\r\n      \"default\": null,\r\n      \"type\": [\r\n        \"null\",\r\n        {\r\n          \"type\": \"record\",\r\n          \"name\": \"NatuerlichePerson\",\r\n          \"fields\": [\r\n            {\r\n              \"name\": \"geschlecht\",\r\n              \"type\": {\r\n                \"type\": \"enum\",\r\n                \"name\": \"Geschlecht\",\r\n                \"namespace\": \"ch.abraxas.steuern.polaris.personenregister.api.event\",\r\n                \"symbols\": [\r\n                  \"UNBESTIMMT\"\r\n                ]\r\n...\r\n```\r\n\r\nProducing such a record works fine. Also autoregistering at schema registry works fine.\r\n\r\nBut consumptions of such a record fails with:\r\nA failure has been reported for Kafka topics '[movies]': org.apache.avro.SchemaParseException: \"Geschlecht\" is not a defined name. The type of the \"geschlecht\" field must be a defined name or a {\"type\": ...} expression.\r\n\r\nIf the enum is defined on top level, as field of record ch.abraxas.steuern.polaris.personenregister.api.eventPersonUpdated, then all works fine.\r\n\n\n### Expected behavior\n\nWith Quarkus 2.9.1.Final all worked fine\n\n### Actual behavior\n\nWith Quarkus 2.13.3.Final only producing works. Consumption of a record produced by the same application fails with:\r\nA failure has been reported for Kafka topics '[movies]': org.apache.avro.SchemaParseException: \"Geschlecht\" is not a defined name. The type of the \"geschlecht\" field must be a defined name or a {\"type\": ...} expression.\r\n\n\n### How to Reproduce?\n\nReproducer:\r\ngit@github.com:anchou-bockhorn/reproducer_avro_issue.git\r\n\r\nSteps:\r\n1.  ./mvnw quarkus:dev # Start application\r\n2. curl -X GET http://localhost:8080/movies # produce record\r\n3. curl -N http://localhost:8080/consumed-movies # consume record\n\n### Output of `uname -a` or `ver`\n\nLinux axabo-Lenovo 5.15.0-46-generic #49~20.04.1-Ubuntu SMP Thu Aug 4 19:15:44 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.16.1\" 2022-08-12 LTS OpenJDK Runtime Environment Corretto-11.0.16.9.1 (build 11.0.16.1+9-LTS) OpenJDK 64-Bit Server VM Corretto-11.0.16.9.1 (build 11.0.16.1+9-LTS, mixed mode)\n\n### GraalVM version (if different from Java)\n\n-\n\n### Quarkus version or git rev\n\n2.13.3.Final \n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63) Maven home: /home/axabo/.m2/wrapper/dists/apache-maven-3.8.6-bin/67568434/apache-maven-3.8.6 Java version: 11.0.16.1, vendor: Amazon.com Inc., runtime: /opt/corretto-11-jdk Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.0-46-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28848/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28848/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

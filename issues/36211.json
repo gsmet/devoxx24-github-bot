@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36211",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36211/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36211/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36211/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36211",
+  "id": 1919101366,
+  "node_id": "I_kwDOCFbutM5yYym2",
+  "number": 36211,
+  "title": "Hibernate reactive with panache exception when lazily loading a byte array",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2023-09-29T11:29:14Z",
+  "updated_at": "2023-09-29T14:49:35Z",
+  "closed_at": "2023-09-29T13:46:03Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have the following class, with a \"data\" field that is a byte array.\r\n\r\n```java\r\n@Entity\r\npublic class Storage extends PanacheEntity {\r\n    @Lob\r\n    @Basic(fetch = FetchType.LAZY)\r\n    @Column(nullable = false)\r\n    public byte[] data;\r\n}\r\n```\r\n\r\nI need to load it lazily, but when I try to do it I have the following exception:\r\n```\r\n2023-09-29 08:06:55,106 ERROR [com.tha.ota.exc.ThrowableMapper] (vert.x-eventloop-thread-3) class java.util.concurrent.CompletableFuture cannot be cast to class [B (java.util.concurrent.CompletableFuture and [B are in module java.base of loader 'bootstrap'): java.lang.ClassCastException: class java.util.concurrent.CompletableFuture cannot be cast to class [B (java.util.concurrent.CompletableFuture and [B are in module java.base of loader 'bootstrap')\r\n        at com.example.$$_hibernate_read_data(StoredFile.java)\r\n        at com.example.StoredFile.getData(StoredFile.java)\r\n        at com.example.StorageController.lambda$download$1(StorageController.java:83)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualConsumer.accept(SlowContextualConsumer.java:21)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemConsume$UniOnItemComsumeProcessor.invokeEventHandler(UniOnItemConsume.java:77)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemConsume$UniOnItemComsumeProcessor.onItem(UniOnItemConsume.java:42)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:60)\r\n        at io.smallrye.mutiny.operators.uni.builders.DefaultUniEmitter.complete(DefaultUniEmitter.java:37)\r\n        at io.smallrye.mutiny.groups.UniOnNull.lambda$failWith$1(UniOnNull.java:46)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualBiConsumer.accept(SlowContextualBiConsumer.java:21)\r\n        at io.smallrye.mutiny.groups.UniOnItem.lambda$transformToUni$4(UniOnItem.java:177)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualConsumer.accept(SlowContextualConsumer.java:21)\r\n        at io.smallrye.mutiny.operators.uni.builders.UniCreateWithEmitter.subscribe(UniCreateWithEmitter.java:22)\r\n        at io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.performInnerSubscription(UniOnItemTransformToUni.java:81)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:57)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:60)\r\n        at io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onItem(UniOperatorProcessor.java:47)\r\n        at io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage$CompletionStageUniSubscription.forwardResult(UniCreateFromCompletionStage.java:63)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:863)\r\n        at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:841)\r\n        at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n        at java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2147)\r\n        at org.hibernate.reactive.util.async.impl.AsyncTrampoline$TrampolineInternal.unroll(AsyncTrampoline.java:131)\r\n        at org.hibernate.reactive.util.async.impl.AsyncTrampoline$TrampolineInternal.lambda$unroll$0(AsyncTrampoline.java:126)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:863)\r\n        at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:841)\r\n        at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n        at java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2147)\r\n        at io.vertx.core.Future.lambda$toCompletionStage$3(Future.java:536)\r\n        at io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n        at io.vertx.core.impl.future.FutureBase.emitSuccess(FutureBase.java:60)\r\n        at io.vertx.core.impl.future.FutureImpl.tryComplete(FutureImpl.java:211)\r\n        at io.vertx.core.impl.future.PromiseImpl.tryComplete(PromiseImpl.java:23)\r\n        at io.vertx.sqlclient.impl.QueryResultBuilder.tryComplete(QueryResultBuilder.java:88)\r\n        at io.vertx.sqlclient.impl.QueryResultBuilder.tryComplete(QueryResultBuilder.java:32)\r\n        at io.vertx.core.Promise.complete(Promise.java:66)\r\n        at io.vertx.core.Promise.handle(Promise.java:51)\r\n        at io.vertx.core.Promise.handle(Promise.java:29)\r\n        at io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n        at io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n        at io.vertx.core.impl.EventLoopContext.execute(EventLoopContext.java:86)\r\n        at io.vertx.core.impl.DuplicatedContext.execute(DuplicatedContext.java:184)\r\n        at io.vertx.core.impl.future.FutureBase.emitSuccess(FutureBase.java:51)\r\n        at io.vertx.core.impl.future.FutureImpl.tryComplete(FutureImpl.java:211)\r\n        at io.vertx.core.impl.future.PromiseImpl.tryComplete(PromiseImpl.java:23)\r\n        at io.vertx.core.impl.future.PromiseImpl.onSuccess(PromiseImpl.java:49)\r\n        at io.vertx.core.impl.future.PromiseImpl.handle(PromiseImpl.java:41)\r\n        at io.vertx.core.impl.future.PromiseImpl.handle(PromiseImpl.java:23)\r\n        at io.vertx.sqlclient.impl.command.CommandResponse.fire(CommandResponse.java:46)\r\n        at io.vertx.sqlclient.impl.SocketConnectionBase.handleMessage(SocketConnectionBase.java:325)\r\n        at io.vertx.sqlclient.impl.SocketConnectionBase.lambda$init$0(SocketConnectionBase.java:138)\r\n        at io.vertx.core.impl.EventLoopContext.emit(EventLoopContext.java:55)\r\n        at io.vertx.core.impl.ContextBase.emit(ContextBase.java:297)\r\n        at io.vertx.core.net.impl.NetSocketImpl.handleMessage(NetSocketImpl.java:378)\r\n        at io.vertx.core.net.impl.ConnectionBase.read(ConnectionBase.java:159)\r\n        at io.vertx.core.net.impl.VertxHandler.channelRead(VertxHandler.java:153)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n        at io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:436)\r\n        at io.vertx.mysqlclient.impl.codec.MySQLEncoder.handleCommandResponse(MySQLEncoder.java:63)\r\n        at io.vertx.mysqlclient.impl.codec.QueryCommandBaseCodec.handleAllResultsetDecodingCompleted(QueryCommandBaseCodec.java:175)\r\n        at io.vertx.mysqlclient.impl.codec.ExtendedQueryCommandBaseCodec.handleAllResultsetDecodingCompleted(ExtendedQueryCommandBaseCodec.java:51)\r\n        at io.vertx.mysqlclient.impl.codec.QueryCommandBaseCodec.handleSingleResultsetDecodingCompleted(QueryCommandBaseCodec.java:136)\r\n        at io.vertx.mysqlclient.impl.codec.QueryCommandBaseCodec.handleRows(QueryCommandBaseCodec.java:124)\r\n        at io.vertx.mysqlclient.impl.codec.QueryCommandBaseCodec.decodePayload(QueryCommandBaseCodec.java:66)\r\n        at io.vertx.mysqlclient.impl.codec.ExtendedQueryCommandCodec.decodePayload(ExtendedQueryCommandCodec.java:108)\r\n        at io.vertx.mysqlclient.impl.codec.MySQLDecoder.decodePackets(MySQLDecoder.java:72)\r\n        at io.vertx.mysqlclient.impl.codec.MySQLDecoder.channelRead(MySQLDecoder.java:48)\r\n        at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:251)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:346)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:318)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n        at io.netty.channel.DefaultChannelPipeline$HeadContexelRead(DefaultChannelPipeline.java:1410)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n        at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:919)\r\n        at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:788)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\nLooks like it's trying to directly cast CompletableFuture to the byte array, and I don't understand why or how to fix it.\r\nIf I change the \"data\" to FetchType.EAGER it works fine.\r\n\r\nJust an example of how I'm loading the entity (It works fine with EAGER, only fails with LAZY loading the byte array) :\r\n```java\r\n@GET\r\n@Path(\"/{id}\")\r\n@WithSession\r\npublic Uni<byte[]> download(@PathParam(\"id\") long id) {\r\n    return StoredFile.<StoredFile>findById(id)\r\n            .onItem().ifNull().failWith(NotFoundException::new)\r\n            .invoke(s -> System.out.println(s.data))\r\n            .map(s -> s.data);\r\n}\r\n```\n\n### Expected behavior\n\nLoad a byte array lazily\n\n### Actual behavior\n\nException class java.util.concurrent.CompletableFuture cannot be cast to class [B\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux 5.15.90.1-microsoft-standard-WSL2\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 LTS OpenJDK Runtime Environment Corretto-17.0.7.7.1 (build 17.0.7+7-LTS) OpenJDK 64-Bit Server VM Corretto-17.0.7.7.1 (build 17.0.7+7-LTS, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.4.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.9.2\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36211/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36211/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

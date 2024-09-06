@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33564",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33564/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33564/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33564/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33564",
+  "id": 1722519055,
+  "node_id": "I_kwDOCFbutM5mq44P",
+  "number": 33564,
+  "title": "The FastBootEntityManagerFactoryBuilder doesn't allow us to decorate the SessionFactory",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-05-23T17:40:35Z",
+  "updated_at": "2024-03-19T07:25:45Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHibernate Core provides the `EntityManagerFactoryBuilderImpl` so that when building an `EntityManagerFactory`, the `SessionFactoryBuilder` SPI is used, like this:\r\n\r\n```\r\npublic EntityManagerFactory build() {\r\n\tSessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();\r\n\tpopulate( sfBuilder, standardServiceRegistry );\r\n\r\n\ttry {\r\n\t\treturn sfBuilder.build();\r\n\t}\r\n\tcatch (Exception e) {\r\n\t\tthrow persistenceException( \"Unable to build Hibernate SessionFactory\", e );\r\n\t}\r\n}\r\n```\r\n\r\nQuarkus does not do that. Instead, it creates a hardcoded `SessionFactoryImpl` in the `FastBootEntityManagerFactoryBuilder`, like this:\r\n\r\n```\r\npublic EntityManagerFactory build() {\r\n\ttry {\r\n\t\tSessionFactoryOptionsBuilder optionsBuilder = this.metadata.buildSessionFactoryOptionsBuilder();\r\n\t\tthis.populate(this.persistenceUnitName, optionsBuilder, this.standardServiceRegistry);\r\n\t\treturn new SessionFactoryImpl(this.metadata, optionsBuilder.buildOptions(), this.metadata.getTypeConfiguration().getMetadataBuildingContext().getBootstrapContext());\r\n\t} catch (Exception var2) {\r\n\t\tthrow this.persistenceException(\"Unable to build Hibernate SessionFactory\", var2);\r\n\t}\r\n}\r\n```\n\n### Expected behavior\n\nThe `FastBootEntityManagerFactoryBuilder` should use the `SessionFactoryBuilder` so that applications can decorate the Hibernate `SessionFactory` via this SPI mechanism. \n\n### Actual behavior\n\nThe `SessionFactoryImpl` is instantiated no matter if we declare a `org.hibernate.boot.spi.SessionFactoryBuilderFactory` SPI.\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33564/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33564/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

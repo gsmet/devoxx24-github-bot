@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20537",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20537/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20537/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20537/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20537",
+  "id": 1016111633,
+  "node_id": "I_kwDOCFbutM48kKIR",
+  "number": 20537,
+  "title": "Header lost in DLQ failure strategy",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2021-10-05T09:45:59Z",
+  "updated_at": "2021-12-06T13:57:04Z",
+  "closed_at": "2021-10-24T19:19:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n\r\n\r\nI am implementing a retry policy in my project in quarkus. Here's the pitch : I produce a Kafka message who's consumed in several place in my project. If for any reason one of this consumer fails to handle this message, it's nacked and publish in a retry topic using the dead-letter-queue failure strategy.\r\n\r\nThe messages from this topic are handle by another consumer who try to republish it in the original topic while adding a \"retryCount\" header. The message will then be consumed again by the faulty consumer, who will either succeed or fail again and publish it back in the retry topic.\r\n\r\nHere is my issue :\r\n\r\nThe headers won't persist after first retry. After first fail, the message is succesfully pushed in the error topic, then pushed back in its original topic with the new custom header, but if the consumer fail once more and push the message in the error topic again, my custom header doesn't exist anymore.\r\n\r\nhttps://github.com/smallrye/smallrye-reactive-messaging/blob/d09d8b97cba72988f7c06f6ceec81b4a1a322a7d/smallrye-reactive-messaging-kafka/src/main/java/io/smallrye/reactive/messaging/kafka/fault/KafkaDeadLetterQueue.java#L129 This seems to show that headers are kept when pushed in DLQ but in my consumer, it doesn't\r\n\r\n    @ApplicationScoped\r\n    @ActivateRequestContext\r\n    @Slf4j\r\n    public class KafkaErrorConsumer {\r\n    private final KafkaRetry kafkaRetry;\r\n    private String insanity = \"Insanity is doing the same thing over and over again and expecting a different result\";\r\n\r\n    @Inject\r\n    public KafkaErrorConsumer(KafkaRetry kafkaRetry) {\r\n        this‧kafkaRetry = kafkaRetry;\r\n    }\r\n\r\n    @NonBlocking\r\n    @Incoming(KafkaTopics.KAFKA_ERROR_EVENT)\r\n\r\n    public CompletionStage<Void> handle(Message<String> event) throws BusinessException, InterruptedException {\r\n\r\n    var metadata = event‧getMetadata(IncomingKafkaRecordMetadata‧class)\r\n                        .orElseThrow(() -> new IllegalArgumentException(\"Expected a message coming from Kafka\"));\r\n    String reason = new String(metadata‧getHeaders().lastHeader(\"dead-letter-reason\").value());\r\n    String topic = new String(metadata‧getHeaders().lastHeader(\"dead-letter-topic\").value());\r\n    \r\n    Instant timeStamp = metadata‧getTimestamp();\r\n    if (!reason‧equals(insanity)) {\r\n        log‧info(\"\"\"\r\n                                    \r\n                Received failed event : {}\r\n                from : {}\r\n                because of : {}\"\"\", event‧getPayload(), topic, reason);\r\n        kafkaRetry‧execute(event, topic);\r\n\r\n        return event‧ack();\r\n    } else {\r\n        metadata‧getHeaders().forEach(header -> log‧info(new String(header‧value())));\r\n\r\nI enter the \"else\" durind second retry, so the custom header shoud be there, as it was added after first fail, but it's not.\r\n\r\n\r\n### Expected behavior\r\n\r\nheaders should be kept while pushing the message in the DLQ, as shown in this :\r\nhttps://github.com/smallrye/smallrye-reactive-messaging/blob/d09d8b97cba72988f7c06f6ceec81b4a1a322a7d/smallrye-reactive-messaging-kafka/src/main/java/io/smallrye/reactive/messaging/kafka/fault/KafkaDeadLetterQueue.java#L129\r\n\r\n### Actual behavior\r\n\r\nHeaders are overwritten and \r\n`metadata‧getHeaders().lastHeader(\"retryCount\")` return null\r\n\r\n### How to Reproduce?\r\n\r\nHow to rerpoduce :\r\n\r\n1) nack a message in a topic with dead letter queue failure strategy enabled via quarkus conf\r\n2) consume this message, add a custom header, push it in its original topic\r\n3) consume this message again, check the custom header, nack the message if the header is present so it goes in the DLQ topic\r\n4) consume this message once more, custom header is gone\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux 5.14.7-2-MANJARO #1 SMP PREEMPT Wed Sep 22 12:22:56 UTC 2021 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17\" 2021-09-14 OpenJDK Runtime Environment (build 17+35-2724) OpenJDK 64-Bit Server VM (build 17+35-2724, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.2 (NON_CANONICAL)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20537/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20537/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

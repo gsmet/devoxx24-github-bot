@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34959",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34959/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34959/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34959/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34959",
+  "id": 1818577925,
+  "node_id": "I_kwDOCFbutM5sZUwF",
+  "number": 34959,
+  "title": "Using the Uni or ManagedExecutor or other async calls does not release DB connection at end of transaction",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 3700813587,
+      "node_id": "LA_kwDOCFbutM7cle8T",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/context-propagation",
+      "name": "area/context-propagation",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2023-07-24T14:46:23Z",
+  "updated_at": "2023-07-25T06:42:24Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a Quartz job and an endpoint that calls a service with the goal of running a store procedure, but I want this done asynchronous. For this I started by creating a Uni that has to make a call to the repository that will then execute the store procedure. After Completing the transaction of the worker, in the database pool, the connection it was being used by the worker stays in the active state and does not goes into idle.\r\nIf I the code is executed multiple times, it leaves with multiple connections in the active state equal to the number of times the code is executed.\r\nSince I have a max pool of 20 (default value), after I have this max as active connections the pod goes into a state that cannot acquire new connections and then I have to restart it.\r\n\r\nI am using for database Postgresql version 13.11\r\n\r\nInitial Code:\r\n\r\n```\r\n@ApplicationScoped\r\n@Transactional(Transactional.TxType.REQUIRED)\r\npublic class EntityCommandServiceImpl implements EntityCommandService {\r\n\r\n    private static final Logger LOGGER = Logger.getLogger(EntityCommandServiceImpl.class);\r\n    private static final String ENTITY_METRIC_NAME = \"entity\";\r\n    private static final String ENTITY_METRIC_DESCRIPTION =\r\n            \"Metrics regarding the process of fetching the entity.\";\r\n\r\n    @Inject\r\n    EntityRepository entityRepository;\r\n\r\n    @Override\r\n    @Timed(value = ENTITY_METRIC_NAME, description = ENTITY_METRIC_DESCRIPTION)\r\n    public void fetchEntity() {\r\n        final UUID itemId = UUID.randomUUID();\r\n        LOGGER.infof(\"Starting to fetch entity (processingId=%s).\", itemId);\r\n\r\n        Uni.createFrom()\r\n                .item(itemId)\r\n                .emitOn(Infrastructure.getDefaultWorkerPool())\r\n                .subscribe()\r\n                .with(this::worker);\r\n    }\r\n\r\n    private Uni<Void> worker(final UUID uuid) {\r\n        LOGGER.infof(\"Starting worker for fetching entity (processingId=%s).\", uuid.toString());\r\n\r\n        try {\r\n            this.entityRepository.fetchEntity();\r\n        } catch (final StoredProcedureException exception) {\r\n            LOGGER.infof(\"Could not fetch entity (processingId=%s).\", uuid.toString());\r\n        }\r\n\r\n        LOGGER.infof(\"Finished worker for fetching entity (processingId=%s).\", uuid.toString());\r\n        return Uni.createFrom().voidItem();\r\n    }\r\n}\r\n```\r\n\r\n\r\nAfter I identified the issue was here, I tried this next solution that gave the same issue:\r\n\r\n```\r\n@ApplicationScoped\r\n@Transactional(Transactional.TxType.REQUIRED)\r\npublic class EntityCommandServiceImpl implements EntityCommandService {\r\n\r\n    private static final Logger LOGGER = Logger.getLogger(EntityCommandServiceImpl.class);\r\n    private static final String ENTITY_METRIC_NAME = \"entity\";\r\n    private static final String ENTITY_METRIC_DESCRIPTION =\r\n            \"Metrics regarding the process of fetching the entity.\";\r\n\r\n    @Inject\r\n    EntityRepository entityRepository;\r\n\r\n    @Override\r\n    @Timed(value = ENTITY_METRIC_NAME, description = ENTITY_METRIC_DESCRIPTION)\r\n    public void fetchEntity() {\r\n        final UUID itemId = UUID.randomUUID();\r\n        LOGGER.infof(\"Starting to fetch entity (processingId=%s).\", itemId);\r\n\r\n        ManagedExecutor executor = ManagedExecutor.builder()\r\n                .maxAsync(5)\r\n                .propagated(ThreadContext.CDI,\r\n                            ThreadContext.TRANSACTION)\r\n                .build();\r\n\r\n        ThreadContext threadContext = ThreadContext.builder()\r\n                .propagated(ThreadContext.CDI,\r\n                            ThreadContext.TRANSACTION)\r\n                .build();\r\n\r\n        executor.runAsync(threadContext.contextualRunnable(() -> this.worker(itemId)));\r\n    }\r\n\r\n    private void worker(final UUID uuid) {\r\n        LOGGER.infof(\"Starting worker for fetching entity (processingId=%s).\", uuid.toString());\r\n\r\n        try {\r\n            this.entityRepository.fetchEntity();\r\n        } catch (final StoredProcedureException exception) {\r\n            LOGGER.infof(\"Could not fetch entity (processingId=%s).\", uuid.toString());\r\n        }\r\n\r\n        LOGGER.infof(\"Finished worker for fetching entity (processingId=%s).\", uuid.toString());\r\n    }\r\n}\r\n```\r\n\r\nRepository:\r\n\r\n```\r\n@ApplicationScoped\r\n@Transactional(Transactional.TxType.SUPPORTS)\r\npublic class EntityCustomRepositoryImpl implements EntityCustomRepository {\r\n\r\n    private static final Logger LOGGER = Logger.getLogger(EntityCustomRepositoryImpl.class);\r\n\r\n    private static final String FN_FETCH_ENTITY = \"fn_fetch_entity\";\r\n    private static final String CONNECTION_STRING_PARAMETER = \"dblink\";\r\n    private static final String RESULT_PARAMETER = \"result\";\r\n\r\n    /**\r\n     * host for connection.\r\n     */\r\n    @ConfigProperty(name = \"host\")\r\n    String host;\r\n\r\n    /**\r\n     * port for connection.\r\n     */\r\n    @ConfigProperty(name = \"port\")\r\n    int port;\r\n\r\n    /**\r\n     * database name for connection.\r\n     */\r\n    @ConfigProperty(name = \"name\")\r\n    String name;\r\n\r\n    /**\r\n     * user name for connection.\r\n     */\r\n    @ConfigProperty(name = \"user\")\r\n    String user;\r\n\r\n    /**\r\n     * password for connection.\r\n     */\r\n    @ConfigProperty(name = \"password\")\r\n    String password;\r\n\r\n    /**\r\n     * The entity manager for the repository\r\n     */\r\n    @PersistenceContext\r\n    EntityManager entityManager;\r\n\r\n\r\n    @Override\r\n    public void fetchEntity() throws StoredProcedureException {\r\n        final FunctionResultDTO result = executeFetchEntityFunction();\r\n        this.validateResultFetchEntity(result);\r\n        LOGGER.info(\"Fetching entity executed successfully\");\r\n    }\r\n\r\n    private FunctionResultDTO executeFetchEntityFunction() {\r\n        final DBConnectionString connectionString = DBConnectionString.builder()\r\n                .dbName(this.name)\r\n                .host(this.host)\r\n                .port(this.port)\r\n                .user(this.user)\r\n                .password(this.password)\r\n                .build();\r\n\r\n        final StoredProcedureQuery function = this.entityManager.createStoredProcedureQuery(FN_FETCH_ENTITY);\r\n        function.registerStoredProcedureParameter(CONNECTION_STRING_PARAMETER, String.class, ParameterMode.IN);\r\n        function.registerStoredProcedureParameter(RESULT_PARAMETER, String.class, ParameterMode.OUT);\r\n        function.setParameter(CONNECTION_STRING_PARAMETER, connectionString.toString());\r\n\r\n        function.execute();\r\n\r\n        return this.jsonParserUtil.parse((String) function.getOutputParameterValue(RESULT_PARAMETER), FunctionResultDTO.class);\r\n    }\r\n\r\n    private void validateResultFetchEntity(final FunctionResultDTO functionResultDTO) throws StoredProcedureException {\r\n        if (functionResultDTO == null) {\r\n            throw new StoredProcedureException(\"Stored procedure returned null\");\r\n        }\r\n\r\n        final int errorResult = 1;\r\n        if (functionResultDTO.getExecutionStatus() == errorResult) {\r\n            if (LOGGER.isEnabled(Logger.Level.ERROR)) {\r\n                LOGGER.errorf(\"Function for fetching entity executed with error. \"\r\n                              + \"Output: {executionStatus: %d, errorName: %s})\", functionResultDTO.getExecutionStatus(),\r\n                              functionResultDTO.getErrorName());\r\n            }\r\n\r\n            throw new StoredProcedureException(functionResultDTO.getErrorName());\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nNote that I also tried without the ThreadContext\r\n\r\nAfter all this and with no solution that I could find, had to change it back to a synchronous solution.\r\n\r\nI tried to set the max lifetime of the database connection but it didn't kill the active connections only the idle ones.\r\nquarkus.datasource.jdbc.max-lifetime= 5M\r\n\r\n### Expected behavior\r\n\r\nI expect that at the end of the transaction the connection to the database goes back into idle state.\r\n\r\n### Actual behavior\r\n\r\nThe database transaction stays in active state forever\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17.0.2\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.9.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmaven 3.8.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34959/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34959/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

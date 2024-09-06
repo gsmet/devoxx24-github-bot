@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41466",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41466/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41466/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41466/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41466",
+  "id": 2375111106,
+  "node_id": "I_kwDOCFbutM6NkVHC",
+  "number": 41466,
+  "title": "Arc: declare a synthetic, runtime-initialized bean as eagerly initialized (if conditions met)",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2024-06-26T11:44:41Z",
+  "updated_at": "2024-07-29T10:11:49Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nSome Quarkus extensions would need Arc to expose the ability to declare a synthetic, runtime-initialized bean as initialized on startup -- under some circumstances.\r\n\r\nBriefly, here's the situation:\r\n\r\n* By design, `Datasource` beans are defined at build time, when we have incomplete information about the runtime environment.\r\n* Application developers may not actually use all datasources at runtime:\r\n   * The default datasource being defined implicitly, it's possble the user didn't even want it in the first place.\r\n   * In some cases (e.g. Keycloak) the application is distributed as a binary, thus it must define a static list of datasources (postgres, oracle, mysql, sql server, ...), and people running the binary will decide to use only one of these by [activating it](https://quarkus.io/guides/datasource#datasource-active).\r\n* Application developers may forget to configure a datasource (set the JDBC URL) at runtime.\r\n\r\nAnd here's the need:\r\n\r\n* We want startup to fail if the application contains a _user_ bean that gets injected with an _active_ , _unconfigured_ (no JDBC URL) datasource.\r\n* We want programmatic retrieval of such bean to fail similarly -- on retrieval, not when the bean is actually used!\r\n* We want the failures to include actionable messages:\r\n  * The root cause for the problem, specific to each bean: \"This datasource is inactive because `quarkus.datasource.active` is set to false\"\r\n  * For injected beans, the list of injection points\r\n* We want the failure to have a specific exception type, so that programmatic retrieval can catch it and ignore it (e.g. for Agroal [metrics](https://github.com/quarkusio/quarkus/blob/5bbae6fc32ca65188b91d0f86db987fde727332f/extensions/agroal/runtime/src/main/java/io/quarkus/agroal/runtime/metrics/AgroalMetricsRecorder.java)/[health](https://github.com/quarkusio/quarkus/blob/5ee3dc6dae8970e48370606fe888a8ca0ecb20b3/extensions/agroal/runtime/src/main/java/io/quarkus/agroal/runtime/health/DataSourceHealthCheck.java#L29), or [Flyway](https://github.com/quarkusio/quarkus/blob/5bbae6fc32ca65188b91d0f86db987fde727332f/extensions/flyway/runtime/src/main/java/io/quarkus/flyway/runtime/FlywayRecorder.java#L58-L57)/Liquibase: those consumers just want to ignore datasources that are not available).\r\n\r\nNote that this is not specific to datasources: other extensions need a similar feature (Hibernate ORM) and some may need it in the future (MongoDB client, Elasticsearch client, ...).\r\n\r\nFor more information about the problem, see:\r\n\r\n* https://github.com/quarkusio/quarkus/issues/36666#issuecomment-2162923149\r\n* https://groups.google.com/g/quarkus-dev/c/enMgpOrb61o/m/cRKwiWmGAgAJ\r\n* https://quarkusio.zulipchat.com/#narrow/stream/187038-dev/topic/.22Activate.22.2F.22Deactivate.22.20beans.20at.20runtime\r\n\r\nAnd see this mind map:\r\n\r\n![arc-initialize-on-startup](https://github.com/quarkusio/quarkus/assets/412878/0007251d-ba00-4a1b-9e50-e02694bb0ccd)\r\n\r\n\r\n\r\n\r\n### Implementation ideas\r\n\r\nHere are the conclusions of our last conversation.\r\n\r\nThe feature below only make sense for runtime-initialized, `@ApplicationScoped`, synthetic bean definitions. Eager initialization probably doesn't make much sense for singletons -- which are already initialized eagerly and are not proxied -- and for other scopes and pseudo-scopes (how would you initialize a `@Dependent` or `@RequestScoped` bean eagerly?).\r\n\r\nWe could add two methods to `io.quarkus.arc.deployment.SyntheticBeanBuildItem.ExtendedBeanConfigurator` (names are placeholders subject to bikeshedding):\r\n\r\n1. `activeIf(condition)`: tells Arc that this bean is only \"active\" (~initializable) if the provided condition is met. Default is always active.\r\n2. `initializeEagerly()`: tells Arc that this bean should be initialized:\r\n   * on startup if it's active (see above) **and** injected in a user (non-synthetic) bean. Default is to only follow CDI semantics for initialization.\r\n   * on first retrieval (no uninitialized proxy) if retrieved programmatically. Default is to only follow CDI semantics for initialization.\r\n\r\nThe type of `condition` would be, depending on implementation needs (TBD):\r\n\r\n* A `RuntimeValue<BooleanSupplier>` (returns `true` if the condition is met)\r\n* A `RuntimeValue<Runnable>` (checks the condition, if not met throws with meaningful, actionable message)\r\n* A combination of the above, e.g. `RuntimeValue<Condition>` where `Condition` is defined as:\r\n  ```java\r\n  public interface Condition extends BooleanSupplier {\r\n   \r\n     // returns `true` if the condition is met\r\n     @Override\r\n     boolean getAsBoolean();\r\n  \r\n     // checks the condition, if not met throws with meaningful, actionable message\r\n     void check() throws RuntimeException;\r\n     \r\n  }\r\n  ```\r\n\r\nAdditionally, we will need to implement two new behaviors:\r\n\r\n* The \"eager\" initialization on bean retrieval, which will throw a meaningful, typed exception (`InactiveBeanException`?) if the `activeIf` condition is not met, or wrap any exception thrown by initialization.\r\n* The \"eager\" initialization on startup, which essentially amounts to startup code that will go through all eagerly-initialized beans, and retrieve those that are injected and active, wrapping any exception with more context (the list of injection point).\r\n\r\nIn practice, we'll probably use this for datasources by setting the `activeIf` condition to something like \"quarkus.datasource[.name].active is unset OR set to true\" -- but it could be more complicated, we'll have to check. We'll also have to adapt some code that currently retrieves the datasources through various ways.\r\n\r\nIn the future we'll want to trigger initialization on startup even if a bean is only used in other synthetic beans (e.g. a datasource in a Hibernate ORM persistence unit), but that will require more work as we'll want to ignore synthetic consumers that are themselves inactive.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41466/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 1,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41466/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34687",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34687/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34687/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34687/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34687",
+  "id": 1799821860,
+  "node_id": "I_kwDOCFbutM5rRxok",
+  "number": 34687,
+  "title": "Amazon Services: no current Vertx context found for an S3 call with reactive resteasy and panache reactive",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 26,
+  "created_at": "2023-07-11T22:05:48Z",
+  "updated_at": "2024-03-25T20:07:29Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nA user [reported an issue](https://github.com/quarkiverse/quarkus-amazon-services/issues/837) using AWS extension and reactive panache at the same time. Trying to reproduce the issue with s3 quickstart and I'm stuck trying to make it work.\r\n\r\nFirst, adding `quarkus-hibernate-reactive-panache` and calling a JAX-RS endpoint that do not use Panache entity or repository but make S3 calls fails, trying to autoclose an on demand Session.\r\n\r\nI see two issues:\r\n- Could it be possible to narrow the detection of panache usage per method in a resource class.\r\n- How to run a continuation on the Vertx ThreadPool after the s3 completionstage ? This is a bit off the issue but if narrowing is not possible this could solve this issue and explain usage of both s3 and panache in the same method\r\n\r\n\r\n### Expected behavior\r\n\r\nRequest should return a 200 response. At least, it should not try to close a session. Looking at https://github.com/quarkusio/quarkus/pull/34671, it seems that the `WithSessionOnDemand` annotation is added even if the Resource does not inject a Panache entity nor repository. The detection mechanism is a bit too wide and it detects static usage of entity/repo in others methods.\r\n\r\n\r\n### Actual behavior\r\n\r\nRequest failed with \r\n\r\n```\r\n2023-07-11 22:59:56,208 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [amazon-s3, cdi, hibernate-orm, hibernate-reactive, hibernate-reactive-panache, reactive-pg-client, resteasy-reactive, resteasy-reactive-jackson, smallrye-context-propagation, vertx]\r\n2023-07-11 23:00:17,048 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-1) HTTP Request to /async-s3 failed, error id: 35acc389-f5b0-4f34-bc59-b3506f412974-1: java.lang.IllegalStateException: No current Vertx context found\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations.vertxContext(SessionOperations.java:186)\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations.closeSession(SessionOperations.java:191)\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations.lambda$withSessionOnDemand$0(SessionOperations.java:73)\r\n        at io.smallrye.mutiny.Uni.lambda$eventually$1(Uni.java:580)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualBiFunction.apply(SlowContextualBiFunction.java:21)\r\n        at io.smallrye.mutiny.groups.UniOnItemOrFailure.lambda$call$2(UniOnItemOrFailure.java:68)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualBiFunction.apply(SlowContextualBiFunction.java:21)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemOrFailureFlatMap$UniOnItemOrFailureFlatMapProcessor.performInnerSubscription(UniOnItemOrFailureFlatMap.java:86)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemOrFailureFlatMap$UniOnItemOrFailureFlatMapProcessor.onItem(UniOnItemOrFailureFlatMap.java:54)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransform$UniOnItemTransformProcessor.onItem(UniOnItemTransform.java:43)\r\n        at io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage$CompletionStageUniSubscription.forwardResult(UniCreateFromCompletionStage.java:63)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:863)\r\n        at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:841)\r\n        at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n        at java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2147)\r\n        at software.amazon.awssdk.core.internal.http.pipeline.stages.AsyncApiCallMetricCollectionStage.lambda$execute$0(AsyncApiCallMetricCollectionStage.java:56)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:863)\r\n        at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:841)\r\n        at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n        at java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2147)\r\n        at software.amazon.awssdk.core.internal.http.pipeline.stages.AsyncApiCallTimeoutTrackingStage.lambda$execute$2(AsyncApiCallTimeoutTrackingStage.java:69)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:863)\r\n        at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:841)\r\n        at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n        at java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2147)\r\n        at software.amazon.awssdk.core.internal.http.pipeline.stages.AsyncRetryableStage$RetryingExecutor.lambda$attemptExecute$1(AsyncRetryableStage.java:177)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:863)\r\n        at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:841)\r\n        at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n        at java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2147)\r\n        at software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage.lambda$null$0(MakeAsyncHttpRequestStage.java:105)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:863)\r\n        at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:841)\r\n        at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n        at java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2147)\r\n        at software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage.completeResponseFuture(MakeAsyncHttpRequestStage.java:238)\r\n        at software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage.lambda$executeHttpRequest$3(MakeAsyncHttpRequestStage.java:163)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934)\r\n        at java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:911)\r\n        at java.base/java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:482)\r\n        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\r\n        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nWith this repro : https://github.com/scrocquesel/quarkus-quickstarts/tree/s3_with_panache\r\n\r\n1. inside `amazon-s3-quickstart`\r\n2. quarkus dev\r\n3. curl http://localhost:8080/async-s3.html\r\n(4. you can also try to upload a file)\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34687/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34687/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

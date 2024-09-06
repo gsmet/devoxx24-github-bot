@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29349",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29349/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29349/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29349/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29349",
+  "id": 1454950561,
+  "node_id": "I_kwDOCFbutM5WuMih",
+  "number": 29349,
+  "title": "Thread blocked when starting multiple instances of gRPC server with SSL",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-11-18T11:31:49Z",
+  "updated_at": "2023-08-30T05:07:39Z",
+  "closed_at": "2023-08-30T05:07:39Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter upgrading from Quarkus 2.10.4 to 2.13.3, our gRPC server was throwing thread blocked exception indefinitely. After investigation, we found that the issue started with Quarkus 2.13.1 and still occurs in 2.14.1.\r\n\r\nWe are able to reproduce the issue with a minimal application (code sample generated from Quarkus.io) including gRPC with SSL and multiple instances.\r\n\r\nThis issue does not happen in dev mode.\n\n### Expected behavior\n\nApplication starting multiple SSL instances of the gRPC server\n\n### Actual behavior\n\nApplication never start because of thread blocked indefinitely\r\n\r\n### Exception:\r\n\r\n```\r\n2022-11-18 12:02:59,044 WARN  [io.ver.cor.imp.BlockedThreadChecker] (vertx-blocked-thread-checker) Thread Thread[vert.x-eventloop-thread-7,5,main] has been blocked for 3951 ms, time limit is 2000 ms: io.vertx.core.VertxException: Thread blocked\r\n        at java.base@18.0.1.1/java.util.concurrent.ConcurrentHashMap.computeIfAbsent(ConcurrentHashMap.java:1726)\r\n        at io.vertx.grpc.VertxServer.start(VertxServer.java:177)\r\n        at io.quarkus.grpc.runtime.GrpcServerRecorder$GrpcServerVerticle.start(GrpcServerRecorder.java:484)\r\n        at io.vertx.core.impl.DeploymentManager.lambda$doDeploy$5(DeploymentManager.java:196)\r\n        at io.vertx.core.impl.DeploymentManager$$Lambda$982/0x00000008010a0f78.handle(Unknown Source)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n        at io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n        at io.vertx.core.impl.EventLoopContext$$Lambda$983/0x00000008010a1188.run(Unknown Source)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base@18.0.1.1/java.lang.Thread.run(Thread.java:833)\r\n```\n\n### How to Reproduce?\n\n### Steps to reproduce the behavior:\r\n\r\n1. Create quarkus application with gRPC extension (https://code.quarkus.io/d?e=grpc&cn=code.quarkus.io)\r\n2. Configure SSL certificate for gRPC server (quarkus.grpc.server.ssl.key  and quarkus.grpc.server.ssl.certificate)\r\n3. Configure more than one instance (quarkus.grpc.server.instances)\r\n4. run tests (mvn test)\r\n6. After few seconds the following exception is displayed:\r\nThread Thread[vert.x-eventloop-thread-5,5,main] has been blocked for 3937 ms, time limit is 2000 ms: io.vertx.core.VertxException: Thread blocked\r\n\r\nAnother option to reproduce it, is to package the application in native mode and start it with the same configuration.\r\n\r\n### pom.xml\r\n\r\n```\r\n<?xml version=\"1.0\"?>\r\n<project xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\" xmlns=\"http://maven.apache.org/POM/4.0.0\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n  <modelVersion>4.0.0</modelVersion>\r\n  <groupId>org.acme</groupId>\r\n  <artifactId>code-with-quarkus</artifactId>\r\n  <version>1.0.0-SNAPSHOT</version>\r\n  <properties>\r\n    <compiler-plugin.version>3.8.1</compiler-plugin.version>\r\n    <maven.compiler.release>17</maven.compiler.release>\r\n    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\r\n    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>\r\n    <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>\r\n    <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>\r\n    <quarkus.platform.version>2.14.1.Final</quarkus.platform.version>\r\n    <skipITs>true</skipITs>\r\n    <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>\r\n  </properties>\r\n  <dependencyManagement>\r\n    <dependencies>\r\n      <dependency>\r\n        <groupId>${quarkus.platform.group-id}</groupId>\r\n        <artifactId>${quarkus.platform.artifact-id}</artifactId>\r\n        <version>${quarkus.platform.version}</version>\r\n        <type>pom</type>\r\n        <scope>import</scope>\r\n      </dependency>\r\n    </dependencies>\r\n  </dependencyManagement>\r\n  <dependencies>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-grpc</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-arc</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-junit5</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n  </dependencies>\r\n  <build>\r\n    <plugins>\r\n      <plugin>\r\n        <groupId>${quarkus.platform.group-id}</groupId>\r\n        <artifactId>quarkus-maven-plugin</artifactId>\r\n        <version>${quarkus.platform.version}</version>\r\n        <extensions>true</extensions>\r\n        <executions>\r\n          <execution>\r\n            <goals>\r\n              <goal>build</goal>\r\n              <goal>generate-code</goal>\r\n              <goal>generate-code-tests</goal>\r\n            </goals>\r\n          </execution>\r\n        </executions>\r\n      </plugin>\r\n      <plugin>\r\n        <artifactId>maven-compiler-plugin</artifactId>\r\n        <version>${compiler-plugin.version}</version>\r\n        <configuration>\r\n          <compilerArgs>\r\n            <arg>-parameters</arg>\r\n          </compilerArgs>\r\n        </configuration>\r\n      </plugin>\r\n      <plugin>\r\n        <artifactId>maven-surefire-plugin</artifactId>\r\n        <version>${surefire-plugin.version}</version>\r\n        <configuration>\r\n          <systemPropertyVariables>\r\n            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>\r\n            <maven.home>${maven.home}</maven.home>\r\n          </systemPropertyVariables>\r\n        </configuration>\r\n      </plugin>\r\n      <plugin>\r\n        <artifactId>maven-failsafe-plugin</artifactId>\r\n        <version>${surefire-plugin.version}</version>\r\n        <executions>\r\n          <execution>\r\n            <goals>\r\n              <goal>integration-test</goal>\r\n              <goal>verify</goal>\r\n            </goals>\r\n            <configuration>\r\n              <systemPropertyVariables>\r\n                <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>\r\n                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>\r\n                <maven.home>${maven.home}</maven.home>\r\n              </systemPropertyVariables>\r\n            </configuration>\r\n          </execution>\r\n        </executions>\r\n      </plugin>\r\n    </plugins>\r\n  </build>\r\n  <profiles>\r\n    <profile>\r\n      <id>native</id>\r\n      <activation>\r\n        <property>\r\n          <name>native</name>\r\n        </property>\r\n      </activation>\r\n      <properties>\r\n        <skipITs>false</skipITs>\r\n        <quarkus.package.type>native</quarkus.package.type>\r\n      </properties>\r\n    </profile>\r\n  </profiles>\r\n</project>\r\n```\r\n\r\n### application.properties\r\n\r\n```\r\nquarkus.grpc.server.instances=10\r\nquarkus.grpc.server.ssl.key=<PEM KEY PATH>\r\nquarkus.grpc.server.ssl.certificate=<PEM CERTIFICATE PATH>\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"18.0.1.1\" 2022-04-22 OpenJDK Runtime Environment (build 18.0.1.1+2-6) OpenJDK 64-Bit Server VM (build 18.0.1.1+2-6, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\nmandrel-java17-22.3.0.1-Final\n\n### Quarkus version or git rev\n\n2.14.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nJava version: 18.0.1.1, vendor: Oracle Corporation, runtime: C:\\Program Files\\Java\\jdk-18.0.1.1 Default locale: en_IE, platform encoding: UTF-8 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\n\n### Additional information\n\nThanks for your support and amazing tools you build",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29349/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29349/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

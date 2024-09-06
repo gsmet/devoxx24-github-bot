@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41802",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41802/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41802/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41802/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41802",
+  "id": 2399792338,
+  "node_id": "I_kwDOCFbutM6PCezS",
+  "number": 41802,
+  "title": "Native compile leading to large file and more memory footprint",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-07-10T05:34:51Z",
+  "updated_at": "2024-07-10T09:23:54Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello, sorry, I am pretty new to web development, so I apologize if this is a basic question. I am trying to build a Quarkus tutorial into native container as I saw that it would lead to less memory usage so I can deploy it on a smaller VM (currently targeting fly.io's free tier) after working through guides such as https://www.codecentric.de/wissens-hub/blog/spring-boot-flyio and https://www.freecodecamp.org/news/get-started-with-quarkus-and-jpastreamer-2/\r\n\r\nHowever, playing with native vs non-native container builds, I see that the memory usage actually got slightly bigger. Am I misconfiguring something? The code itself is fairly simple, consisting of a Hibernate class that interacts with a single Postgres table. Thank you. \r\n\r\n### Expected behavior\r\n\r\nSmaller file memory usage when deployed into Docker\r\n\r\n### Actual behavior\r\n\r\nLarger memory size in Docker\r\n\r\n### How to Reproduce?\r\n\r\nNative container build: `mvnw clean install -Dnative \"-Dquarkus.container-image.build=true\" \"-Dquarkus.native.container-build=true\" \"-Dquarkus.buildpack.builder-env.BP_JVM_VERSION=17\"`\r\nleads to a Docker file of size 300.95 MB, and `docker stat` of:\r\n\r\n```\r\nCONTAINER ID   NAME             CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O   PIDS\r\nf9f9dac37ad3   focused_swartz   0.10%     230.2MiB / 7.671GiB   2.93%     10.6kB / 8.04kB   0B / 0B     50\r\n```\r\n\r\nvs\r\n\r\nNon-native container build: `mvnw clean install \"-Dquarkus.container-image.build=true\" \"-Dquarkus.buildpack.builder-env.BP_JVM_VERSION=17\"`\r\nleads to a Docker file of size 254.35 MB - it builds properly but I'm currently unable to reproduce this (`ERROR: failed to launch: determine start command: when there is no default process a command is required` - will update issue when I figure this out, but from a previous run, my 'docker stat' was:\r\n\r\n```\r\nCONTAINER ID   NAME                CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O   PIDS\r\ncdb6992ba593   reverent_bhaskara   0.09%     212.7MiB / 7.671GiB   2.71%     10.3kB / 8.08kB   0B / 0B     48\t   \r\n```\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows 11\r\n\r\n### Output of `java -version`\r\n\r\nliberica 21.0.3-12\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\nOracle GraalVM 21.0.3+7.1 (build 21.0.3+7-LTS-jvmci-23.1-b37)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n3.9.7 (via Scoop)\r\n\r\n### Additional information\r\n\r\npom.xml:\r\n\r\n```\r\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\r\n    <modelVersion>4.0.0</modelVersion>\r\n    <groupId>com.testing</groupId>\r\n    <artifactId>rest-api-java</artifactId>\r\n    <version>1.0.3-native</version>\r\n\r\n    <properties>\r\n        <java.version>21</java.version>\r\n        <maven.compiler.release>21</maven.compiler.release>\r\n        <compiler-plugin.version>3.13.0</compiler-plugin.version>\r\n        <jpastreamer.version>3.0.3.Final</jpastreamer.version>\r\n        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>\r\n        <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>\r\n        <quarkus.platform.version>3.12.0</quarkus.platform.version>\r\n        <surefire-plugin.version>3.2.5</surefire-plugin.version>\r\n        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\r\n        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>\r\n    </properties>\r\n\r\n    <dependencyManagement>\r\n        <dependencies>\r\n            <dependency>\r\n                <groupId>${quarkus.platform.group-id}</groupId>\r\n                <artifactId>${quarkus.platform.artifact-id}</artifactId>\r\n                <version>${quarkus.platform.version}</version>\r\n                <type>pom</type>\r\n                <scope>import</scope>\r\n            </dependency>\r\n        </dependencies>\r\n    </dependencyManagement>\r\n\r\n    <dependencies>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-arc</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-hibernate-orm-panache</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-jdbc-postgresql</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkiverse.jpastreamer</groupId>\r\n            <artifactId>quarkus-jpastreamer</artifactId>\r\n            <version>${jpastreamer.version}</version>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-container-image-buildpack</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-junit5</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-rest-jackson</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-openapi</artifactId>\r\n        </dependency>\r\n    </dependencies>\r\n\r\n    <build>\r\n        <plugins>\r\n            <plugin>\r\n                <artifactId>maven-compiler-plugin</artifactId>\r\n                <version>${compiler-plugin.version}</version>\r\n                <configuration>\r\n                    <compilerArgs>\r\n                        <arg>-parameters</arg>\r\n                    </compilerArgs>\r\n                </configuration>\r\n            </plugin>\r\n            <plugin>\r\n                <artifactId>maven-failsafe-plugin</artifactId>\r\n                <version>${surefire-plugin.version}</version>\r\n                <executions>\r\n                    <execution>\r\n                        <goals>\r\n                            <goal>integration-test</goal>\r\n                            <goal>verify</goal>\r\n                        </goals>\r\n                    </execution>\r\n                </executions>\r\n                <configuration>\r\n                    <systemPropertyVariables>\r\n                        <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>\r\n                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>\r\n                        <maven.home>${maven.home}</maven.home>\r\n                    </systemPropertyVariables>\r\n                </configuration>\r\n            </plugin>\r\n            <plugin>\r\n                <artifactId>maven-surefire-plugin</artifactId>\r\n                <version>${surefire-plugin.version}</version>\r\n                <configuration>\r\n                    <systemPropertyVariables>\r\n                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>\r\n                        <maven.home>${maven.home}</maven.home>\r\n                    </systemPropertyVariables>\r\n                </configuration>\r\n            </plugin>\r\n            <plugin>\r\n                <groupId>${quarkus.platform.group-id}</groupId>\r\n                <artifactId>quarkus-maven-plugin</artifactId>\r\n                <version>${quarkus.platform.version}</version>\r\n                <extensions>true</extensions>\r\n                <executions>\r\n                    <execution>\r\n                        <goals>\r\n                            <goal>build</goal>\r\n                            <goal>generate-code</goal>\r\n                            <goal>generate-code-tests</goal>\r\n                        </goals>\r\n                    </execution>\r\n                </executions>\r\n            </plugin>\r\n        </plugins>\r\n    </build>\r\n\r\n    <profiles>\r\n        <profile>\r\n            <id>native</id>\r\n            <activation>\r\n                <property>\r\n                    <name>native</name>\r\n                </property>\r\n            </activation>\r\n            <properties>\r\n                <skipITs>false</skipITs>\r\n                <quarkus.package.jar.type>uber-jar</quarkus.package.jar.type>\r\n                <quarkus.native.enabled>true</quarkus.native.enabled>\r\n            </properties>\r\n        </profile>\r\n    </profiles>\r\n</project>\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41802/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41802/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

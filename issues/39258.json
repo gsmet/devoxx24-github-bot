@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39258",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39258/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39258/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39258/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39258",
+  "id": 2173925114,
+  "node_id": "I_kwDOCFbutM6Bk3b6",
+  "number": 39258,
+  "title": "JPA find and locking a lazy referenced entity fails",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-03-07T13:55:30Z",
+  "updated_at": "2024-08-12T12:55:47Z",
+  "closed_at": "2024-08-12T12:55:32Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nTrying to find and lock (via `EntityManager.find(*.class, ..., LockModeType.PESSIMISTIC_WRITE)`) of an Entity fails if that entity:\r\n\r\n- Has a `@Version` attribute\r\n- Is referenced by another entity (main entity) with `fetch = FetchType.LAZY`\r\n- The referencing entity (main entity): is already loaded **and** locked\r\n- The referenced entity was **not** previously loaded in the same transaction\r\n\r\n----\r\n\r\nAbbreviated example from https://github.com/mensinda/quarkus-stuff/tree/lockLazyLock to illustrate:\r\n\r\n```java\r\n@Entity\r\npublic class MainEntity {\r\n    @Id\r\n    private long id;\r\n\r\n    @Version\r\n    @Column(columnDefinition = \"NUMERIC(9) DEFAULT 0\")\r\n    private long tanum;\r\n\r\n    @ManyToOne(fetch = FetchType.LAZY)\r\n    @JoinColumn(name = \"LEHRL\")\r\n    private ReferencedEntity referenced;\r\n\r\n    protected MainEntity() {}\r\n\r\n    public MainEntity(long id, ReferencedEntity referenced) {\r\n        this.id = id;\r\n        this.referenced = referenced;\r\n    }\r\n}\r\n\r\n@Entity\r\npublic class ReferencedEntity {\r\n\r\n    @Id\r\n    private long id;\r\n\r\n    @Version\r\n    @Column(columnDefinition = \"NUMERIC(9) DEFAULT 0\")\r\n    private long tanum;\r\n\r\n    protected ReferencedEntity() {}\r\n\r\n    public ReferencedEntity(long id) {\r\n        this.id = id;\r\n    }\r\n}\r\n\r\n@QuarkusTest\r\nclass DoTest {\r\n\r\n    @Inject\r\n    EntityManager em;\r\n\r\n    @BeforeAll\r\n    @Transactional\r\n    static void setup() {\r\n        final EntityManager em = CDI.current().select(EntityManager.class).get();\r\n        final ReferencedEntity e1 = new ReferencedEntity(0);\r\n        em.persist(e1);\r\n        em.persist(new MainEntity(0, e1));\r\n    }\r\n\r\n    /**\r\n     * FAILS!\r\n     */\r\n    @Test\r\n    @Transactional\r\n    void findAndLock() {\r\n        MainEntity m = em.find(MainEntity.class, 0, LockModeType.PESSIMISTIC_WRITE);\r\n\r\n        // This call will now throw an jakarta.persistence.OptimisticLockException\r\n        ReferencedEntity e1 = em.find(ReferencedEntity.class, 0, LockModeType.PESSIMISTIC_WRITE);\r\n    }\r\n}\r\n\r\n```\n\n### Expected behavior\n\nNo exceptions on the second `em.find(..., LockModeType.PESSIMISTIC_WRITE);`\n\n### Actual behavior\n\n```\r\njakarta.persistence.OptimisticLockException: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect) : [root.ReferencedEntity#0]\r\n\tat org.hibernate.internal.ExceptionConverterImpl.wrapStaleStateException(ExceptionConverterImpl.java:209)\r\n\tat org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:95)\r\n\tat org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:184)\r\n\tat org.hibernate.internal.SessionImpl.find(SessionImpl.java:2470)\r\n\tat org.hibernate.internal.SessionImpl.find(SessionImpl.java:2400)\r\n\tat io.quarkus.hibernate.orm.runtime.session.TransactionScopedSession.find(TransactionScopedSession.java:191)\r\n\tat org.hibernate.engine.spi.SessionLazyDelegator.find(SessionLazyDelegator.java:829)\r\n\tat org.hibernate.Session_OpdLahisOZ9nWRPXMsEFQmQU03A_Synthetic_ClientProxy.find(Unknown Source)\r\n\tat test.DoTest.findAndLock(DoTest.java:97)\r\n\tat test.DoTest_Subclass.findAndLock$$superforward(Unknown Source)\r\n\tat test.DoTest_Subclass$$function$$1.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:73)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:62)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.invokeInOurTx(TransactionalInterceptorBase.java:136)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.invokeInOurTx(TransactionalInterceptorBase.java:107)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired.doIntercept(TransactionalInterceptorRequired.java:38)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.intercept(TransactionalInterceptorBase.java:61)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired.intercept(TransactionalInterceptorRequired.java:32)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n\tat test.DoTest_Subclass.findAndLock(Unknown Source)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.runExtensionMethod(QuarkusTestExtension.java:1013)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.interceptTestMethod(QuarkusTestExtension.java:827)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n\tSuppressed: org.hibernate.StaleObjectStateException: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect) : [root.ReferencedEntity#0]\r\n\t\tat org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy.lock(PessimisticWriteSelectLockingStrategy.java:81)\r\n\t\tat org.hibernate.persister.entity.AbstractEntityPersister.lock(AbstractEntityPersister.java:2189)\r\n\t\tat org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock(LoaderHelper.java:93)\r\n\t\tat org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.loadFromSessionCache(CacheEntityLoaderHelper.java:184)\r\n\t\tat org.hibernate.event.internal.DefaultLoadEventListener.doLoad(DefaultLoadEventListener.java:532)\r\n\t\tat org.hibernate.event.internal.DefaultLoadEventListener.load(DefaultLoadEventListener.java:207)\r\n\t\tat org.hibernate.event.internal.DefaultLoadEventListener.lockAndLoad(DefaultLoadEventListener.java:492)\r\n\t\tat org.hibernate.event.internal.DefaultLoadEventListener.doOnLoad(DefaultLoadEventListener.java:112)\r\n\t\tat org.hibernate.event.internal.DefaultLoadEventListener.onLoad(DefaultLoadEventListener.java:68)\r\n\t\tat org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:138)\r\n\t\tat org.hibernate.internal.SessionImpl.fireLoadNoChecks(SessionImpl.java:1222)\r\n\t\tat org.hibernate.internal.SessionImpl.fireLoad(SessionImpl.java:1210)\r\n\t\tat org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:203)\r\n\t\tat org.hibernate.loader.internal.IdentifierLoadAccessImpl.doLoad(IdentifierLoadAccessImpl.java:160)\r\n\t\tat org.hibernate.loader.internal.IdentifierLoadAccessImpl.lambda$load$1(IdentifierLoadAccessImpl.java:149)\r\n\t\tat org.hibernate.loader.internal.IdentifierLoadAccessImpl.perform(IdentifierLoadAccessImpl.java:112)\r\n\t\tat org.hibernate.loader.internal.IdentifierLoadAccessImpl.load(IdentifierLoadAccessImpl.java:149)\r\n\t\tat org.hibernate.internal.SessionImpl.find(SessionImpl.java:2424)\r\n\t\t... 24 more\r\nCaused by: [CIRCULAR REFERENCE: org.hibernate.StaleObjectStateException: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect) : [root.ReferencedEntity#0]]\r\n```\n\n### How to Reproduce?\n\nI have created a minimal test case for this issue: https://github.com/mensinda/quarkus-stuff/tree/lockLazyLock\r\n\r\nSteps to reproduce:\r\n\r\n1. clone / checkout the `lockLazyLock` branch of https://github.com/mensinda/quarkus-stuff/tree/lockLazyLock\r\n2. run `mvn clean verify`\n\n### Output of `uname -a` or `ver`\n\nLinux XXXXXXX 5.15.0-56-generic #62-Ubuntu SMP Tue Nov 22 19:54:14 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.10\" 2024-01-16\n\n### Quarkus version or git rev\n\n3.8.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.2 (c9616018c7a021c1c39be70fb2843d6f5f9b8a1c)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39258/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39258/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

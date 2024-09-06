@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37537",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37537/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37537/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37537/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37537",
+  "id": 2026588312,
+  "node_id": "I_kwDOCFbutM54y0iY",
+  "number": 37537,
+  "title": "KafkaCompanionResource doesn't work with Dev Service for Kafka",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-12-05T16:17:32Z",
+  "updated_at": "2023-12-05T17:46:47Z",
+  "closed_at": "2023-12-05T17:46:47Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn chapter https://quarkus.io/guides/kafka#testing-using-a-kafka-broker it says \r\n\r\n> If the Kafka Dev Service is available during tests, KafkaCompanionResource uses the created Kafka broker, otherwise it creates a Kafka broker using [Strimzi Test Container](https://github.com/strimzi/test-container).\r\n\r\nBut it always start his own service on a different port. If I use the Dev Service kafka port configuration it it fails with the message that the port is already in use.\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n> 2023-12-05 17:12:25,526 INFO  [io.qua.kaf.cli.dep.DevServicesKafkaProcessor] (build-39) Dev Services for Kafka started. Other Quarkus applications in dev mode will find the broker automatically. For Quarkus applications in production mode, you can connect to this by starting your application with -Dkafka.bootstrap.servers=OUTSIDE://localhost:9092\r\n\r\n> java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        [error]: Build step io.quarkus.kafka.client.deployment.DevServicesKafkaProcessor#startKafkaDevService threw an exception: java.lang.RuntimeException: org.testcontainers.containers.ContainerLaunchException: Container startup failed for image docker.io/vectorized/redpanda:v22.3.4\r\n        at io.quarkus.kafka.client.deployment.DevServicesKafkaProcessor.startKafkaDevService(DevServicesKafkaProcessor.java:105)\r\n        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n        at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n        at io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n        at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        at java.base/java.lang.Thread.run(Thread.java:1583)\r\n        at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\nCaused by: org.testcontainers.containers.ContainerLaunchException: Container startup failed for image docker.io/vectorized/redpanda:v22.3.4\r\n        at org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:359)\r\n        at org.testcontainers.containers.GenericContainer.start(GenericContainer.java:334)\r\n        at io.quarkus.kafka.client.deployment.DevServicesKafkaProcessor.lambda$startKafka$5(DevServicesKafkaProcessor.java:237)\r\n        at java.base/java.util.Optional.orElseGet(Optional.java:364)\r\n        at io.quarkus.kafka.client.deployment.DevServicesKafkaProcessor.startKafka(DevServicesKafkaProcessor.java:285)\r\n        at io.quarkus.kafka.client.deployment.DevServicesKafkaProcessor.startKafkaDevService(DevServicesKafkaProcessor.java:95)\r\n        ... 9 more\r\nCaused by: org.rnorth.ducttape.RetryCountExceededException: Retry limit hit with exception\r\n        at org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:88)\r\n        at org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:344)\r\n        ... 14 more\r\nCaused by: org.testcontainers.containers.ContainerLaunchException: Could not create/start container\r\n        at org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:564)\r\n        at org.testcontainers.containers.GenericContainer.lambda$doStart$0(GenericContainer.java:354)\r\n        at org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:81)\r\n        ... 15 more\r\nCaused by: com.github.dockerjava.api.exception.InternalServerErrorException: Status 500: {\"message\":\"driver failed programming external connectivity on endpoint nostalgic_feynman (a146a9930d06ca1f67ffbe4553dfc4b6833c9459c286156bf2efa032c8e7c920): Bind for 0.0.0.0:9092 failed: port is already allocated\"}\r\n\r\n### How to Reproduce?\r\n\r\nI just used the test from the documentation\r\n\r\n`@QuarkusTest\r\n@QuarkusTestResource(KafkaCompanionResource.class)\r\npublic class OrderProcessorTest {\r\n\r\n    @InjectKafkaCompanion \r\n    KafkaCompanion companion;\r\n\r\n    @Test\r\n    void testProcessor() {\r\n        companion.produceStrings().usingGenerator(i -> new ProducerRecord<>(\"orders\", UUID.randomUUID().toString())); \r\n\r\n        // Expect that the tested application processes orders from 'orders' topic and write to 'orders-processed' topic\r\n\r\n        ConsumerTask<String, String> orders = companion.consumeStrings().fromTopics(\"orders-processed\", 10); \r\n        orders.awaitCompletion(); \r\n        assertEquals(10, orders.count());\r\n    }\r\n}`\r\n\r\nI hope I am not missing something, because just started to use Quarkus. \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux ffd-nb0092 5.15.133.1-microsoft-standard-WSL2 #1 SMP Thu Oct 5 21:02:42 UTC 2023 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\n21\r\n\r\n### Quarkus version or git rev\r\n\r\n3.6.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.7 (b89d5959fcde851dcb1c8946a785a163f14e1e29) Maven home: /home/christian/.m2/wrapper/dists/apache-maven-3.8.7-bin/678cc9d4/apache-maven-3.8.7 Java version: 21.0.1, vendor: Debian, runtime: /usr/lib/jvm/java-21-openjdk-amd64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.133.1-microsoft-standard-wsl2\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37537/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37537/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

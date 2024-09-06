@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25891",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25891/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25891/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25891/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25891",
+  "id": 1254138998,
+  "node_id": "I_kwDOCFbutM5KwKR2",
+  "number": 25891,
+  "title": "I llegalStateException when using Hibernate Reactive Panache with external SDKs(that switch thread)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-05-31T16:50:24Z",
+  "updated_at": "2022-06-06T07:08:25Z",
+  "closed_at": "2022-06-06T07:08:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm using Reactive Panache for Postgresql. I need to take an application level lock(redis), inside which I need to perform certain operations. However, panache library throws the following error:\r\n```\r\njava.lang.IllegalStateException: HR000069: Detected use of the reactive Session from a different Thread than the one which was used to open the reactive Session - this suggests an invalid integration; original thread [222]: 'vert.x-eventloop-thread-3' current Thread [154]: 'vert.x-eventloop-thread-2'\r\n```\r\n\r\nMy code looks something like this:\r\n```\r\nredissonClient.getLock(\"lock\").lock(this.leaseTimeInMillis, TimeUnit.MILLISECONDS, this.lockId)\r\n.chain(() ->  return Panache.withTransaction(() -> Uni.createFrom.nullItem())\r\n                            .eventually(lock::release);\r\n)\r\n```\r\n\r\n\r\nWhen I tried using Mutiny.sessionFactory instead of panache I get this error: \r\n```\r\njava.lang.IllegalStateException: The current operation requires a safe (isolated) Vert.x sub-context, but the current context hasn't been flagged as such. You can still use Hibernate Reactive, you just need to avoid using the methods which implicitly require accessing the stateful context, such as MutinySessionFactory#withTransaction and #withSession.\r\n```\r\n\r\nand my updated code looks like this:\r\n```\r\nMutiny.SessionFactory sessionFactory;\r\n\r\nredissonClient.getLock(\"lock\").lock(this.leaseTimeInMillis, TimeUnit.MILLISECONDS, this.lockId)\r\n.chain(() ->  return sessionFactory.withTransaction(session -> Uni.createFrom.nullItem())\r\n                            .eventually(lock::release);\r\n)\r\n```\r\n\r\n### Expected behavior\r\n\r\nShould return nullitem without error\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.9.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25891/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25891/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

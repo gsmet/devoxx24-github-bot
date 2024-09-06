@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23938",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23938/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23938/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23938/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23938",
+  "id": 1149082364,
+  "node_id": "I_kwDOCFbutM5EfZr8",
+  "number": 23938,
+  "title": "Using Java Module System with ServiceLoader fails",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-02-24T09:57:46Z",
+  "updated_at": "2022-02-25T15:32:47Z",
+  "closed_at": "2022-02-25T15:31:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm running a small project using latest Quarkus 2.7.1.\r\n\r\nMy project uses the java module system with Java 11 as target. I have so far different maven modules, each with its `module-info.java`:\r\n\r\n- api (having `exports com.example`)\r\n- implementation-1 (having `provides com.example.MyApi with com.example.impl.First;`)\r\n- implementation-2 (having `provides com.example.MyApi with com.example.impl.Second;`)\r\n- server (the Quarkus App - having `uses com.example.MyApi`)\r\n\r\nIn a class in my Quarkus application, i have something like this:\r\n\r\n```java\r\npackage com.example.server;\r\n\r\nimport com.example.MyApi;\r\nimport java.util.ServiceLoader;\r\n\r\npublic class MyApiProvider {\r\n  private final MyApi myApiImpl;\r\n\r\n  public MyApiProvider() {\r\n    myApiImpl = initModule();\r\n  }\r\n\r\n  private MyApi initModule() {\r\n    // here should be found First or Second\r\n    return ServiceLoader.load(MyApi.class).stream().findFirst().orElseThrow().get();\r\n  }\r\n\r\n  public MyApi getMyApi() {\r\n    return myApiImpl;\r\n  }\r\n}\r\n```\r\n\r\nMy Quarkus application module-info.java is:\r\n\r\n```java\r\nmodule com.example.server {\r\n  requires com.example.api; // the API module\r\n  requires java.ws.rs;\r\n  requires microprofile.health.api;\r\n\r\n  uses com.example.MyApi;\r\n}\r\n\r\n```\r\n\r\nWhen I call this class in another one like: `new MyApiProvider().getMyApi()`, I get a ` java.util.NoSuchElementException: No value present` error in the ServiceLoader call.\r\n\r\nIn the pom.xml file are all the modules as dependencies registered and in the `target/quarkus-app/lib/main` i see all my JAR files there.\r\n\r\nMy question is, how can I instruct Quarkus to actually leverage the ServiceLoader? I am not running the code in native mode, but simply out of the JAR file.\r\n\r\n### Expected behavior\r\n\r\nThe Service Loader finds the supplied module implementations\r\n\r\n### Actual behavior\r\n\r\nThe Service Loader can not find the implementation of an interface\r\n\r\n### How to Reproduce?\r\n\r\nA project with an interface, two module implementations and a quarkus application using ServiceLoader to load the implementations\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux 5.16.7-1-MANJARO #1 SMP PREEMPT Sun Feb 6 12:22:29 UTC 2022 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\n11.0.14\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.4\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23938/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23938/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

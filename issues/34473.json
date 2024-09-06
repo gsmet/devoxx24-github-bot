@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34473",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34473/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34473/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34473/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34473",
+  "id": 1785837877,
+  "node_id": "I_kwDOCFbutM5qcbk1",
+  "number": 34473,
+  "title": "Improve HTTP/2 performance",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 33,
+  "created_at": "2023-07-03T10:10:55Z",
+  "updated_at": "2024-01-19T13:54:46Z",
+  "closed_at": "2023-09-25T08:33:52Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\n**BACKGROUND**\r\nI have implemented a Quarkus based microservice that is targeting to replace a Spring Boot implementation\r\n\r\nMicroservice receives POST (JSON) requests and provide answer with JSON.\r\n\r\n**LIMITATION WITH HTTP/2**\r\nWe have observed that latencies when using HTTP/2 are worse that when we are using HTTP 1.1 (0,5 msecs aprox per request). CPU usage is also higher (between 5-10%). Obviously in HTTP/2 connections the number of connections needed to sustain the same throughput is much lower (multiplexing in HTTP2)\r\nThis is NOT happening in Spring (Jetty) implementation in which HTTP/2 latencies are aprox the same compared with Spring Boot HTTP 1.1.\r\n\r\n**GOAL OF THIS TICKET**\r\nPurpose of the ticket is to check why HTTP/2 latencies are worse (at least in microservices with  long living connections) compared with HTTP 1.1 and provide a fix\r\n\r\n**INITIAL ANALYSIS (IN CASE COULD HELP)**\r\nAfter some analysis we have found a difference in Quarkus HTTP/2  compared with (QUarkus HTTP 1.1 or Spring Jetty HTTP/2) that could explain the performance drop (worse latency)\r\n\r\nWe have captured packets for each implementation (Images attached). This is the result. QUarkus HTTP/2 is using one extra message compared with other implementations. Any reason for that? At least in this use case, I do NOT see the need to avoid sending Headers and response data in the same packet. I can understand that streaming use cases could be different.\r\n\r\n1.- Quarkus HTTP/2\r\nClient          ---------  HTTP2/JSON POST     HEADERS + DATA      ----------------------->  Quarkus  server\r\nQuarkus     ---------  HTTP2  HEADERS  (200 OK)----------------------------------------->  Client\r\nClient         ----------------------------------------------------------------------------------> ACK\r\nQuarkus     ---------  HTTP2/JSON   DATA (END STREAM)  -------------------------------> cLIENT\r\nClient         ----------------------------------------------------------------------------------> ACK\r\n \r\n![Quarkus-HTTP2](https://github.com/quarkusio/quarkus/assets/3510476/585d4f74-9c0f-4f6a-94f8-980db54208ae)\r\n\r\n\r\n2.- Quarkus HTTP/1.1\r\nClient          ---------  HTTP2/JSON POST     HEADERS + DATA     ----------------->  Quarkus  server\r\nQuarkus     ---------  HTTP2  HEADERS (200 OK)  + DATA ------------------------->  Client\r\nClient         ---------------------------------------------------------------------------> ACK\r\n\r\n![Quarkus-HTTP1 1 jpg](https://github.com/quarkusio/quarkus/assets/3510476/1c48645b-9d58-4bf7-b0e0-b7430b6bce04)\r\n\r\n\r\n\r\n3.- Spring (Jetty)  HTTP/2\r\nClient          ---------  HTTP2/JSON POST     HEADERS + DATA     ----------------->  Spring  server\r\nSpring server ---------  HTTP2  HEADERS (200 OK)  + DATA (END STREAM)------->  Client\r\nClient         ------------------------------------------------------------ --------------> ACK\r\n\r\n![Spring-Jetty-HTTP2](https://github.com/quarkusio/quarkus/assets/3510476/238e67b2-6a3b-4630-a9bc-5412d999191e)\r\n\r\nReproducer to check network packages\r\n\r\n[code-with-quarkus.zip](https://github.com/quarkusio/quarkus/files/11935646/code-with-quarkus.zip)\r\n\r\nSend traffic with curl or wrk or hyperfoil. Capture with wireshark\r\ncurl -v --http2 -d '{\"name\": \"juan\"}' -H \"Content-Type: application/json\" -X POST http://localhost:8080/hello\r\n\r\n\r\n\r\n\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34473/reactions",
+    "total_count": 2,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 2
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34473/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

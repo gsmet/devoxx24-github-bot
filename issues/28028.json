@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28028",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28028/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28028/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28028/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28028",
+  "id": 1376752327,
+  "node_id": "I_kwDOCFbutM5SD5LH",
+  "number": 28028,
+  "title": "Undertow: servletContext.getResourcePaths(\"/\") not listed in PROD mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1359391180,
+      "node_id": "MDU6TGFiZWwxMzU5MzkxMTgw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/undertow",
+      "name": "area/undertow",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2022-09-17T11:54:52Z",
+  "updated_at": "2023-08-13T03:15:22Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a simple ApplicationInitializer to print out all the available servlet resource paths...\r\n\r\n```java\r\npublic class ApplicationInitializer implements ServletContainerInitializer {\r\n\r\n\tprivate static final Logger logger = Logger.getLogger(ApplicationInitializer.class.getName());\r\n\r\n\t@Override\r\n\tpublic void onStartup(Set<Class<?>> c, ServletContext servletContext) throws ServletException {\r\n\t\tlogger.info(\"Checking servlet resource paths...\");\r\n\r\n\t\tSet<String> resourcePaths = servletContext.getResourcePaths(\"/\");\r\n\t\tfor (String resourcePath : resourcePaths) {\r\n\t\t\tlogger.info(\"Resource: \" + resourcePath);\r\n\t\t}\r\n\t\t\r\n\t\tif (resourcePaths.isEmpty()) {\r\n\t\t\tlogger.warning(\"NO servlet resource paths found!\");\r\n\t\t}\r\n\t}\r\n}\r\n```\r\n\r\nWhen running in **DEV** mode `mvn quarkus:dev` the following is printed out it finds the mapped `/index.html`:\r\n```\r\n2022-09-17 07:51:08,575 INFO  [org.acm.ApplicationInitializer] (Quarkus Main Thread) Checking servlet resource paths...\r\n2022-09-17 07:51:08,577 INFO  [org.acm.ApplicationInitializer] (Quarkus Main Thread) Resource: /index.html\r\n```\r\n\r\nWhen running in **PRD** mode `mvn clean package -DskipTests && java -jar target/quarkus-app/quarkus-run.jar` it doesn't find anything:\r\n```\r\n2022-09-17 07:49:05,376 INFO  [org.acm.ApplicationInitializer] (main) Checking servlet resource paths...\r\n2022-09-17 07:49:05,376 WARNING [org.acm.ApplicationInitializer] (main) NO servlet resource paths found!\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\nAll servlet resource paths should be available in both DEV and PRD mode.\r\n\r\n### Actual behavior\r\n\r\nResource Paths are only available in DEV mode.\r\n\r\n### How to Reproduce?\r\n\r\n[quarkus-servlet.zip](https://github.com/quarkusio/quarkus/files/9591559/quarkus-servlet.zip)\r\n\r\n1. Unzip the reproducer attached\r\n2. Run `mvn clean quarkus:dev` and see the servlet paths printed out `2022-12-27 13:00:20,489 INFO  [org.acm.ApplicationInitializer] (Quarkus Main Thread) Resource: /index.html`\r\n3. Run `mvn clean package -DskipTests && java -jar target/quarkus-app/quarkus-run.jar` and see the WARNING that no paths found `2022-12-27 13:01:06,297 WARNING [org.acm.ApplicationInitializer] (main) NO servlet resource paths found!`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nOS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.10+9, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.15.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.5 (3599d3414f046de2324203b78ddcf9b5e4388aa0) Maven home: C:\\Tools\\apache-maven-3.8.5 Java version: 11.0.10, vendor: AdoptOpenJDK, runtime: C:\\Tools\\jdk-11.0.10 Default locale: en_US, platform encoding: Cp1252 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28028/reactions",
+    "total_count": 3,
+    "+1": 3,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28028/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "reopened"
+}

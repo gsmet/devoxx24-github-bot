@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24993",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24993/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24993/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24993/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24993",
+  "id": 1207585538,
+  "node_id": "I_kwDOCFbutM5H-ksC",
+  "number": 24993,
+  "title": "opentelemetry tracks only half of spans in 2.8.0/2.8.1",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-04-19T00:37:09Z",
+  "updated_at": "2022-11-08T11:53:53Z",
+  "closed_at": "2022-11-08T11:53:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using hibernate-reactive to trace vertx sql, I found quarkus only tracks half of spans in vertx.I'm using quarkus 2.8.0, and I have this problem with any call I make within the quarkus project.\r\nI tried to change logic method calls order, and found that span could only be traced separated by rows.\r\n\r\nI have mentioned the same problem in issue https://github.com/quarkusio/quarkus/issues/23144#issuecomment-1101255841  \r\nThe span viewed in Jaeger is only the first and third lines.\r\n```java\r\narepo.update(\"isDelete = true, updateTime = ?1 where id = ?2\", now, table.id)\r\n    .call(r -> brepo.update(\"isDelete = true, updateTime = ?1 where tableId = ?2\", now, table.id))\r\n    .call(r -> crepo.update(\"isDelete = true, updateTime = ?1 where tableId = ?2\", now, table.id))\r\n    .call(r -> drepo.update(\"isDelete = true, updateTime = ?1 where tableId = ?2\", now, table.id))\r\n```\r\n\r\n### Expected behavior\r\n\r\nQuarkus should track all span with vertx\r\n\r\n### Actual behavior\r\n\r\nI have written an example in `How to Reproduce?`.\r\nNormally, I should use hibernate batch to output insert statements six times. In fact, I only see three inert statements in Jaeger UI.\r\n\r\n![image](https://user-images.githubusercontent.com/12069428/163897860-aad0a3f2-1e25-44a8-bc54-fc229c947a38.png)\r\n\r\n\r\n### How to Reproduce?\r\n\r\nbatch save:\r\n```java\r\n    @POST\r\n    @Path(\"/batch\")\r\n    @ReactiveTransactional\r\n    public Uni<Void> batch() {\r\n        List<Fruit> fruits = new ArrayList<>();\r\n        for (long i = 0, row = 6; i < row; i++) {\r\n            Fruit fruit = new Fruit();\r\n            fruit.id = i + 1;\r\n            fruit.name = \"test\";\r\n            fruits.add(fruit);\r\n        }\r\n\r\n        return Fruit.persist(fruits);\r\n    }\r\n```\r\nFruit entity:\r\n```java\r\n@Entity\r\npublic class Fruit extends PanacheEntityBase {\r\n    @Id\r\n    @Column(name = \"id\")\r\n    public Long id;\r\n\r\n    @Column(length = 40, unique = true)\r\n    public String name;\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nuser\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.14\" 2022-01-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nOpenJDK Runtime Environment GraalVM CE 22.0.0.2 (build 11.0.14+9-jvmci-22.0-b05)\r\n\r\n### Quarkus version or git rev\r\n\r\n2.8.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.6.3\r\n\r\n### Additional information\r\n\r\napplication.yaml\r\n```yaml\r\nquarkus:\r\n  opentelemetry:\r\n    enabled: true\r\n      tracer:\r\n        exporter:\r\n          otlp:\r\n            endpoint: http://XXXX:55680\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24993/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24993/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

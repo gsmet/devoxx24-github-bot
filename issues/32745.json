@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32745",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32745/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32745/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32745/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32745",
+  "id": 1674030435,
+  "node_id": "I_kwDOCFbutM5jx61j",
+  "number": 32745,
+  "title": "Bug in MDC Context Propagation with WebSocket ServerEndpoint and Redis Client",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3700813587,
+      "node_id": "LA_kwDOCFbutM7cle8T",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/context-propagation",
+      "name": "area/context-propagation",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-04-19T01:19:11Z",
+  "updated_at": "2023-04-20T12:55:17Z",
+  "closed_at": "2023-04-19T17:18:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen attempting to propagate MDC context using a WebSocket server endpoint, a bug has been identified that causes the context to not be properly propagated in the `onMessage` handler, but it is successfully propagated in the `onOpen` handler, even when the same method is called.\r\n\r\nThis bug is consistently reproducible when using a Redis client. The exact nature of the bug may vary depending on the specific implementation, but it appears that the MDC context is not properly maintained when processing messages received by the server. This can lead to unexpected behavior and errors when attempting to use MDC in conjunction with WebSocket server endpoints.\n\n### Expected behavior\n\nI expect to have MDC context propagated in the `onMessage` handler the same way as in `onOpen` handler given that both are calling the exact same method\n\n### Actual behavior\n\nIn `onMessage` handler the MDC is not propagated as expected. In the logs below, you can see that MDC was only set for first line but lost in the others\r\n```\r\n\"\"01:05:12 INFO  user=Oussama [or.ac.qu.md.pr.ChatSocket] (vert.x-eventloop-thread-1) start\r\n\"\"01:05:12 INFO  user= [or.ac.qu.md.pr.ChatSocket] (vert.x-eventloop-thread-3) New heartbeat: 1681866312671\r\n\"\"01:05:12 INFO  user= [or.ac.qu.md.pr.ChatSocket] (vert.x-eventloop-thread-3) end\r\n```\n\n### How to Reproduce?\n\nI created a reproducer project https://github.com/omarkad2/quarkus-mdc-propagation \r\nEach time a new websocket is opened or a new message is received we store the username (key) and current date (value) in redis\r\n\r\n\r\nNotice that MDC is propagated on `onOpen` handler but not `onMessage` handler:\r\n`onOpen` logs:\r\n```\r\n\"\"01:05:08 INFO  user=Oussama [or.ac.qu.md.pr.ChatSocket] (vert.x-eventloop-thread-1) start\r\n\"\"01:05:08 INFO  user=Oussama [or.ac.qu.md.pr.ChatSocket] (vert.x-eventloop-thread-1) New heartbeat: 1681866308036\r\n\"\"01:05:08 INFO  user=Oussama [or.ac.qu.md.pr.ChatSocket] (vert.x-eventloop-thread-1) end\r\n```\r\n`onMessage` logs:\r\n```\r\n\"\"01:05:12 INFO  user=Oussama [or.ac.qu.md.pr.ChatSocket] (vert.x-eventloop-thread-1) start\r\n\"\"01:05:12 INFO  user= [or.ac.qu.md.pr.ChatSocket] (vert.x-eventloop-thread-3) New heartbeat: 1681866312671\r\n\"\"01:05:12 INFO  user= [or.ac.qu.md.pr.ChatSocket] (vert.x-eventloop-thread-3) end\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin MacBook-Pro.local 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:04:44 PST 2022; root:xnu-8792.61.2~4/RELEASE_ARM64_T8103 x86_64\n\n### Output of `java -version`\n\nGraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.6.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.8.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32745/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32745/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

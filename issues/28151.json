@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28151",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28151/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28151/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28151/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28151",
+  "id": 1382366105,
+  "node_id": "I_kwDOCFbutM5SZTuZ",
+  "number": 28151,
+  "title": "hibernate validator manual validation, usage with kogito bpmn",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1305687763,
+      "node_id": "MDU6TGFiZWwxMzA1Njg3NzYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-validator",
+      "name": "area/hibernate-validator",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Validator"
+    },
+    {
+      "id": 1424123054,
+      "node_id": "MDU6TGFiZWwxNDI0MTIzMDU0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kogito",
+      "name": "area/kogito",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-09-22T12:26:18Z",
+  "updated_at": "2022-10-26T07:32:10Z",
+  "closed_at": "2022-10-26T07:32:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi, I want to do manual validation and return my custom exception on my POJO classes but when importing models into bpmn files, my function does not even work and hibernate validator returns its json error (it validates before my function works).\r\n\r\nThis is my POJO class with validations added from *javax.validation.constraints*\r\n```\r\npublic class UserRegister {\r\n\r\n  @NotBlank(message = \"Username is required\")\r\n  @Size(min = 2, max = 20, message = \"Username must be between 2 and 20 characters\")\r\n  @Pattern(regexp = \"^[a-zA-Z0-9]+$\", message = \"Username must be alphanumeric with no spaces\")\r\n  private String username;\r\n\r\n  @NotBlank(message = \"First name is required\")\r\n  @Size(min = 2, max = 32, message = \"First name must be between 2 and 32 characters\")\r\n  private String firstName;\r\n\r\n  @NotBlank(message = \"Last name is required\")\r\n  @Size(min = 2, max = 32, message = \"Last name must be between 2 and 32 characters\")\r\n  private String lastName;\r\n\r\n  @NotBlank(message = \"Email is required\")\r\n  @Email(message = \"Email must be valid\")\r\n  private String email;\r\n\r\n  public String getUsername() {\r\n    return username;\r\n  }\r\n\r\n  public void setUsername(String username) {\r\n    this.username = username;\r\n  }\r\n```\r\n\r\nimported my UserRegister model here.\r\n![Screenshot from 2022-09-22 15-17-26](https://user-images.githubusercontent.com/40024436/191744547-457db856-2186-427c-ad52-0a25c8a4ca97.png)\r\n\r\nkogito calls this function\r\n![Screenshot from 2022-09-22 15-18-22](https://user-images.githubusercontent.com/40024436/191744722-d9f897a5-9db5-412b-800d-9feaf5b42da7.png)\r\n\r\nAnd the function, notice that my function does not even entered, i do not see the system out println on my console.\r\n```\r\n  public void validateUserRegister(UserRegister userRegister) throws MyApplicationException {\r\n        System.out.println(\"Does not see this.\");\r\n        Set<ConstraintViolation<UserRegister>> violations = validator.validate(userRegister);\r\n        if (!violations.isEmpty()) {\r\n            throw new MyApplicationException(\"My exception: \" + violations.iterator().next().getMessage());\r\n        }\r\n    }\r\n\r\n```\r\n\r\nThen I send a json that is not valid,\r\nI was expecting to get my exception thrown, but this is the result from hibernate:\r\n```\r\n{\r\n    \"exception\": null,\r\n    \"propertyViolations\": [],\r\n    \"classViolations\": [],\r\n    \"parameterViolations\": [\r\n        {\r\n            \"constraintType\": \"PARAMETER\",\r\n            \"path\": \"createResource_reguser.resource.userRegister.email\",\r\n            \"message\": \"Email must be valid\",\r\n            \"value\": \"fgsdgsdggmail.com\"\r\n        }\r\n    ],\r\n    \"returnValueViolations\": []\r\n}\r\n```\r\n\r\nThere is no @Valid annotation in my code so I was expecting to get my exception. What do I do wrong?\r\nIs there any other method disabling automatic validaton? Maybe this will solve my issue.\n\n### Expected behavior\n\nGetting my exception instead of hibernate validator's json.\n\n### Actual behavior\n\nreturns hibernate validator message\n\n### How to Reproduce?\n\nI explained this at first step.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmvn 3.8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28151/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28151/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

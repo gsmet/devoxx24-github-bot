@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41658",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41658/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41658/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41658/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41658",
+  "id": 2388057129,
+  "node_id": "I_kwDOCFbutM6OVtwp",
+  "number": 41658,
+  "title": "graceful shutdown NPE when using kafka consumer with stork",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3830648795,
+      "node_id": "LA_kwDOCFbutM7kUw_b",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/stork",
+      "name": "area/stork",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-07-03T08:49:56Z",
+  "updated_at": "2024-07-03T10:40:59Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a kafka consumer calling a rest service using a stork url.\r\nunder reasonable load, the rest call fails with a NPE in the `StorkClientRequestFilter`: `\"io.smallrye.stork.Stork.getInstance()\" is null`\r\nit sounds like the shutdown of the application does not wait for in flight messages to finish processing, before shutting down parts of the application.\r\nthe integrity of data is preserved, but some messages are sent to the dead letter topic, delaying our ability to quickly process them, when there is actually another replica that could have processed them.\r\n\n\n### Expected behavior\n\nin a ideal situation, upon shutdown, we should have: \r\n - do not accept new workload\r\n - let in flight activity finish (schedulers, rest endpoints, messaging consumers)\r\n - shut down all parts of the application\r\n - exit\r\n\n\n### Actual behavior\n\nwe see the following exception:\r\n```\r\n2024-07-03 10:37:15,144 ERROR [org.jbo.res.rea.cli.imp.StorkClientRequestFilter] (quarkus-virtual-thread-10) Error selecting service instance for serviceName: greeting-service [Error Occurred After Shutdown]: java.lang.NullPointerException: Cannot invoke \"io.smallrye.stork.Stork.getService(String)\" because the return value of \"io.smallrye.stork.Stork.getInstance()\" is null\r\n        at org.jboss.resteasy.reactive.client.impl.StorkClientRequestFilter.filter(StorkClientRequestFilter.java:38)\r\n        at org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter.filter(ResteasyReactiveClientRequestFilter.java:21)\r\n        at org.jboss.resteasy.reactive.client.handlers.ClientRequestFilterRestHandler.handle(ClientRequestFilterRestHandler.java:25)\r\n        at org.jboss.resteasy.reactive.client.handlers.ClientRequestFilterRestHandler.handle(ClientRequestFilterRestHandler.java:10)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.invokeHandler(AbstractResteasyReactiveContext.java:231)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n        at org.jboss.resteasy.reactive.client.impl.AsyncInvokerImpl.performRequestInternal(AsyncInvokerImpl.java:285)\r\n        at org.jboss.resteasy.reactive.client.impl.AsyncInvokerImpl.performRequestInternal(AsyncInvokerImpl.java:275)\r\n        at org.jboss.resteasy.reactive.client.impl.AsyncInvokerImpl.method(AsyncInvokerImpl.java:215)\r\n        at org.jboss.resteasy.reactive.client.impl.InvocationBuilderImpl.method(InvocationBuilderImpl.java:313)\r\n        at org.acme.IGreetingResource$$QuarkusRestClientInterface.hello(Unknown Source)\r\n        at org.acme.IGreetingResource$$CDIWrapper.hello(Unknown Source)\r\n        at org.acme.IGreetingResource$$CDIWrapper_ClientProxy.hello(Unknown Source)\r\n        at org.acme.PriceConsumer.consume(PriceConsumer.java:29)\r\n        at org.acme.PriceConsumer_ClientProxy.consume(Unknown Source)\r\n        at org.acme.PriceConsumer_SmallRyeMessagingInvoker_consume_ff7ab742c6cdb0956d1e3afc1d8ed7fd43c75ad0.invoke(Unknown Source)\r\n        at io.smallrye.reactive.messaging.providers.AbstractMediator.lambda$invokeBlocking$15(AbstractMediator.java:190)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\n        at io.smallrye.mutiny.operators.uni.builders.UniCreateFromDeferredSupplier.subscribe(UniCreateFromDeferredSupplier.java:25)\r\n        at io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n        at io.smallrye.mutiny.operators.uni.UniRunSubscribeOn.lambda$subscribe$0(UniRunSubscribeOn.java:27)\r\n        at io.quarkus.virtual.threads.ContextPreservingExecutorService$ContextPreservingRunnable.run(ContextPreservingExecutorService.java:45)\r\n        at java.base/java.util.concurrent.ThreadPerTaskExecutor$TaskRunner.run(ThreadPerTaskExecutor.java:314)\r\n        at java.base/java.lang.VirtualThread.run(VirtualThread.java:309)\r\n```\r\nand messages may be sent to the DLT.\n\n### How to Reproduce?\n\ncreate a new application with additional deps:\r\n```\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-rest-client</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-messaging-kafka</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-stork</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.smallrye.stork</groupId>\r\n      <artifactId>stork-service-discovery-static-list</artifactId>\r\n    </dependency>\r\n```\r\n\r\nadd properties file:\r\n```\r\nquarkus.http.port=18080\r\n\r\nmp.messaging.incoming.prices.connector=smallrye-kafka\r\nmp.messaging.outgoing.prices-out.connector=smallrye-kafka\r\n\r\nmp.messaging.incoming.prices.topic=mytopic\r\nmp.messaging.outgoing.prices-out.topic=mytopic\r\n\r\nquarkus.rest-client.greeting.url=stork://greeting-service\r\n#quarkus.rest-client.greeting.url=http://localhost:18080\r\n\r\nquarkus.stork.greeting-service.service-discovery.type=static\r\nquarkus.stork.greeting-service.service-discovery.address-list=localhost:18080\r\nquarkus.stork.greeting-service.load-balancer.type=round-robin\r\n```\r\n\r\na producer:\r\n```\r\n@ApplicationScoped\r\npublic class KafkaPriceProducer {\r\n\r\n    private final Random random = new Random();\r\n\r\n    @Outgoing(\"prices-out\")\r\n    public Multi<Double> generate() {\r\n        // Build an infinite stream of random prices\r\n        // It emits a price every second\r\n        return Multi.createFrom().ticks().every(Duration.ofMillis(100))\r\n                .map(x -> random.nextDouble());\r\n    }\r\n}\r\n```\r\n\r\na consumer:\r\n```\r\n@ApplicationScoped\r\npublic class PriceConsumer {\r\n\r\n    Logger log = LoggerFactory.getLogger(PriceConsumer.class);\r\n\r\n    @Inject\r\n    @RestClient\r\n    IGreetingResource greetingResource;\r\n\r\n    @Incoming(\"prices\")\r\n    @RunOnVirtualThread\r\n    @Blocking(ordered = false)\r\n    public void consume(double price) throws InterruptedException {\r\n        log.info(\"receive \" + price);\r\n        Thread.sleep(1000);\r\n        log.info(\"greeting => \" + greetingResource.hello());\r\n    }\r\n\r\n}\r\n\r\n```\r\n\r\nstart the application with `quarkus:dev`\r\nafter startup, press `s`\r\nyou should see multiple exceptions.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n3.12\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41658/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41658/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

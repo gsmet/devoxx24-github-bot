@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37386",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37386/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37386/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37386/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37386",
+  "id": 2016604710,
+  "node_id": "I_kwDOCFbutM54MvIm",
+  "number": 37386,
+  "title": "Using quarkus-amazon-lambda-rest and static mehtods with Annotations fails on build",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-11-29T13:33:16Z",
+  "updated_at": "2023-11-29T15:01:07Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nOn a new generated project downloaded from code.quarkus.io (version 3.5.3), added a static method with an annotation @CacheInvalidate(cacheName = \"test\") or @Transactional, then builded with \"mvn package\" and then using \"sam start api\", the startup fails on the method which has the static method with the annotation.\r\n\r\n### Expected behavior\r\n\r\nStartup success\r\n\r\n### Actual behavior\r\n\r\nFails on startup\r\n\r\n### How to Reproduce?\r\n\r\n1. Download a 3.5.3 quarkus from code.quarkus.io\r\n2. add this package to pom.xml\r\n```      \r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-amazon-lambda-rest</artifactId>\r\n    <version>${quarkus.platform.version}</version>\r\n</dependency>\r\n```\r\n3. add static method with an Annotation on the GreetingResource.java. It could be CacheInvalidate, or Transactional or else. Ex:\r\n```\r\n@CacheInvalidateAll(cacheName = \"test\")\r\npublic static boolean invalidateCache(){\r\n    return true;\r\n}\r\n```\r\n4. package to generate the necessary files for aws lambda. I use the integrated mvn:\r\n```\r\n./mvnw clean package -Dmaven.test.skip=true\r\n```\r\n5. test builded code with sam:\r\n```\r\nsam local start-api --template target/sam.jvm.yaml\r\n```\r\nIf it's fails for compiler version, it can be for the java runtime version in sam.jvm.waml (change it to java17)\r\n6. call the endpoint /hello on the port assigned by sam (default 3000)\r\n7. watch startup quarkus failing\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux dmoran-ThinkPad 6.2.0-37-generic #38~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov  2 18:01:13 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\njava version \"17.0.6\" 2023-01-17 LTS Java(TM) SE Runtime Environment (build 17.0.6+9-LTS-190) Java HotSpot(TM) 64-Bit Server VM (build 17.0.6+9-LTS-190, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven home: /home/dmoran/.m2/wrapper/dists/apache-maven-3.9.5-bin/32db9c34/apache-maven-3.9.5 Java version: 17.0.6, vendor: Oracle Corporation, runtime: /usr/lib/jvm/jdk-17.0.6 Default locale: es_CL, platform encoding: UTF-8 OS name: \"linux\", version: \"6.2.0-37-generic\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\nHere is the detail of the error on startup\r\n```\r\njava.lang.ExceptionInInitializerError: java.lang.ExceptionInInitializerError\r\njava.lang.ExceptionInInitializerError\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Unknown Source)\r\n        at io.quarkus.runtime.Quarkus.manualInitialize(Quarkus.java:236)\r\n        at io.quarkus.amazon.lambda.runtime.QuarkusStreamHandler.<init>(QuarkusStreamHandler.java:21)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)\r\n        at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Source)\r\n        at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Unknown Source)\r\n        at java.base/java.lang.reflect.Constructor.newInstance(Unknown Source)\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n        ... 9 more\r\nCaused by: java.lang.NoClassDefFoundError: Could not initialize class io.quarkus.arc.runtime.InterceptedStaticMethodsInitializer\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Unknown Source)\r\n        at io.quarkus.arc.runtime.InterceptedStaticMethodsRecorder.callInitializer(InterceptedStaticMethodsRecorder.java:17)\r\n        at io.quarkus.deployment.steps.InterceptedStaticMethodsProcessor$callInitializer254957675.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.InterceptedStaticMethodsProcessor$callInitializer254957675.deploy(Unknown Source)\r\n        ... 10 more\r\nCaused by: java.lang.ExceptionInInitializerError: Exception java.lang.NullPointerException [in thread \"main\"]\r\n        at org.acme.GreetingResource_InterceptorInitializer.init_invalidateCache_a507a1b06db3a2e92c748e8345a77c6856dd2582(Unknown Source)\r\n        at org.acme.GreetingResource_InterceptorInitializer.init_static_intercepted_methods(Unknown Source)\r\n        at io.quarkus.arc.runtime.InterceptedStaticMethodsInitializer.<clinit>(Unknown Source)\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Unknown Source)\r\n        at io.quarkus.runtime.PreloadClassesRecorder.preloadClass(PreloadClassesRecorder.java:19)\r\n        at io.quarkus.runtime.PreloadClassesRecorder.preloadClassesFromStream(PreloadClassesRecorder.java:56)\r\n        at io.quarkus.runtime.PreloadClassesRecorder.preloadClasses(PreloadClassesRecorder.java:41)\r\n        at io.quarkus.runtime.PreloadClassesRecorder.invokePreloadClasses(PreloadClassesRecorder.java:65)\r\n        at io.quarkus.deployment.steps.PreloadClassesBuildStep$preInit93512537.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.PreloadClassesBuildStep$preInit93512537.deploy(Unknown Source)\r\n        ... 10 more\r\n\r\n29 Nov 2023 12:24:45,825 [ERROR] (rapid) Init failed InvokeID= error=Runtime exited with error: exit status 1\r\njava.lang.ExceptionInInitializerError: java.lang.ExceptionInInitializerError\r\njava.lang.ExceptionInInitializerError\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Unknown Source)\r\n        at io.quarkus.runtime.Quarkus.manualInitialize(Quarkus.java:236)\r\n        at io.quarkus.amazon.lambda.runtime.QuarkusStreamHandler.<init>(QuarkusStreamHandler.java:21)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)\r\n        at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Source)\r\n        at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Unknown Source)\r\n        at java.base/java.lang.reflect.Constructor.newInstance(Unknown Source)\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n        ... 9 more\r\nCaused by: java.lang.NoClassDefFoundError: Could not initialize class io.quarkus.arc.runtime.InterceptedStaticMethodsInitializer\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Unknown Source)\r\n        at io.quarkus.arc.runtime.InterceptedStaticMethodsRecorder.callInitializer(InterceptedStaticMethodsRecorder.java:17)\r\n        at io.quarkus.deployment.steps.InterceptedStaticMethodsProcessor$callInitializer254957675.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.InterceptedStaticMethodsProcessor$callInitializer254957675.deploy(Unknown Source)\r\n        ... 10 more\r\nCaused by: java.lang.ExceptionInInitializerError: Exception java.lang.NullPointerException [in thread \"main\"]\r\n        at org.acme.GreetingResource_InterceptorInitializer.init_invalidateCache_a507a1b06db3a2e92c748e8345a77c6856dd2582(Unknown Source)\r\n        at org.acme.GreetingResource_InterceptorInitializer.init_static_intercepted_methods(Unknown Source)\r\n        at io.quarkus.arc.runtime.InterceptedStaticMethodsInitializer.<clinit>(Unknown Source)\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Unknown Source)\r\n        at io.quarkus.runtime.PreloadClassesRecorder.preloadClass(PreloadClassesRecorder.java:19)\r\n        at io.quarkus.runtime.PreloadClassesRecorder.preloadClassesFromStream(PreloadClassesRecorder.java:56)\r\n        at io.quarkus.runtime.PreloadClassesRecorder.preloadClasses(PreloadClassesRecorder.java:41)\r\n        at io.quarkus.runtime.PreloadClassesRecorder.invokePreloadClasses(PreloadClassesRecorder.java:65)\r\n        at io.quarkus.deployment.steps.PreloadClassesBuildStep$preInit93512537.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.PreloadClassesBuildStep$preInit93512537.deploy(Unknown Source)\r\n        ... 10 more\r\n```\r\n\r\nHere is the GreetingResource.java (this is the only resource that the project has)\r\n```\r\npackage org.acme;\r\n\r\nimport io.quarkus.cache.CacheInvalidateAll;\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\nimport jakarta.ws.rs.Produces;\r\nimport jakarta.ws.rs.core.MediaType;\r\n\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n    @GET\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public String hello(Integer idClient) {\r\n        return \"Hello from RESTEasy Reactive\";\r\n    }\r\n    \r\n    \r\n    @CacheInvalidateAll(cacheName = \"test\")\r\n    public static boolean invalidateCache(){\r\n        return true;\r\n    }\r\n}\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37386/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37386/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

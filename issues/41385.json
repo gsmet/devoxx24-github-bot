@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41385",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41385/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41385/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41385/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41385",
+  "id": 2369964663,
+  "node_id": "I_kwDOCFbutM6NQsp3",
+  "number": 41385,
+  "title": "Detected an instance of Random/SplittableRandom class in the image heap",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2024-06-24T11:13:16Z",
+  "updated_at": "2024-08-06T13:32:24Z",
+  "closed_at": "2024-08-06T13:32:17Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a Quarkus application, that includes dependencies for both AWS and Azure EventHub. Since EventHub extension is not yet available and Azure SDK is GraalVM compatible, while building the native image I am getting following error\r\n\r\n```\r\nError: Detected an instance of Random/SplittableRandom class in the image heap. Instances created during image generation have cached seed values and don't behave as expected. If these objects should not be stored in the image heap, you can use \r\n    '--trace-object-instantiation=java.security.SecureRandom'\r\nto find classes that instantiate these objects. Once you found such a class, you can mark it explicitly for run time initialization with \r\n    '--initialize-at-run-time=<culprit>'\r\nto prevent the instantiation of the object.\r\nThe object was probably created by a class initializer and is reachable from a static field. You can request class initialization at image runtime by using the option --initialize-at-run-time=<class-name>. Or you can write your own initialization methods and call them explicitly from your main entry point.\r\nDetailed message:\r\nTrace: Object was reached by\r\n  trying to constant fold static field com.microsoft.azure.proton.transport.proxy.impl.DigestProxyChallengeProcessorImpl.SECURE_RANDOM\r\n    at com.microsoft.azure.proton.transport.proxy.impl.DigestProxyChallengeProcessorImpl.computeDigestAuthHeader(DigestProxyChallengeProcessorImpl.java:143)\r\n  parsing method com.microsoft.azure.proton.transport.proxy.impl.DigestProxyChallengeProcessorImpl.computeDigestAuthHeader(DigestProxyChallengeProcessorImpl.java:116) reachable via the parsing context\r\n    at static root method.(Unknown Source)\r\ncom.oracle.svm.core.util.UserError$UserException: Detected an instance of Random/SplittableRandom class in the image heap. Instances created during image generation have cached seed values and don't behave as expected. If these objects should not be stored in the image heap, you can use \r\n    '--trace-object-instantiation=java.security.SecureRandom'\r\nto find classes that instantiate these objects. Once you found such a class, you can mark it explicitly for run time initialization with \r\n    '--initialize-at-run-time=<culprit>'\r\nto prevent the instantiation of the object.\r\nThe object was probably created by a class initializer and is reachable from a static field. You can request class initialization at image runtime by using the option --initialize-at-run-time=<class-name>. Or you can write your own initialization methods and call them explicitly from your main entry point.\r\nDetailed message:\r\nTrace: Object was reached by\r\n  trying to constant fold static field com.microsoft.azure.proton.transport.proxy.impl.DigestProxyChallengeProcessorImpl.SECURE_RANDOM\r\n    at com.microsoft.azure.proton.transport.proxy.impl.DigestProxyChallengeProcessorImpl.computeDigestAuthHeader(DigestProxyChallengeProcessorImpl.java:143)\r\n  parsing method com.microsoft.azure.proton.transport.proxy.impl.DigestProxyChallengeProcessorImpl.computeDigestAuthHeader(DigestProxyChallengeProcessorImpl.java:116) reachable via the parsing context\r\n    at static root method.(Unknown Source)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:85)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.FallbackFeature.reportAsFallback(FallbackFeature.java:248)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.runPointsToAnalysis(NativeImageGenerator.java:814)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:592)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:550)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:539)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:721)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.start(NativeImageGeneratorRunner.java:143)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:98)\r\nCaused by: com.oracle.graal.pointsto.constraints.UnsupportedFeatureException: Detected an instance of Random/SplittableRandom class in the image heap. Instances created during image generation have cached seed values and don't behave as expected. If these objects should not be stored in the image heap, you can use \r\n    '--trace-object-instantiation=java.security.SecureRandom'\r\nto find classes that instantiate these objects. Once you found such a class, you can mark it explicitly for run time initialization with \r\n    '--initialize-at-run-time=<culprit>'\r\nto prevent the instantiation of the object.\r\nThe object was probably created by a class initializer and is reachable from a static field. You can request class initialization at image runtime by using the option --initialize-at-run-time=<class-name>. Or you can write your own initialization methods and call them explicitly from your main entry point.\r\nDetailed message:\r\nTrace: Object was reached by\r\n  trying to constant fold static field com.microsoft.azure.proton.transport.proxy.impl.DigestProxyChallengeProcessorImpl.SECURE_RANDOM\r\n    at com.microsoft.azure.proton.transport.proxy.impl.DigestProxyChallengeProcessorImpl.computeDigestAuthHeader(DigestProxyChallengeProcessorImpl.java:143)\r\n  parsing method com.microsoft.azure.proton.transport.proxy.impl.DigestProxyChallengeProcessorImpl.computeDigestAuthHeader(DigestProxyChallengeProcessorImpl.java:116) reachable via the parsing context\r\n    at static root method.(Unknown Source)\r\n\tat org.graalvm.nativeimage.pointsto/com.oracle.graal.pointsto.constraints.UnsupportedFeatures.report(UnsupportedFeatures.java:126)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.runPointsToAnalysis(NativeImageGenerator.java:809)\r\n\t... 6 more\r\n```\r\n\r\nThe initial error was different and related to a conflict with reactor netty, so based on https://github.com/quarkusio/quarkus/issues/26879 I made following adjustments in my POM\r\n\r\n```\r\n <dependency>\r\n            <groupId>io.quarkiverse.azureservices</groupId>\r\n            <artifactId>quarkus-azure-http-client-vertx</artifactId>\r\n            <version>1.0.4</version>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>com.azure</groupId>\r\n            <artifactId>azure-messaging-eventhubs</artifactId>\r\n            <exclusions>\r\n                <exclusion>\r\n                    <groupId>com.azure</groupId>\r\n                    <artifactId>azure-core-http-netty</artifactId>\r\n                </exclusion>\r\n            </exclusions>\r\n        </dependency>\r\n```\r\nI also defined below native image args\r\n```\r\nquarkus:\r\n  native:\r\n    additional-build-args: --initialize-at-run-time=com.microsoft.azure.proton.transport.ws.impl.Utils\r\n```\r\nHowever, after making the change, it is now throwing the above error.\r\n\r\n\n\n### Expected behavior\n\nThe native image build should succeed.\n\n### Actual behavior\n\nTHe native build fails\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\ngraalvm-jdk-21+35.1\n\n### Mandrel or GraalVM version (if different from Java)\n\n23.1.3.1-Final\n\n### Quarkus version or git rev\n\n3.11.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41385/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41385/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

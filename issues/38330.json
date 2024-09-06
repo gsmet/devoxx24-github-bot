@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38330",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38330/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38330/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38330/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38330",
+  "id": 2093875459,
+  "node_id": "I_kwDOCFbutM58zgED",
+  "number": 38330,
+  "title": "query error in ftsearch() when trying to use Redis-search",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2024-01-22T13:03:20Z",
+  "updated_at": "2024-01-22T20:37:40Z",
+  "closed_at": "2024-01-22T16:34:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello,\r\n\r\nWhen I call ftSearch(index, query) function the client response an error instead of the result of the query.\r\n\r\nThe error is \"java.util.concurrent.CompletionException: Syntax error at offset 1 near voie\" as if I forgot he \"@\" caracter.\r\n\r\n### Expected behavior\r\n\r\nI expect to receive the result of corresponding FT.SEARCH command in redis-cli.\r\n\r\n\r\n### Actual behavior\r\n\r\nAn error is sent corresponding to an error in the query, but when I send the exact same query in redis-cli it's working.\r\n\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\n\r\n1. Start a Redis stack docker instance\r\n2. In this instance create an index: \"ft.create idx:voiture on hash prefix 1 voiture:dyn: schema pk numeric sortable voie tag sortable\"\r\n3. In this instance create several datas corresponding to this index: \r\n- hmset voiture:dyn:001 pk 10 voie c8l2\r\n- hmset voiture:dyn:002 pk 22 voie c8l2\r\n- hmset voiture:dyn:003 pk 10 voie c9l2\r\n- hmset voiture:dyn:004 pk 14 voie c8l2\r\n4.  In this instance test a ft.search : ft.search idx:voitre \"@voie:{c8l2} @pk:[8 16]\"\r\nRedis well answer with voiture:dyn:001 and voiture:dyn:004\r\n5. Write a client which do this search: \r\n```\r\n@Singleton\r\npublic class RedisOperation {\r\n\r\n    private final HashCommands<String, String, String> hashc;\r\n    private final SearchCommands<String> searchc;\r\n\r\n    public RedisOperation(RedisDataSource ds) {\r\n        hashc = ds.hash(String.class);\r\n        searchc = ds.search(String.class);\r\n    }\r\n\r\n    public String get(String key, String field) {\r\n        String retour;\r\n        retour = hashc.hget(key, field);\r\n        log.info(\"La commande a renvoyé : \"+retour);\r\n        return retour;\r\n    }\r\n\r\n    public String getIndex(String idVoie,Integer pkDebut,Integer pkFin) {\r\n        String index = \"idx:voiture\";\r\n        String query = \"\\\"@voie:{\"+idVoie+\"} @pk:[\"+pkDebut+\" \"+pkFin+\"]\\\"\";\r\n    \r\n        StringBuilder retour = new StringBuilder(\"\");\r\n\r\n        log.info(\"On envoie la demande de recherche sur \"+index+\" lavec la query : \"+query);\r\n        SearchQueryResponse result = searchc.ftSearch(index, query);\r\n        \r\n        log.info(\"la requête est passée\");\r\n        log.info(\"La réponse est : \"+result.toString());\r\n        for (Document doc : result.documents()) {\r\n            log.info(\"Trouver : \"+doc.key());\r\n            retour.append(\" \").append(doc.key());\r\n        }\r\n        return retour.toString();\r\n    }\r\n}\r\n```\r\n6. When I execute this code, I received the following error:\r\n\r\n> 024-01-22 12:00:23,181 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-1) HTTP Request to /referentiel/check failed, error id: 7aca9804-3363-4a06-a677-2cd6ff885a9b-1: java.util.concurrent.CompletionException: Syntax error at offset 1 near voie\r\n> \tat io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:79)\r\n> \tat io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n> \tat io.quarkus.redis.runtime.datasource.BlockingSearchCommandsImpl.ftSearch(BlockingSearchCommandsImpl.java:116)\r\n> \tat org.acme.data.RedisOperation.getIndex(RedisOperation.java:38)\r\n> \tat org.acme.endpoint.ReferentielControl.check(ReferentielControl.java:33)\r\n> \tat org.acme.endpoint.ReferentielControl$quarkusrestinvoker$check_64c0cbd5ef6d0fa67060dba6907356b2ebacb7b5.invoke(Unknown Source)\r\n> \tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n> \tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:141)\r\n> \tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n> \tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\n> \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n> \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n> \tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n> \tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n> \tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n> \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n> Caused by: Syntax error at offset 1 near voie\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux vmDev 5.10.0-21-amd64 #1 SMP Debian 5.10.162-1 (2023-01-21) x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10) OpenJDK 64-Bit Server VM Temurin-17.0.6+10 (build 17.0.6+10, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.6.6\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /home/sdrogou/.m2/wrapper/dists/apache-maven-3.9.6-bin/3311e1d4/apache-maven-3.9.6 Java version: 17.0.6, vendor: Eclipse Adoptium, runtime: /home/sdrogou/.jbang/cache/jdks/17 Default locale: fr_FR, platform encoding: UTF-8 OS name: \"linux\", version: \"5.10.0-21-amd64\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\nAs I work on this feature for several days, I described the issue in stackoverflow :\r\nhttps://stackoverflow.com/questions/77845421/how-to-use-ftsearch-command-with-redisdatasource-in-quarkus/77858435\r\n\r\nAll the source code used can be found on this github depot : \r\nhttps://github.com/stephane-drogou/redis-search-example.git\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38330/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38330/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

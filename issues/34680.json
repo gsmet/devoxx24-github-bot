@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34680",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34680/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34680/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34680/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34680",
+  "id": 1798989815,
+  "node_id": "I_kwDOCFbutM5rOmf3",
+  "number": 34680,
+  "title": "Spring-Data-JPA Extension lacks on hibernate feature ragarding @EmbeddedId and @IdClass annotations",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 1552233747,
+      "node_id": "MDU6TGFiZWwxNTUyMjMzNzQ3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/spring",
+      "name": "area/spring",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues relating to the Spring integration"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-07-11T13:49:13Z",
+  "updated_at": "2024-08-14T15:11:11Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nHello everyone,\r\n\r\nI came across an unsupported feature in the \"**quarkus-spring-data-jpa**\" extension which is often very usefull or quite mandatory and therefore an addition to the already fixed bug at: [https://github.com/quarkusio/quarkus/issues/10870](https://github.com/quarkusio/quarkus/issues/10870)\r\n\r\nThe problem is regarding on how one can implement composit primary keys in hibernate orm. As the documentations of Hibernate shows [(here)](https://docs.jboss.org/hibernate/orm/5.4/userguide/html_single/Hibernate_User_Guide.html#identifiers-composite) there are two ways to implement composite primary keys in hibernate:\r\n- javax.persistence.EmbeddedId (or jakarta.persistence.EmbeddedId)\r\n- javax.persistence.IdClass (or jakarta.persistence.IdClass)\r\n\r\nThere are of course many differenced between those two ways but the one I want to highlight is that it is only possible to use the @GeneratedValue annotation on the compositekey class when using the @IdClass variant [(see).](https://docs.jboss.org/hibernate/orm/5.4/userguide/html_single/Hibernate_User_Guide.html#identifiers-composite)\r\n\r\nSo whats the problem with the quarkus extension?\r\nIn quarkus only the @EmbeddedId annotation is supported for composite primary keys. Therefore it's impossible to use eg. the @GeneratedValue annotation on a part of a composite primary key.\r\nIf you dare to try it this fancy error occurs:\r\n\r\n```\r\n2023-06-12 13:53:15,117 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (main) Failed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.spring.data.deployment.SpringDataJPAProcessor#build threw an exception: java.lang.IllegalArgumentException: Currently the @Id or @EmbeddedId annotation can only be placed on a single field or method. Offending class is my.hibernate.Class\r\n\tat io.quarkus.spring.data.deployment.generate.StockMethodsAdder.getIdAnnotationTargetRec(StockMethodsAdder.java:1063)\r\n\tat io.quarkus.spring.data.deployment.generate.StockMethodsAdder.getIdAnnotationTarget(StockMethodsAdder.java:1039)\r\n\tat io.quarkus.spring.data.deployment.generate.StockMethodsAdder.generateSave(StockMethodsAdder.java:149)\r\n\tat io.quarkus.spring.data.deployment.generate.StockMethodsAdder.add(StockMethodsAdder.java:89)\r\n\tat io.quarkus.spring.data.deployment.generate.SpringDataRepositoryCreator.implementCrudRepository(SpringDataRepositoryCreator.java:115)\r\n\tat io.quarkus.spring.data.deployment.SpringDataJPAProcessor.implementCrudRepositories(SpringDataJPAProcessor.java:264)\r\n\tat io.quarkus.spring.data.deployment.SpringDataJPAProcessor.build(SpringDataJPAProcessor.java:129)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:834)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```\r\n\r\nI think there are quite a lot users who would benefit from this feature as there are some related questions online eg.[https://stackoverflow.com/questions/61211391/are-composite-primary-keys-in-jpa-with-quarkus-possible](https://stackoverflow.com/questions/61211391/are-composite-primary-keys-in-jpa-with-quarkus-possible)\r\n\r\nLet me know if anything is unclear..\r\nThanks\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34680/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34680/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

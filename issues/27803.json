@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27803",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27803/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27803/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27803/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27803",
+  "id": 1365801062,
+  "node_id": "I_kwDOCFbutM5RaHhm",
+  "number": 27803,
+  "title": "Kotlin - unrecommended usage of private members warning for public field injection",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2022-09-08T08:38:17Z",
+  "updated_at": "2022-09-09T07:26:03Z",
+  "closed_at": "2022-09-09T05:52:04Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nKotlin - unrecommended usage of private members warning for public field injection\r\n\r\n```\r\n[INFO] [io.quarkus.arc.processor.BeanProcessor] Found unrecommended usage of private members (use package-private instead) in application beans:\r\n\t- @Inject field org.acme.GreetingResource$ErrorMapper#request\r\n[INFO] [io.quarkus.deployment.QuarkusAugmentor] Quarkus augmentation completed in 1358ms\r\n```\r\n\r\nEquivalent java code has no warning.\r\n\r\nAnother example are quarkus quickstarts - `mvn clean package -DskipTests -pl hibernate-orm-panache-kotlin-quickstart,hibernate-orm-panache-quickstart`\r\n\r\nCC @mkouba \n\n### Expected behavior\n\nNo warning\n\n### Actual behavior\n\nFound unrecommended usage of private members (use package-private instead) in application beans warning\n\n### How to Reproduce?\n\n - get sample kotlin app - https://code.quarkus.io/?e=kotlin&extension-search=origin:platform%20quarkus-kotlin\r\n - extend GreetingResource.kt \r\n - run `mvn clean package -DskipTests` and check the log\r\n \r\nGreetingResource.kt:\r\n```java\r\npackage org.acme\r\n\r\nimport io.quarkus.logging.Log\r\nimport io.vertx.core.http.HttpServerRequest\r\nimport javax.inject.Inject\r\nimport javax.ws.rs.GET\r\nimport javax.ws.rs.Path\r\nimport javax.ws.rs.Produces\r\nimport javax.ws.rs.WebApplicationException\r\nimport javax.ws.rs.core.MediaType\r\nimport javax.ws.rs.core.Response\r\nimport javax.ws.rs.ext.ExceptionMapper\r\nimport javax.ws.rs.ext.Provider\r\n\r\n@Path(\"/hello\")\r\nclass GreetingResource {\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    fun hello() = \"Hello from RESTEasy Reactive\"\r\n\r\n    @GET\r\n    @Path(\"/fail\")\r\n    fun getFail() {\r\n        throw WebApplicationException(\"Custom fail\", 404)\r\n    }\r\n\r\n    @Provider\r\n    public class ErrorMapper : ExceptionMapper<Exception> {\r\n        @Inject\r\n        public var request: HttpServerRequest? = null\r\n\r\n        override fun toResponse(exception: Exception): Response {\r\n            Log.info(\"Exception for client \" + request!!.remoteAddress());\r\n\r\n            var code = 500\r\n            if (exception is WebApplicationException) {\r\n                code = exception.response.status\r\n            }\r\n            return Response.status(code).build()\r\n        }\r\n    }\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\nmacOS Monterey\n\n### Output of `java -version`\n\nJava 17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.12.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27803/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27803/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

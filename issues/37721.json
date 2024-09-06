@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37721",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37721/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37721/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37721/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37721",
+  "id": 2040101818,
+  "node_id": "I_kwDOCFbutM55mXu6",
+  "number": 37721,
+  "title": "`gradle quarkusUpdate` fails while running in Windows Powershell",
+  "labels": [
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2023-12-13T16:44:34Z",
+  "updated_at": "2024-07-17T15:15:21Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "If I switch to 'powershell' + the batch files...\r\n\r\n```\r\npsh ❯ .\\gradlew quarkusUpdate\r\n...\r\n> Task :quarkusUpdate\r\nquarkusUpdate is experimental, its options and output might change in future versions\r\nDetected project Java version: 21\r\nDetected project Java version: 21\r\nInstructions to update this project from '3.6.2' to '3.6.3':\r\nRecommended Quarkus platform BOM updates:\r\nUpdate: io.quarkus.platform:quarkus-bom:pom:3.6.2 -> 3.6.3\r\n...\r\n\r\nResolved io.quarkus:quarkus-updates-recipes:1.0.11 with 0 recipe(s) to update from 3.6.2 to 3.6.3 (initially made for OpenRewrite GRADLE plugin version: 6.5.10)\r\nOpenRewrite recipe generated: C:\\TEMP\\quarkus-project-recipe-18062489789386963700.yaml\r\n...\r\nExecuting:\r\nD:\\storage\\workdir\\quarkus-update-repro\\gradlew.bat --console plain --stacktrace --init-script C:\\TEMP\\openrewrite-init15405549798719511192gradle rewriteRun\r\n\r\n```\r\n\r\nWhich then hangs forever... If you try to run the precise commandline again in powershell:\r\n\r\n```\r\npsh ❯ ./gradlew.bat --console plain --stacktrace --init-script C:\\TEMP\\openrewrite-init15405549798719511192gradle rewriteRun\r\n...\r\nFAILURE: Build failed with an exception.\r\n\r\n* Where:\r\nInitialization script 'C:\\TEMP\\openrewrite-init15405549798719511192gradle' line: 27\r\n\r\n* What went wrong:\r\nCould not compile initialization script 'C:\\TEMP\\openrewrite-init15405549798719511192gradle'.\r\n> startup failed:\r\n  initialization script 'C:\\TEMP\\openrewrite-init15405549798719511192gradle': 27: Unexpected character: '\"' @ line 27, column 50.\r\n     project.getRootProject().file(\"C:\\TEMP\\q\r\n                                   ^\r\n\r\n  1 error\r\n```\r\n\r\n- Note that if you manually modify the generated gradle script file so that `C:\\TEMP\\` -> `C:/TEMP/` then the script will run.\r\n\r\n```\r\npsh ❯ ./gradlew.bat --console plain --stacktrace --init-script C:\\TEMP\\openrewrite-init15405549798719511192gradle rewriteRun\r\nTo honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.5/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.\r\nDaemon will be stopped at the end of the build\r\n> Task :processResources\r\n> Task :quarkusGenerateCode\r\n> Task :quarkusGenerateCodeDev\r\n> Task :compileJava NO-SOURCE\r\n> Task :classes\r\n> Task :compileQuarkusTestGeneratedSourcesJava NO-SOURCE\r\n> Task :quarkusGenerateCodeTests\r\n> Task :compileTestJava NO-SOURCE\r\n> Task :processTestResources NO-SOURCE\r\n> Task :testClasses UP-TO-DATE\r\n> Task :compileIntegrationTestJava NO-SOURCE\r\n> Task :processIntegrationTestResources NO-SOURCE\r\n> Task :integrationTestClasses UP-TO-DATE\r\n> Task :compileNativeTestJava NO-SOURCE\r\n> Task :compileQuarkusGeneratedSourcesJava NO-SOURCE\r\n> Task :rewriteResolveDependencies\r\n\r\n> Task :rewriteRun\r\nValidating active recipes\r\nScanning sources in project :\r\nUsing active styles []\r\nAll sources parsed, running active recipes: io.quarkus.openrewrite.Quarkus\r\nGenerated new file gradle.properties by:\r\n    io.quarkus.openrewrite.Quarkus\r\n        org.openrewrite.gradle.AddProperty: {key=quarkusPlatformVersion, value=3.6.3, overwrite=true}\r\nGenerated new file gradle.properties by:\r\n    io.quarkus.openrewrite.Quarkus\r\n        org.openrewrite.gradle.AddProperty: {key=quarkusPluginVersion, value=3.6.3, overwrite=true}\r\nPlease review and commit the results.\r\n\r\nDeprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.\r\n\r\nYou can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.\r\n\r\nFor more on this, please refer to https://docs.gradle.org/8.5/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.\r\n\r\nBUILD SUCCESSFUL in 21s\r\n6 actionable tasks: 6 executed\r\n```\r\n\r\nWhich implies to me that the problem is 'potentially on windows' and not just isolated to my WSL.\r\n\r\n_Originally posted by @quotidian-ennui in https://github.com/quarkusio/quarkus/issues/37715#issuecomment-1853989074_\r\n            ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37721/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37721/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

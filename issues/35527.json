@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35527",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35527/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35527/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35527/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35527",
+  "id": 1864916662,
+  "node_id": "I_kwDOCFbutM5vKF62",
+  "number": 35527,
+  "title": "Launching via quarkus:dev fails after upgrading from Quarkus 3.1.x",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2023-08-24T11:03:48Z",
+  "updated_at": "2023-12-15T11:47:38Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter updating a project from Quarkus 3.1.x to 3.2.x, `mvn quarkus:dev` fails to start the application:\r\n\r\n```\r\n2023-08-24 12:29:34,440 INFO  [io.qua.dep.dev.IsolatedDevModeMain] (main) Attempting to start live reload endpoint to recover from previous Quarkus startup failure\r\n2023-08-24 12:29:35,092 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (main) Failed to start quarkus: io.smallrye.config.ConfigValidationException: Configuration validation failed:\r\n        java.util.NoSuchElementException: SRCFG00011: Could not expand value platform.quarkus.native.builder-image in property quarkus.native.builder-image\r\n        at io.smallrye.config.ConfigMappingProvider.mapConfigurationInternal(ConfigMappingProvider.java:1003)\r\n        at io.smallrye.config.ConfigMappingProvider.lambda$mapConfiguration$3(ConfigMappingProvider.java:959)\r\n        at io.smallrye.config.SecretKeys.doUnlocked(SecretKeys.java:28)\r\n        at io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:959)\r\n        at io.smallrye.config.ConfigMappings.mapConfiguration(ConfigMappings.java:91)\r\n        at io.smallrye.config.SmallRyeConfigBuilder.build(SmallRyeConfigBuilder.java:647)\r\n        at io.quarkus.deployment.configuration.BuildTimeConfigurationReader.initConfiguration(BuildTimeConfigurationReader.java:409)\r\n        at io.quarkus.deployment.ExtensionLoader.loadStepsFrom(ExtensionLoader.java:138)\r\n        at io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:107)\r\n        at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:332)\r\n        at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:253)\r\n        at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.firstStart(IsolatedDevModeMain.java:82)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:423)\r\n        at io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:55)\r\n        at io.quarkus.bootstrap.app.CuratedApplication.runInCl(CuratedApplication.java:138)\r\n        at io.quarkus.bootstrap.app.CuratedApplication.runInAugmentClassLoader(CuratedApplication.java:93)\r\n        at io.quarkus.deployment.dev.DevModeMain.start(DevModeMain.java:131)\r\n        at io.quarkus.deployment.dev.DevModeMain.main(DevModeMain.java:62)\r\n```\r\n\r\nThe problem appears with Quarkus 3.3.0 too. There is no problem with building the application (i.e., running `mvn package`) and running the produced artifact, the problem appears with `quarkus:dev` only. In this sense it is not an actual development blocker, but it significantly reduces a developer's comfort.\n\n### Expected behavior\n\nThere should be no regression w.r.t. running `quarkus:dev`. If the application can be compiled and launched with no errors, `quarkus:dev` should be capable of compiling and launching it with no errors as well.\r\n\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nWe were able to prepare [a small reproducer](https://github.com/quarkusio/quarkus/files/12428467/quarkus-dev-problem.zip) that can be used to see the regression:\r\n\r\n1. Unpack the project.\r\n2. Execute `mvn quarkus:dev` in the project's root folder.\r\n3. You should see that it fails with the stack trace from above.\r\n4. Change `quarkus.version` property in `pom.xml` to `3.1.3.Final` (the latest version that worked).\r\n5. Execute `mvn quarkus:dev` in the project's root folder again.\r\n6. The application should launch without problems.\r\n\r\nNotes:\r\n\r\n- Running `mvn clean compile quarkus:dev` succeeds.\r\n- Removing `flatten-maven-plugin` definitely helps.\r\n\r\nWe tried the `mvn clean compile quarkus:dev` workaround with other projects. All our Quarkus projects are based on the same template, thus have the same structure, same plugin set etc., although they may differ in versions of plugins and dependencies. Regardless of eventual differences, we could not pinpoint other important precursor for the failure than the presence of `flatten-maven-plugin`. Some projects do work even with the plugin and even without the workaround, for other projects the workaround does not actually work and the only thing that helps is removing the plugin. The reproducer, which is quite minimalistic, shows both, so we hope it is linked to all potential root causes that manifest problems in various projects of ours.\r\n\r\nIt should be noted that we tried different versions of both Maven and `flatten-maven-plugin` to no avail (we tried Maven 3.9.* and Maven 3.8.4 and 3.8.6, which were working before). We tried that on Windows and Linux (Ubuntu) and different versions of OpenJDK (mostly OpenJDK 17).\r\n\r\nLast, but not least, we experienced similar troubles before, see #27930.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35527/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35527/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

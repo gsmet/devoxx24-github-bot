@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39701",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39701/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39701/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39701/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39701",
+  "id": 2208464277,
+  "node_id": "I_kwDOCFbutM6Don2V",
+  "number": 39701,
+  "title": "Jandex IndexOutOfBOunds (ImmutableArrayList) when upgrading from keycloak 23 to 24.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-03-26T14:44:22Z",
+  "updated_at": "2024-06-05T13:23:21Z",
+  "closed_at": "2024-06-05T11:09:23Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nUntil keycloak 23 we do not have issues..\r\nBut after upgrading to keycloak 24 , the java build goes fine but when building the keycloak (with our custom providers) with docker(-compose) build we get an indexOutOfBounds :\r\n\r\n```posh\r\n ERROR: Build failure: Build failed due to errors\r\n5.668 \t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: java.lang.ArrayIndexOutOfBoundsException: Index 2 out of bounds for length 2\r\n5.668 \tat org.jboss.jandex.ImmutableArrayList.get(ImmutableArrayList.java:14)\r\n5.668 \tat io.quarkus.arc.processor.Types.buildResolvedMap(Types.java:791)\r\n5.668 \tat io.quarkus.arc.processor.Types.getTypeClosure(Types.java:660)\r\n5.668 \tat io.quarkus.arc.processor.Types.getTypeClosure(Types.java:696)\r\n5.668 \tat io.quarkus.arc.processor.Types.getClassUnrestrictedTypeClosure(Types.java:508)\r\n5.668 \tat io.quarkus.arc.processor.BeanDeployment.findSkippedClassesMatching(BeanDeployment.java:1733)\r\n5.668 \tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:493)\r\n5.668 \tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:638)\r\n5.668 \tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:308)\r\n5.668 \tat io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:160)\r\n5.668 \tat io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:488)\r\n5.668 \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n5.668 \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n5.668 \tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n5.668 \tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n5.668 \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n5.668 \tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n5.668 \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n5.668 \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n5.668 \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n5.668 \tat java.base/java.lang.Thread.run(Thread.java:840)\r\n5.668 \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```\r\n\r\n\r\nTried many things:\r\n* using forced different janex versions.\r\n* excluding it\r\n* quarkus 3.8.1, 3.8.3, 3.9.0\r\n\r\nThe all have same issue. Block to go futher.\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nexpected that our docker build goes fine.\r\n(it adds custom provider to the keycloak /provider folder).\r\n\r\nTried to debug but stuck\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\non every os (mac osx, linux).\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.10\" 2024-01-16\r\n\r\n### Quarkus version or git rev\r\n\r\n24.0.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmaven build goes fine.\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39701/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39701/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42286",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42286/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42286/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42286/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42286",
+  "id": 2444402047,
+  "node_id": "I_kwDOCFbutM6Rsp1_",
+  "number": 42286,
+  "title": "Lambda Snapstart kafka connection errors",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-08-02T08:33:32Z",
+  "updated_at": "2024-08-14T06:45:58Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi,\r\n\r\nwe use snapstart on our quarkus lambdas. Some of them use smallrye-messaging to write or receive messages from a kafka. This works as expected unfortunately in our logs we have some warnings that the connection to a kafka node was lost either to auth error or firewall blocking.\r\n\r\n```\r\n    \"loggerClassName\": \"org.apache.kafka.common.utils.LogContext$LocationAwareKafkaLogger\",\r\n    \"loggerName\": \"org.apache.kafka.clients.NetworkClient\",\r\n    \"level\": \"WARN\",\r\n    \"message\": \"[Producer clientId=kafka-producer-event-xxxx] Connection to node xx (hxxxx.amazonaws.com/xxx:9096) terminated during authentication. This may happen due to any of the following reasons: (1) Authentication failed due to invalid credentials with brokers older than 1.0.0, (2) Firewall blocking Kafka TLS traffic (eg it may only allow HTTPS traffic), (3) Transient network issue.\",\r\n```\r\n\r\nAfaik during the init phase the whole memory of a started quarkus lambda is stored and when the lambda is reused reloaded into the memory to skip the init phase. That also means that pooled connections are \"stored\" but in reality are already closed.\r\n\r\nNow I thought i simply need to close all open kafka connections before the snapshot is created. I did this with a org.crac.Resource and the beforeCheckpoint method. Now the warnings in the log are gone but it looks like no new connections are initiated and therefore all messages send via a channel fail. I also used KafkaProducer::flush but that didnt help.\r\n\r\nAny ideas?\r\n\r\n```\r\n@ApplicationScoped\r\n@Slf4j\r\npublic class KafkaHelper implements Resource {\r\n\r\n    @Inject\r\n    KafkaClientService kafkaClientService;\r\n\r\n    void onStart(@Observes StartupEvent ev) {\r\n        Core.getGlobalContext().register(this);\r\n    }\r\n\r\n    @Override\r\n    public void beforeCheckpoint(org.crac.Context<? extends Resource> context)\r\n            throws Exception {\r\n        log.info(\"kafkaproducer {}\", kafkaClientService.getProducerChannels());\r\n        log.info(\"kafkaconsumer {}\", kafkaClientService.getConsumerChannels());\r\n\r\n        log.info(\"going to sleep\");\r\n        var listOfProducer = kafkaClientService.getProducerChannels().stream()\r\n                .map(kafkaClientService::getProducer)\r\n                .map(KafkaProducer::flush) // with KafkaProducer::close log warnings are gone but all future messages fail\r\n                .toList();\r\n\r\n        Uni.combine().all().unis(listOfProducer)\r\n                .combinedWith(unused -> null)\r\n                .await().atMost(Duration.ofSeconds(10));\r\n        log.info(\"going to sleep 2\");\r\n    }\r\n    @Override\r\n    public void afterRestore(org.crac.Context<? extends Resource> context)\r\n            throws Exception {\r\n\r\n        // is there a 'init connection' method?\r\n        log.info(\"i am back\");\r\n\r\n    }\r\n}\r\n```\r\n\r\nI found https://github.com/quarkusio/quarkus/issues/31401 which is the same issue but with database connections.\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42286/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42286/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

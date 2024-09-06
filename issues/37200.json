@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37200",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37200/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37200/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37200/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37200",
+  "id": 2000461218,
+  "node_id": "I_kwDOCFbutM53PJ2i",
+  "number": 37200,
+  "title": "Improve errors legibility in duplicated routes",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-11-18T15:15:28Z",
+  "updated_at": "2023-11-21T03:50:09Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nHello, I was playing around with Quarkus and especially the quarkus cli (`quarkus dev`) and I noticed that when having a duplicated endpoint the immediate verbosity of the stack trace and error is quite high and in my opinion the error message itself is not great.\r\n\r\nIn my specific example I am using rest easy and jakarta, and the error log is extremely verbose, but you can quickly replicate this with a smaller stacktrace with the snippet below.\r\n\r\n```\r\n    @GET\r\n    @Path(\"test\")\r\n    public void get1(String id) {}\r\n    @GET\r\n    @Path(\"test\")\r\n    public void get2(String id) {}\r\n```\r\n\r\n<details>\r\nExample error log\r\n\r\n```\r\n        jakarta.enterprise.inject.spi.DeploymentException: GET /todo is declared by :\r\n        com.github.azthec.TodoResource#getAll consumes *, produces application/json\r\n        com.github.azthec.TodoResource#todo consumes *, produces application/json\r\n\r\n        \tat io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor.checkForDuplicateEndpoint(ResteasyReactiveProcessor.java:1359)\r\n        \tat io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor.setupEndpoints(ResteasyReactiveProcessor.java:666)\r\n        \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        \tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        \tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:858)\r\n        \tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n        \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n        \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n        Resulted in: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        \t[error]: Build step io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor#setupEndpoints threw an exception: jakarta.enterprise.inject.spi.DeploymentException: GET /todo is declared by :\r\n        com.github.azthec.TodoResource#getAll consumes *, produces application/json\r\n        com.github.azthec.TodoResource#todo consumes *, produces application/json\r\n\r\n        \tat io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor.checkForDuplicateEndpoint(ResteasyReactiveProcessor.java:1359)\r\n        \tat io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor.setupEndpoints(ResteasyReactiveProcessor.java:666)\r\n        \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        \tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        \tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:858)\r\n        \tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n        \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n        \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\n        \tat io.quarkus.builder.Execution.run(Execution.java:123)\r\n        \tat io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:79)\r\n        \tat io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:160)\r\n        \tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:332)\r\n        \tat io.quarkus.runner.bootstrap.AugmentActionImpl.reloadExistingApplication(AugmentActionImpl.java:266)\r\n        \tat io.quarkus.runner.bootstrap.AugmentActionImpl.reloadExistingApplication(AugmentActionImpl.java:60)\r\n        \tat io.quarkus.deployment.dev.IsolatedDevModeMain.restartApp(IsolatedDevModeMain.java:191)\r\n        \tat io.quarkus.deployment.dev.IsolatedDevModeMain.restartCallback(IsolatedDevModeMain.java:174)\r\n        \tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:541)\r\n        \tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:441)\r\n        \tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:152)\r\n        \tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:139)\r\n        \tat io.vertx.core.impl.ContextBase.lambda$executeBlocking$1(ContextBase.java:180)\r\n        \tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:277)\r\n        \tat io.vertx.core.impl.ContextBase.lambda$internalExecuteBlocking$2(ContextBase.java:199)\r\n        \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1512)\r\n        \tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        \tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        \tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n        Resulted in: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        \t[error]: Build step io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor#setupEndpoints threw an exception: jakarta.enterprise.inject.spi.DeploymentException: GET /todo is declared by :\r\n        com.github.azthec.TodoResource#getAll consumes *, produces application/json\r\n        com.github.azthec.TodoResource#todo consumes *, produces application/json\r\n\r\n        \tat io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor.checkForDuplicateEndpoint(ResteasyReactiveProcessor.java:1359)\r\n        \tat io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor.setupEndpoints(ResteasyReactiveProcessor.java:666)\r\n        \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        \tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        \tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:858)\r\n        \tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n        \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n        \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\n        \tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:336)\r\n        \t... 18 more\r\n\r\n```\r\n\r\n</details>\n\n### Implementation ideas\n\nCould it maybe possible to:\r\n  - omit the stack trace by default, and enable printing the stack trace with a hotkey similarly to [r] for re-run etc\r\n  - make the error message a bit more human friendly?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37200/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37200/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

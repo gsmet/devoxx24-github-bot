@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36543",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36543/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36543/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36543/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36543",
+  "id": 1949189954,
+  "node_id": "I_kwDOCFbutM50LkdC",
+  "number": 36543,
+  "title": "Support load shedding for HTTP requests",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-10-18T08:38:13Z",
+  "updated_at": "2024-02-08T16:31:46Z",
+  "closed_at": "2023-11-20T13:39:10Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nFor the Keycloak project, we've been running load tests and found that load shedding increases the stability of the system when handling overload situations. Without load shedding, an overload situation could lead to Pods restarting, which would make it even harder for the system to recover.\r\n\r\nWe think this situation is similar also for other users of Quarkus, so we're asking for an enhancement in Quarkus for this.\r\n\r\nLoad Shedding is IMHO important for blocking requests as those would queue up in the system and lead to very long processing times until the request is processed. Once it is then processed, the answer might no longer be relevant to the caller, and it might have run into a timeout.\r\n\r\nEven for non-blocking requests there is still a resource usage with the number of connections, and the number of requests in flight which could eventually overload the event loop. With Keycloak doing cryptographic operations like password hashing and token signing, this a situation that is very real. \r\n\r\nFor that, we've been experimenting with different approaches and tried to use the things Quarkus has already to offer.\r\n\r\n**1. The naive approach: to use `quarkus.thread-pool.queue-size`**\r\n\r\nA first naive approach was to use `quarkus.thread-pool.queue-size` to limit the number of queued blocking requests.\r\nOnce a blocking requests exceeds the queue size, there is a rejected execution exception which by default would return a 500 (server error) and creates a lot of logs on the console. We also found that in some cases Vert.x wasn't handling this well (#36530). Also not being able to differentiate between probes (health, liveness, readiness) and metrics which were also shedded was problematic, as it would lead to pod restarts if the liveness probe was also shedded. With #36434 being implemented, probes will no longer be shedded as they will become non-blocking, but metrics will remain blocking. \r\n\r\nGiven the drawbacks listed above, and not finding another existing Quarkus option, we started looking for something else (see below). \r\n\r\n**2. More sophisticated attempt: LoadSheddingHandler**\r\n\r\nThe next attempt was to implement a Handler in Vert.x which would keep count of all requests in flight, and would respond with a 503 (server unavailable) once a given limit is exceeded. \r\n\r\nThe PR https://github.com/keycloak/keycloak/pull/23343 is an attempt to do this (see class `LoadSheddingHandler`): \r\n\r\n* Define a predicate which routes to be ignored (health and metrics in our case)\r\n* Set up a semaphore to keep track of how many requests are currently processed\r\n* Add a logging summary of how many requests were dropped\r\n* Future enhancement: expose a metric about accepted and rejected requests\r\n\r\nThe results we got from this in our tests are quite promising, were meeting our expectations. As stated above, we think this situation is similar also for other users of Quarkus, so we're asking for an enhancement in Quarkus for this.\r\n\n\n### Implementation ideas\n\nThe `LoadSheddingHandler` from the Keyclak PR could be a starting point for an implementation which could come bundled with Quarkus.\r\n\r\nThe configuration options for such a handler would be: \r\n\r\n* Number of concurrent requests allowed (threshold) - in our case we would set it to 1000 if we're running a system which usually processes up to 200 requests per second to have a maximum expected queue time of 5 seconds.\r\n* Routes to be excluded - in our case health and metrics, might be additional endpoints in other scenarios\r\n\r\n\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36543/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36543/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

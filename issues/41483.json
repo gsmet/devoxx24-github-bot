@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41483",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41483/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41483/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41483/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41483",
+  "id": 2375745512,
+  "node_id": "I_kwDOCFbutM6Nmv_o",
+  "number": 41483,
+  "title": "Mismatch between registry data and platform json bom for some extensions",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2388070055,
+      "node_id": "MDU6TGFiZWwyMzg4MDcwMDU1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/quarkiverse",
+      "name": "area/quarkiverse",
+      "color": "a01441",
+      "default": false,
+      "description": "This issue/PR is part of the Quarkiverse organization"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-06-26T16:12:24Z",
+  "updated_at": "2024-06-27T07:28:08Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### The problem\r\n\r\nSee original discussion on https://github.com/quarkusio/quarkus/pull/41476\r\n\r\nFor two extensions, Websockets Next and Confluent Schema Registry - Avro, there is a mismatch between what ends up in the registry and what ends up in the platform bom json, `target/quarkus-bom-quarkus-platform-descriptor-999-SNAPSHOT-999-SNAPSHOT.json`. \r\n\r\nThe registry has un-enriched metadata, so it's missing things like the description from the pom. \r\n\r\n### The visible symptom\r\nYou can see the effect of this on extensions.quarkus.io:\r\n<img width=\"230\" alt=\"image\" src=\"https://github.com/quarkusio/quarkus/assets/11509290/830e88f3-2a42-4abf-a931-d7da747f14f0\">\r\n<img width=\"237\" alt=\"image\" src=\"https://github.com/quarkusio/quarkus/assets/11509290/237dbb5c-36b4-45ff-8dee-bd60598f0641\">\r\n\r\nhttp://code.quarkus.io has the correct descriptions for these extensions, even though the registry [returns incorrect data](https://registry.quarkus.io/q/swagger-ui/#/Client/get_client_extensions_all). I think that's because code.quarkus is reading the platform bom json, rather than the registry entries for the extensions.\r\n\r\n### Why is this happening? \r\n\r\nUm, not sure. \r\n\r\nWhen websockets-next is built, the 'source' pom is in `runtime/pom.xml`, but the generated extension yaml ends up in `server/target/runtime/quarkus-extension.yaml`. I think `./runtime/target/classes/META-INF/quarkus-extension.yaml` is what's used for the registry upload, but `./server/runtime/target/classes/META-INF/quarkus-extension.yaml` is what's used to generate the platform bom. Since the metadata we use for the registry upload is non-enriched, the registry data ends up being incomplete/incorrect.\r\n\r\nThe `quarkus/extensions/schema-registry/confluent/avro` extension has a similar mismatch between platform json and the registry, but I can't see a similar 'other directory' mechanism for that one, so the 'other directory' thing might be the wrong tree.\r\n\r\nAny idea what's going on, @aloubyansky or @gastaldi?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41483/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41483/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

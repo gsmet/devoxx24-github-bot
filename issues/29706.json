@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29706",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29706/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29706/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29706/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29706",
+  "id": 1479357265,
+  "node_id": "I_kwDOCFbutM5YLTNR",
+  "number": 29706,
+  "title": "Ability to install mocks for interfaces with QuarkusMock",
+  "labels": [
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-12-06T15:17:37Z",
+  "updated_at": "2023-10-09T10:42:04Z",
+  "closed_at": "2022-12-07T09:28:08Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nI have a plain Java interface e.g. `StoreInventory`, a real implementation `DbStoreInventory` using Panache that is `@ApplicationScoped` and a `ProductResource` that depends on `StoreInventory`:\r\n\r\n```java\r\npublic interface StoreInventory {\r\n  List<Product> getProducts();\r\n  Product getProduct(long id);\r\n  void addProduct(Product product);\r\n  ...\r\n}\r\n```\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class DbStoreInventory implements StoreInventory, PanacheRepository<Product> {\r\n  ...\r\n}\r\n```\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class ProductResource {\r\n  public ProductResource(StoreInventory inventory) {\r\n    ...\r\n  }\r\n  ...\r\n}\r\n```\r\n\r\nI am trying do something like the following with a fake `StoreInventory` implementation `InMemoryStoreInventory`:\r\n\r\n```java\r\n@QuarkusTest\r\n@TestHttpEndpoint(ProductResource.class)\r\nclass ProductResourceTest {\r\n  @Inject StoreInventory inventory;\r\n\r\n  @BeforeAll\r\n  static void setup() {\r\n    QuarkusMock.installMockForType(new InMemoryStoreInventory(), StoreInventory.class);\r\n  }\r\n}\r\n```\r\n\r\nthen I get an (erroneous) error:\r\n\r\n```\r\nDbStoreInventory@13cc31df is not a normal scoped CDI bean, make sure the bean is a normal scope like @ApplicationScoped or @RequestScoped\r\n```\r\n\r\nchecking the cause shows the real issue:\r\n\r\n```\r\nCaused by: java.lang.ClassCastException: class InMemoryStoreInventory cannot be cast to class DbStoreInventory\r\n```\r\n\r\nSince all of my code depends on the abstraction `StoreInventory` then ideally I'd like to be able to install fake implementations of that that do not inherit from `DbStoreInventory`.\r\n\r\nNB: I am able to use `@InjectMock` to inject a new Mockito mock for `StoreInventory`, but perhaps this is actually just mocking `DbStoreInventory`?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29706/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29706/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20360",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20360/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20360/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20360/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20360",
+  "id": 1005446982,
+  "node_id": "I_kwDOCFbutM477edG",
+  "number": 20360,
+  "title": "Nonexisting truststore doesn't lead to error in native image",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2021-09-23T13:37:22Z",
+  "updated_at": "2021-09-28T08:53:44Z",
+  "closed_at": "2021-09-28T08:53:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI tried to bake a truststore into my application using the following property:\r\n`quarkus.native.additional-build-args=-J-Djavax.net.ssl.trustStore=/tmp/mongo/truststore.jks,-J-Djavax.net.ssl.trustStorePassword=changeit\r\n`\r\n\r\nThe issue is that if the file /tmp/mongo/truststore.jks does not exist, I don't get an error because it seems that the build-process makes a fallback on some default truststore. This leads to a successful build and later on to an error message when calling a service/app/db that requires SSL:\r\n`sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target`\r\n\r\nIf I change the password to an arbitrary value, I get an error in the build process:\r\n`javax.net.ssl.trustStorePassword=FooBar` \r\n`java.security.UnrecoverableKeyException: Password verification failed` \r\n\r\nThis behaviour happens, even though the file does not exist.\r\n\r\nIf I use an existing truststore with the correct password, everything works fine.\r\n\r\n\r\n\n\n### Expected behavior\n\nBy setting an non existing truststore I would expect the build process to fail with a corresponding error message.\n\n### Actual behavior\n\nThe buildprocess takes some unknown default truststore, that then fails in the runtime of the application because of the wrong CA in it.\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nDarwin MacBook-Pro-3.local 20.6.0 Darwin Kernel Version 20.6.0: Wed Jun 23 00:26:31 PDT 2021; root:xnu-7195.141.2~5/RELEASE_X86_64 x86_64 (but also on ubuntu)\n\n### Output of `java -version`\n\nopenjdk version \"11.0.10\"\n\n### GraalVM version (if different from Java)\n\n21.0.0\n\n### Quarkus version or git rev\n\n2.2.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.6.3\n\n### Additional information\n\nBuildlog with nonexisting truststore:\r\n\r\n`/Library/Java/JavaVirtualMachines/jdk-11.0.9.jdk/Contents/Home/bin/java -agentlib:jdwp=transport=dt_socket,address=127.0.0.1:55197,suspend=y,server=n -Dmaven.multiModuleProjectDirectory=/Users/mathew/gitrepos/trap/trap -Dmaven.home=/Applications/IntelliJ IDEA.app/Contents/plugins/maven/lib/maven3 -Dclassworlds.conf=/Applications/IntelliJ IDEA.app/Contents/plugins/maven/lib/maven3/bin/m2.conf -Dmaven.ext.class.path=/Applications/IntelliJ IDEA.app/Contents/plugins/maven/lib/maven-event-listener.jar -javaagent:/Users/mathew/Library/Caches/JetBrains/IntelliJIdea2020.3/captureAgent/debugger-agent.jar -Dfile.encoding=UTF-8 -classpath /Applications/IntelliJ IDEA.app/Contents/plugins/maven/lib/maven3/boot/plexus-classworlds.license:/Applications/IntelliJ IDEA.app/Contents/plugins/maven/lib/maven3/boot/plexus-classworlds-2.6.0.jar:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar org.codehaus.classworlds.Launcher -Didea.version=2020.3.4 package -Pnative -DskipTests\r\nConnected to the target VM, address: '127.0.0.1:55197', transport: 'socket'\r\n[INFO] Scanning for projects...\r\n[INFO] \r\n[INFO] ------------------------< com.axa.ch.trap:trap >------------------------\r\n[INFO] Building trap 1.0.0-SNAPSHOT\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[INFO] \r\n[INFO] --- quarkus-maven-plugin:2.2.3.Final:generate-code (default) @ trap ---\r\n[INFO] \r\n[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ trap ---\r\n[INFO] Using 'UTF-8' encoding to copy filtered resources.\r\n[INFO] Copying 3 resources\r\n[INFO] \r\n[INFO] --- maven-compiler-plugin:3.8.1:compile (default-compile) @ trap ---\r\n[INFO] Nothing to compile - all classes are up to date\r\n[INFO] \r\n[INFO] --- jacoco-maven-plugin:0.8.6:instrument (instrument) @ trap ---\r\n[INFO] \r\n[INFO] --- quarkus-maven-plugin:2.2.3.Final:generate-code-tests (default) @ trap ---\r\n[INFO] \r\n[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ trap ---\r\n[INFO] Using 'UTF-8' encoding to copy filtered resources.\r\n[INFO] Copying 3 resources\r\n[INFO] \r\n[INFO] --- maven-compiler-plugin:3.8.1:testCompile (default-testCompile) @ trap ---\r\n[INFO] Changes detected - recompiling the module!\r\n[INFO] Compiling 9 source files to /Users/mathew/gitrepos/trap/trap/target/test-classes\r\n[INFO] /Users/mathew/gitrepos/trap/trap/src/test/java/ch/zhaw/ba/mongo/codec/OrderEventProviderTest.java: /Users/mathew/gitrepos/trap/trap/src/test/java/ch/zhaw/ba/mongo/codec/OrderEventProviderTest.java uses unchecked or unsafe operations.\r\n[INFO] /Users/mathew/gitrepos/trap/trap/src/test/java/ch/zhaw/ba/mongo/codec/OrderEventProviderTest.java: Recompile with -Xlint:unchecked for details.\r\n[INFO] \r\n[INFO] --- maven-surefire-plugin:3.0.0-M5:test (default-test) @ trap ---\r\n[INFO] Tests are skipped.\r\n[INFO] \r\n[INFO] --- jacoco-maven-plugin:0.8.6:restore-instrumented-classes (restore) @ trap ---\r\n[INFO] \r\n[INFO] --- maven-jar-plugin:2.4:jar (default-jar) @ trap ---\r\n[INFO] Building jar: /Users/mathew/gitrepos/trap/trap/target/trap-1.0.0-SNAPSHOT.jar\r\n[INFO] \r\n[INFO] --- quarkus-maven-plugin:2.2.3.Final:build (default) @ trap ---\r\n[INFO] [org.jboss.threads] JBoss Threads version 3.4.2.Final\r\n[WARNING] [io.quarkus.deployment.steps.ReflectiveHierarchyStep] Unable to properly register the hierarchy of the following classes for reflection as they are not in the Jandex index:\r\n\t- com.axa.ch.trap.model.OrderEvent (source: <unknown>)\r\nConsider adding them to the index either by creating a Jandex index for your dependency via the Maven plugin, an empty META-INF/beans.xml or quarkus.index-dependency properties.\r\n[INFO] [io.quarkus.deployment.pkg.steps.JarResultBuildStep] Building native image source jar: /Users/mathew/gitrepos/trap/trap/target/trap-1.0.0-SNAPSHOT-native-image-source-jar/trap-1.0.0-SNAPSHOT-runner.jar\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildStep] Building native image from /Users/mathew/gitrepos/trap/trap/target/trap-1.0.0-SNAPSHOT-native-image-source-jar/trap-1.0.0-SNAPSHOT-runner.jar\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildStep] Running Quarkus native-image plugin on GraalVM Version 21.0.0 (Java Version 11.0.10+8-jvmci-21.0-b06)\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] /Library/Java/JavaVirtualMachines/graalvm-ce-java11-21.0.0/Contents/Home/bin/native-image -J-DCoordinatorEnvironmentBean.transactionStatusManagerEnable=false -J-Dsun.nio.ch.maxUpdateArraySize=100 -J-Djava.util.logging.manager=org.jboss.logmanager.LogManager -J-Dvertx.logger-delegate-factory-class-name=io.quarkus.vertx.core.runtime.VertxLogDelegateFactory -J-Dvertx.disableDnsResolver=true -J-Dio.netty.leakDetection.level=DISABLED -J-Dio.netty.allocator.maxOrder=3 -J-Duser.language=de -J-Duser.country=CH -J-Dfile.encoding=UTF-8 -J-Djavax.net.ssl.trustStore=/tmp/mongo/nonexisting.jks -J-Djavax.net.ssl.trustStorePassword=changeit -H:InitialCollectionPolicy=com.oracle.svm.core.genscavenge.CollectionPolicy\\$BySpaceAndTime -H:+JNI -H:+AllowFoldMethods -H:FallbackThreshold=0 -H:+ReportExceptionStackTraces -H:-AddAllCharsets -H:EnableURLProtocols=http,https --enable-all-security-services -H:-UseServiceLoaderFeature -H:+StackTrace trap-1.0.0-SNAPSHOT-runner -jar trap-1.0.0-SNAPSHOT-runner.jar\r\n[trap-1.0.0-SNAPSHOT-runner:70790]    classlist:   2’404.77 ms,  1.19 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]        (cap):  10’402.39 ms,  1.68 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]        setup:  12’353.30 ms,  1.68 GB\r\n15:31:09,174 INFO  [org.hib.val.int.uti.Version] HV000001: Hibernate Validator 6.2.0.Final\r\n15:31:25,903 INFO  [org.jbo.threads] JBoss Threads version 3.4.2.Final\r\n[trap-1.0.0-SNAPSHOT-runner:70790]     (clinit):   1’193.02 ms,  5.59 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]   (typeflow):  19’297.94 ms,  5.59 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]    (objects):  22’367.74 ms,  5.59 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]   (features):   1’187.49 ms,  5.59 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]     analysis:  46’494.62 ms,  5.59 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]     universe:   2’547.29 ms,  5.47 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]      (parse):   3’572.96 ms,  5.47 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]     (inline):  10’216.13 ms,  6.78 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]    (compile):  32’642.28 ms,  6.45 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]      compile:  50’077.60 ms,  6.45 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]        image:   6’756.92 ms,  6.56 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]        write:   2’117.38 ms,  6.56 GB\r\n[trap-1.0.0-SNAPSHOT-runner:70790]      [total]: 123’184.54 ms,  6.56 GB\r\n[WARNING] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] objcopy executable not found in PATH. Debug symbols will therefore not be separated from the executable.\r\n[WARNING] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] That also means that resulting native executable is larger as it embeds the debug symbols.\r\n[INFO] [io.quarkus.deployment.QuarkusAugmentor] Quarkus augmentation completed in 145343ms\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD SUCCESS\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  02:42 min\r\n[INFO] Finished at: 2021-09-23T15:32:57+02:00\r\n[INFO] ------------------------------------------------------------------------\r\nDisconnected from the target VM, address: '127.0.0.1:55197', transport: 'socket'\r\n\r\nProcess finished with exit code 0\r\n`",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20360/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20360/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

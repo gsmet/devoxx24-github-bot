@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39494",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39494/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39494/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39494/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39494",
+  "id": 2189393010,
+  "node_id": "I_kwDOCFbutM6Cf3xy",
+  "number": 39494,
+  "title": "Ambiguity in the WebAuthN docs when writing custom login/registration and getting dual write errors on database",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 6477362026,
+      "node_id": "LA_kwDOCFbutM8AAAABghSzag",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/webauthn",
+      "name": "area/webauthn",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2024-03-15T20:09:30Z",
+  "updated_at": "2024-04-12T19:51:21Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello! \r\n\r\nI'm working through the WebAuthN docs and am trying to add custom logic just for the registration endpoint so that I can include user roles. However, when I get to persisting I get errors relating to duplicate key values even if i don't have anything in my database and I realized it's because I didn't make any edits to the `MyWebAuthnSetup` class so I persist both there and in my registration resource. \r\n\r\n\r\nI noticed in the docs there was a small comment `// leave the scooby user to the manual endpoint, because if we do it here it will be created/updated twice` on the `updateOrStoreWebAuthnCredentials` function and tested registering with a user named scooby and didn't get a dual write error. So for now my fix was to  just comment out anything in the `updateOrStoreWebAuthnCredentials` function. But now i'm not sure what the best way to handle the `WebAuthnSetup` is when writing custom registration logic and a bit confused overall as to when the `updateOrStoreWebAuthnCredentials` get's triggered if I'm not using the original registration endpoint anymore to handle user persistence. I attached my javascript snippet and the quarkus code below to make sure I wasn't doing anything wrong on my side. \r\n\r\n So my questions are : \r\n\r\n1. How best to handle the `WebAuthnSetup` class and functions when implementing custom logic. Are there best practices to follow?\r\n2. When does the `updateOrStoreWebAuthnCredentials` function get triggered? I'm having some trouble finding it in the  WebAuthN extension itself and it would be helpful so I can understand why it was getting triggered. \r\n\r\nLet me know if maybe I misunderstood the docs and did something wrong, thank you so much!\n\n### Expected behavior\n\nNo dual write error / less ambiguity\n\n### Actual behavior\n\ndual write error\n\n### How to Reproduce?\n\nJavascript code: \r\n\r\n```\r\n const registerButton = document.getElementById('register');\r\n\r\n      registerButton.onclick = () => {\r\n      var userName = document.getElementById('userNameRegister').value;\r\n      var firstName = document.getElementById('firstName').value;\r\n      var lastName = document.getElementById('lastName').value;\r\n      var userRole = document.getElementById('userRole').value;\r\n      result.replaceChildren();\r\n      webAuthn.registerOnly({ name: userName, role: userRole, displayName: firstName + \" \" + lastName })\r\n      .then(body => {\r\n            let formData = new FormData();\r\n            formData.append('userName', userName);\r\n            formData.append('role', userRole);\r\n            formData.append('displayName', firstName + \" \" + lastName);\r\n            formData.append('webAuthnId', body.id);\r\n            formData.append('webAuthnRawId', body.rawId);\r\n            formData.append('webAuthnResponseAttestationObject', body.response.attestationObject);\r\n            formData.append('webAuthnResponseClientDataJSON', body.response.clientDataJSON);\r\n            formData.append('webAuthnType', body.type);\r\n            return fetch('/register', {\r\n                method: 'POST',\r\n                headers: {\r\n                    'Accept': 'application/json'\r\n                  },\r\n                body: formData\r\n              })\r\n            })\r\n      .then(res => {\r\n        if (res.status >= 200 && res.status < 300) {\r\n          return res;\r\n        }\r\n        throw new Error(res.statusText);\r\n      });\r\n  };\r\n```\r\n\r\n\r\nregistration resource code:\r\n```\r\n  @Path(\"/register\")\r\n  @POST\r\n  @Transactional\r\n  public Response register(@RestForm String userName, @RestForm String role,\r\n    @BeanParam WebAuthnRegisterResponse webAuthnResponse,\r\n    RoutingContext ctx) {\r\n    // Input validation\r\n    if(userName == null || userName.isEmpty() || !webAuthnResponse.isSet() || !webAuthnResponse.isValid()) {\r\n      return Response.status(Status.BAD_REQUEST).build();\r\n    }\r\n    User user = User.findByUserName(userName);\r\n    if(user != null) {\r\n      // Duplicate user\r\n      return Response.status(Status.BAD_REQUEST).build();\r\n    }\r\n    try {\r\n      // store the user\r\n      Authenticator authenticator = this.webAuthnSecurity.register(webAuthnResponse, ctx).await().indefinitely();\r\n      User newUser = new User();\r\n      newUser.userName = authenticator.getUserName();\r\n      newUser.role = role;\r\n      WebAuthnCredential credential = new WebAuthnCredential(authenticator, newUser);\r\n\r\n      newUser.persist();\r\n      credential.persist();\r\n\r\n      // make a login cookie\r\n      this.webAuthnSecurity.rememberUser(newUser.userName, ctx);\r\n      return Response.ok().build();\r\n    } catch (Exception ignored) {\r\n      // handle login failure\r\n      // make a proper error response\r\n      return Response.status(Status.BAD_REQUEST).build();\r\n    }\r\n  }\r\n\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin. -MBP.lan 23.3.0 Darwin Kernel Version 23.3.0: Wed Dec 20 21:30:44 PST 2023; root:xnu-10002.81.5~7/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.8.1\" 2023-08-24 OpenJDK Runtime Environment Homebrew (build 17.0.8.1+0) OpenJDK 64-Bit Server VM Homebrew (build 17.0.8.1+0, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.8.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39494/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39494/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

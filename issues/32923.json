@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32923",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32923/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32923/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32923/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32923",
+  "id": 1685370797,
+  "node_id": "I_kwDOCFbutM5kdLet",
+  "number": 32923,
+  "title": "Bean with StartupEvent observer starts before extensions",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 27,
+  "created_at": "2023-04-26T16:41:07Z",
+  "updated_at": "2023-08-03T10:55:14Z",
+  "closed_at": "2023-08-03T10:55:14Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a bean using opentelemetry (injecting the `Tracer`) and with observes on `StartupEvent`:\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class Greeting {\r\n\r\n    @Inject\r\n    Tracer tracer;\r\n\r\n    private final Logger logger = LoggerFactory.getLogger(Greeting.class);\r\n\r\n    public void startup(@Observes StartupEvent startupEvent) {\r\n        Span span = tracer.spanBuilder(\"My custom span\")\r\n                        .setAttribute(\"my.attr\", \"attr\")\r\n                                .setParent(Context.current().with(Span.current()))\r\n                                        .setSpanKind(SpanKind.INTERNAL)\r\n                                                .startSpan();\r\n        span.addEvent(\"Starting ...\");\r\n        logger.info(\"Hello world !\");\r\n        span.addEvent(\"I'm done\");\r\n        span.end();\r\n    }\r\n\r\n    @WithSpan\r\n    public void shutdown(@Observes ShutdownEvent shutdownEvent) {\r\n        logger.info(\"Bye bye world !\");\r\n    }\r\n\r\n}\r\n```\r\n\r\nWhen I start my application, I can see:\r\n\r\n```\r\n\"\"09:34:37 WARN  traceId=, parentId=, spanId=, sampled= [io.qu.op.ru.ex.ot.LateBoundBatchSpanProcessor] (main) No BatchSpanProcessor delegate specified, no action taken.\r\n\"\"09:34:38 INFO  traceId=, parentId=, spanId=, sampled= [co.dr.cl.co.ex.fi.Greeting] (main) Hello world !\r\n\"\"09:34:38 INFO  traceId=, parentId=, spanId=, sampled= [io.quarkus] (main) first-service 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.0.1.Final) started in 0.803s. Listening on: http://0.0.0.0:8080\r\n\"\"09:34:38 INFO  traceId=, parentId=, spanId=, sampled= [io.quarkus] (main) Profile prod activated. \r\n\"\"09:34:38 INFO  traceId=, parentId=, spanId=, sampled= [io.quarkus] (main) Installed features: [cdi, kubernetes-client, opentelemetry, rest-client, resteasy-reactive, smallrye-context-propagation, vertx]\r\n...\r\n```\r\n\r\nSo it seems that my bean is starting before the opentelemetry extension, even if I inject the `Tracer`. Is it a bug ?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32923/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32923/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

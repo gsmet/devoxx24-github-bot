@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29830",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29830/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29830/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29830/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29830",
+  "id": 1494240349,
+  "node_id": "I_kwDOCFbutM5ZEExd",
+  "number": 29830,
+  "title": "Quarkus Redis PubSub Client loses subscribers",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-12-13T13:28:12Z",
+  "updated_at": "2022-12-14T07:27:20Z",
+  "closed_at": "2022-12-14T07:12:18Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nI have a simple use case where I need to publish some Strings using ReactivePubSubCommands and subscribe to them at application start-up so that I can have a listener active for the entire app lifecycle. \r\n\r\nThe problem is my Redis subscribers somehow disappear after some time of running on the remote environment (~2 hours). The logs don't show any error and I was not able to reproduce the issue locally. \r\n\r\nRunning `pubsub numsub <topic>` returns 0 after the subscriber stops working\r\n\r\nAny thoughts on what could be the route cause? From what I saw, Redis subscribers don't have any expiry time so I was expecting to have my listener be active for the entire app lifecycle. Instead, the subscriber just stops receiving new data after some time.\r\n\r\n### Code samples:\r\n```\r\nReactivePubSubCommands<String> redisPubSub = reactiveRedisDataSource.pubsub(String.class);\r\n\r\n// Publisher\r\nredisPubSub.publish(\"notifications\", someStringId).subscribe().with(\r\n                ignored -> log.info(\"Published id {}\", someStringId),\r\n                failure -> log.error(\"Failed to publish id {}\", someStringId, failure));\r\n\r\n// Subscriber\r\npublic void onStart(@Observes StartupEvent ev, ReactiveRedisDataSource redis) {\r\n        redis.pubsub(String.class).subscribe(\"notifications\")\r\n                .onItem().invoke(id -> doSomethingWithTheId(id))\r\n                .subscribe().with(\r\n                        id -> log.info(\"New id has been processed {}\", id),\r\n                        err -> log.error(\"Error while listening for new ids \", err));\r\n}\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29830/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29830/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

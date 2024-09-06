@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28032",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28032/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28032/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28032/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28032",
+  "id": 1376786247,
+  "node_id": "I_kwDOCFbutM5SEBdH",
+  "number": 28032,
+  "title": "Lightweight feature flags extension",
+  "labels": [
+    {
+      "id": 1553869078,
+      "node_id": "MDU6TGFiZWwxNTUzODY5MDc4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/extension-proposal",
+      "name": "kind/extension-proposal",
+      "color": "abfcbb",
+      "default": false,
+      "description": "Discuss and Propose new extensions"
+    },
+    {
+      "id": 2388070055,
+      "node_id": "MDU6TGFiZWwyMzg4MDcwMDU1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/quarkiverse",
+      "name": "area/quarkiverse",
+      "color": "a01441",
+      "default": false,
+      "description": "This issue/PR is part of the Quarkiverse organization"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-09-17T14:22:21Z",
+  "updated_at": "2024-08-07T16:41:06Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nFeature flags (or toggles, flips, switches...) are a very powerful tool for cloud-native apps and the current Quarkus offer in that area is a bit limited (unless I missed something 😄). There is of course [quarkus-unleash](https://github.com/quarkiverse/quarkus-unleash) based on the excellent [Unleash](https://www.getunleash.io/) but one does not always want to deploy something as big as Unleash, with the external Unleash server requirement and all the set up / maintenance costs and the SPOF risk that come with it. There are many very good reasons to use Unleash and many reasons as well to not use it (depending on the project requirements), but that's not the subject of this issue.\r\n\r\nI'm part of a https://console.redhat.com team that uses a lot of feature flags for several reasons, including:\r\n- we often need to merge parts of unfinished huge features that must remain disabled until everything's ready for production\r\n- we have to deal with risky migrations that sometimes affect the entire app and require extra precautions (intensive testing, automated and manual) before we actually migrate the production data\r\n\r\nOur feature flags are in-memory and based on some custom Java code with no external dependency. At first, I wanted to write a Quarkus blog post to show how we use these flags and how we run our tests with any flags combinations very easily. Then I realized this could actually be the base of a new Quarkus extension.\r\n\r\nHere's how things could look like from a user perspective:\r\n\r\n```java\r\n// Some package\r\nimport quarkus.featureflag.FeatureFlags;\r\n\r\n@FeatureFlags\r\npublic class FeatureFlipper {\r\n\r\n    @ConfigProperty(name = \"huge-feature.enabled\", defaultValue = \"true\")\r\n    boolean hugeFeatureEnabled;\r\n\r\n    @ConfigProperty(name = \"risky-feature.enabled\", defaultValue = \"false\")\r\n    boolean riskyFeatureEnabled;\r\n\r\n    /* getters and setters */\r\n}\r\n\r\n// Other package\r\n@ApplicationScoped\r\npublic class MyService {\r\n\r\n    @Inject\r\n    FeatureFlipper featureFlipper;\r\n\r\n    public void doSomething() {\r\n        if (featureFlipper.isHugeFeatureEnabled()) {\r\n            // Do something with the huge feature\r\n        } else {\r\n            // Do something without the huge feature, or even nothing at all\r\n        }\r\n    }\r\n}\r\n```\r\n\r\n- The `@FeatureFlags` annotation would only be allowed on one class of a Quarkus app because it's a good practice to centralize all flags at the same place for easier maintenance.\r\n- The `@Singleton` CDI scope would automatically be added to the annotated class.\r\n- Each `@ConfigProperty boolean` (or `Boolean`) field of that class would be automatically considered as a feature flag and a `defaultValue` would be mandatory.\r\n- Flags values would be changed from environment variables, i.e. `RISKY_FEATURE_ENABLED=true`.\r\n- An extension config key `quarkus.feature-flag.log-at-startup=true|false` (default true) would be used to log all flags at application startup because that usually helps a lot when something related to the flags goes wrong on prod.\r\n- An extension config key `quarkus.feature-flag.rest-endpoint.enabled=true|false` (default false) would be used to expose all feature flags through a REST API because that allows a UI to determine what it should or should not show to the users depending on the enabled features. The REST endpoint path would start with the non application root path (`/q`).\r\n- All feature flags could be displayed/managed from the Quarkus Dev Console.\r\n- An extra extension annotation could be used on feature flags fields to add information such as a nice description to use while logging the flags status at app startup.\r\n\r\nAll annotations or config keys names suggested here are open for discussion, I'm sure we could better name them than my proposal 😄\r\n\r\nThe way my team uses these lightweight (because of the absence of external dependency) feature flags is based on our experience and has proven to be very reliable and easy to use. There are many other ways of including feature flags in a Quarkus app and they all come with their advantages and drawbacks. One key aspect of our approach is that feature flags values can be overriden from tests at any time, allowing all flags combinations within any test with no restriction. This is not possible using things like `System.setProperty(\"the-flag\", \"true\")` or Quarkus test profiles (which are less flexible).\r\n\r\nI think this could be useful to the Quarkus community. WDYT?\r\n\r\nIf the creation of this extension is confirmed, I will take care of everything listed here (and probably more).\r\n\r\nInterested in this extension, please +1 via the emoji/reaction feature of GitHub (top right).\r\n\r\n### Repository name\r\n\r\nquarkus-feature-flags\r\n\r\n### Short description\r\n\r\nLightweight, in-memory and easy to use feature flags\r\n\r\n### Repository Homepage URL\r\n\r\nhttps://quarkiverse.github.io/quarkiverse-docs/<REPOSITORY_NAME>/dev/\r\n\r\n### Repository Topics\r\n\r\n- quarkus-extension\r\n- \r\n...\r\n\r\n\r\n### Team Members\r\n\r\n- @gwenneg \r\n\r\n\r\n### GitHub Applications?\r\n\r\n- [ ] [Stale](https://github.com/marketplace/stale) - Automatically close stale Issues and Pull Requests that tend to accumulate during a project\r\n\r\n### Additional context\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28032/reactions",
+    "total_count": 7,
+    "+1": 7,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28032/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38511",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38511/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38511/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38511/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38511",
+  "id": 2111077493,
+  "node_id": "I_kwDOCFbutM591Hx1",
+  "number": 38511,
+  "title": "[resteasy classic] Invalid JSON body should result in HTTP 400, not 500",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282147660,
+      "node_id": "MDU6TGFiZWwxMjgyMTQ3NjYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/resteasy-classic",
+      "name": "area/resteasy-classic",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2024-01-31T22:19:49Z",
+  "updated_at": "2024-02-26T10:23:57Z",
+  "closed_at": "2024-02-12T15:09:24Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn Quarkus <= 3.6.6, POSTing a non-JSON string to a REST endpoint set to consume only JSON resulted in HTTP 400 response. This behaviour changed with Quarkus 3.6.7 release. Now, a internal server error is thrown instead.\r\n\r\nStacktrace:\r\n\r\n```\r\n2024-01-31 23:08:43,847 ERROR [org.jbo.res.plu.pro.jackson] (executor-thread-1) RESTEASY-JACKSON000100: Not able to deserialize data provided: com.fasterxml.jackson.core.JsonParseException: Unexpected character ('<' (code 60)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\r\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 2]\r\n\tat com.fasterxml.jackson.core.JsonParser._constructError(JsonParser.java:2481)\r\n\tat com.fasterxml.jackson.core.base.ParserMinimalBase._reportError(ParserMinimalBase.java:752)\r\n\tat com.fasterxml.jackson.core.base.ParserMinimalBase._reportUnexpectedChar(ParserMinimalBase.java:676)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser._handleUnexpectedValue(UTF8StreamJsonParser.java:2794)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser._nextTokenNotInObject(UTF8StreamJsonParser.java:911)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser.nextToken(UTF8StreamJsonParser.java:797)\r\n\tat org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider.readFrom(ResteasyJackson2Provider.java:171)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.AbstractReaderInterceptorContext.readFrom(AbstractReaderInterceptorContext.java:99)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.ServerReaderInterceptorContext.readFrom(ServerReaderInterceptorContext.java:60)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.AbstractReaderInterceptorContext.proceed(AbstractReaderInterceptorContext.java:81)\r\n\tat org.jboss.resteasy.core.MessageBodyParameterInjector.inject(MessageBodyParameterInjector.java:192)\r\n\tat org.jboss.resteasy.core.MethodInjectorImpl.injectArguments(MethodInjectorImpl.java:87)\r\n\tat org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:116)\r\n```\r\n\r\n### Expected behavior\r\n\r\nA request not possible to parse should be rejected with HTTP 400 like in the past.\r\n\r\n### Actual behavior\r\n\r\nQuarkus responds with HTTP 500 instead.\r\n\r\n### How to Reproduce?\r\n\r\n```\r\ngit clone git@github.com:steinsag/quarkus-maven-kotlin.git\r\ngit checkout dependabot/maven/quarkus.platform.version-3.7.1\r\nmvn clean verify\r\n```\r\n\r\ntest case: services.progressit.rest.TodoResourceTest.Create#post - invalid JSON - bad request 400\r\n```\r\ngiven()\r\n                .contentType(APPLICATION_JSON)\r\n                .body(\"<invalidJson />\")\r\n                .post(\"/$TODO_BASE_PATH\")\r\n                .then().statusCode(400)\r\n```\r\n\r\nrespective REST endpoint: services.progressit.rest.TodoResource#createTodo\r\n\r\ncontroller annotated with\r\n```\r\n@Consumes(APPLICATION_JSON)\r\n@Produces(APPLICATION_JSON)\r\nabstract class TodoResourceDocumentation {\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 21.0.2 2024-01-16 LTS\r\n\r\n### Quarkus version or git rev\r\n\r\n3.7.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn 3.9.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38511/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38511/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

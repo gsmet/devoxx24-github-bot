@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28795",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28795/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28795/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28795/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28795",
+  "id": 1420952368,
+  "node_id": "I_kwDOCFbutM5UsgMw",
+  "number": 28795,
+  "title": "Subpar Caffeine cache performance (vs Akka HTTP, Play2, ASP.NET Core)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 34,
+  "created_at": "2022-10-24T14:43:36Z",
+  "updated_at": "2023-03-20T14:51:06Z",
+  "closed_at": "2023-03-20T14:51:05Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI've [been looking](https://github.com/dotnet/aspnetcore/issues/44696) into cache stampede issues across a few microservices that I'm running. I've observed quite meager Caffeine performance on cached endpoints running on Quarkus, and Spring WebFlux alike. As a baseline I'm taking my Akka HTTP cached implementation of the same simple microservice that sanitizes upstream HTML data. My Akka HTTP implementation is based on Scala's sttp/tapir, otherwise pretty bare akka-http underneath. Play2 Framework is close to it but still slower at cached performance and [appears to suffer from cache stampede](https://github.com/playframework/playframework/issues/11506). While Quarkus is sophisticated enough to mitigate by thread locking cache access, the performance I've observed is just a fraction of what's feasible---about one tenth, i.e., an order of magnitude slower, see below.\r\n\r\nFor load and soak testing among other tools I've used `bombardier`,  for a simple use case as follows\r\n\r\n```sh\r\nbombardier -c 100 -d 10s -k -l \"http://localhost:8090/website?address=http://localhost:8081\"\r\n```\r\n\r\nwhich initiates 100 concurrent connections, runs them for `10s` (or any other duration), and implicitly reuses open connections. The upstream endpoint can be anything you like to ingest HTML data from.\r\n\r\nTogether with Spring WebFlux, my Quarkus microservices are slowest at cached throughput among the services I've been running.\r\n\r\nIn addition, no `Cache-Control` HTTP headers are being set (only) by Quarkus. I believe they should be available for being set implicitly from the annotation rather than at compile time from the config---like all other frameworks do.\r\n\r\nThe figures below are relative to the execution environment. But the relations among the individual framework figures are pretty much constant, that is, Quarkus and Spring WebFlux are 10 times slower at response caching than Akka HTTP, which is twice more efficient than the recent ASP.NET Core and about 50% faster than Play2.\n\n### Expected behavior\n\nSince Akka HTTP too uses Caffeine under the hood, I'd expect it to have similar performance at response caching. \r\n\r\nAkka HTTP underneath sttp/tapir over 10s:\r\n\r\n```sh\r\nStatistics        Avg      Stdev        Max\r\n  Reqs/sec      7404.86    1809.11   11954.27\r\n  Latency       13.50ms    18.85ms      0.94s\r\n  Latency Distribution\r\n     50%    11.65ms\r\n     75%    15.83ms\r\n     90%    21.03ms\r\n     95%    25.30ms\r\n     99%    40.44ms\r\n  HTTP codes:\r\n    1xx - 0, 2xx - 74116, 3xx - 0, 4xx - 0, 5xx - 0\r\n    others - 0\r\n  Throughput:     4.97GB/s\r\n```\r\n\r\nWith proper Cache-Control headers set.\n\n### Actual behavior\n\nQuarkus native on GraalVM or JVM alike, production build. Same machine, same workload, randomized tests, 20 runs each in total.\r\nThis is the best as it gets over 10s (dev mode about 0.5 GB/s best), with about 0.6 GB/s on average under the given environment.\r\n\r\n```sh\r\nStatistics        Avg      Stdev        Max\r\n  Reqs/sec      1349.09     531.60    2969.21\r\n  Latency       73.95ms    80.61ms   626.72ms\r\n  Latency Distribution\r\n     50%    27.84ms\r\n     75%   117.27ms\r\n     90%   194.88ms\r\n     95%   237.21ms\r\n     99%   351.59ms\r\n  HTTP codes:\r\n    1xx - 0, 2xx - 13553, 3xx - 0, 4xx - 0, 5xx - 0\r\n    others - 0\r\n  Throughput:     0.91GB/s\r\n```\r\n\r\nWithout any Cache-Control HTTP headers.\r\n\r\nI'm looking into a way to improve it. Not sure how, though. On a side note, I'd like to have a way to choose or plug in other means of mitigation.\n\n### How to Reproduce?\n\nHere's a very simple resource, which instead of invoking a remote HTTP call could instead block the fiber for a while. The caching of the result of that endpoint is subject matter here.\r\n\r\n```java\r\n@Path(\"/website\")\r\npublic\r\nclass WebsiteResource {\r\n\r\n  @GET\r\n  @Produces(MediaType.TEXT_HTML)\r\n  @CacheResult(cacheName = \"get-sanitized-html\") //, lockTimeout = 500L)\r\n  public\r\n  String getSanitizedHtml (@QueryParam(\"address\") @CacheKey final String address) throws IOException {\r\n    return new WebsiteSanitizerService().sanitizeUrl(new URL(address));\r\n  }\r\n}\r\n```\r\n\r\nWith the following cache config in `application.yaml`:\r\n\r\n```yaml\r\nquarkus:\r\n  cache:\r\n    caffeine:\r\n      \"get-sanitized-html\":\r\n        initial-capacity: 100\r\n        maximum-size: 100\r\n        expire-after-write: 90S\r\n```\n\n### Output of `uname -a` or `ver`\n\nmacOS 16.2, arm64\n\n### Output of `java -version`\n\nOpenJDK 19.0.1\n\n### GraalVM version (if different from Java)\n\ngraalvm-ce-java17-22.2.0\n\n### Quarkus version or git rev\n\n2.13.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.5.1\n\n### Additional information\n\nThe issues of mine that I linked in the first paragraph contain additional links and data points. I hope it's just me missing some obvious configuration in Quarkus that has led to this subpar performance at response caching.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28795/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28795/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

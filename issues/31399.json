@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31399",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31399/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31399/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31399/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31399",
+  "id": 1598629540,
+  "node_id": "I_kwDOCFbutM5fSSak",
+  "number": 31399,
+  "title": "Jackson polymorphic deserialization doesn't work using JsonTypeInfo.Id.CLASS with resteasy and kotlin",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-02-24T13:26:21Z",
+  "updated_at": "2023-04-12T09:01:44Z",
+  "closed_at": "2023-04-12T09:01:39Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm trying serilization/deserialization on polymorphic classes using using quarkus-resteasy-jackson.\r\nSerialization works, but deserialization throw com.fasterxml.jackson.databind.exc.InvalidTypeIdException: Could not resolve type id\r\n\r\nDesertialization doesn't work when i use `@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)` on my interface, instead when i use JsonTypeInfo.Id.NAME it works\r\n```\r\n@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)\r\n@JsonSubTypes(\r\n    JsonSubTypes.Type(value = Hero::class, name = \"Hero\"),\r\n    JsonSubTypes.Type(value = Ally::class, name = \"Ally\")\r\n)\r\n```\r\n\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n```\r\npackage com.example\r\n\r\nimport com.fasterxml.jackson.annotation.JsonProperty\r\nimport com.fasterxml.jackson.annotation.JsonTypeInfo\r\n\r\n@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)\r\ninterface Character {\r\n    var name: String?\r\n    var surname: String?\r\n}\r\n\r\n@JsonTypeInfo(\r\n    use = JsonTypeInfo.Id.CLASS,\r\n    include = JsonTypeInfo.As.PROPERTY,\r\n    defaultImpl = Ally::class\r\n)\r\nclass Ally constructor(\r\n    @field:JsonProperty(\"name\")\r\n    override var name: String? = null,\r\n    @field:JsonProperty(\"surname\")\r\n    override var surname: String? = null,\r\n    @field:JsonProperty(\"partner\")\r\n    var partner: Hero? = null,\r\n\r\n    ) : Character\r\n\r\n@JsonTypeInfo(\r\n    use = JsonTypeInfo.Id.CLASS,\r\n    include = JsonTypeInfo.As.PROPERTY,\r\n    defaultImpl = Hero::class\r\n)\r\nclass Hero constructor(\r\n    @field:JsonProperty(\"name\")\r\n    override var name: String? = null,\r\n    @field:JsonProperty(\"surname\")\r\n    override var surname: String? = null,\r\n    @field:JsonProperty(\"number\")\r\n    var number: Int? = null,\r\n\r\n    ) : Character\r\n```\r\n\r\nI have 2 different test case using quarkus-resteasy-jackson:\r\n\r\n- when i make a request with input` {\"@class\":\"com.example.Hero\",\"name\":\"Jar Jar\",\"surname\":\"Binks\",\"number\":1}` to \r\n```\r\n@POST\r\n@Path(\"post\")\r\nfun post(hero:Hero)\r\n```\r\n\r\nit throws: com.fasterxml.jackson.databind.exc.InvalidTypeIdException: Could not resolve type id &#x27;com.example.Hero&#x27; as a subtype of `com.example.Hero`: Configured `PolymorphicTypeValidator` (of type\r\n`com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator`) denied resolution\r\n\r\n- when i make a request with input` {\"@class\":\"com.example.Hero\",\"name\":\"Jar Jar\",\"surname\":\"Binks\",\"number\":1}` to \r\n```\r\n    @POST\r\n    @Path(\"post2\")\r\n    fun post(char:Character)\r\n```\r\n\r\nit throws: com.fasterxml.jackson.databind.exc.InvalidTypeIdException: Could not resolve type id &#x27;com.example.Hero&#x27; as a subtype of `com.example.Character`: Configured `PolymorphicTypeValidator` (of type\r\n`com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator`) denied resolution\r\n\r\nAm i doing something wrong?\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n11\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31399/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31399/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

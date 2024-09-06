@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31576",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31576/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31576/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31576/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31576",
+  "id": 1608301874,
+  "node_id": "I_kwDOCFbutM5f3L0y",
+  "number": 31576,
+  "title": "Maven tests failing on Windows with remote dev waiting for input",
+  "labels": [
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-03-03T09:50:40Z",
+  "updated_at": "2023-03-03T13:14:24Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "I have seen the Maven tests failing a lot on Windows lately with the following pattern:\r\n\r\n```\r\n [INFO] --- quarkus-maven-plugin:999-SNAPSHOT:remote-dev (default-cli) @ acme ---\r\n[INFO] Invoking org.apache.maven.plugins:maven-resources-plugin:2.6:testResources @ acme\r\n[INFO] Using 'UTF-8' encoding to copy filtered resources.\r\n[INFO] skip non existing resourceDirectory D:\\a\\quarkus\\quarkus\\integration-tests\\maven\\target\\test-classes\\projects\\project-classic-run-java-change-local\\src\\test\\resources\r\n[INFO] Invoking org.apache.maven.plugins:maven-compiler-plugin:3.1:testCompile @ acme\r\n[INFO] Changes detected - recompiling the module!\r\n[INFO] Compiling 1 source file to D:\\a\\quarkus\\quarkus\\integration-tests\\maven\\target\\test-classes\\projects\\project-classic-run-java-change-local\\target\\test-classes\r\nListening for transport dt_socket at address: 5005\r\n2023-03-02 15:10:52,178 INFO  [io.qua.dep.QuarkusAugmentor] (main) Quarkus augmentation completed in 1876ms\r\n2023-03-02 15:10:53,094 INFO  [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Sending lib/deployment/appmodel.dat\r\n2023-03-02 15:10:53,113 INFO  [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Sending app/acme-1.0-SNAPSHOT.jar\r\n2023-03-02 15:10:53,118 INFO  [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Sending quarkus-run.jar\r\n2023-03-02 15:10:53,122 INFO  [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Connected to remote server\r\n2023-03-02 15:10:55,693 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (Remote dev client thread) Restarting quarkus due to changes in HelloResource.class, HelloResource$Blah.class.\r\n2023-03-02 15:10:56,250 INFO  [io.qua.dep.QuarkusAugmentor] (Remote dev client thread) Quarkus augmentation completed in 556ms\r\n2023-03-02 15:10:56,257 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (Remote dev client thread) Live reload total time: 1.116s \r\n2023-03-02 15:10:56,633 INFO  [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Sending app/acme-1.0-SNAPSHOT.jar\r\n2023-03-02 15:10:56,638 INFO  [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Sending quarkus-run.jar\r\n2023-03-02 15:10:56,643 INFO  [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Sending dev/app/org/acme/HelloResource.class\r\nTerminate batch job (Y/N)? \r\nError: The operation was canceled.\r\n```\r\n\r\nI think remove dev is somehow waiting for input indefinitely until the job is cancelled by GitHub Actions.\r\n\r\nThere are other errors before but I'm not sure if they are related:\r\n\r\n```\r\n2023-03-02 15:10:18,297 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (Remote dev client thread) Live reload total time: 3.137s \r\nError:  Port 5005 in use, not starting in debug mode\r\nDebugger failed to attach: handshake failed - connection prematurally closed\r\n2023-03-02 15:10:19,114 INFO  [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Sending app/acme-1.0-SNAPSHOT.jar\r\n2023-03-02 15:10:19,120 INFO  [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Sending quarkus-run.jar\r\n2023-03-02 15:10:19,125 INFO  [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Sending dev/app/application.properties\r\n2023-03-02 15:10:20,756 ERROR [io.qua.ver.htt.dep.dev.HttpRemoteDevClient] (Remote dev client thread) Remote dev request failed: java.net.SocketException: Connection reset\r\n\tat java.base/java.net.SocketInputStream.read(SocketInputStream.java:186)\r\n\tat java.base/java.net.SocketInputStream.read(SocketInputStream.java:140)\r\n\tat java.base/java.io.BufferedInputStream.fill(BufferedInputStream.java:252)\r\n\tat java.base/java.io.BufferedInputStream.read1(BufferedInputStream.java:292)\r\n\tat java.base/java.io.BufferedInputStream.read(BufferedInputStream.java:351)\r\n\tat java.base/sun.net.www.http.HttpClient.parseHTTPHeader(HttpClient.java:787)\r\n\tat java.base/sun.net.www.http.HttpClient.parseHTTP(HttpClient.java:722)\r\n\tat java.base/sun.net.www.http.HttpClient.parseHTTP(HttpClient.java:746)\r\n\tat java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1615)\r\n\tat java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1520)\r\n\tat io.quarkus.vertx.http.deployment.devmode.HttpRemoteDevClient$Session.run(HttpRemoteDevClient.java:222)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n```\r\n\r\nAn example of failing run is here: https://github.com/quarkusio/quarkus/actions/runs/4314124744/jobs/7527940195 but there are a lot of others.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31576/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31576/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

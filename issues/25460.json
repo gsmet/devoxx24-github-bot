@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25460",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25460/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25460/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25460/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25460",
+  "id": 1230011431,
+  "node_id": "I_kwDOCFbutM5JUHwn",
+  "number": 25460,
+  "title": "Running a kotlin/jackson native built with mandrel (graal-22.0 java 17)  will fail on missing json fields",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-05-09T17:10:07Z",
+  "updated_at": "2022-05-11T14:31:47Z",
+  "closed_at": "2022-05-11T07:14:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nNot sure if this is truly a bug with Quarkus or a bug with the documentation referring to using the mandrel image for building native apps.\r\n\r\nMy business requirement is to build a bunch of cloud native microservices, so I chose quarkus and Kotlin and followed [this guide](https://quarkus.io/guides/kotlin). Notice that it implies that mandrel is a-ok to use for Kotlin (at least, that is my interpretation).\r\n\r\nEverything works fine until I receive a json with a missing field, even if that field is nullable on the data class. Then I get the classic com.fasterxml.jackson.databind.exc.InvalidDefinitionException: [......] cannot deserialize from Object value (no delegate- or property-based Creator)\r\n\r\n**Important to note that** if I manually specify the field in the json like `{\"theField\" : null}` then it actually works, the issue only appears when the field is omitted, like when serialized with the `JsonInclude(NOT_NULL)` annotation\r\n\r\nFunnily enough, it worked when compiling natively on windows. After hours and trial-and-error I found out why. This is the log printed by the native build on windows:\r\n\r\n```[1/7] Initializing...                                                                                   (10.9s @ 0.14GB)\r\n Version info: 'GraalVM 22.1.0 Java 17 CE'\r\n C compiler: cl.exe (microsoft, x64, 19.16.27045)\r\n Garbage collector: Serial GC\r\n 5 user-provided feature(s)\r\n  - com.oracle.svm.polyglot.kotlin.KotlinFeature    <----------- notice this!!!\r\n  - com.oracle.svm.thirdparty.gson.GsonFeature\r\n  - io.quarkus.runner.AutoFeature\r\n  - io.quarkus.runtime.graal.DisableLoggingAutoFeature\r\n  - io.quarkus.runtime.graal.ResourcesFeature```\r\n```\r\nThen I remembered reading somewhere that polyglot is removed from mandrel. Sure enough, the pipeline build using mandrel was not printing the line above.\r\n\r\nI don't know if something can or even should be done about this (or maybe it's even intentional), but it is a very easy trap to fall in. The documentation, at least, should not lead you to fall into this trap by casually mentioning that you can use mandrel with Kotlin. \n\nIn the end I made it work using the normal graalvm image in the guides. \r\n\r\n### Expected behavior\r\n\r\nWhen building a native image with mandrel and kotlin + jackson, missing fields should be mapped to null if the property in the POJO is marked as nullable with Kotlin's `?`\r\n\r\n### Actual behavior\r\n\r\nThe request crashes with 400 Bad Request. No exception is printed by default, however I managed to coax it out:\r\n\r\n```\r\n2022-05-09 14:40:05,685 ERROR [com.ora.vp.act.res.ActuatorResource] (vert.x-eventloop-thread-0) 2: com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Cannot construct instance of `com.orange.vp.bo.dto.stb.request.ActuatorControlDTO` (no Creators, like default constructor, exist): cannot deserialize from Object value (no delegate- or property-based Creator)\r\n at [Source: (String)\"{\"pairing\":{\"pairingExists\":true,\"householdId\":\"householdId\",\"deviceId\":\"deviceId\"}}\"; line: 1, column: 2]\r\n\tat com.fasterxml.jackson.databind.DeserializationContext.reportBadDefinition(DeserializationContext.java:1904)\r\n\tat com.fasterxml.jackson.databind.DatabindContext.reportBadDefinition(DatabindContext.java:400)\r\n\tat com.fasterxml.jackson.databind.DeserializationContext.handleMissingInstantiator(DeserializationContext.java:1349)\r\n\tat com.fasterxml.jackson.databind.deser.BeanDeserializerBase.deserializeFromObjectUsingNonDefault(BeanDeserializerBase.java:[1415](https://gitlab.tech.orange/voice-portal/vp-int/-/jobs/34661424#L1415))\r\n\tat com.fasterxml.jackson.databind.deser.BeanDeserializer.deserializeFromObject(BeanDeserializer.java:351)\r\n\tat com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:184)\r\n\tat com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:322)\r\n\tat com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:4674)\r\n\tat com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3629)\r\n<ommited for brevity>\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Create a quarkus-resteasy-reactive-jackson project with kotlin ( used intellij for this) \r\n2. Create a simple data class with some fields, but one of them must be nullable \r\n\r\n    example: \r\n    ```kotlin\r\n    data class ExampleClass(\r\n        @JsonProperty(\"fieldOne\") val fieldOne: Int,\r\n        @JsonProperty(\"fieldTwo\") val fieldTwo: String? = null\r\n    )\r\n    ```\n    I know I did not add the 'field:' modifier, but I assure you I tried every combination with/without field, param, get, set. \n\r\n3. Compile with mandrel docker image quay.io/quarkus/ubi-quarkus-mandrel:22.0-java17\r\n4. run with quarkus-micro-image:1.0\r\n5. Send the following json `{\"fieldOne\": 4}`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux dev-vp-stb-actuator-644fd9cc99-7z7n6 4.18.0-305.40.2.el8_4.x86_64 #1 SMP Tue Mar 8 14:29:54 EST 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.2\" 2022-01-18 OpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8) OpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.8.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nwhatever it is on quay.io/quarkus/ubi-quarkus-mandrel:22.0-java17\r\n\r\n### Additional information\r\n\r\nMy dependencies:\r\n\r\n```xml\r\n    <dependencies>\r\n    \r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-resteasy-reactive-jackson</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-fault-tolerance</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-kotlin</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-opentracing</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-health</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-smallrye-context-propagation</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-rest-client-reactive-jackson</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-arc</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>com.fasterxml.jackson.module</groupId>\r\n            <artifactId>jackson-module-kotlin</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.jetbrains.kotlin</groupId>\r\n            <artifactId>kotlin-stdlib-jdk8</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-junit5</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.rest-assured</groupId>\r\n            <artifactId>rest-assured</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.rest-assured</groupId>\r\n            <artifactId>kotlin-extensions</artifactId>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>com.github.tomakehurst</groupId>\r\n            <artifactId>wiremock-jre8-standalone</artifactId>\r\n            <version>2.33.0</version>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.assertj</groupId>\r\n            <artifactId>assertj-core</artifactId>\r\n            <version>3.22.0</version>\r\n            <scope>test</scope>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>com.marcinziolo</groupId>\r\n            <artifactId>kotlin-wiremock</artifactId>\r\n            <version>1.0.3</version>\r\n            <scope>test</scope>\r\n        </dependency>\r\n    </dependencies>\r\n\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25460/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25460/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

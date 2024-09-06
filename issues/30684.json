@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30684",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30684/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30684/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30684/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30684",
+  "id": 1561003326,
+  "node_id": "I_kwDOCFbutM5dCwU-",
+  "number": 30684,
+  "title": "Quarkus' funky fails on avro on handler's input",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1958884827,
+      "node_id": "MDU6TGFiZWwxOTU4ODg0ODI3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/funqy",
+      "name": "area/funqy",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-01-28T20:37:36Z",
+  "updated_at": "2023-01-30T09:24:27Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a simple handler:\r\n\r\n```java\r\npublic class GreetingFunction {\r\n\r\n    @Funq\r\n    public String myFunqyGreeting(TwitterMessage twitterMessage) {\r\n        return \"Hello \";\r\n    }\r\n    \r\n}\r\n```\r\n\r\n```java\r\n@Data\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\npublic class TwitterMessage {\r\n    String username;\r\n    String tweet;\r\n    Long timestamp;\r\n}\r\n```\r\n\r\nI have a custom mapper:\r\n\r\n```java\r\npublic class ObjectMapperConfiguration {\r\n    @Singleton\r\n    ObjectMapper objectMapper(Instance<ObjectMapperCustomizer> customizers) {\r\n        // Your own `ObjectMapper` or one provided by another library\r\n        ObjectMapper mapper = new AvroMapper();\r\n        // Apply customizations (includes customizations from Quarkus)\r\n        for (ObjectMapperCustomizer customizer : customizers) {\r\n            customizer.customize(mapper);\r\n        }\r\n        return mapper;\r\n    }\r\n}\r\n\r\n```\r\n\r\nwhere AvroMapper() got from pom.xml dependency:\r\n```xml\r\n    <dependency>\r\n      <groupId>com.fasterxml.jackson.dataformat</groupId>\r\n      <artifactId>jackson-dataformat-avro</artifactId>\r\n      <version>2.8.5</version>\r\n    </dependency>\r\n```\r\naccording to this: \r\nhttps://github.com/FasterXML/jackson-dataformats-binary/tree/master/avro#creating-objectmapper\r\n\r\nI'm trying to send to it request with avro input data:\r\n```bash\r\ncurl -i --request POST -H 'Content-Type: avro/binary' -d twitter.avro http://localhost:8080\r\n```\r\n\r\nExample of twitter.avro you can get from [https://github.com/miguno/avro-cli-examples/blob/master/twitter.avro](url)\r\n\r\n### Expected behavior\r\n\r\nEndpoint works without error\r\n\r\n### Actual behavior\r\n\r\nError:\r\n2023-01-28 21:25:20,818 ERROR [io.qua.ama.lam.run.AbstractLambdaPollLoop] (Lambda Thread (DEVELOPMENT)) Failed to run lambda (DEVELOPMENT): com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'twitter': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\r\n at [Source: (sun.net.www.protocol.http.HttpURLConnection$HttpInputStream); line: 1, column: 9]\r\n\tat com.fasterxml.jackson.core.JsonParser._constructError(JsonParser.java:2418)\r\n\tat com.fasterxml.jackson.core.base.ParserMinimalBase._reportError(ParserMinimalBase.java:759)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser._reportInvalidToken(UTF8StreamJsonParser.java:3693)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser._reportInvalidToken(UTF8StreamJsonParser.java:3666)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser._matchToken2(UTF8StreamJsonParser.java:3007)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser._matchTrue(UTF8StreamJsonParser.java:2941)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser._nextTokenNotInObject(UTF8StreamJsonParser.java:878)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser.nextToken(UTF8StreamJsonParser.java:793)\r\n\tat com.fasterxml.jackson.databind.ObjectReader._initForReading(ObjectReader.java:357)\r\n\tat com.fasterxml.jackson.databind.ObjectReader._bindAndClose(ObjectReader.java:2095)\r\n\tat com.fasterxml.jackson.databind.ObjectReader.readValue(ObjectReader.java:1481)\r\n\tat io.quarkus.amazon.lambda.runtime.JacksonInputReader.readValue(JacksonInputReader.java:17)\r\n\tat io.quarkus.amazon.lambda.runtime.AbstractLambdaPollLoop$1.run(AbstractLambdaPollLoop.java:135)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n21.4.0 Darwin Kernel Version 21.4.0: Mon Feb 21 20:35:58 PST 2022; root:xnu-8020.101.4~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\n17.0.4+8-jvmci-22.2-b06\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.6\r\n\r\n### Additional information\r\n\r\nI'm working with AWS Lambda. In this lambda is configured trigger on Apache Kafka messages. Messages are getting in avro format https://avro.apache.org/. I want to receive messages in Lambda handler in Quarkus.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30684/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30684/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

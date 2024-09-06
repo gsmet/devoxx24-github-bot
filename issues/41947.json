@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41947",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41947/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41947/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41947/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41947",
+  "id": 2413125428,
+  "node_id": "I_kwDOCFbutM6P1V80",
+  "number": 41947,
+  "title": "gRPC client deadline config semantics",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-07-17T09:32:12Z",
+  "updated_at": "2024-07-18T10:50:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI believe the gRPC client `deadline` behaviour either does not match the intent, the documentation is incorrect or it needs clarifying.\r\n\r\nThe gRPC client [deadline](https://github.com/quarkusio/quarkus/blob/731c915175d7cdaf4e440745e299a9921a4b9402/extensions/grpc/runtime/src/main/java/io/quarkus/grpc/runtime/config/GrpcClientConfiguration.java#L217-L221) config says:\r\n\r\n> The deadline used for each call.\r\n\r\nThe code that [applies](https://github.com/quarkusio/quarkus/blob/731c915175d7cdaf4e440745e299a9921a4b9402/extensions/grpc/runtime/src/main/java/io/quarkus/grpc/runtime/supports/GrpcClientConfigProvider.java#L45-L47) this config calls the gRPC `AbstractStub.withDeadlineAfter` method which says:\r\n\r\n> Returns a new CallOptions with a deadline that is after the given duration from now.\r\n\r\nThe Quarkus documentation implies that each call will have a new separate deadline that commences when each call starts. However the actual behaviour is a single deadline that commences when the `CallOptions` are created. This results in every call after the deadline has been reached to immediately fail with DEADLINE_EXCEEDED. This effectively renders the stub bean useless after the single deadline has been reached. Have I missed something?\r\n\r\n\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nEach call has a separate deadline starting at the beginning of each call.\r\n\r\n### Actual behavior\r\n\r\nThe stub has a single deadline that starts when the bean is created. After the deadline has expired the stub is unable to execute any requests because they all immediately fail with DEADLINE_EXCEEDED.\r\n\r\n### How to Reproduce?\r\n\r\n1. Create app - `quarkus create app --extension=grpc --java=17`\r\n2. Give the `helloGrpc` stub in `HelloGrpcServiceTest` a name - `@GrpcClient(\"hello\")`\r\n3. Add a deadline in `application.properties` - `quarkus.grpc.clients.\"hello\".deadline=2s`\r\n4. Edit the test `HelloGrpcServiceTest.testHello()` - repeat the call twice with a sleep longer than the deadline between them.\r\n\r\n```\r\n  @Test\r\n  void testHello() throws Exception {\r\n    HelloReply reply = helloGrpc\r\n        .sayHello(HelloRequest.newBuilder().setName(\"Neo\").build()).await()\r\n        .atMost(Duration.ofSeconds(5));\r\n    assertEquals(\"Hello Neo!\", reply.getMessage());\r\n    Thread.sleep(4_000);\r\n    reply = helloGrpc\r\n        .sayHello(HelloRequest.newBuilder().setName(\"Neo\").build()).await()\r\n        .atMost(Duration.ofSeconds(5));\r\n    assertEquals(\"Hello Neo!\", reply.getMessage());\r\n  }\r\n```\r\n\r\n6. Run the test.\r\n\r\nOutcome:\r\n\r\nThe stub will be created on the first call which commences the deadline. This call will be within the deadline so will succeed. The second call (and all subsequent calls) will fail with DEADLINE_EXCEEDED\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41947/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41947/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

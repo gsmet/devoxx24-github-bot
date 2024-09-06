@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28422",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28422/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28422/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28422/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28422",
+  "id": 1399103230,
+  "node_id": "I_kwDOCFbutM5TZJ7-",
+  "number": 28422,
+  "title": "Hibernate validator returns whole stacktrace when validating",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1218486975,
+      "node_id": "MDU6TGFiZWwxMjE4NDg2OTc1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/documentation",
+      "name": "area/documentation",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1305687763,
+      "node_id": "MDU6TGFiZWwxMzA1Njg3NzYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-validator",
+      "name": "area/hibernate-validator",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Validator"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-10-06T08:34:54Z",
+  "updated_at": "2022-12-06T17:36:04Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have two resteasy reactive endpoints. One of them uses `@Size` annotation to validate input parameter and another uses the same annotation to validate output value. When validation fails for input parameter, the endpoint returns HTTP response with status 400 and compact json with error description. When validation fails for output value, the endpoint returns HTTP response with status 500 and huge json with a whole stacktrace.\n\n### Expected behavior\n\nValidation for input parameter: \r\n```\r\n{\r\n    \"title\": \"Constraint Violation\",\r\n    \"status\": 400,\r\n    \"violations\": [\r\n        {\r\n            \"field\": \"reactiveEcho.content\",\r\n            \"message\": \"request must have 3 characters\"\r\n        }\r\n    ]\r\n}\r\n```\n\n### Actual behavior\n\nValidation for output parameter:\r\n```\r\n{\r\n    \"details\": \"Error id 849dcadd-4e99-4004-ae1a-bf19cdb64b04-1, io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveViolationException: validateEcho.<return value>: response must have 3 characters\",\r\n    \"stack\": \"io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveViolationException: validateEcho.<return value>: response must have 3 characters\\n\\tat io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveEndPointValidationInterceptor.validateMethodInvocation(ResteasyReactiveEndPointValidationInterceptor.java:23)\\n\\tat io.quarkus.hibernate.validator.runtime.jaxrs.ResteasyReactiveEndPointValidationInterceptor_Bean.intercept(Unknown Source)\\n\\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\\n\\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:40)\\n\\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\\n\\tat com.redhat.qe.Resource_Subclass.validateEcho(Unknown Source)\\n\\tat com.redhat.qe.Resource$quarkusrestinvoker$validateEcho_623744ff40cda3f41249d3831a9fde1e2a468a45.invoke(Unknown Source)\\n\\tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\\n\\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:115)\\n\\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:140)\\n\\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:560)\\n\\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\\n\\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\\n\\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\\n\\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\\n\\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\\n\\tat java.base/java.lang.Thread.run(Thread.java:829)\"\r\n}\r\n```\n\n### How to Reproduce?\n\n1. Clone the reproducer `git clone git@github.com:fedinskiy/reproducer.git -b reproducer/output-validation`\r\n2. `cd reproducer`\r\n3. Run the test, which checks the output endpoint `mvn clean verify -Dtest=GreetingResourceTest#classic`\r\n4. For a comparison, run the test, which checks the input endpoint `mvn clean verify -Dtest=GreetingResourceTest#input`\r\n\n\n### Output of `uname -a` or `ver`\n\n5.19.11-200.fc36.x86_64\n\n### Output of `java -version`\n\n11.0.16 temurin\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.13.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\n\n### Additional information\n\nI would like to point out, that HTTP status is also different. I can understand the motivation behind this decision (output error may be considered a `server error`) but  this behavior deservers a mention somewhere in the user guide.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28422/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28422/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

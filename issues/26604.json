@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26604",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26604/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26604/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26604/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26604",
+  "id": 1297302381,
+  "node_id": "I_kwDOCFbutM5NU0Nt",
+  "number": 26604,
+  "title": "Quarkiverse  extension MockServer",
+  "labels": [
+    {
+      "id": 1553869078,
+      "node_id": "MDU6TGFiZWwxNTUzODY5MDc4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/extension-proposal",
+      "name": "kind/extension-proposal",
+      "color": "abfcbb",
+      "default": false,
+      "description": "Discuss and Propose new extensions"
+    },
+    {
+      "id": 2388070055,
+      "node_id": "MDU6TGFiZWwyMzg4MDcwMDU1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/quarkiverse",
+      "name": "area/quarkiverse",
+      "color": "a01441",
+      "default": false,
+      "description": "This issue/PR is part of the Quarkiverse organization"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-07-07T11:56:14Z",
+  "updated_at": "2022-10-19T12:54:41Z",
+  "closed_at": "2022-07-07T14:33:51Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nHi,\r\nI would like to propose a new Quarkiverse extension for Testcontainer MockServer. It uses devservices to start MockServer container for testing/developing. There is a simple configuration and integration in the Quarkus test. \r\n\r\n```java\r\n@QuarkusTest\r\n@QuarkusTestResource(MockServerTestResource.class)\r\npublic class TestRestControllerTest  {\r\n\r\n    @InjectMockServerClient\r\n    MockServerClient mockServerClient;\r\n\r\n    @Test\r\n    public void test() {\r\n        Map<String, Object> data = new HashMap<>(Map.of(\r\n                \"key-A\", \"value-A\",\r\n                \"key-B\", 1));\r\n\r\n        // create mock rest endpoint\r\n        mockServerClient.when(request().withPath(\"/activity/data\").withMethod(\"POST\"))\r\n                .respond(httpRequest -> response().withStatusCode(200)\r\n                        .withHeader(\"Content-Type\", \"application/json\")\r\n                        .withBody(JsonBody.json(data)));\r\n\r\n        TestRestController.Data request = new TestRestController.Data();\r\n        request.key = \"k1\";\r\n        request.value = \"v1\";\r\n\r\n        Map result = given()\r\n                .contentType(MediaType.APPLICATION_JSON)\r\n                .body(request)\r\n                .post(\"/test\")\r\n                .prettyPeek()\r\n                .then()\r\n                .statusCode(Response.Status.OK.getStatusCode())\r\n                .extract().body().as(Map.class);\r\n        System.out.println(result);\r\n    }\r\n}\r\n```\r\n\r\nMy PoC: https://github.com/lorislab/quarkus-mockserver\r\n\n\n### Configuration suggestion\n\nThe rest-client could be configured in [application.properties](http://application.properties/) like this %test.activity-client/mp-rest/url=${quarkus.mockserver.endpoint}\r\n\r\n```\r\nquarkus.mockserver.endpoint\r\nquarkus.mockserver.host\r\nquarkus.mockserver.port\r\n```\n\n### Additional context\n\nYou can define multiple mock static endpoints with `mock-server-client` and `init json` file or use callbacks to define response dynamically in the test.\r\nhttps://mock-server.com/mock_server/getting_started.html#button_response_class_callback\r\n```java\r\n        Map<String, Object> data = new HashMap<>(Map.of(\r\n                \"key-A\", \"value-A\",\r\n                \"key-B\", 1));\r\n\r\n        // create mock rest endpoint\r\n        mockServerClient.when(request().withPath(\"/activity/data\").withMethod(\"POST\"))\r\n                .respond(httpRequest -> response().withStatusCode(200)\r\n                        .withHeader(\"Content-Type\", \"application/json\")\r\n                        .withBody(JsonBody.json(data)));\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26604/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26604/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

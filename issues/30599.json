@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30599",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30599/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30599/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30599/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30599",
+  "id": 1556492892,
+  "node_id": "I_kwDOCFbutM5cxjJc",
+  "number": 30599,
+  "title": "Intercept when the underneath TCP connection is closed by the HTTP client in Quarkus RESTeasy Reactive",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-01-25T11:32:00Z",
+  "updated_at": "2023-03-02T07:38:27Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nUsing the Quarkus RESTeasy Reactive, I am missing a way to handle the disconnection of the HTTP client on the other side.\r\nDepending on the service which you are developing, it could be necessary to do some clean up when the HTTP client close the underneath TCP connection. It could use the same connection for multiple HTTP requests (with connection \"keep-alive\") and then closing it; or just closing the connection on each HTTP request. In both cases, detecting the disconnection is sometimes useful.\r\n\r\nIn our Strimzi HTTP - Apache Kafka bridge we have such a use case (we are moving from Vert.x to Quarkus).\r\nWhen an HTTP client connects for sending messages to Kafka, a Kafka Producer instance is created on the bridge and it has to be closed when the HTTP client disconnects. The HTTP client can use (or not) the same connection to send multiple HTTP requests (for sending messages to Kafka) then closing the connection. We cannot leave the Kafka Producer still living on the bridge but with no HTTP clients using it. The 1:1 relationship (HTTP client - Kafka producer) is even useful when developing a \"passthrough authentication\" from HTTP to Kafka (it's in our plans).\r\n\r\nI had this discussion https://github.com/quarkusio/quarkus/discussions/30597 with @geoand and thanks to him we found a workaround.\r\nSuch a workaround is actually the same way we use today with the bridge using Vert.x. Being able to get the `HttpConnection` instance and register an handler for it. In the Vert.x implementation we get the `connectionHandler` directly from the started web server.\r\n\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30599/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30599/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

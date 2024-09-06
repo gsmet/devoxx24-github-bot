@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30276",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30276/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30276/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30276/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30276",
+  "id": 1527124678,
+  "node_id": "I_kwDOCFbutM5bBhLG",
+  "number": 30276,
+  "title": "ResponseExceptionMapper is not invoked on `java.net.ConnectException: Connection refused`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2023-01-10T10:21:35Z",
+  "updated_at": "2023-01-12T10:52:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI wrote a ResponseExceptionMapper (in Kotlin) and it looks it works fine, but when the other service I want to access is not running at all, a `java.net.ConnectException: Connection refused` is thrown but doesn't pass to the `toThrowable` function.\n\n### Expected behavior\n\nIt should be received inside the `toThrowable` function\r\n\r\nhttps://github.com/Shinigami92/quarkus-fruits/blob/8a198bd6b805a7841537166e0381399d5421f18b/src/main/kotlin/com/github/shinigami92/OtherService.kt#L30-L34\n\n### Actual behavior\n\nNothing happens and the default handling applies\r\n\r\n```jsonc\r\n{\r\n    \"details\": \"Error id 486e5e50-a7db-4d6b-8922-02dd4f34d89e-2, javax.ws.rs.ProcessingException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:8079\",\r\n    \"stack\": \"javax.ws.rs.ProcessingException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:8079\r\n    at org.jboss.resteasy.reactive.client.handlers.ClientSendRequestHandler$3.accept(ClientSendRequestHandler.java:217)\r\n    at org.jboss.resteasy.reactive.client.handlers.ClientSendRequestHandler$3.accept(ClientSendRequestHandler.java:209)\r\n    at io.smallrye.context.impl.wrappers.SlowContextualConsumer.accept(SlowContextualConsumer.java:21)\r\n    at io.smallrye.mutiny.helpers.UniCallbackSubscriber.onFailure(UniCallbackSubscriber.java:62)\r\n    at io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onFailure(UniOperatorProcessor.java:55)\r\n    at io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onFailure(UniOperatorProcessor.java:55)\r\n    at org.jboss.resteasy.reactive.client.AsyncResultUni.lambda$subscribe$1(AsyncResultUni.java:37)\r\n    at io.vertx.core.impl.future.FutureImpl$3.onFailure(FutureImpl.java:153)\r\n    at io.vertx.core.impl.future.FutureBase.lambda$emitFailure$1(FutureBase.java:69)\r\n    at io.vertx.core.impl.EventLoopContext.execute(EventLoopContext.java:86)\r\n    at io.vertx.core.impl.DuplicatedContext.execute(DuplicatedContext.java:163)\r\n    at io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:66)\r\n    at io.vertx.core.impl.future.FutureImpl.tryFail(FutureImpl.java:230)\r\n    at io.vertx.core.impl.future.PromiseImpl.tryFail(PromiseImpl.java:23)\r\n    at io.vertx.core.http.impl.HttpClientImpl.lambda$doRequest$6(HttpClientImpl.java:658)\r\n    at io.vertx.core.net.impl.pool.Endpoint.lambda$getConnection$0(Endpoint.java:52)\r\n    at io.vertx.core.http.impl.SharedClientHttpStreamEndpoint$Request.handle(SharedClientHttpStreamEndpoint.java:162)\r\n    at io.vertx.core.http.impl.SharedClientHttpStreamEndpoint$Request.handle(SharedClientHttpStreamEndpoint.java:123)\r\n    at io.vertx.core.impl.EventLoopContext.emit(EventLoopContext.java:55)\r\n    at io.vertx.core.impl.ContextBase.emit(ContextBase.java:239)\r\n    at io.vertx.core.net.impl.pool.SimpleConnectionPool$ConnectFailed$1.run(SimpleConnectionPool.java:384)\r\n    at io.vertx.core.net.impl.pool.CombinerExecutor.submit(CombinerExecutor.java:50)\r\n    at io.vertx.core.net.impl.pool.SimpleConnectionPool.execute(SimpleConnectionPool.java:245)\r\n    at io.vertx.core.net.impl.pool.SimpleConnectionPool.lambda$connect$2(SimpleConnectionPool.java:259)\r\n    at io.vertx.core.http.impl.SharedClientHttpStreamEndpoint.lambda$connect$2(SharedClientHttpStreamEndpoint.java:104)\r\n    at io.vertx.core.impl.future.FutureImpl$3.onFailure(FutureImpl.java:153)\r\n    at io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:75)\r\n    at io.vertx.core.impl.future.FutureImpl.tryFail(FutureImpl.java:230)\r\n    at io.vertx.core.impl.future.Composition$1.onFailure(Composition.java:66)\r\n    at io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:75)\r\n    at io.vertx.core.impl.future.FailedFuture.addListener(FailedFuture.java:98)\r\n    at io.vertx.core.impl.future.Composition.onFailure(Composition.java:55)\r\n    at io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:75)\r\n    at io.vertx.core.impl.future.FutureImpl.tryFail(FutureImpl.java:230)\r\n    at io.vertx.core.impl.future.PromiseImpl.tryFail(PromiseImpl.java:23)\r\n    at io.vertx.core.impl.EventLoopContext.emit(EventLoopContext.java:55)\r\n    at io.vertx.core.impl.ContextBase.emit(ContextBase.java:239)\r\n    at io.vertx.core.net.impl.NetClientImpl.failed(NetClientImpl.java:320)\r\n    at io.vertx.core.net.impl.NetClientImpl.lambda$connectInternal2$5(NetClientImpl.java:288)\r\n    at io.netty.util.concurrent.DefaultPromise.notifyListener0(DefaultPromise.java:590)\r\n    at io.netty.util.concurrent.DefaultPromise.notifyListenersNow(DefaultPromise.java:557)\r\n    at io.netty.util.concurrent.DefaultPromise.notifyListeners(DefaultPromise.java:492)\r\n    at io.netty.util.concurrent.DefaultPromise.setValue0(DefaultPromise.java:636)\r\n    at io.netty.util.concurrent.DefaultPromise.setFailure0(DefaultPromise.java:629)\r\n    at io.netty.util.concurrent.DefaultPromise.setFailure(DefaultPromise.java:110)\r\n    at io.vertx.core.net.impl.ChannelProvider.lambda$handleConnect$0(ChannelProvider.java:160)\r\n    at io.netty.util.concurrent.DefaultPromise.notifyListener0(DefaultPromise.java:590)\r\n    at io.netty.util.concurrent.DefaultPromise.notifyListeners0(DefaultPromise.java:583)\r\n    at io.netty.util.concurrent.DefaultPromise.notifyListenersNow(DefaultPromise.java:559)\r\n    at io.netty.util.concurrent.DefaultPromise.notifyListeners(DefaultPromise.java:492)\r\n    at io.netty.util.concurrent.DefaultPromise.setValue0(DefaultPromise.java:636)\r\n    at io.netty.util.concurrent.DefaultPromise.setFailure0(DefaultPromise.java:629)\r\n    at io.netty.util.concurrent.DefaultPromise.tryFailure(DefaultPromise.java:118)\r\n    at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.fulfillConnectPromise(AbstractNioChannel.java:321)\r\n    at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.finishConnect(AbstractNioChannel.java:337)\r\n    at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:776)\r\n    at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)\r\n    at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)\r\n    at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n    at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n    at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n    at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n    at java.base/java.lang.Thread.run(Thread.java:1589)\r\nCaused by: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:8079\r\nCaused by: java.net.ConnectException: Connection refused\r\n    at java.base/sun.nio.ch.Net.pollConnect(Native Method)\r\n    at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672)\r\n    at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:973)\r\n    at io.netty.channel.socket.nio.NioSocketChannel.doFinishConnect(NioSocketChannel.java:337)\r\n    at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.finishConnect(AbstractNioChannel.java:334)\r\n    at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:776)\r\n    at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)\r\n    at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)\r\n    at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n    at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n    at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n    at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n    at java.base/java.lang.Thread.run(Thread.java:1589)\"\r\n}\r\n```\n\n### How to Reproduce?\n\nhttps://github.com/Shinigami92/quarkus-fruits/blob/main/src/main/kotlin/com/github/shinigami92/OtherService.kt#L30-L34\r\n\r\n```\r\ngit clone git@github.com:Shinigami92/quarkus-fruits.git\r\ncd quarkus-fruits\r\nquarkus dev\r\n```\r\n\r\n`GET http://localhost:8080/api/fruit/other`\r\n\r\nprofit $$$\n\n### Output of `uname -a` or `ver`\n\nDarwin Shinigami-MBP.dermalog.hh 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:03:51 PST 2022; root:xnu-8792.61.2~4/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"19.0.1\" 2022-10-18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.15.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmvn via quarkus\n\n### Additional information\n\nhttps://mas.to/@Shini92/109664368712090615",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30276/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30276/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

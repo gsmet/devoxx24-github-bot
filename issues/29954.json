@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29954",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29954/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29954/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29954/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29954",
+  "id": 1502809363,
+  "node_id": "I_kwDOCFbutM5Zkw0T",
+  "number": 29954,
+  "title": "Fail to start-up Kafka dev services after https://github.com/quarkusio/quarkus/pull/29897",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-12-19T11:49:32Z",
+  "updated_at": "2022-12-19T12:18:05Z",
+  "closed_at": "2022-12-19T12:12:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter https://github.com/quarkusio/quarkus/pull/29897/commits/0f3a9384a0da9ca149b40a4b88f8713fc0a80b46 our tests are failing[1] as I can see the default provider is set to `redpanda` for the `quarkus.kafka.devservices.provider` new property introduced.\r\n\r\nHowever, in our test we don't have such property defined, but `quarkus.kafka.devservices.image-name=quay.io/strimzi-test-container/test-container:0.100.0-kafka-3.1.0` instead. Thus test is failing, as default provider is `redpanda` but we are specifying an `strimzi` image.\r\n\r\nThen, it fails to start up the kafka dev service.\r\n\r\n[1] https://github.com/quarkus-qe/quarkus-test-suite/blob/main/messaging/kafka-streams-reactive-messaging/src/test/java/io/quarkus/ts/messaging/kafka/reactive/streams/DevModeStrimziKafkaStreamIT.java\n\n### Expected behavior\n\nI would expect this change to be documented in the migration guide, as there might be some users already having this current setup described above.\n\n### Actual behavior\n\nUnable to start up:\r\n\r\n```\r\nCould not start container: java.lang.IllegalStateException: Container exited with code 127\r\n\tat org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:514)\r\n\tat org.testcontainers.containers.GenericContainer.lambda$doStart$0(GenericContainer.java:344)\r\n\tat org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:81)\r\n\tat org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:334)\r\n\tat org.testcontainers.containers.GenericContainer.start(GenericContainer.java:322)\r\n\tat io.quarkus.kafka.client.deployment.DevServicesKafkaProcessor.lambda$startKafka$5(DevServicesKafkaProcessor.java:236)\r\n\tat java.base/java.util.Optional.orElseGet(Optional.java:364)\r\n\tat io.quarkus.kafka.client.deployment.DevServicesKafkaProcessor.startKafka(DevServicesKafkaProcessor.java:282)\r\n\tat io.quarkus.kafka.client.deployment.DevServicesKafkaProcessor.startKafkaDevService(DevServicesKafkaProcessor.java:95)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```\n\n### How to Reproduce?\n\n```[shell]\r\ngit clone -b kafka-devservices-provider git@github.com:afalhambra/code-with-quarkus.git\r\ncd code-with-quarkus\r\nmvn quarkus:dev\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux antferna.remote.csb 4.18.0-372.19.1.el8_6.x86_64 #1 SMP Mon Jul 18 11:14:02 EDT 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\nQuarkus main\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29954/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29954/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

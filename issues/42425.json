@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42425",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42425/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42425/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42425/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42425",
+  "id": 2456647870,
+  "node_id": "I_kwDOCFbutM6SbXi-",
+  "number": 42425,
+  "title": "Fetchgraph does not prevent Hibernate from fetching lazy one-to-one relationships",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2024-08-08T21:25:25Z",
+  "updated_at": "2024-08-30T09:52:36Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn a monolith using WebLogic (as application server) and Eclipselink (as ORM), there was a very slow SQL query (that could takes more than 10 seconds) that can returns thousand of rows. We have been able to optimize it so it takes less than 1 second when using a fetch graph. Prior the fix, a mapper after the method `javax.persistence.TypedQuery#getResultList` was submitting dozen of SQL queries (fetching lazy relationships and lazy of lazy...) for each row when using the getters of the main entity class. The fetch graph allowed to eagerly fetch lazy relationships in a single query.\r\n\r\nNow, the entire feature is planned to be moved into a Quarkus 2 project while still keeping the DDL and the database for iterative migrations. Unfortunately, the fetch graph is not working as expected.\r\n\r\nYet the Hibernate documentation states (source 6, see all links below):\r\n\r\n> fetch graph : In this case, all attributes specified in the entity graph will be treated as FetchType.EAGER, and all attributes not specified will ALWAYS be treated as FetchType.LAZY.\r\n\r\nThere was a bug which ignored the hint but it seems solved since the 5.4.22: https://hibernate.atlassian.net/browse/HHH-8776\r\n\r\nWhat I tried :\r\n* Using `@LazyToOne` annotations (source 1, 5 or 8), but this was required for Hibernate < 5.5.\r\n* Using attribute `optional = false` for `@OneToOne` (source 3 or 4)\r\n* Setting `hibernate.enhancer.enableLazyInitialization` to true in `application.properties` (source 7)\r\n\r\nI can't update the DDL, so it prevents using the annotation `@MapsId` (source 3 or 4).\r\n\r\nAccording to source 2:\r\n> Starting with Hibernate 5.5, the FetchType.EAGER fetching strategy can be overridden at query time via the fetchgraph property.\r\n\r\nAccording to source 8:\r\n> However, if you really need to use a bidirectional association and want to make sure that this is always going to be fetched lazily, then you need to enable lazy state initialization bytecode enhancement and use the @LazyToOne annotation as well.\r\n\r\nI don't know why it does not work, can it be related to some internals Quarkus bytecode enhancement incompatible with Hibernate?\r\n\r\nSources :\r\n1. https://vladmihalcea.com/hibernate-lazytoone-annotation/\r\n2. https://vladmihalcea.com/fetchtype-eager-fetchgraph/\r\n3. https://vladmihalcea.com/the-best-way-to-map-a-onetoone-relationship-with-jpa-and-hibernate/\r\n4. https://thorben-janssen.com/hibernate-tip-lazy-loading-one-to-one/\r\n5. http://justonjava.blogspot.com/2010/09/lazy-one-to-one-and-one-to-many.html\r\n6. https://docs.jboss.org/hibernate/orm/5.6/userguide/html_single/Hibernate_User_Guide.html#fetching-strategies-dynamic-fetching-entity-graph\r\n7. https://docs.jboss.org/hibernate/orm/5.6/userguide/html_single/Hibernate_User_Guide.html#configurations-bytecode-enhancement\r\n8. https://docs.jboss.org/hibernate/orm/5.6/userguide/html_single/Hibernate_User_Guide.html#associations-one-to-one-bidirectional-lazy\r\n\r\n### Expected behavior\r\n\r\nI expect only one query in the logs:\r\n\r\n```\r\nHibernate:\r\n    select\r\n        fruit0_.id as id1_0_0_,\r\n        fruit0_.name as name2_0_0_\r\n    from\r\n        known_fruits fruit0_\r\n    where\r\n        fruit0_.id=?\r\n```\r\n\r\n### Actual behavior\r\n\r\nThere is an additional request to fetch the lazy `@OneToOne` relationship:\r\n\r\n```\r\nHibernate:\r\n    select\r\n        fruit0_.id as id1_0_0_,\r\n        fruit0_.name as name2_0_0_\r\n    from\r\n        known_fruits fruit0_\r\n    where\r\n        fruit0_.id=?\r\nHibernate:\r\n    select\r\n        fruitdetai0_.id as id1_1_0_,\r\n        fruitdetai0_.description as descript2_1_0_,\r\n        fruitdetai0_.fruit_id as fruit_id3_1_0_\r\n    from\r\n        known_fruits_detail fruitdetai0_\r\n    where\r\n        fruitdetai0_.fruit_id=?\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nHere is a minimal project to reproduce the issue (branch 2.16): https://github.com/KevinSeroux/quarkus-quickstarts/tree/2.16\r\n\r\nIf you prefer an archive: [hibernate-orm-quickstart-fetchgraph.tar.gz](https://github.com/user-attachments/files/16553609/hibernate-orm-quickstart-fetchgraph.tar.gz)\r\n\r\nIf you only want the diffs from hibernate-orm-quickstart (might be easier to locate the issue): https://github.com/quarkusio/quarkus-quickstarts/compare/2.16...KevinSeroux:quarkus-quickstarts:2.16\r\n\r\nI reproduce the issue also with Quarkus 3.13.1.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux ITEM-S131685 5.15.153.1-microsoft-standard-WSL2 #1 SMP Fri Mar 29 23:14:13 UTC 2024 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.11\" 2024-04-16 OpenJDK Runtime Environment (build 17.0.11+9-Debian-1deb12u1) OpenJDK 64-Bit Server VM (build 17.0.11+9-Debian-1deb12u1, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42425/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42425/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

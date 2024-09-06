@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28240",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28240/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28240/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28240/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28240",
+  "id": 1388720692,
+  "node_id": "I_kwDOCFbutM5SxjI0",
+  "number": 28240,
+  "title": "StructuredTaskScope has no effect",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-09-28T04:46:15Z",
+  "updated_at": "2022-09-28T08:36:05Z",
+  "closed_at": "2022-09-28T08:26:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n         \r\n ```java\r\n try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {\r\n                Future<List<RetrieveVO>> cmdListFuture = scope.fork(() -> retrieveCmd(trimmedItem, 0, ttyOsType.getId()));\r\n                Future<List<RetrieveVO>> shortcutCmdListFuture = scope.fork(() -> retrieveShortcutCmd(trimmedItem, ttyOsType.getId()));\r\n                Future<List<RetrieveVO>> historyCmdListFuture = scope.fork(() -> retrieveHistoryCmd(trimmedItem, ttyOsType.getId()));\r\n                scope.join();\r\n                scope.throwIfFailed();\r\n\r\n                List<RetrieveVO> retrieveCmdList = cmdListFuture.resultNow();\r\n                List<RetrieveVO> retrieveShortcutCmdList = shortcutCmdListFuture.resultNow();\r\n                List<RetrieveVO> retrieveHistoryCmdList = historyCmdListFuture.resultNow();\r\n                ArrayList<RetrieveVO> list = new ArrayList<>(retrieveCmdList.size() + retrieveShortcutCmdList.size() + retrieveHistoryCmdList.size());\r\n                list.addAll(retrieveCmdList);\r\n                list.addAll(retrieveShortcutCmdList);\r\n                list.addAll(retrieveHistoryCmdList);\r\n                retrieveVOList = list;\r\n            } catch (ExecutionException | InterruptedException e) {\r\n                throw new RuntimeException(e);\r\n            }\r\n```\r\n\r\n\r\nThe current thread has not entered\r\n\r\n\r\n\r\nThe following old writing is OK\r\n\r\n```java\r\nCompletableFuture<List<RetrieveVO>> cmdListFuture = CompletableFuture.supplyAsync(() -> retrieveCmd(trimmedItem, 0, ttyOsType.getId()));\r\n            CompletableFuture<List<RetrieveVO>> shortcutCmdListFuture = CompletableFuture.supplyAsync(() -> retrieveShortcutCmd(trimmedItem, ttyOsType.getId()));\r\n            CompletableFuture<List<RetrieveVO>> historyCmdListFuture = CompletableFuture.supplyAsync(() -> retrieveHistoryCmd(trimmedItem, ttyOsType.getId()));\r\n\r\n            CompletableFuture.allOf(cmdListFuture, shortcutCmdListFuture, historyCmdListFuture).join();\r\n            try {\r\n                List<RetrieveVO> retrieveCmdList = cmdListFuture.get();\r\n                List<RetrieveVO> retrieveShortcutCmdList = shortcutCmdListFuture.get();\r\n                List<RetrieveVO> retrieveHistoryCmdList = historyCmdListFuture.get();\r\n                ArrayList<RetrieveVO> list = new ArrayList<>(retrieveCmdList.size() + retrieveShortcutCmdList.size() + retrieveHistoryCmdList.size());\r\n                list.addAll(retrieveCmdList);\r\n                list.addAll(retrieveShortcutCmdList);\r\n                list.addAll(retrieveHistoryCmdList);\r\n                retrieveVOList = list;\r\n            } catch (InterruptedException | ExecutionException e) {\r\n                throw new RuntimeException(e);\r\n            }\r\n```\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nwindows 10\r\n\r\n### Output of `java -version`\r\n\r\njava19\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n GraalVM CE 22.3.0-dev\r\n\r\n### Quarkus version or git rev\r\n\r\n2.12.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28240/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28240/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

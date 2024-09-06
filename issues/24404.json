@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24404",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24404/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24404/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24404/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24404",
+  "id": 1173496144,
+  "node_id": "I_kwDOCFbutM5F8iFQ",
+  "number": 24404,
+  "title": "Classes might be transformed twice in some cases",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-03-18T11:44:53Z",
+  "updated_at": "2023-01-28T14:55:00Z",
+  "closed_at": "2023-01-28T14:55:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nSeeing the following error when running integration tests: `Caused by: java.lang.ClassFormatError: Duplicate method name \"<init>\" with signature \"()V\" in class file org/acme/testcoverage/GreetingService2`, so classes might be transformed twice or there might be some transformation checks missing.\r\n\r\nHow I got there is a bit unorthodox, but raising the issue anyway in case there's an actual bug to fix or improvement that can be made (which might open the door to a simple way of getting test coverage working in all cases).\r\n\r\nSince [I can't still get JaCoCo to work properly in multi module projects](https://github.com/quarkusio/quarkus/issues/18559#issuecomment-1070987521), I had the idea to try to make Quarkus write the transformed classes before the unit tests, so that JaCoCo sees the transformed classes for everything (unit tests, integration tests and any reporting including aggregation). So I tried this:\r\n\r\n```xml\r\n<plugin>\r\n    <groupId>${quarkus.platform.group-id}</groupId>\r\n    <artifactId>quarkus-maven-plugin</artifactId>\r\n    <version>${quarkus.platform.version}</version>\r\n    <extensions>true</extensions>\r\n    <configuration>\r\n        <systemProperties>\r\n            <quarkus.package.write-transformed-bytecode-to-build-output>true</quarkus.package.write-transformed-bytecode-to-build-output>\r\n            <quarkus.arc.remove-unused-beans>framework</quarkus.arc.remove-unused-beans>\r\n        </systemProperties>\r\n    </configuration>\r\n    <executions>\r\n        <execution>\r\n            <id>special-build</id>\r\n            <phase>process-test-classes</phase>\r\n            <goals>\r\n                <goal>build</goal>\r\n            </goals>\r\n        </execution>\r\n        <execution>\r\n            <goals>\r\n                <goal>generate-code</goal>\r\n                <goal>generate-code-tests</goal>\r\n            </goals>\r\n        </execution>\r\n    </executions>\r\n</plugin>\r\n```\r\n\r\nIf I don't set `quarkus.arc.remove-unused-beans` the error disappears, but I need to set it so that JaCoCo sees the right class for classes that are not unit tested but loaded by integration tests.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nReproducer: [reproducer.zip](https://github.com/quarkusio/quarkus/files/8304118/reproducer.zip)\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\nDarwin xtaixe 21.3.0 Darwin Kernel Version 21.3.0: Wed Jan  5 21:37:58 PST 2022; root:xnu-8019.80.24~20/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nopenjdk version \"11.0.13\" 2021-10-19 OpenJDK Runtime Environment GraalVM CE 21.3.0 (build 11.0.13+7-jvmci-21.3-b05) OpenJDK 64-Bit Server VM GraalVM CE 21.3.0 (build 11.0.13+7-jvmci-21.3-b05, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24404/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24404/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33610",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33610/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33610/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33610/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33610",
+  "id": 1725785016,
+  "node_id": "I_kwDOCFbutM5m3WO4",
+  "number": 33610,
+  "title": "Building Native executable using container-build fails",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5456027948,
+      "node_id": "LA_kwDOCFbutM8AAAABRTRhLA",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/podman",
+      "name": "env/podman",
+      "color": "edea47",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-05-25T13:00:21Z",
+  "updated_at": "2024-08-24T12:27:29Z",
+  "closed_at": "2024-08-24T12:27:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nTrying to build linux executable with:\r\n`mvn install -Dnative -DskipTests -Dquarkus.native.container-build=true` as per quarkus.io/guides/building-native-image, fails with following error:\r\n```\r\nWriting manifest to image destination\r\nStoring signatures\r\n47a7e9c75dba704bd8b46c17ab25b1529b26a2eb21f2c2f894ac744afab915ec\r\n[ERROR] [io.quarkus.deployment.pkg.steps.NativeImageBuildStep] Unable to get GraalVM version from the native-image binary.\r\n...\r\n...\r\nError: error creating container storage: creating an ID-mapped copy of layer \"b20471bd23f2a3de10323366a217bcd22d8a9ad77fff50d20cf71280a8a4e0da\": error during chown: storage-chown-by-maps: lchown usr/lib/locale/en_AU.utf8/LC_NAME: no such file or directory: exit status 1\r\n```\r\n\r\nI checked if my RHEL host machine has the file at `/usr/lib/locale/en_AU.utf8/LC_NAME` and it is there (root:root), but I am not sure why **en_AU** is important and if error refers to the file on my host machine or build image.\r\n\r\n### Expected behavior\r\n\r\nexecutable is built using default build image without errors.\r\n\r\n### Actual behavior\r\n\r\nfails with error from above.\r\n\r\n### How to Reproduce?\r\n\r\nExecute:\r\n`mvn install -Dnative -DskipTests -Dquarkus.native.container-build=true` in a getting-started quarkus project root. \r\n\r\nwill render:\r\n```\r\nTrying to pull quay.io/quarkus/ubi-quarkus-mandrel-builder-image:22.3-java17...\r\nGetting image source signatures\r\nCopying blob 8667fe2eaa4a skipped: already exists  \r\nCopying blob 42d71c7fcaa2 skipped: already exists  \r\nCopying blob d7a143ab1773 skipped: already exists  \r\nCopying blob 368759f1ce35 skipped: already exists  \r\nCopying blob a27c365cc8f5 skipped: already exists  \r\nCopying blob f1e5c98c74e5 skipped: already exists  \r\nCopying blob 118a124c1483 skipped: already exists  \r\nCopying blob 6e198094e21c skipped: already exists  \r\nCopying blob e430a4eaf0f9 skipped: already exists  \r\nCopying blob 7d5003439875 skipped: already exists  \r\nCopying blob 71d351c5e765 skipped: already exists  \r\nCopying blob 3543484e245f skipped: already exists  \r\nCopying blob 4f4fb700ef54 skipped: already exists  \r\nCopying blob 4f4fb700ef54 skipped: already exists  \r\nCopying blob a49367d57626 skipped: already exists  \r\nCopying config 47a7e9c75d done  \r\nWriting manifest to image destination\r\nStoring signatures\r\n47a7e9c75dba704bd8b46c17ab25b1529b26a2eb21f2c2f894ac744afab915ec\r\n[ERROR] [io.quarkus.deployment.pkg.steps.NativeImageBuildStep] Unable to get GraalVM version from the native-image binary.\r\n\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] podman run --env LANG=C --rm --user 119066:119066 --userns=keep-id -v /home/someuser/Downloads/quarkus-playground/getting-start/target/getting-start-1.0.0-SNAPSHOT-native-image-source-jar:/project:z --name build-native-cGOgX quay.io/quarkus/ubi-quarkus-mandrel-builder-image:22.3-java17 -J-Dsun.nio.ch.maxUpdateArraySize=100 -J-Djava.util.logging.manager=org.jboss.logmanager.LogManager -J-Dlogging.initial-configurator.min-level=500 -J-Dvertx.logger-delegate-factory-class-name=io.quarkus.vertx.core.runtime.VertxLogDelegateFactory -J-Dvertx.disableDnsResolver=true -J-Dio.netty.leakDetection.level=DISABLED -J-Dio.netty.allocator.maxOrder=3 -J-Duser.language=en -J-Duser.country=US -J-Dfile.encoding=UTF-8 --features=io.quarkus.runner.Feature,io.quarkus.runtime.graal.DisableLoggingFeature -H:-ParseOnce -J--add-exports=java.security.jgss/sun.security.krb5=ALL-UNNAMED -J--add-opens=java.base/java.text=ALL-UNNAMED -J--add-opens=java.base/java.io=ALL-UNNAMED -J--add-opens=java.base/java.lang.invoke=ALL-UNNAMED -J--add-opens=java.base/java.util=ALL-UNNAMED -H:+AllowFoldMethods -J-Djava.awt.headless=true --no-fallback --link-at-build-time -H:+ReportExceptionStackTraces -H:-AddAllCharsets --enable-url-protocols=http -H:-UseServiceLoaderFeature -H:+StackTrace -J--add-exports=org.graalvm.sdk/org.graalvm.nativeimage.impl=ALL-UNNAMED --exclude-config io\\.netty\\.netty-codec /META-INF/native-image/io\\.netty/netty-codec/generated/handlers/reflect-config\\.json --exclude-config io\\.netty\\.netty-handler /META-INF/native-image/io\\.netty/netty-handler/generated/handlers/reflect-config\\.json getting-start-1.0.0-SNAPSHOT-runner -jar getting-start-1.0.0-SNAPSHOT-runner.jar\r\nError: error creating container storage: creating an ID-mapped copy of layer \"b20471bd23f2a3de10323366a217bcd22d8a9ad77fff50d20cf71280a8a4e0da\": error during chown: storage-chown-by-maps: lchown usr/lib/locale/en_AU.utf8/LC_NAME: no such file or directory: exit status 1\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  12.333 s\r\n[INFO] Finished at: 2023-05-25T14:55:13+02:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:3.0.4.Final:build (default) on project getting-start: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR] \t[error]: Build step io.quarkus.deployment.pkg.steps.NativeImageBuildStep#build threw an exception: io.quarkus.deployment.pkg.steps.NativeImageBuildStep$ImageGenerationFailureException: Image generation failed. Exit code: 125\r\n[ERROR] \tat io.quarkus.deployment.pkg.steps.NativeImageBuildStep.imageGenerationFailed(NativeImageBuildStep.java:437)\r\n[ERROR] \tat io.quarkus.deployment.pkg.steps.NativeImageBuildStep.build(NativeImageBuildStep.java:263)\r\n[ERROR] \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n[ERROR] \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n[ERROR] \tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n[ERROR] \tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n[ERROR] \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n[ERROR] \tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n[ERROR] \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n[ERROR] \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n[ERROR] \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n[ERROR] \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n[ERROR] \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n4.18.0-425.19.2.el8_7.x86_64\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Temurin-17.0.7+7 (build 17.0.7+7)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n~/.sdkman/candidates/java/22.3.0.1.r17-mandrel/\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39)\r\n\r\n### Additional information\r\n\r\nJava is set by SdkMan, `JAVA_HOME` is not set, but `java -version` returns correct version and sdkman set it correctly to be available in the Path \r\nGRAALVM_HOME is explicitly set to mandrel installed by sdkman and it has `~/.sdkman/candidates/java/22.3.0.1.r17-mandrel/` value. \r\n\r\n\r\nHereby, I would like to emphasize that this issue is about building with image. `podman images` returns:\r\n```\r\nREPOSITORY                                                                          TAG                     IMAGE ID           CREATED        SIZE\r\nquay.io/quarkus/ubi-quarkus-mandrel-builder-image  22.3-java17       47a7e9c75dba  4 days ago     1.1 GB\r\n```\r\n\r\nBuilding using `quarkus build --native` when `GRAALVM_HOME` is set to mandrel version (and `JAVA_HOME` not set) as described above, creates valid native runnable of the getting-started application (~42MB).",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33610/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33610/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

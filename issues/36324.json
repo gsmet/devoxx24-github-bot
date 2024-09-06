@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36324",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36324/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36324/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36324/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36324",
+  "id": 1929759861,
+  "node_id": "I_kwDOCFbutM5zBcx1",
+  "number": 36324,
+  "title": "Calling redis gives \"ERR unknown command 'watch'\" when upgrading from quarkus 3.3.2 to 3.4.2",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-10-06T09:18:49Z",
+  "updated_at": "2024-02-08T07:26:13Z",
+  "closed_at": "2023-11-29T09:28:43Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nFrom imperative code, we call a reactive method annotated with @CacheResult. This works fine with quarkus 3.3.2, but when we upgrade to 3.4.2 (not changing any thing else than the quarkus version) we get this error when accessing our sentinel redis from the application:\r\n\r\nCaused by: ERR unknown command 'watch', with args beginning with: 'cache:get-cpr-number-cache:2120-02-02-04.24.28.23145' \r\n\r\n### Expected behavior\r\n\r\nExpect the redis interaction to work with quarkus 3.4.2 as it does with quarkus 3.3.2\r\n\r\n### Actual behavior\r\n\r\nThrow exception with \"unknown command 'watch'\"\r\n\r\n### How to Reproduce?\r\n\r\nWe have a redis installed in kubernetes in a sentinel setup with three pods, using this image:\r\n\r\n```\r\n_image:\r\n   registry: docker.io\r\n   repository: bitnami/redis\r\n   tag: 7.2-debian-11_\r\n```\r\nIn quarkus we configure the integration with:\r\n\r\n```\r\n_quarkus.cache.type=redis\r\nquarkus.redis.max-nested-arrays=16\r\nquarkus.redis.hosts=redis://redis:26379\r\nquarkus.redis.client-type=sentinel\r\nquarkus.redis.password=${REDIS_AUH_PASSWORD}\r\n// The number of nodes in our sentinel cluster\r\nquarkus.redis.max-pool-size=3\r\n// Clean the redis pool queue every 2 seconds, hopefully freeing resources to \r\n// Our other reactive threads\r\nquarkus.redis.pool-cleaner-interval=2S\r\n// There is per default no timeout on the blocking redis calls\r\n// Since, the idea with the cache is speed, 1 second timeout should be fine\r\nquarkus.redis.timeout=1S\r\n// We have a fairly simple redis setup, so we don't have that many\r\n// arrays within arrays. Lowering this from 32 helps with our perfomance\r\nquarkus.redis.max-nested-arrays=16_\r\n```\r\n\r\n\r\nFrom our application we call this reactive cache annotated method from imperative code:\r\n\r\n```\r\n@CacheResult(cacheName = \"get-cpr-number-cache\")\r\npublic Uni<String> getCprNumber(String customerId) {\r\n    return ....\r\n}\r\n\r\n```\r\nWhen upgrading the quarkus version we get this exception:\r\n\r\n```\r\n         ...\r\n\tCaused by: jakarta.ws.rs.InternalServerErrorException: Failed to fetch cpr for customerId:  2120-02-02-04.24.28.23145\r\n\tat dk.bankdata.drb.external.metadata.MetaDataFacade.lambda$getCprNumber$6(MetaDataFacade.java:112)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnFailureTransform$UniOnFailureTransformProcessor.onFailure(UniOnFailureTransform.java:54)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnFailureFlatMap$UniOnFailureFlatMapProcessor.dispatch(UniOnFailureFlatMap.java:85)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnFailureFlatMap$UniOnFailureFlatMapProcessor.onFailure(UniOnFailureFlatMap.java:60)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onFailure(UniOperatorProcessor.java:55)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnTerminationCall$UniOnTerminationCallProcessor.lambda$onFailure$3(UniOnTerminationCall.java:79)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualConsumer.accept(SlowContextualConsumer.java:21)\r\n\tat io.smallrye.mutiny.helpers.UniCallbackSubscriber.onItem(UniCallbackSubscriber.java:73)\r\n\tat io.smallrye.mutiny.vertx.AsyncResultUni.lambda$subscribe$1(AsyncResultUni.java:35)\r\n\tat io.vertx.core.impl.future.SucceededFuture.onComplete(SucceededFuture.java:81)\r\n\tat io.vertx.redis.client.RedisConnection.close(RedisConnection.java:127)\r\n\tat io.vertx.mutiny.redis.client.RedisConnection.lambda$close$14(RedisConnection.java:266)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualConsumer.accept(SlowContextualConsumer.java:21)\r\n\tat io.smallrye.mutiny.vertx.AsyncResultUni.subscribe(AsyncResultUni.java:31)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.withSubscriber(UniSubscribe.java:51)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:110)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:88)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnTerminationCall$UniOnTerminationCallProcessor.onFailure(UniOnTerminationCall.java:78)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onFailure(UniOperatorProcessor.java:55)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onFailure(UniOperatorProcessor.java:55)\r\n\tat io.smallrye.mutiny.operators.uni.UniOperatorProcessor.onFailure(UniOperatorProcessor.java:55)\r\n\tat io.smallrye.mutiny.vertx.AsyncResultUni.lambda$subscribe$1(AsyncResultUni.java:37)\r\n\tat io.smallrye.mutiny.vertx.DelegatingHandler.handle(DelegatingHandler.java:25)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onFailure(FutureImpl.java:153)\r\n\tat io.vertx.core.impl.future.FutureImpl$ListenerArray.onFailure(FutureImpl.java:268)\r\n\tat io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:75)\r\n\tat io.vertx.core.impl.future.FutureImpl.tryFail(FutureImpl.java:230)\r\n\tat io.vertx.core.impl.future.Transformation$1.onFailure(Transformation.java:67)\r\n\tat io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:75)\r\n\tat io.vertx.core.impl.future.FutureImpl.addListener(FutureImpl.java:191)\r\n\tat io.vertx.core.impl.future.PromiseImpl.addListener(PromiseImpl.java:23)\r\n\tat io.vertx.core.impl.future.Transformation.onFailure(Transformation.java:56)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitFailure$1(FutureBase.java:69)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\t... 2 more\r\nCaused by: ERR unknown command 'watch', with args beginning with: 'cache:get-cpr-number-cache:2120-02-02-04.24.28.23145'\r\n```\r\n\r\n        \r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux wealth-items-service-654c5759c8-nlrkg 4.18.0-372.69.1.el8_6.x86_64 #1 SMP Thu Aug 3 16:12:43 EDT 2023 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.8\" 2023-07-18 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.4.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.1.1\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36324/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36324/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

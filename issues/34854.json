@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34854",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34854/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34854/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34854/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34854",
+  "id": 1811927086,
+  "node_id": "I_kwDOCFbutM5r_9Au",
+  "number": 34854,
+  "title": "\"This error is reported at image build time because classis registered for linking at image build time\" error despite using --initalize-at-run-time",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2023-07-19T13:16:59Z",
+  "updated_at": "2024-09-02T12:14:53Z",
+  "closed_at": "2023-07-20T12:55:40Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI've been tasked with continuing work on getting native image support working for the Couchbase Quarkus extension (https://github.com/quarkiverse/quarkus-couchbase), currently in alpha.\r\n\r\nI'm hitting a couple of different issues that look to have the same root cause.  One of the issues is this, hit while natively compiling a very basic Quarkus app that depends on the quarkus-couchbase extension:\r\n\r\n```\r\nFatal error: com.oracle.graal.pointsto.util.AnalysisError$ParsingError: Error encountered while parsing com.couchbase.client.java.env.ClusterEnvironment.<init>(com.couchbase.client.java.env.ClusterEnvironment$Builder)\r\nParsing context:\r\n   at com.couchbase.client.java.env.ClusterEnvironment.<init>(ClusterEnvironment.java:55)\r\n   at com.couchbase.client.java.env.ClusterEnvironment.<init>(ClusterEnvironment.java:48)\r\n   <elided>\r\n\r\nCaused by: org.graalvm.compiler.java.BytecodeParser$BytecodeParserError: com.oracle.graal.pointsto.constraints.UnresolvedElementException: Discovered unresolved method during parsing: com.couchbase.client.java.codec.JacksonJsonSerializer.create(com.couchbase.client.core.encryption.CryptoManager). This error is reported at image build time because class com.couchbase.client.java.env.ClusterEnvironment is registered for linking at image build time by command line\r\n        at parsing com.couchbase.client.java.env.ClusterEnvironment.newDefaultSerializer(ClusterEnvironment.java:71)\r\n\t   <elided>\r\n\r\nCaused by: com.oracle.graal.pointsto.constraints.UnresolvedElementException: Discovered unresolved method during parsing: com.couchbase.client.java.codec.JacksonJsonSerializer.create(com.couchbase.client.core.encryption.CryptoManager). This error is reported at image build time because class com.couchbase.client.java.env.ClusterEnvironment is registered for linking at image build time by command line\r\n\t   <elided>\r\n```\r\n\r\nThe error itself makes sense.  We have some code `ClusterEnvironment.newDefaultSerializer()` that checks if the user has the Jackson library on their classpath, and initialises a `JacksonJsonSerializer` if so.  So the solution seems to be to push all this logic to runtime rather than buildtime.\r\n\r\nSo I added to native-image.properties in quarkus-couchbase `--initialize-at-run-time=<elided>,com.couchbase.client.java.codec.JacksonJsonSerializer,com.couchbase.client.java.env.ClusterEnvironment,<elided>`\r\n\r\nAnd used `native-image -H:+PrintClassInitialization` to confirm the mentioned classes should be getting initialized at runtime:\r\n\r\n```\r\ncom.couchbase.client.java.codec.JacksonJsonSerializer, RUN_TIME, from 'META-INF\\native-image\\native-image.properties' in 'file:///C:/dev/test-quarkus-couchbase/target/test-quarkus-couchbase-1.0.0-SNAPSHOT-native-image-source-jar/lib/io.quarkiverse.couchbase.quarkus-couchbase-999-SNAPSHOT.jar' with 'com.couchbase.client.java.codec.JacksonJsonSerializer'\r\ncom.couchbase.client.java.env.ClusterEnvironment, RUN_TIME, from 'META-INF\\native-image\\native-image.properties' in 'file:///C:/dev/test-quarkus-couchbase/target/test-quarkus-couchbase-1.0.0-SNAPSHOT-native-image-source-jar/lib/io.quarkiverse.couchbase.quarkus-couchbase-999-SNAPSHOT.jar' with 'com.couchbase.client.java.env.ClusterEnvironment'\r\n```\r\n\r\nBut, I'm still getting the same error indicating the classes continue to be getting processed at image build time.\r\n\r\nAny thoughts?  I can upload a project that replicates this if it helps.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34854/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34854/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

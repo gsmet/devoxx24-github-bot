@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27777",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27777/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27777/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27777/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27777",
+  "id": 1364332443,
+  "node_id": "I_kwDOCFbutM5RUg-b",
+  "number": 27777,
+  "title": "In native mode a static instance cannot load resources as the resource URL references a jar in the path",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-09-07T09:00:08Z",
+  "updated_at": "2022-09-13T15:50:08Z",
+  "closed_at": "2022-09-07T11:40:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen an object is instantiated as static then the object or any objects instantiated by it are not able to load resources.\r\n\r\nIf I instantiate the object as non static, then when the object tries to load a resource, the resource URL looks like this:\r\n\r\n    resource:/diagram-interchange-dish-example.dmn\r\n\r\nIf I instantiate the same object as static, then the resource URL looks like this:\r\n\r\n    jar:file:/project/quarkus-bug-1.0-SNAPSHOT-runner.jar!/diagram-interchange-dish-example.dmn\r\n\r\nThis is the exception I get when I try to open a resource loaded by a static object:\r\n\r\n    Caused by: java.nio.file.NoSuchFileException: /project/quarkus-bug-1.0-SNAPSHOT-runner.jar\r\n        at sun.nio.fs.UnixFileAttributeViews$Basic.readAttributes(UnixFileAttributeViews.java:55)\r\n        at sun.nio.fs.UnixFileSystemProvider.readAttributes(UnixFileSystemProvider.java:149)\r\n        at sun.nio.fs.LinuxFileSystemProvider.readAttributes(LinuxFileSystemProvider.java:99)\r\n        at java.nio.file.Files.readAttributes(Files.java:1764)\r\n        at java.util.zip.ZipFile$Source.get(ZipFile.java:1259)\r\n        at java.util.zip.ZipFile$CleanableResource.<init>(ZipFile.java:733)\r\n        at java.util.zip.ZipFile$CleanableResource.get(ZipFile.java:850)\r\n        at java.util.zip.ZipFile.<init>(ZipFile.java:248)\r\n        at java.util.zip.ZipFile.<init>(ZipFile.java:177)\r\n        at java.util.jar.JarFile.<init>(JarFile.java:350)\r\n        at sun.net.www.protocol.jar.URLJarFile.<init>(URLJarFile.java:103)\r\n        at sun.net.www.protocol.jar.URLJarFile.getJarFile(URLJarFile.java:72)\r\n        at sun.net.www.protocol.jar.JarFileFactory.get(JarFileFactory.java:84)\r\n        at sun.net.www.protocol.jar.JarURLConnection.connect(JarURLConnection.java:125)\r\n        at sun.net.www.protocol.jar.JarURLConnection.getInputStream(JarURLConnection.java:155)\r\n        at java.net.URL.openStream(URL.java:1165)\r\n        at my.quarkus.test.QuarkusBug$Loader.read(QuarkusBug.java:30)\n\n### Expected behavior\n\nthe resource URL is the same for both scenarios (static and non static resource loader objects)\r\n\r\n    resource:/diagram-interchange-dish-example.dmn\r\n\n\n### Actual behavior\n\nwhen the object which loads the resource is instantiated as static then the resource URL references a non-existent jar file:\r\n\r\n    jar:file:/project/quarkus-bug-1.0-SNAPSHOT-runner.jar!/diagram-interchange-dish-example.dmn\r\n\n\n### How to Reproduce?\n\nLink to a minimal project to reproduce the issue: https://drive.google.com/file/d/1ZeIZypM1rCpA0SVsUW33uwi2hV1GlntF/view?usp=sharing\r\n\r\nbuild it with\r\n\r\n    mvn clean install -Pnative\r\n\r\nsample code:\r\n\r\n'''\r\npublic class QuarkusBug implements RequestHandler<Map<String, Object>, Map<String, Object>> {\r\n\r\n  @Slf4j\r\n  public static class Loader {\r\n    private URL resource;\r\n\r\n    public Loader() {\r\n      resource = Loader.class.getClassLoader().getResource(\"diagram-interchange-dish-example.dmn\");\r\n      log.info(\"-------------- LOADER CONSTRUCTOR: {}\", resource);\r\n    }\r\n\r\n    public void loader() {\r\n      resource = Loader.class.getClassLoader().getResource(\"diagram-interchange-dish-example.dmn\");\r\n      log.info(\"-------------- LOADER METHOD: {}\", resource);\r\n    }\r\n\r\n    public void read() {\r\n      log.info(\"-------------- LOADER READ RESOURCE: {}\", resource);\r\n      try (InputStream is = resource.openStream()) {\r\n        log.info(\"-------------- LOADER READ OPERATION: {}\", new String(is.readNBytes(38)));\r\n      } catch (IOException e) {\r\n        throw new RuntimeException(e);\r\n      }\r\n    }\r\n  }\r\n\r\n  // THE FAILING ONE\r\n  private static Loader loader = new Loader();\r\n\r\n  // THE PASSING ONE\r\n//  private Loader loader = new Loader();\r\n\r\n  public QuarkusBug() {\r\n    loader.read();\r\n  }\r\n\r\n  @Override\r\n  public Map<String, Object> handleRequest(Map<String, Object> request, Context context) {\r\n    return request;\r\n  }\r\n}\r\n'''\n\n### Output of `uname -a` or `ver`\n\nLinux 5.15.0-46-generic #49~20.04.1-Ubuntu SMP Thu Aug 4 19:15:44 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.16\" 2022-07-19\n\n### GraalVM version (if different from Java)\n\nGraalVM 22.2.0 Java 11 CE (quay.io/quarkus/ubi-quarkus-native-image:22.2-java11)\n\n### Quarkus version or git rev\n\n2.12.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.6.3\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27777/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27777/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

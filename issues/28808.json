@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28808",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28808/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28808/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28808/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28808",
+  "id": 1422029269,
+  "node_id": "I_kwDOCFbutM5UwnHV",
+  "number": 28808,
+  "title": "Qute template problem (reactive)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1714005220,
+      "node_id": "MDU6TGFiZWwxNzE0MDA1MjIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/qute",
+      "name": "area/qute",
+      "color": "0366d6",
+      "default": false,
+      "description": "The template engine"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 19,
+  "created_at": "2022-10-25T07:56:07Z",
+  "updated_at": "2022-10-26T12:51:24Z",
+  "closed_at": "2022-10-25T15:37:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n```java\r\n@Path(\"/test\")\r\n@ApplicationScoped\r\npublic class IndexTestController {\r\n\r\n\t@GET\r\n\tpublic Uni<Object> wei(@QueryParam(\"page\") Integer page) {\r\n\t\tpage = page != null ? page : 1;\r\n\t\tInteger page2 = page;\r\n\t\treturn Panache.getSession().flatMap(session -> session.withTransaction(tran -> {\r\n\t\t\tUni<List<Object>> singleResult = session.createNativeQuery(\"select types from Posts\").getResultList();\r\n\t\t\tPanacheQuery<Posts> panacheQuery = Posts.findAll(Sort.by(\"createDate\", Direction.Descending))\r\n\t\t\t\t\t.page(page2 - 1, 10);\r\n\t\t\tUni<Long> count = panacheQuery.count();\r\n\t\t\tUni<List<Posts>> list = panacheQuery.list();\r\n\t\t\tUni<List<Posts>> rightReads = Posts.findAll(Sort.by(\"readNum\", Direction.Descending)).page(page2 - 1, 10)\r\n\t\t\t\t\t.list();\r\n\t\t\treturn Uni.combine().all().unis(count, list, rightReads, singleResult)\r\n\t\t\t\t\t.combinedWith((c, l, reads, types) -> {\r\n\t\t\t\t\t\tPageView<Posts> pageView = new PageView<Posts>(10, page2);\r\n\t\t\t\t\t\tQueryResult<Posts> queryResult = new QueryResult<Posts>();\r\n\t\t\t\t\t\tqueryResult.setTotalRecord(c);\r\n\t\t\t\t\t\tqueryResult.setResultList(l);\r\n\t\t\t\t\t\tpageView.setQueryResult(queryResult);\r\n\r\n\t\t\t\t\t\tIndexVo indexVo = new IndexVo();\r\n\t\t\t\t\t\tindexVo.pageView = pageView;\r\n\t\t\t\t\t\tindexVo.rightNews = queryResult.getResultList();\r\n\t\t\t\t\t\tindexVo.rightReads = reads;\r\n\t\t\t\t\t\tList<String> split = BaseUtil.listSplit(types);\r\n\t\t\t\t\t\tMap<String, Long> map = split.stream()\r\n\t\t\t\t\t\t\t\t.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));\r\n\t\t\t\t\t\tindexVo.mapType = sortByValue(map);\r\n\t\t\t\t\t\treturn indexVo;\r\n\t\t\t\t\t});\r\n\t\t}));\r\n\t}\r\n```\r\n\r\nThis code is ok。\r\nbut：\r\n\r\n```java\r\n       @GET\r\n\tpublic TemplateInstance wei(@QueryParam(\"page\") Integer page) {\r\n\t\tpage = page != null ? page : 1;\r\n\t\tInteger page2 = page;\r\n\t\t\r\n\t\tUni<IndexVo> indexVos = Panache.getSession().flatMap(session->session.withTransaction(tran->{\r\n\t\t\tUni<List<Object>> singleResult = session.createNativeQuery(\"select types from Posts\").getResultList();\r\n\t\t\tPanacheQuery<Posts> panacheQuery = Posts.findAll(Sort.by(\"createDate\", Direction.Descending)).page(page2 - 1,\r\n\t\t\t\t\t10);\r\n\t\t\tUni<Long> count = panacheQuery.count();\r\n\t\t\tUni<List<Posts>> list = panacheQuery.list();\r\n\t\t\tUni<List<Posts>> rightReads = Posts.findAll(Sort.by(\"readNum\", Direction.Descending)).page(page2 - 1, 10)\r\n\t\t\t\t\t.list();\r\n\t\t\treturn Uni.combine().all().unis(count, list, rightReads,singleResult).combinedWith((c, l, reads,types) -> {\r\n\t\t\t\tPageView<Posts> pageView = new PageView<Posts>(10, page2);\r\n\t\t\t\tQueryResult<Posts> queryResult = new QueryResult<Posts>();\r\n\t\t\t\tqueryResult.setTotalRecord(c);\r\n\t\t\t\tqueryResult.setResultList(l);\r\n\t\t\t\tpageView.setQueryResult(queryResult);\r\n\r\n\t\t\t\tIndexVo indexVo = new IndexVo();\r\n\t\t\t\tindexVo.pageView = pageView;\r\n\t\t\t\tindexVo.rightNews = queryResult.getResultList();\r\n\t\t\t\tindexVo.rightReads = reads;\r\n\t\t\t\tList<String> split = BaseUtil.listSplit(types);\r\n\t\t\t\tMap<String, Long> map = split.stream()\r\n\t\t\t\t\t\t.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));\r\n\t\t\t\tindexVo.mapType = sortByValue(map);\r\n\t\t\t\treturn indexVo;\r\n\t\t\t});\r\n\t\t}));\r\n\r\n\t\treturn index.data(\"indexVo\", indexVos);\r\n\t}\r\n```\r\n\r\nThis code is error：\r\n\r\n```posh\r\n2022-10-25 15:53:28,944 ERROR [org.hib.rea.errors] (vert.x-eventloop-thread-1) HR000057: Failed to execute statement [select count(*) as col_0_0_ from Posts posts0_]: could not execute query: java.util.concurrent.CompletionException: java.lang.IllegalStateException: HR000061: Session is currently connecting to database\r\n\tat java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:332)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniComposeStage(CompletableFuture.java:1177)\r\n\tat java.base/java.util.concurrent.CompletableFuture.thenCompose(CompletableFuture.java:2309)\r\n\tat java.base/java.util.concurrent.CompletableFuture.thenCompose(CompletableFuture.java:144)\r\n\tat org.hibernate.reactive.loader.ReactiveLoader.doReactiveQueryAndInitializeNonLazyCollections(ReactiveLoader.java:75)\r\n\tat org.hibernate.reactive.loader.CachingReactiveLoader.doReactiveList(CachingReactiveLoader.java:62)\r\n\tat org.hibernate.reactive.loader.CachingReactiveLoader.reactiveListIgnoreQueryCache(CachingReactiveLoader.java:80)\r\n\tat org.hibernate.reactive.loader.hql.impl.ReactiveQueryLoader.reactiveList(ReactiveQueryLoader.java:129)\r\n\tat org.hibernate.reactive.loader.hql.impl.ReactiveQueryLoader.reactiveList(ReactiveQueryLoader.java:95)\r\n\tat org.hibernate.reactive.session.impl.ReactiveQueryTranslatorImpl.reactiveList(ReactiveQueryTranslatorImpl.java:132)\r\n\tat org.hibernate.reactive.session.impl.ReactiveHQLQueryPlan.performReactiveList(ReactiveHQLQueryPlan.java:114)\r\n\tat org.hibernate.reactive.session.impl.ReactiveSessionImpl.lambda$reactiveList$9(ReactiveSessionImpl.java:461)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniComposeStage(CompletableFuture.java:1187)\r\n\tat java.base/java.util.concurrent.CompletableFuture.thenCompose(CompletableFuture.java:2309)\r\n\tat java.base/java.util.concurrent.CompletableFuture.thenCompose(CompletableFuture.java:144)\r\n\tat org.hibernate.reactive.session.impl.ReactiveSessionImpl.reactiveList(ReactiveSessionImpl.java:461)\r\n\tat org.hibernate.reactive.session.impl.ReactiveQueryImpl.doReactiveList(ReactiveQueryImpl.java:151)\r\n\tat org.hibernate.reactive.session.impl.ReactiveQueryImpl.getReactiveResultList(ReactiveQueryImpl.java:127)\r\n\tat org.hibernate.reactive.session.impl.ReactiveQueryImpl.getReactiveSingleResult(ReactiveQueryImpl.java:94)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage.subscribe(UniCreateFromCompletionStage.java:24)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniRunSubscribeOn.lambda$subscribe$0(UniRunSubscribeOn.java:27)\r\n\tat org.hibernate.reactive.context.impl.VertxContext.execute(VertxContext.java:90)\r\n\tat io.smallrye.mutiny.operators.uni.UniRunSubscribeOn.subscribe(UniRunSubscribeOn.java:25)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.performInnerSubscription(UniOnItemTransformToUni.java:81)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:57)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription.forward(UniCreateFromKnownItem.java:38)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription.access$100(UniCreateFromKnownItem.java:26)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem.subscribe(UniCreateFromKnownItem.java:23)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni.subscribe(UniOnItemTransformToUni.java:25)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniAndCombination$UniHandler.subscribe(UniAndCombination.java:234)\r\n\tat io.smallrye.mutiny.operators.uni.UniAndCombination$AndSupervisor.run(UniAndCombination.java:88)\r\n\tat io.smallrye.mutiny.operators.uni.UniAndCombination$AndSupervisor.access$000(UniAndCombination.java:57)\r\n\tat io.smallrye.mutiny.operators.uni.UniAndCombination.subscribe(UniAndCombination.java:54)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.performInnerSubscription(UniOnItemTransformToUni.java:81)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni$UniOnItemTransformToUniProcessor.onItem(UniOnItemTransformToUni.java:57)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription.forward(UniCreateFromKnownItem.java:38)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription.access$100(UniCreateFromKnownItem.java:26)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem.subscribe(UniCreateFromKnownItem.java:23)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemTransformToUni.subscribe(UniOnItemTransformToUni.java:25)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.withSubscriber(UniSubscribe.java:52)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:112)\r\n\tat io.smallrye.mutiny.operators.uni.UniSubscribeToCompletionStage.subscribe(UniSubscribeToCompletionStage.java:30)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.asCompletionStage(UniSubscribe.java:178)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.asCompletionStage(UniSubscribe.java:165)\r\n\tat io.smallrye.mutiny.Uni.subscribeAsCompletionStage(Uni.java:142)\r\n\tat io.quarkus.qute.EvaluatorImpl.toCompletionStage(EvaluatorImpl.java:228)\r\n\tat io.quarkus.qute.EvaluatorImpl.lambda$resolve$4(EvaluatorImpl.java:216)\r\n\tat io.quarkus.qute.CompletedStage.thenCompose(CompletedStage.java:232)\r\n\tat io.quarkus.qute.EvaluatorImpl.resolve(EvaluatorImpl.java:209)\r\n\tat io.quarkus.qute.EvaluatorImpl.resolveReference(EvaluatorImpl.java:132)\r\n\tat io.quarkus.qute.EvaluatorImpl.evaluate(EvaluatorImpl.java:90)\r\n\tat io.quarkus.qute.ResolutionContextImpl.evaluate(ResolutionContextImpl.java:29)\r\n\tat io.quarkus.qute.LoopSectionHelper.resolve(LoopSectionHelper.java:45)\r\n\tat io.quarkus.qute.SectionNode.resolve(SectionNode.java:50)\r\n\tat io.quarkus.qute.SectionNode$SectionResolutionContextImpl.execute(SectionNode.java:184)\r\n\tat io.quarkus.qute.SectionHelper$SectionResolutionContext.execute(SectionHelper.java:46)\r\n\tat io.quarkus.qute.Parser$1.resolve(Parser.java:1233)\r\n\tat io.quarkus.qute.SectionNode.resolve(SectionNode.java:50)\r\n\tat io.quarkus.qute.TemplateImpl$TemplateInstanceImpl.renderData(TemplateImpl.java:178)\r\n\tat io.quarkus.qute.TemplateImpl$TemplateInstanceImpl.renderAsyncNoTimeout(TemplateImpl.java:169)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage.subscribe(UniCreateFromCompletionStage.java:24)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniFailOnTimeout.subscribe(UniFailOnTimeout.java:36)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.withSubscriber(UniSubscribe.java:52)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:112)\r\n\tat io.smallrye.mutiny.groups.UniSubscribe.with(UniSubscribe.java:89)\r\n\tat org.jboss.resteasy.reactive.server.handlers.UniResponseHandler.handle(UniResponseHandler.java:19)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:124)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:142)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:51)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:18)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:8)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:173)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:140)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:84)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:71)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:136)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:140)\r\n\tat io.vertx.ext.web.handler.impl.StaticHandlerImpl.lambda$sendStatic$1(StaticHandlerImpl.java:290)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.IllegalStateException: HR000061: Session is currently connecting to database\r\n\tat org.hibernate.reactive.pool.impl.ProxyConnection.withConnection(ProxyConnection.java:66)\r\n\tat org.hibernate.reactive.pool.impl.ProxyConnection.selectJdbc(ProxyConnection.java:129)\r\n\tat org.hibernate.reactive.pool.BatchingConnection.selectJdbc(BatchingConnection.java:173)\r\n\tat org.hibernate.reactive.loader.ReactiveLoader.executeReactiveQueryStatement(ReactiveLoader.java:128)\r\n\tat org.hibernate.reactive.loader.ReactiveLoader.doReactiveQueryAndInitializeNonLazyCollections(ReactiveLoader.java:69)\r\n\t... 96 more\r\n```\r\n\r\nDifferences between the two pieces of code：\r\nreturn  `Uni<Object>`  or  `TemplateInstance(qute)`\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njdk17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28808/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28808/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

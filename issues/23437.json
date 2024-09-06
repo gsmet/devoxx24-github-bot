@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23437",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23437/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23437/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23437/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23437",
+  "id": 1124026333,
+  "node_id": "I_kwDOCFbutM5C_0fd",
+  "number": 23437,
+  "title": "DevServices for Keycloak `keycloak.url` property is not available at runtime",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-02-04T10:12:03Z",
+  "updated_at": "2022-02-04T12:02:46Z",
+  "closed_at": "2022-02-04T11:42:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am experimenting with the integration of the Keycloak RealmResource in my Quarkus Application. To the best of my knowledge quarkus does not offer a implementation for that, so my solution was to define some custom properties and then create a bean for the RealmResource\r\n\r\n```java\r\n@ConfigMapping(prefix = \"keycloak\")\r\npublic interface KeycloakConfiguration {\r\n  String serverUrl();\r\n\r\n  String realm();\r\n\r\n  String clientId();\r\n\r\n  String clientSecret();\r\n}\r\n\r\npublic class KeycloakProvider {\r\n  private final KeycloakConfiguration keycloakConfiguration;\r\n\r\n  @Inject\r\n  public KeycloakProvider(KeycloakConfiguration keycloakConfiguration) {\r\n    this.keycloakConfiguration = keycloakConfiguration;\r\n  }\r\n\r\n  @ApplicationScoped\r\n  public RealmResource keycloakRealmResource() {\r\n    return KeycloakBuilder.builder()\r\n        .serverUrl(keycloakConfiguration.serverUrl())\r\n        .realm(keycloakConfiguration.realm())\r\n        .clientId(keycloakConfiguration.clientId())\r\n        .clientSecret(keycloakConfiguration.clientSecret())\r\n        .grantType(OAuth2Constants.CLIENT_CREDENTIALS)\r\n        .build().realm(keycloakConfiguration.realm());\r\n  }\r\n}\r\n```\r\n\r\nNext up I want to setup the application configuration for production and development. I made the oidc configuration dependent by expansion of the previously defined keycloak configuration. \r\n\r\n```properties\r\nquarkus.oidc.auth-server-url=${keycloak.server-url}/realms/${keycloak.realm}\r\nquarkus.oidc.client-id=${keycloak.client-id}\r\nquarkus.oidc.application-type=service\r\n\r\nkeycloak.client-id=my-quarkus-service\r\nkeycloak.client-secret=${KEYCLOAK_CLIENT_SECRET}\r\nkeycloak.realm=quarkus\r\nkeycloak.server-url=${keycloak.url}\r\n%prod.keycloak.realm=my-realm\r\n%prod.keycloak.server-url=https://production-keycloak/auth\r\n```\r\n\r\nFor the production configuration that works like a charm, but with the dev services i encounter the following error. \r\n```\r\n2022-02-04 10:56:25,498 ERROR [io.qua.ver.cor.run.VertxCoreRecorder] (vert.x-eventloop-thread-19) Uncaught exception received by Vert.x: java.util.NoSuchElementException: SRCFG00011: Could not expand value keycloak.url in property keycloak.server-url\r\n        at io.smallrye.config.ExpressionConfigSourceInterceptor.lambda$getValue$0(ExpressionConfigSourceInterceptor.java:63)\r\n        at io.smallrye.common.expression.ExpressionNode.emit(ExpressionNode.java:22)\r\n        at io.smallrye.common.expression.Expression.evaluateException(Expression.java:56)\r\n        at io.smallrye.common.expression.Expression.evaluate(Expression.java:70)\r\n        at io.smallrye.config.ExpressionConfigSourceInterceptor.getValue(ExpressionConfigSourceInterceptor.java:56)\r\n        at io.smallrye.config.ExpressionConfigSourceInterceptor.lambda$getValue$0(ExpressionConfigSourceInterceptor.java:57)\r\n        at io.smallrye.common.expression.ExpressionNode.emit(ExpressionNode.java:22)\r\n        at io.smallrye.common.expression.CompositeNode.emit(CompositeNode.java:22)\r\n        at io.smallrye.common.expression.Expression.evaluateException(Expression.java:56)\r\n        at io.smallrye.common.expression.Expression.evaluate(Expression.java:70)\r\n        at io.smallrye.config.ExpressionConfigSourceInterceptor.getValue(ExpressionConfigSourceInterceptor.java:56)\r\n        at io.smallrye.config.ExpressionConfigSourceInterceptor.getValue(ExpressionConfigSourceInterceptor.java:36)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.FallbackConfigSourceInterceptor.getValue(FallbackConfigSourceInterceptor.java:24)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.FallbackConfigSourceInterceptor.getValue(FallbackConfigSourceInterceptor.java:24)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.PropertyNamesConfigSourceInterceptor.getValue(PropertyNamesConfigSourceInterceptor.java:61)\r\n        at io.smallrye.config.SmallRyeConfigSourceInterceptorContext.proceed(SmallRyeConfigSourceInterceptorContext.java:20)\r\n        at io.smallrye.config.SmallRyeConfig.getConfigValue(SmallRyeConfig.java:305)\r\n        at io.smallrye.config.SmallRyeConfig.getValue(SmallRyeConfig.java:223)\r\n        at io.smallrye.config.SmallRyeConfig.getOptionalValue(SmallRyeConfig.java:322)\r\n        at io.quarkus.vertx.http.runtime.devmode.ReplacementDebugPage.generateHtml(ReplacementDebugPage.java:62)\r\n        at io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup.handleDeploymentProblem(VertxHttpHotReplacementSetup.java:205)\r\n        at io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$5.handle(VertxHttpHotReplacementSetup.java:189)\r\n        at io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$5.handle(VertxHttpHotReplacementSetup.java:185)\r\n        at io.vertx.core.impl.future.FutureImpl$3.onFailure(FutureImpl.java:153)\r\n        at io.vertx.core.impl.future.FutureBase.lambda$emitFailure$1(FutureBase.java:69)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\nIf I'm not mistaking something the `keycloak.url` configuration key should be in fact available at runtime and is listed in the configuration editor when launching the application without my configuration stuff.\r\n\r\n![keycloak.url property](https://i.imgur.com/4WhgTG0.png)\r\n\r\nAnother question unrelated to the problem itself is: What exactly is the purpose of the `keycloak-admin-client` extension? It seems to be more like a \"fixing extension\" than a \"feature extension\" if that makes any sense.\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n ------------------------------------------------------------ Gradle 7.3 ------------------------------------------------------------  Build time:   2021-11-09 20:40:36 UTC Revision:     96754b8c44399658178a768ac764d727c2addb37  Kotlin:       1.5.31 Groovy:       3.0.9 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          17.0.1 (Eclipse Adoptium 17.0.1+12) OS:           Windows 10 10.0 amd64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23437/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23437/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

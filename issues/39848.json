@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39848",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39848/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39848/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39848/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39848",
+  "id": 2221428490,
+  "node_id": "I_kwDOCFbutM6EaE8K",
+  "number": 39848,
+  "title": "Reactive Debezium Outbox extension commits database changes in new, separate transaction",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1633508165,
+      "node_id": "MDU6TGFiZWwxNjMzNTA4MTY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/narayana",
+      "name": "area/narayana",
+      "color": "0366d6",
+      "default": false,
+      "description": "Transactions / Narayana"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-04-02T20:54:45Z",
+  "updated_at": "2024-04-04T03:27:22Z",
+  "closed_at": "2024-04-03T12:09:34Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm trying to apply the transactional outbox pattern for inter-microservice communication. In order to ease that, I tried out the [Debezium Quarkus Outbox _Reactive_ extension](https://quarkus.io/extensions/io.debezium/debezium-quarkus-outbox-reactive/), since I'm using the reactive programming approach (this includes hibernate-reactive with panache, pg-reactive client, etc.).\r\n\r\nAs consistency is really important in my project, after having written the necessary code, I first checked to see if the entity's database is modified in the **same** database transaction as the outbox table's insert (AFAIK this is an essential part of the [transactional outbox pattern](https://microservices.io/patterns/data/transactional-outbox.html)).\r\n\r\nTo my surprise, the outbox extension starts a new, separate transaction for this insert, no matter how I tried to control the transaction boundaries (I followed the respective guides on quarkus.io, tried wrapping the whole code with `Panache.withTransaction()` or annotating the method with `@WithTransaction`, without luck).\r\n\r\nAm I missing something here, or could it be that the \"same transaction\" aspect of the outbox pattern was forgotten in the reactive debezium outbox extension?\r\n\r\nThank you for your help in advance!\r\n\r\nP.S.: Although not part of the main Quarkus repo, I found [these lines](https://github.com/debezium/debezium/blob/main/debezium-quarkus-outbox-reactive/runtime/src/main/java/io/debezium/outbox/reactive/quarkus/internal/AbstractEventDispatcher.java#L41) that I think are related to this issue. For me it does not seem like the extension tries to make sure that it reuses an already existing transaction, but I can easily be wrong here.\n\n### Expected behavior\n\nWhen using the Debezium Quarkus Outbox Reactive extension, the modification in the entity table of the database should happen in the **same** database transaction as the insert to the outbox table caused by the outbox extension, as per the transactional outbox pattern.\r\nThis transactionality is essential to guarantee consistence between the service's inner state and the services observing its outbox table for communication.\n\n### Actual behavior\n\nI checked the transactions with Postgres using the virtual transaction IDs and also by defining constraints to make the entity update fail, but the outbox insert did not fail with it, so it couldn't have been in the same transaction as the update (it should have also been rolled back).\r\nExamining the virtual tx ids resulted in the same finding, the two are unfortunately separate transactions.\n\n### How to Reproduce?\n\nI do not have one currently, but I can put one together if needed.\n\n### Output of `uname -a` or `ver`\n\nLinux fedora 6.7.9-200.fc39.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Mar  6 19:35:04 UTC 2024 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.22\" 2024-01-16 OpenJDK Runtime Environment (Red_Hat-11.0.22.0.7-1) (build 11.0.22+7) OpenJDK 64-Bit Server VM (Red_Hat-11.0.22.0.7-1) (build 11.0.22+7, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.2.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.1 (Red Hat 3.9.1-3) Maven home: /usr/share/maven Java version: 11.0.22, vendor: Red Hat, Inc., runtime: /usr/lib/jvm/java-11-openjdk-11.0.22.0.7-1.fc39.x86_64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"6.7.9-200.fc39.x86_64\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39848/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39848/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

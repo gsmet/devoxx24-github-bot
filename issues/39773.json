@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39773",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39773/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39773/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39773/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39773",
+  "id": 2213290627,
+  "node_id": "I_kwDOCFbutM6D7CKD",
+  "number": 39773,
+  "title": "Running quarkus:dev requires compile to be included",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-03-28T13:48:03Z",
+  "updated_at": "2024-04-03T22:31:52Z",
+  "closed_at": "2024-04-03T22:31:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nOriginally, using 3.9.0-rc2 we could run `mvn quarkus:dev` and startup without issues.  \r\n\r\nWe had this before and there was considerable cleanup to the POMs (regrettably use a combination of the Maven CI friendly versions and the Flatten plugin so that we can deploy at the moment).\r\n\r\nNow, after upgrading to 3.9.1 we need to run `mvn compile quarkus:dev`.  This seems consistent across all of our services that we may startup. On a side note, they all have jandex indexes and everything works as expected.\r\n\r\nThe error we are getting is:\r\n\r\n```\r\n[ERROR] io.quarkus.runner.bootstrap.StartupActionImpl (Quarkus Main Thread) Error running Quarkus: java.lang.reflect.InvocationTargetException\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:113)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.ExceptionInInitializerError\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n        at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)\r\n        at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:480)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:70)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        ... 6 more\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n        ... 15 more\r\nCaused by: java.lang.NoClassDefFoundError: io/quarkus/generated/boolean$quarkusrestparamConverter$\r\n        at io.logicdrop.platform.core.endpoint.PlatformParams.__quarkus_init_converter__debug(PlatformParams.java)\r\n        at io.quarkus.rest.runtime.__QuarkusInit.init(Unknown Source)\r\n        at io.quarkus.resteasy.reactive.server.runtime.ResteasyReactiveRecorder.createDeployment(ResteasyReactiveRecorder.java:152)\r\n        at io.quarkus.deployment.steps.ResteasyReactiveProcessor$setupDeployment713137389.deploy_24(Unknown Source)\r\n        at io.quarkus.deployment.steps.ResteasyReactiveProcessor$setupDeployment713137389.deploy(Unknown Source)\r\n        ... 16 more\r\nCaused by: java.lang.ClassNotFoundException: io.quarkus.generated.boolean$quarkusrestparamConverter$\r\n        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)\r\n        at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n        at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:518)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:468)\r\n        ... 21 more\r\n```\r\n\r\n### Expected behavior\r\n\r\nUsing `mvn quarkus:dev` starts up the service.\r\n\r\n### Actual behavior\r\n\r\nUsing `mvn quarkus:dev` throws an CNFE in a BeanParam in another service (which is part of the project).  Running `mvn compile quarkus:dev` starts up the service.\r\n\r\n### How to Reproduce?\r\n\r\nStill investigating and I'm not quite sure yet how to build a reproducer for this but will try.  \r\n\r\nThere are a lot of moving parts the consider and try to replicate in the reproducer.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17.0.6\r\n\r\n### Quarkus version or git rev\r\n\r\n3.9.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.9.5\r\n\r\n### Additional information\r\n\r\nNot critical but a nuisance to remember to include `compile` before `quarkus:dev`",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39773/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39773/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

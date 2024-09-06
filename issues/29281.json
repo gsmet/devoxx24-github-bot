@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29281",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29281/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29281/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29281/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29281",
+  "id": 1449910272,
+  "node_id": "I_kwDOCFbutM5Wa-AA",
+  "number": 29281,
+  "title": "Missing cloudevents artifacts definitions on Quarkus BOM",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-11-15T14:49:47Z",
+  "updated_at": "2022-11-15T15:45:12Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have an HTTP endpoint that directly consume CloudEvents\r\n\r\nFor example\r\n```\r\n@Path(\"/events\")\r\npublic class EventResource {\r\n\r\n    @Inject\r\n    ObjectMapper mapper;\r\n\r\n@POST\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    @Consumes(MediaType.APPLICATION_JSON)\r\n    @Path(\"/pureCE\")\r\n    public EventDTO pureCloudEventPayload(@Valid CloudEvent event) {\r\n        if (event == null || event.getData() == null) {\r\n            throw new BadRequestException(\"Invalid data received. Null or empty event\");\r\n        }\r\n\r\n        return EventDTO.fromCloudEvent(mapper, event);\r\n    }\r\n```\r\n\r\nEventDTO\r\n```\r\n@RegisterForReflection\r\npublic class EventDTO implements Serializable {\r\n\r\n    private static final long serialVersionUID = 1305278483346223763L;\r\n\r\n    public static EventDTO fromCloudEvent(ObjectMapper mapper, CloudEvent cloudEvent) {\r\n        return PojoCloudEventDataMapper\r\n                .from(mapper, EventDTO.class)\r\n                .map(cloudEvent.getData())\r\n                .getValue();\r\n    }\r\n   \r\n   @NotNull(message = \"Call UUID value should be not null\")\r\n    @NotBlank(message = \"Call UUID may not be blank\")\r\n    private String callUUID;\r\n\r\n    @NotNull(message = \"Timestamp value should be not null\")\r\n    @NotBlank(message = \"Timestamp may not be blank\")\r\n    private String timestamp;\r\n\r\n    @NotNull(message = \"Service UUID value should be not null\")\r\n    @NotBlank(message = \"Service UUID may not be blank\")\r\n    private String serviceUUID;\r\n\r\n    @NotNull(message = \"IP Address value should be not null\")\r\n    @NotBlank(message = \"IP Address may not be blank\")\r\n    private String ipAddress;\r\n\r\n    private String message;  \r\n    .\r\n    . // getters & setters\r\n    .\r\n    .\r\n \r\n   public CloudEventData toCloudEventData(ObjectMapper mapper) {\r\n        return PojoCloudEventData.wrap(this, mapper::writeValueAsBytes);\r\n    }\r\n```\r\n\r\nRequest example through rest assurance\r\n\r\n```\r\n@Test\r\n    public void verifyPureCloudEvents() {\r\n        EventDTO event = defaultEventDto();\r\n        makeCloudEventPost(event, \"/events/pureCE\")\r\n                .then()\r\n                .statusCode(HttpStatus.SC_OK)\r\n                .body(\"message\", is(EXPECTED_MSG));\r\n    }\r\n    \r\n     private EventDTO defaultEventDto() {\r\n        EventDTO event = new EventDTO();\r\n        event.setCallUUID(UUID.randomUUID().toString());\r\n        event.setMessage(EXPECTED_MSG);\r\n        event.setIpAddress(\"192.168.2.1\");\r\n        event.setServiceUUID(UUID.randomUUID().toString());\r\n        event.setTimestamp((new Timestamp(System.currentTimeMillis())).toString());\r\n        return event;\r\n    }\r\n\r\n    private Response makeCloudEventPost(EventDTO event, String path) {\r\n        return given().body(event)\r\n                .contentType(ContentType.JSON)\r\n                .header(\"Ce-Specversion\", \"1.0\")\r\n                .header(\"Ce-Type\", \"EventDTO\")\r\n                .header(\"Ce-Source\", \"io.quarkus.ts.http.cloudevents/eventDTO\")\r\n                .header(\"Ce-Id\", UUID.randomUUID().toString())\r\n                .header(\"Ce-Subject\", \"SUBJ-0001\")\r\n                .post(path);\r\n    }\r\n\r\n```\r\n\r\nAnd What I see is that Quarkus are missing the following artifacts on Quarkus BOM\r\n\r\n```\r\n       <dependency>\r\n            <groupId>io.cloudevents</groupId>\r\n            <artifactId>cloudevents-api</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.cloudevents</groupId>\r\n            <artifactId>cloudevents-http-restful-ws</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.cloudevents</groupId>\r\n            <artifactId>cloudevents-json-jackson</artifactId>\r\n        </dependency>\r\n```\r\n\r\nAlso the  `Hibernate-validation` annotations doesn't look that are working with HTTP CloudEvents. \r\n\r\nI saw that other extensions as Funqy or Kafka has a clear integration with CloudEvents. But has Quarkus-resteasy (classic or reactive) an integration with cloudEvents? \r\n\r\n### How to Reproduce?\r\n\r\n`git clone -b GH-29208 https://github.com/pjgg/quarkus-test-suite.git`\r\n`cd quarkus-test-suite/http/http-cloud-events`\r\n`mvn clean verify`\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29281/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 1,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29281/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

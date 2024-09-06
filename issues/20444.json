@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20444",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20444/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20444/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20444/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20444",
+  "id": 1010621711,
+  "node_id": "I_kwDOCFbutM48PN0P",
+  "number": 20444,
+  "title": "Dependencies error when building tests only on gitlab ci pipeline (non native)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1520022286,
+      "node_id": "MDU6TGFiZWwxNTIwMDIyMjg2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/bootstrap",
+      "name": "area/bootstrap",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 33,
+  "created_at": "2021-09-29T07:57:55Z",
+  "updated_at": "2021-10-07T10:36:44Z",
+  "closed_at": "2021-10-07T10:36:41Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n@aloubyansky \r\n\r\nWhen the gitlab ci pipeline runs the tests i am getting dependency resolutions errors. \r\n````\r\nCaused by: io.quarkus.bootstrap.BootstrapException: Failed to create the application model for com.mycompany.mypackage:myservice-svc::jar:1.0.0-SNAPSHOT\r\nCaused by: io.quarkus.bootstrap.resolver.maven.BootstrapMavenException: Failed to resolve dependencies for com.mycompany.mypackage:myservice-svc:jar:1.0.0-SNAPSHOT\r\nCaused by: org.eclipse.aether.resolution.DependencyResolutionException: The following artifacts could not be resolved: com.mycompany.mypackage:myservice-api:yaml:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:json:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:yaml:async:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:json:async:1.0.0-SNAPSHOT: Could not find artifact com.mycompany.mypackage:myservice-api:yaml:1.0.0-SNAPSHOT\r\nCaused by: org.eclipse.aether.resolution.ArtifactResolutionException: The following artifacts could not be resolved: com.mycompany.mypackage:myservice-api:yaml:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:json:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:yaml:async:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:json:async:1.0.0-SNAPSHOT: Could not find artifact com.mycompany.mypackage:myservice-api:yaml:1.0.0-SNAPSHOT\r\nCaused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find artifact com.mycompany.mypackage:myservice-api:yaml:1.0.0-SNAPSHOT\r\n132924 [INFO] Running com.mycompany.mypackage.MyFailingTest\r\n````\r\nI can see the artifacts being deployed in the log previously, in the local repo:\r\n\r\n````\r\n6991 [INFO] --- maven-install-plugin:2.4:install (default-install) @ myservice-api ---\r\n6999 [INFO] Installing somelocation/myservice/api/target/myservice-api-1.0.0-SNAPSHOT.jar to somelocation/myservice/.m2/repository/namespace/myservice-api/1.0.0-SNAPSHOT/myservice-api-1.0.0-SNAPSHOT.jar\r\n7010 [INFO] Installing somelocation/myservice/api/pom.xml to somelocation/myservice/.m2/repository/namespace/myservice-api/1.0.0-SNAPSHOT/myservice-api-1.0.0-SNAPSHOT.pom\r\n7022 [INFO] Installing somelocation/myservice/api/target/generated-sources/async-openapi/openapi/openapi.yaml to somelocation/myservice/.m2/repository/namespace/myservice-api/1.0.0-SNAPSHOT/myservice-api-1.0.0-SNAPSHOT-async.yaml\r\n7033 [INFO] Installing somelocation/myservice/api/target/generated-sources/async-openapi/openapi.json to somelocation/myservice/.m2/repository/namespace/myservice-api/1.0.0-SNAPSHOT/myservice-api-1.0.0-SNAPSHOT-async.json\r\n7044 [INFO] Installing somelocation/myservice/api/target/generated-sources/sync-openapi/openapi/openapi.yaml to somelocation/myservice/.m2/repository/namespace/myservice-api/1.0.0-SNAPSHOT/myservice-api-1.0.0-SNAPSHOT.yaml\r\n7055 [INFO] Installing somelocation/myservice/api/target/generated-sources/sync-openapi/openapi.json to somelocation/myservice/.m2/repository/namespace/myservice-api/1.0.0-SNAPSHOT/myservice-api-1.0.0-SNAPSHOT.json\r\n````\r\nThe gitlab command is:\r\n````\r\nmvn $MAVEN_CLI_OPTS clean install -DinstallAtEnd=true -DdeployAtEnd=true;\r\nMAVEN_CLI_OPTS=--batch-mode --errors --fail-at-end --show-version -Dmaven.repo.local=.m2/repository -DinstallAtEnd=true -DdeployAtEnd=true --settings $MAVEN_SETTINGS_PATH/$MAVEN_SETTINGS.xml\"\r\nMAVEN_SETTINGS_PATH: \"/maven-tools\"\r\nMAVEN_SETTINGS: \"jenkins-settings\"\r\n````\r\nmy pom.xml:\r\n````\r\n        <dependency>\r\n            <groupId>com.mycompany.mypackage</groupId>\r\n            <artifactId>myservice-api</artifactId>\r\n            <version>1.0.0-SNAPSHOT</version>\r\n            <type>yaml</type>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>com.mycompany.mypackage</groupId>\r\n            <artifactId>myservice-api</artifactId>\r\n            <version>1.0.0-SNAPSHOT</version>\r\n            <type>json</type>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>com.mycompany.mypackage</groupId>\r\n            <artifactId>myservice-api</artifactId>\r\n            <version>1.0.0-SNAPSHOT</version>\r\n            <classifier>async</classifier>\r\n            <type>yaml</type>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>com.mycompany.mypackage</groupId>\r\n            <artifactId>myservice-api</artifactId>\r\n            <version>1.0.0-SNAPSHOT</version>\r\n            <classifier>async</classifier>\r\n            <type>json</type>\r\n        </dependency>\r\n````\r\nthen\r\n````\r\n  <plugin>\r\n                <artifactId>maven-compiler-plugin</artifactId>\r\n                <version>${compiler-plugin.version}</version>\r\n            </plugin>\r\n            <plugin>\r\n                <artifactId>maven-surefire-plugin</artifactId>\r\n                <version>${surefire-plugin.version}</version>\r\n                <configuration>\r\n                    <systemPropertyVariables>\r\n                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>\r\n                        <maven.home>${maven.home}</maven.home>\r\n                        <maven.settings>${session.request.userSettingsFile.path}</maven.settings>\r\n                    </systemPropertyVariables>\r\n                </configuration>\r\n            </plugin>`\r\n````\r\n\r\nMy maven settings contain references to private repos. Nothing special there. The dependencies are deployed on the local maven folder for the build. \r\nAlso, on local of course, everything works perfectly. I tried to reproduce the same versions and command lines from gitlab to no avail. \r\nAnother point, if i have no tests to run, the build passes on gitlab without issues. \r\n\r\nWhat i tried from other issues found on github:\r\n- making sure to use hardcoded versions (no variables) for the dependencies in question.\r\n- Adding the userSettingsFile line as above\r\n- doing first in the pipeline:       \r\n     mvn $MAVEN_CLI_OPTS dependency:resolve;\r\n     mvn $MAVEN_CLI_OPTS compile -DskipTests;\r\n- trying different versions of the surefire plugin (now i use 3.0.0-M5)\r\n-\r\n\r\n\r\n### Expected behavior\r\n\r\nThe pipeline should pass as it passes on local. \r\n\r\n### Actual behavior\r\n\r\nthe build fails with \r\n````\r\nCaused by: io.quarkus.bootstrap.BootstrapException: Failed to create the application model for com.mycompany.mypackage:myservice-svc::jar:1.0.0-SNAPSHOT\r\nCaused by: io.quarkus.bootstrap.resolver.maven.BootstrapMavenException: Failed to resolve dependencies for com.mycompany.mypackage:myservice-svc:jar:1.0.0-SNAPSHOT\r\nCaused by: org.eclipse.aether.resolution.DependencyResolutionException: The following artifacts could not be resolved: com.mycompany.mypackage:myservice-api:yaml:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:json:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:yaml:async:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:json:async:1.0.0-SNAPSHOT: Could not find artifact com.mycompany.mypackage:myservice-api:yaml:1.0.0-SNAPSHOT\r\nCaused by: org.eclipse.aether.resolution.ArtifactResolutionException: The following artifacts could not be resolved: com.mycompany.mypackage:myservice-api:yaml:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:json:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:yaml:async:1.0.0-SNAPSHOT, com.mycompany.mypackage:myservice-api:json:async:1.0.0-SNAPSHOT: Could not find artifact com.mycompany.mypackage:myservice-api:yaml:1.0.0-SNAPSHOT\r\nCaused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find artifact com.mycompany.mypackage:myservice-api:yaml:1.0.0-SNAPSHOT\r\n132924 [INFO] Running com.mycompany.mypackage.MyFailingTest\r\n````\r\n\r\n### How to Reproduce?\r\n\r\nAdd a test and run it on the gitlab ci\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nOS name: \"linux\", version: \"5.4.0-1056-aws\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Output of `java -version`\r\n\r\nJava version: 11.0.5, vendor: Oracle Corporation, runtime: /usr/local/openjdk-11\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.1.4.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n3.6.2\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20444/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20444/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

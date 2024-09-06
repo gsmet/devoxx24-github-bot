@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24633",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24633/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24633/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24633/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24633",
+  "id": 1186281962,
+  "node_id": "I_kwDOCFbutM5GtTnq",
+  "number": 24633,
+  "title": "How to get Multipart info in web request filter.",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1282147660,
+      "node_id": "MDU6TGFiZWwxMjgyMTQ3NjYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/resteasy-classic",
+      "name": "area/resteasy-classic",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-03-30T10:57:48Z",
+  "updated_at": "2023-01-05T18:21:14Z",
+  "closed_at": "2023-01-05T18:21:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n> I want to log the upload file and request info in my logfilter. But I don't get the multipartinfo in my log filter.\r\nsuch like this.\r\n```java\r\n@Provider\r\n@Priority(Priorities.USER + 1000)\r\n@Slf4j\r\npublic class WebLogFilter implements ContainerRequestFilter, ContainerResponseFilter {\r\n\r\n    public static final int MAX_IP_ADDRESS_LENGTH = 15;\r\n    public static final String LOCAL_IP_ADDRESS = \"127.0.0.1\";\r\n    public static final String LOCALHOST_IP_ADDRESS = \"localhost\";\r\n\r\n    @Context\r\n    HttpRequest httpRequest;\r\n\r\n    @Inject\r\n    ObjectMapper objectMapper;\r\n\r\n    @Override\r\n    public void filter(ContainerRequestContext containerRequestContext) throws IOException {\r\n        UriInfo uriInfo = containerRequestContext.getUriInfo();\r\n        String userAgent = containerRequestContext.getHeaderString(HttpHeaders.USER_AGENT);\r\n        String ipAddress = getRemoteAddress();\r\n        containerRequestContext.getMediaType();\r\n\r\n        // TODO 暂时只处理POST请求。因为系统整体请求都是基于post进行请求，后续需要支持处理上传文件等的日志\r\n        String contentType = containerRequestContext.getHeaderString(HttpHeaders.CONTENT_TYPE);\r\n        String requestString = StringUtils.EMPTY;\r\n        if (contentType.contains(MediaType.MULTIPART_FORM_DATA)) {\r\n\r\n            HttpHeaders httpHeaders = httpRequest.getHttpHeaders();\r\n            requestString = getRequestString(containerRequestContext);\r\n\r\n            System.out.println(requestString);\r\n        } else {\r\n            requestString = getRequestString(containerRequestContext);\r\n        }\r\n\r\n        MDCScope.buildMdcScopeInfo(requestString);\r\n\r\n        if (log.isInfoEnabled()) {\r\n            log.info(\"Ip {} at os and browser info {} sended {} method to {}.\", ipAddress, userAgent, containerRequestContext.getMethod(), uriInfo.getPath());\r\n            log.info(\"The Request str is {}\", requestString);\r\n        }\r\n\r\n    }\r\n\r\n    public String getRequestString(ContainerRequestContext containerRequestContext) throws IOException{\r\n        try (BufferedInputStream stream = new BufferedInputStream(containerRequestContext.getEntityStream());){\r\n            String requestString = IOUtils.toString(stream, Charset.defaultCharset());\r\n            containerRequestContext.setEntityStream(IOUtils.toInputStream(requestString, Charset.defaultCharset()));\r\n            return requestString;\r\n        } catch (IOException e){\r\n            throw e;\r\n        }\r\n    }\r\n\r\n    @Override\r\n    public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) throws IOException {\r\n        Object response = containerResponseContext.getEntity();\r\n        if (log.isInfoEnabled() && response != null) {\r\n            log.info(\"Get Response {}\", objectMapper.writeValueAsString(response).toString());\r\n        }\r\n    }\r\n\r\n\r\n    private String getRemoteAddress() throws IOException{\r\n        String ipAddress = httpRequest.getRemoteAddress();\r\n\r\n        if (LOCAL_IP_ADDRESS.equals(ipAddress) || LOCALHOST_IP_ADDRESS.equalsIgnoreCase(ipAddress)) {\r\n            InetAddress host = InetAddress.getLocalHost();\r\n            ipAddress = host.getHostAddress();\r\n        }\r\n\r\n        if (StringUtils.isNullOrEmpty(ipAddress) && ipAddress.length() > MAX_IP_ADDRESS_LENGTH) {\r\n            if (ipAddress.indexOf(StringUtils.SPLIT_COMMA) > 0) {\r\n                ipAddress = ipAddress.substring(0, ipAddress.indexOf(\",\"));\r\n            }\r\n        }\r\n\r\n        return ipAddress;\r\n    }\r\n}\r\n\r\n```\r\nI had try more wat to get Multipart info but not get it.[失望]\r\nsuch as\r\n1. use the `HttpServerRequest` \r\n```java\r\n\r\n@Context\r\nHttpServerRequest httpServerRequest;\r\n```\r\nbut i got error in starting time.\r\n```java\r\nCaused by: java.lang.RuntimeException: RESTEASY003400: Illegal to inject a non-interface type into a singleton\r\n\tat org.jboss.resteasy.core.ContextParameterInjector.inject(ContextParameterInjector.java:199)\r\n\tat org.jboss.resteasy.core.PropertyInjectorImpl.inject(PropertyInjectorImpl.java:208)\r\n\tat io.quarkus.resteasy.common.runtime.QuarkusInjectorFactory$UnwrappingPropertyInjector.inject(QuarkusInjectorFactory.java:68)\r\n\tat org.jboss.resteasy.core.providerfactory.ResteasyProviderFactoryImpl.injectedInstance(ResteasyProviderFactoryImpl.java:1413)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.JaxrsInterceptorRegistryImpl$AbstractInterceptorFactory.createInterceptor(JaxrsInterceptorRegistryImpl.java:150)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.JaxrsInterceptorRegistryImpl$OnDemandInterceptorFactory.initialize(JaxrsInterceptorRegistryImpl.java:168)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.JaxrsInterceptorRegistryImpl$OnDemandInterceptorFactory.checkInitialize(JaxrsInterceptorRegistryImpl.java:183)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.JaxrsInterceptorRegistryImpl$OnDemandInterceptorFactory.getInterceptor(JaxrsInterceptorRegistryImpl.java:193)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.JaxrsInterceptorRegistryImpl$AbstractInterceptorFactory.postMatch(JaxrsInterceptorRegistryImpl.java:131)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.JaxrsInterceptorRegistryImpl.postMatch(JaxrsInterceptorRegistryImpl.java:288)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.ContainerRequestFilterRegistryImpl.postMatch(ContainerRequestFilterRegistryImpl.java:30)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.ContainerRequestFilterRegistryImpl.postMatch(ContainerRequestFilterRegistryImpl.java:12)\r\n\tat org.jboss.resteasy.core.ResourceMethodInvoker.<init>(ResourceMethodInvoker.java:142)\r\n\tat org.jboss.resteasy.core.ResourceMethodRegistry.processMethod(ResourceMethodRegistry.java:381)\r\n\tat org.jboss.resteasy.core.ResourceMethodRegistry.register(ResourceMethodRegistry.java:308)\r\n\tat org.jboss.resteasy.core.ResourceMethodRegistry.addResourceFactory(ResourceMethodRegistry.java:259)\r\n\tat org.jboss.resteasy.core.ResourceMethodRegistry.addResourceFactory(ResourceMethodRegistry.java:227)\r\n\tat org.jboss.resteasy.core.ResourceMethodRegistry.addResourceFactory(ResourceMethodRegistry.java:208)\r\n\tat org.jboss.resteasy.core.ResourceMethodRegistry.addResourceFactory(ResourceMethodRegistry.java:192)\r\n\tat org.jboss.resteasy.core.ResourceMethodRegistry.addResourceFactory(ResourceMethodRegistry.java:175)\r\n\tat org.jboss.resteasy.core.ResourceMethodRegistry.addPerRequestResource(ResourceMethodRegistry.java:87)\r\n\tat org.jboss.resteasy.core.ResteasyDeploymentImpl.registerResources(ResteasyDeploymentImpl.java:518)\r\n\tat org.jboss.resteasy.core.ResteasyDeploymentImpl.registration(ResteasyDeploymentImpl.java:475)\r\n\tat org.jboss.resteasy.core.ResteasyDeploymentImpl.startInternal(ResteasyDeploymentImpl.java:164)\r\n\tat org.jboss.resteasy.core.ResteasyDeploymentImpl.start(ResteasyDeploymentImpl.java:121)\r\n\tat io.quarkus.resteasy.runtime.standalone.ResteasyStandaloneRecorder.staticInit(ResteasyStandaloneRecorder.java:43)\r\n\tat io.quarkus.deployment.steps.ResteasyStandaloneBuildStep$staticInit345281060.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.ResteasyStandaloneBuildStep$staticInit345281060.deploy(Unknown Source)\r\n\tat io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n\tat java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)\r\n\tat java.base/java.lang.reflect.ReflectAccess.newInstance(ReflectAccess.java:128)\r\n\tat java.base/jdk.internal.reflect.ReflectionFactory.newInstance(ReflectionFactory.java:347)\r\n\tat java.base/java.lang.Class.newInstance(Class.java:645)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:66)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n```\r\n\r\n> Does there has any way to got the mutipartinfo in filter?  \n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24633/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24633/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

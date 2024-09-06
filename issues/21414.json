@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21414",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21414/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21414/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21414/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21414",
+  "id": 1052391844,
+  "node_id": "I_kwDOCFbutM4-ujmk",
+  "number": 21414,
+  "title": "Quarkus application cannot find codec for MongoDB Clients",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-11-12T20:38:37Z",
+  "updated_at": "2021-11-13T09:56:47Z",
+  "closed_at": "2021-11-12T21:46:05Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nRunning a quarkus application with MongoDB (Panache) shows warnings on the startup,\r\n\r\nIt is a rest service application that loads data from MongoDB database hosted on Atlas MongoDB.\r\n\r\nThe Warnings logged are similar:\r\n\r\n```\r\nWARN  [io.qua.mon.run.MongoClients] (main) Unable to load the property codec provider class org.bson.codecs.pojo.EnumPropertyCodecProvider: java.lang.NoSuchMethodException: org.bson.codecs.pojo.EnumPropertyCodecProvider.<init>()\r\n    at java.base/java.lang.Class.getConstructor0(Class.java:3349)\r\n    at java.base/java.lang.Class.getConstructor(Class.java:2151)\r\n    at io.quarkus.mongodb.runtime.MongoClients.getPropertyCodecProviders(MongoClients.java:440)\r\n    at io.quarkus.mongodb.runtime.MongoClients.configureCodecRegistry(MongoClients.java:332)\r\n    at io.quarkus.mongodb.runtime.MongoClients.createMongoConfiguration(MongoClients.java:255)\r\n    at io.quarkus.mongodb.runtime.MongoClients.createReactiveMongoClient(MongoClients.java:115)\r\n    at io.quarkus.mongodb.runtime.MongoClientRecorder.reactiveMongoClientSupplier(MongoClientRecorder.java:57)\r\n    at io.quarkus.deployment.steps.MongoClientProcessor$generateClientBeans-1756432087.deploy_0(MongoClientProcessor$generateClientBeans-1756432087.zig:96)\r\n    at io.quarkus.deployment.steps.MongoClientProcessor$generateClientBeans-1756432087.deploy(MongoClientProcessor$generateClientBeans-1756432087.zig:40)\r\n    at io.quarkus.runner.ApplicationImpl.doStart(ApplicationImpl.zig:666)\r\n    at io.quarkus.runtime.Application.start(Application.java:101)\r\n    at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:101)\r\n    at io.quarkus.runtime.Quarkus.run(Quarkus.java:66)\r\n    at io.quarkus.runtime.Quarkus.run(Quarkus.java:42)\r\n    at io.quarkus.runtime.Quarkus.run(Quarkus.java:119)\r\n    at io.quarkus.runner.GeneratedMain.main(GeneratedMain.zig:29)\r\n```\r\nThen in any operation to get data from the database, an StackOverflowError is generated showing cyclically this stacktrace:\r\n```\r\n...\r\n    at org.bson.internal.LazyCodec.encode(LazyCodec.java:38)\r\n    at org.bson.BsonDocumentWrapper.getUnwrapped(BsonDocumentWrapper.java:195)\r\n    at org.bson.BsonDocumentWrapper.entrySet(BsonDocumentWrapper.java:165)\r\n    at org.bson.codecs.BsonDocumentCodec.encode(BsonDocumentCodec.java:112)\r\n    at org.bson.codecs.BsonDocumentCodec.encode(BsonDocumentCodec.java:42)\r\n    at org.bson.codecs.BsonCodec.encode(BsonCodec.java:55)\r\n    at org.bson.codecs.BsonCodec.encode(BsonCodec.java:33)\r\n    at org.bson.internal.LazyCodec.encode(LazyCodec.java:38)\r\n    at org.bson.BsonDocumentWrapper.getUnwrapped(BsonDocumentWrapper.java:195)\r\n    at org.bson.BsonDocumentWrapper.entrySet(BsonDocumentWrapper.java:165)\r\n    at org.bson.codecs.BsonDocumentCodec.encode(BsonDocumentCodec.java:112)\r\n    at org.bson.codecs.BsonDocumentCodec.encode(BsonDocumentCodec.java:42)\r\n ...\r\n```\r\nDependencies configured on the POM:\r\n\r\n```\r\n    <dependency>\r\n        <groupId>io.quarkus</groupId>\r\n        <artifactId>quarkus-arc</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n        <groupId>io.quarkus</groupId>\r\n        <artifactId>quarkus-mongodb-panache</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n        <groupId>io.quarkus</groupId>\r\n        <artifactId>quarkus-resteasy</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n        <groupId>io.quarkus</groupId>\r\n        <artifactId>quarkus-rest-client</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n        <groupId>io.quarkus</groupId>\r\n        <artifactId>quarkus-smallrye-fault-tolerance</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n        <groupId>io.quarkus</groupId>\r\n        <artifactId>quarkus-resteasy-jackson</artifactId>\r\n    </dependency>\r\n```\r\n\r\nRelevant notes:\r\n\r\n- uber-jar artifact\r\n- JavaBeans defined on a third project with the proper Jandex Index\r\n- Running on JVM\r\n- Same behaviour on Linux (Detected on our Azure App Servervices)\r\n\n\n### Expected behavior\n\n- No warnings should be shown\r\n- Calls to service return the data\n\n### Actual behavior\n\n- Always the warnings are showed on the \n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [Version 10.0.22000.318]\n\n### Output of `java -version`\n\nopenjdk version \"11.0.11\" 2021-04-20 OpenJDK Runtime Environment AdoptOpenJDK-11.0.11+9 (build 11.0.11+9) OpenJDK 64-Bit Server VM AdoptOpenJDK-11.0.11+9 (build 11.0.11+9, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.4.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21414/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21414/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

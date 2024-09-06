@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33740",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33740/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33740/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33740/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33740",
+  "id": 1734436920,
+  "node_id": "I_kwDOCFbutM5nYWg4",
+  "number": 33740,
+  "title": "Quarkus 3/Hibernate ORM 6: entity inheritance does not work with Kotlin",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 23,
+  "created_at": "2023-05-31T15:02:04Z",
+  "updated_at": "2024-01-08T09:39:05Z",
+  "closed_at": "2024-01-08T09:39:05Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nUsing Hibernate entity inheritance with Kotlin works fine with Quarkus 2 but not with Quarkus 3.\r\n\r\nI've created a repo that reproduce the bug:\r\nhttps://github.com/cthiebault/quarkus-hibernate-kotlin\r\n\r\nUse the `quarkus2` and `quarkus3` branches to reproduce the issue.\r\n\r\nHere are the entities\r\n\r\n```kotlin\r\n@Entity\r\n@Table(name = \"shape\")\r\n@Inheritance(strategy = InheritanceType.JOINED)\r\nabstract class Shape(\r\n\r\n  @Id\r\n  @JdbcTypeCode(SqlTypes.VARCHAR)\r\n  @Column(name = \"id\", updatable = false, nullable = false, unique = true)\r\n  open val id: UUID,\r\n\r\n  @Length(max = 100)\r\n  @Column(name = \"name\", nullable = false, length = 100)\r\n  open var name: String,\r\n\r\n  @Enumerated(EnumType.STRING)\r\n  @Column(name = \"color\", nullable = false, length = 50)\r\n  open var color: Color,\r\n\r\n  @Embedded\r\n  var properties: Properties?,\r\n)\r\n```\r\n\r\n```kotlin\r\n@Entity\r\n@Table(name = \"rectangle\")\r\n@PrimaryKeyJoinColumn(name = \"shape_id\")\r\ndata class Rectangle(\r\n  override val id: UUID,\r\n  override var name: String,\r\n  override var color: Color,\r\n  override var properties: Properties?\r\n) : Shape(id, name, color, properties) \r\n```\r\n\r\n```kotlin\r\n@ApplicationScoped\r\nclass ShapeRepository : PanacheRepositoryBase<Shape, UUID>\r\n```\r\n\r\nAnd the test I run\r\n\r\n```kotlin\r\n  @Test\r\n  @Transactional\r\n  fun test() {\r\n\r\n    val rectangle = Rectangle(\r\n      id = UUID.randomUUID(),\r\n      name = \"Rectangle\",\r\n      color = Color.Red,\r\n      properties = Properties(\"foo\", \"bar\")\r\n    )\r\n\r\n    Log.info(\"rectangle: $rectangle\")\r\n    repository.persist(rectangle)\r\n\r\n    val found = repository.findById(rectangle.id)\r\n    Log.info(\"found: $found\")\r\n\r\n    assertEquals(rectangle, found)\r\n    assertEquals(1, repository.count())\r\n  }\r\n```\r\n\r\nThe error with Qurakus 3:\r\n```text\r\nINFO: rectangle: Rectangle(id=7c0863fb-a786-4dd7-b9f1-c3b3f48fc0d8, name=Rectangle, color=Red, properties=Properties(foo=foo, bar=bar))\r\n\r\nINFO: found: Rectangle(id=7c0863fb-a786-4dd7-b9f1-c3b3f48fc0d8, name=Rectangle, color=Red, properties=Properties(foo=foo, bar=bar))\r\nERROR: ERROR: null value in column \"name\" of relation \"shape\" violates not-null constraint\r\n  Detail: Failing row contains (7c0863fb-a786-4dd7-b9f1-c3b3f48fc0d8, null, null, null, null).\r\n\r\ncould not execute statement [ERROR: null value in column \"name\" of relation \"shape\" violates not-null constraint\r\n  Detail: Failing row contains (7c0863fb-a786-4dd7-b9f1-c3b3f48fc0d8, null, null, null, null).] [insert into shape (color,name,bar,foo,id) values (?,?,?,?,?)]\r\norg.hibernate.exception.ConstraintViolationException: could not execute statement [ERROR: null value in column \"name\" of relation \"shape\" violates not-null constraint\r\n  Detail: Failing row contains (7c0863fb-a786-4dd7-b9f1-c3b3f48fc0d8, null, null, null, null).] [insert into shape (color,name,bar,foo,id) values (?,?,?,?,?)]\r\n\tat org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:95)\r\n\tat org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:56)\r\n\tat org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)\r\n\tat org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:278)\r\n\tat org.hibernate.engine.jdbc.mutation.internal.AbstractMutationExecutor.performNonBatchedMutation(AbstractMutationExecutor.java:108)\r\n\tat org.hibernate.engine.jdbc.mutation.internal.MutationExecutorStandard.lambda$performNonBatchedOperations$1(MutationExecutorStandard.java:217)\r\n\tat java.base@17.0.7/java.util.TreeMap.forEach(TreeMap.java:1282)\r\n\tat org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupStandard.forEachStatement(PreparedStatementGroupStandard.java:90)\r\n\tat org.hibernate.engine.jdbc.mutation.internal.MutationExecutorStandard.performNonBatchedOperations(MutationExecutorStandard.java:217)\r\n\tat org.hibernate.engine.jdbc.mutation.internal.AbstractMutationExecutor.execute(AbstractMutationExecutor.java:53)\r\n\tat org.hibernate.persister.entity.mutation.InsertCoordinator.doStaticInserts(InsertCoordinator.java:170)\r\n\tat org.hibernate.persister.entity.mutation.InsertCoordinator.coordinateInsert(InsertCoordinator.java:112)\r\n\tat org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:2656)\r\n\tat org.hibernate.action.internal.EntityInsertAction.execute(EntityInsertAction.java:102)\r\n\tat org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:616)\r\n\tat org.hibernate.engine.spi.ActionQueue.lambda$executeActions$1(ActionQueue.java:487)\r\n\tat java.base@17.0.7/java.util.LinkedHashMap.forEach(LinkedHashMap.java:721)\r\n\tat org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:484)\r\n\tat org.hibernate.event.internal.AbstractFlushingEventListener.performExecutions(AbstractFlushingEventListener.java:358)\r\n\tat org.hibernate.event.internal.DefaultAutoFlushEventListener.onAutoFlush(DefaultAutoFlushEventListener.java:55)\r\n\tat org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:127)\r\n\tat org.hibernate.internal.SessionImpl.autoFlushIfRequired(SessionImpl.java:1375)\r\n\tat org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.lambda$new$0(ConcreteSqmSelectQueryPlan.java:107)\r\n\tat org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.withCacheableSqmInterpretation(ConcreteSqmSelectQueryPlan.java:302)\r\n\tat org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.performList(ConcreteSqmSelectQueryPlan.java:243)\r\n\tat org.hibernate.query.sqm.internal.QuerySqmImpl.doList(QuerySqmImpl.java:521)\r\n\tat org.hibernate.query.spi.AbstractSelectionQuery.list(AbstractSelectionQuery.java:367)\r\n\tat org.hibernate.query.sqm.internal.QuerySqmImpl.list(QuerySqmImpl.java:1084)\r\n\tat org.hibernate.query.spi.AbstractSelectionQuery.getSingleResult(AbstractSelectionQuery.java:461)\r\n\tat org.hibernate.query.sqm.internal.QuerySqmImpl.getSingleResult(QuerySqmImpl.java:1110)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.AbstractJpaOperations.count(AbstractJpaOperations.java:323)\r\n\tat org.acme.ShapeRepository.count(ShapeRepository.kt)\r\n\tat org.acme.ShapeRepository_ClientProxy.count(Unknown Source)\r\n\tat org.acme.ShapeTest.test(ShapeTest.kt:43)\r\n```\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nhttps://github.com/cthiebault/quarkus-hibernate-kotlin\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nGradle 8.1.1\r\nBuild time: 2023-04-21 12:31:26 UTC\r\nRevision: 1cf537a851c635c364a4214885f8b9798051175b\r\n\r\nKotlin: 1.8.10\r\nGroovy: 3.0.15\r\nAnt: Apache Ant(TM) version 1.10.11 compiled on July 10 2021\r\nJVM: 17.0.7 (Eclipse Adoptium 17.0.7+7)\r\nOS: Linux 6.1.30-1-MANJARO amd64",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33740/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33740/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

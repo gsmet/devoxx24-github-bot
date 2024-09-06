@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23391",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23391/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23391/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23391/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23391",
+  "id": 1122365746,
+  "node_id": "I_kwDOCFbutM5C5fEy",
+  "number": 23391,
+  "title": "Improve stacktrace of Hibernate Reactive / PGClient Exceptions to reveal the origin",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-02-02T20:39:30Z",
+  "updated_at": "2023-03-29T19:10:25Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nI'm getting an exception using reactive APIs and I have no clue where it is thrown in my chain of transforms and database operation calls. Is there any chance to see an improved stacktrace in future, that is more telling and at least reveals the class where the error is thrown? In my case, it is **not** the RegistrationResource but somewhere else.\r\n\r\nBesides that, the hibernate_sequence definitely exists, as I'm creating it in my import.sql script manually.\r\n\r\n```\r\n2022-02-02 21:33:08,969 ERROR [com.lau.aut.reg.RegistrationResource] (vert.x-eventloop-thread-3) Failed to register user: javax.persistence.PersistenceException: org.hibernate.HibernateException: java.util.concurrent.CompletionException: io.vertx.pgclient.PgException: ERROR: relation \"hibernate_sequence\" does not exist (42P01)\r\n\tat org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:154)\r\n\tat org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:181)\r\n\tat org.hibernate.reactive.session.impl.ReactiveExceptionConverter.convert(ReactiveExceptionConverter.java:31)\r\n\tat org.hibernate.reactive.session.impl.ReactiveSessionImpl.lambda$firePersist$18(ReactiveSessionImpl.java:685)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:911)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n\tat java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2162)\r\n\tat io.vertx.core.Future.lambda$toCompletionStage$2(Future.java:362)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onFailure(FutureImpl.java:153)\r\n\tat io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:75)\r\n\tat io.vertx.core.impl.future.FutureImpl.tryFail(FutureImpl.java:230)\r\n\tat io.vertx.core.impl.future.PromiseImpl.tryFail(PromiseImpl.java:23)\r\n\tat io.vertx.sqlclient.impl.QueryResultBuilder.tryFail(QueryResultBuilder.java:118)\r\n\tat io.vertx.core.Promise.fail(Promise.java:89)\r\n\tat io.vertx.core.Promise.handle(Promise.java:53)\r\n\tat io.vertx.core.Promise.handle(Promise.java:29)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onFailure(FutureImpl.java:153)\r\n\tat io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:75)\r\n\tat io.vertx.core.impl.future.FutureImpl.tryFail(FutureImpl.java:230)\r\n\tat io.vertx.core.impl.future.PromiseImpl.tryFail(PromiseImpl.java:23)\r\n\tat io.vertx.core.impl.future.PromiseImpl.onFailure(PromiseImpl.java:54)\r\n\tat io.vertx.core.impl.future.PromiseImpl.handle(PromiseImpl.java:43)\r\n\tat io.vertx.sqlclient.impl.TransactionImpl.lambda$wrap$0(TransactionImpl.java:72)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onFailure(FutureImpl.java:153)\r\n\tat io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:75)\r\n\tat io.vertx.core.impl.future.FutureImpl.tryFail(FutureImpl.java:230)\r\n\tat io.vertx.core.impl.future.PromiseImpl.tryFail(PromiseImpl.java:23)\r\n\tat io.vertx.core.impl.future.PromiseImpl.onFailure(PromiseImpl.java:54)\r\n\tat io.vertx.core.impl.future.PromiseImpl.handle(PromiseImpl.java:43)\r\n\tat io.vertx.core.impl.future.PromiseImpl.handle(PromiseImpl.java:23)\r\n\tat io.vertx.sqlclient.impl.command.CommandBase.complete(CommandBase.java:42)\r\n\tat io.vertx.sqlclient.impl.command.CommandBase.fail(CommandBase.java:33)\r\n\tat io.vertx.sqlclient.impl.SocketConnectionBase.lambda$prepareCommand$4(SocketConnectionBase.java:276)\r\n\tat io.vertx.sqlclient.impl.command.CommandResponse.fire(CommandResponse.java:46)\r\n\tat io.vertx.sqlclient.impl.SocketConnectionBase.handleMessage(SocketConnectionBase.java:287)\r\n\tat io.vertx.pgclient.impl.PgSocketConnection.handleMessage(PgSocketConnection.java:96)\r\n\tat io.vertx.sqlclient.impl.SocketConnectionBase.lambda$init$0(SocketConnectionBase.java:99)\r\n\tat io.vertx.core.impl.EventLoopContext.emit(EventLoopContext.java:50)\r\n\tat io.vertx.core.impl.ContextImpl.emit(ContextImpl.java:274)\r\n\tat io.vertx.core.impl.EventLoopContext.emit(EventLoopContext.java:22)\r\n\tat io.vertx.core.net.impl.NetSocketImpl.handleMessage(NetSocketImpl.java:394)\r\n\tat io.vertx.core.net.impl.ConnectionBase.read(ConnectionBase.java:156)\r\n\tat io.vertx.core.net.impl.VertxHandler.channelRead(VertxHandler.java:153)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n\tat io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:436)\r\n\tat io.vertx.pgclient.impl.codec.PgEncoder.lambda$write$0(PgEncoder.java:87)\r\n\tat io.vertx.pgclient.impl.codec.PgCommandCodec.handleReadyForQuery(PgCommandCodec.java:139)\r\n\tat io.vertx.pgclient.impl.codec.PrepareStatementCommandCodec.handleReadyForQuery(PrepareStatementCommandCodec.java:96)\r\n\tat io.vertx.pgclient.impl.codec.PgDecoder.decodeReadyForQuery(PgDecoder.java:237)\r\n\tat io.vertx.pgclient.impl.codec.PgDecoder.channelRead(PgDecoder.java:96)\r\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:251)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1410)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:919)\r\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:722)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:658)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:584)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:496)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: org.hibernate.HibernateException: java.util.concurrent.CompletionException: io.vertx.pgclient.PgException: ERROR: relation \"hibernate_sequence\" does not exist (42P01)\r\n\t... 68 more\r\nCaused by: java.util.concurrent.CompletionException: io.vertx.pgclient.PgException: ERROR: relation \"hibernate_sequence\" does not exist (42P01)\r\n\tat java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:332)\r\n\tat java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:347)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:636)\r\n\t... 64 more\r\nCaused by: io.vertx.pgclient.PgException: ERROR: relation \"hibernate_sequence\" does not exist (42P01)\r\n\tat io.vertx.pgclient.impl.codec.ErrorResponse.toException(ErrorResponse.java:31)\r\n\tat io.vertx.pgclient.impl.codec.PrepareStatementCommandCodec.handleErrorResponse(PrepareStatementCommandCodec.java:90)\r\n\tat io.vertx.pgclient.impl.codec.PgDecoder.decodeError(PgDecoder.java:246)\r\n\tat io.vertx.pgclient.impl.codec.PgDecoder.decodeMessage(PgDecoder.java:132)\r\n\tat io.vertx.pgclient.impl.codec.PgDecoder.channelRead(PgDecoder.java:112)\r\n\t... 17 more\r\n\r\n\r\n```\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23391/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23391/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

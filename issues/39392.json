@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39392",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39392/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39392/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39392/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39392",
+  "id": 2183601884,
+  "node_id": "I_kwDOCFbutM6CJx7c",
+  "number": 39392,
+  "title": "Injection failure in generated code in devmode",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-03-13T10:10:18Z",
+  "updated_at": "2024-03-13T11:21:19Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have an application, which uses mapstruct to generate code. When I run this app using `mvn clean quarkus:dev`, it fails with the follwoing exception: `@javax.inject.Inject declared on <..> use @jakarta.inject.Inject instead`. When I run the same app using  `mvn clean compile quarkus:dev` it works as expected.\n\n### Expected behavior\n\nApplication should be started in devmode using `mvn clean quarkus:dev` command\n\n### Actual behavior\n\n```\r\n2024-03-13 10:52:13,481 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (main) Failed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 2 deployment problems: \r\n[1] @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatTopicMapper, use @jakarta.inject.Inject instead\r\n[2] @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatDtoFactory, use @jakarta.inject.Inject instead\r\n\tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1516)\r\n\tat io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:180)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:518)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\tSuppressed: java.lang.IllegalStateException: @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatTopicMapper, use @jakarta.inject.Inject instead\r\n\t\tat io.quarkus.arc.deployment.WrongAnnotationUsageProcessor.detect(WrongAnnotationUsageProcessor.java:68)\r\n\t\t... 9 more\r\n\tSuppressed: java.lang.IllegalStateException: @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatDtoFactory, use @jakarta.inject.Inject instead\r\n\t\tat io.quarkus.arc.deployment.WrongAnnotationUsageProcessor.detect(WrongAnnotationUsageProcessor.java:68)\r\n\t\t... 9 more\r\n\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:334)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:251)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.firstStart(IsolatedDevModeMain.java:112)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:433)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:55)\r\n\tat io.quarkus.bootstrap.app.CuratedApplication.runInCl(CuratedApplication.java:138)\r\n\tat io.quarkus.bootstrap.app.CuratedApplication.runInAugmentClassLoader(CuratedApplication.java:93)\r\n\tat io.quarkus.deployment.dev.DevModeMain.start(DevModeMain.java:131)\r\n\tat io.quarkus.deployment.dev.DevModeMain.main(DevModeMain.java:62)\r\nCaused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 2 deployment problems: \r\n[1] @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatTopicMapper, use @jakarta.inject.Inject instead\r\n[2] @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatDtoFactory, use @jakarta.inject.Inject instead\r\n\tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1516)\r\n\tat io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:180)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:518)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\tSuppressed: java.lang.IllegalStateException: @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatTopicMapper, use @jakarta.inject.Inject instead\r\n\t\tat io.quarkus.arc.deployment.WrongAnnotationUsageProcessor.detect(WrongAnnotationUsageProcessor.java:68)\r\n\t\t... 9 more\r\n\tSuppressed: java.lang.IllegalStateException: @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatDtoFactory, use @jakarta.inject.Inject instead\r\n\t\tat io.quarkus.arc.deployment.WrongAnnotationUsageProcessor.detect(WrongAnnotationUsageProcessor.java:68)\r\n\t\t... 9 more\r\n\r\n\tat io.quarkus.builder.Execution.run(Execution.java:123)\r\n\tat io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:79)\r\n\tat io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:160)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:330)\r\n\t... 9 more\r\nCaused by: jakarta.enterprise.inject.spi.DeploymentException: Found 2 deployment problems: \r\n[1] @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatTopicMapper, use @jakarta.inject.Inject instead\r\n[2] @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatDtoFactory, use @jakarta.inject.Inject instead\r\n\tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1516)\r\n\tat io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:180)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:518)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\tSuppressed: java.lang.IllegalStateException: @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatTopicMapper, use @jakarta.inject.Inject instead\r\n\t\tat io.quarkus.arc.deployment.WrongAnnotationUsageProcessor.detect(WrongAnnotationUsageProcessor.java:68)\r\n\t\t... 9 more\r\n\tSuppressed: java.lang.IllegalStateException: @javax.inject.Inject declared on io.quarkus.ts.javaee.gettingstarted.mapper.ChitChatMapperImpl.chitChatDtoFactory, use @jakarta.inject.Inject instead\r\n\t\tat io.quarkus.arc.deployment.WrongAnnotationUsageProcessor.detect(WrongAnnotationUsageProcessor.java:68)\r\n\t\t... 9 more\r\n\r\n```\n\n### How to Reproduce?\n\n1. `git clone git@github.com:quarkus-qe/quarkus-test-suite.git -b 3.8 tests`\r\n2. `cd tests/javaee-like-getting-started`\r\n3.  `mvn clean quarkus:dev`\n\n### Output of `uname -a` or `ver`\n\n6.7.3-200.fc39.x86_64\n\n### Output of `java -version`\n\nJava version: 21.0.1, vendor: Eclipse Adoptium\n\n### Quarkus version or git rev\n\n3.8.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\n\n### Additional information\n\nStacktrace mentions a bean, which uses `componentModel = CDI`. Mapstruct doc[1] mentions, that for this model, \"the generated mapper is an application-scoped (from javax.enterprise.context or jakarta.enterprise.context, depending on which one is available with javax.inject having priority) CDI bean\". Is it possible, that Quarkus provides javax context for some reason?\r\n\r\n[1] https://mapstruct.org/documentation/stable/reference/html/#configuration-options",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39392/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39392/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38562",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38562/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38562/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38562/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38562",
+  "id": 2115065468,
+  "node_id": "I_kwDOCFbutM5-EVZ8",
+  "number": 38562,
+  "title": "improve rest client exception for method lacking annotations",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-02-02T14:26:33Z",
+  "updated_at": "2024-02-02T14:26:37Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\n\r\nI have this:\r\n```\r\n@GET\r\n    @Path(\"/streams/{id}\")\r\n    public StreamResponse getStream(Integer id); \r\n\r\n    @GET\r\n    @Path(\"/messages\")\r\n    public MessageResponse getMessagesForTopic(int anchor, int num_before, int num_after, List<Narrow> narrows, boolean apply_markdown);\r\n```\r\n\r\n...and I get this noninformative error leaving user guessing what its missing... (in this case that no parameters has @RestQuery or similar annotation afaics)\r\n\r\n```\r\nava.lang.RuntimeException: Error injecting io.quarkus.bot.zulip.ZulipRestClient io.quarkus.bot.zulip.ZulipClient.zulipRestClient\r\n        at io.quarkus.bot.zulip.ZulipClient_Bean.doCreate(Unknown Source)\r\n        at io.quarkus.bot.zulip.ZulipClient_Bean.create(Unknown Source)\r\n        at io.quarkus.bot.zulip.ZulipClient_Bean.create(Unknown Source)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:119)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:38)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:35)\r\n        at io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.c16(Unknown Source)\r\n        at io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.computeIfAbsent(Unknown Source)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:35)\r\n        at io.quarkus.arc.impl.ClientProxies.getApplicationScopedDelegate(ClientProxies.java:21)\r\n        at io.quarkus.bot.zulip.ZulipClient_ClientProxy.arc$delegate(Unknown Source)\r\n        at io.quarkus.bot.zulip.ZulipClient_ClientProxy.addEmojiReaction(Unknown Source)\r\n        at io.quarkus.bot.zulip.ZulipBot.onWebhook(ZulipBot.java:45)\r\n        at io.quarkus.bot.zulip.ZulipBot$quarkusrestinvoker$onWebhook_b967d6a1fba85cea472816cc34067be46cc78eff.invoke(Unknown Source)\r\n        at org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n        at io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:141)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:582)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: org.eclipse.microprofile.rest.client.RestClientDefinitionException: org.jboss.resteasy.reactive.client.api.InvalidRestClientDefinitionException: Failed to generate client for class interface io.quarkus.bot.zulip.ZulipRestClient : Failed to process method 'io.quarkus.bot.zulip.ZulipRestClient#getMessagesForTopic'\r\n        at io.quarkus.rest.client.reactive.runtime.RestClientBuilderImpl.build(RestClientBuilderImpl.java:417)\r\n        at io.quarkus.rest.client.reactive.runtime.QuarkusRestClientBuilderImpl.build(QuarkusRestClientBuilderImpl.java:242)\r\n        at io.quarkus.rest.client.reactive.runtime.RestClientCDIDelegateBuilder.build(RestClientCDIDelegateBuilder.java:62)\r\n        at io.quarkus.rest.client.reactive.runtime.RestClientCDIDelegateBuilder.createDelegate(RestClientCDIDelegateBuilder.java:44)\r\n        at io.quarkus.rest.client.reactive.runtime.RestClientReactiveCDIWrapperBase.delegate(RestClientReactiveCDIWrapperBase.java:76)\r\n        at io.quarkus.rest.client.reactive.runtime.RestClientReactiveCDIWrapperBase.<init>(RestClientReactiveCDIWrapperBase.java:30)\r\n        at io.quarkus.bot.zulip.ZulipRestClient$$CDIWrapper.<init>(Unknown Source)\r\n        at io.quarkus.bot.zulip.ZulipRestClient$$CDIWrapper_ClientProxy.<init>(Unknown Source)\r\n        at io.quarkus.bot.zulip.ZulipRestClient$$CDIWrapper_Bean.proxy(Unknown Source)\r\n        at io.quarkus.bot.zulip.ZulipRestClient$$CDIWrapper_Bean.get(Unknown Source)\r\n        at io.quarkus.bot.zulip.ZulipRestClient$$CDIWrapper_Bean.get(Unknown Source)\r\n        ... 24 more\r\nCaused by: org.jboss.resteasy.reactive.client.api.InvalidRestClientDefinitionException: Failed to generate client for class interface io.quarkus.bot.zulip.ZulipRestClient : Failed to process method 'io.quarkus.bot.zulip.ZulipRestClient#getMessagesForTopic'\r\n        at org.jboss.resteasy.reactive.client.impl.ClientProxies.get(ClientProxies.java:29)\r\n        at org.jboss.resteasy.reactive.client.impl.WebTargetImpl.proxy(WebTargetImpl.java:449)\r\n        at io.quarkus.rest.client.reactive.runtime.RestClientBuilderImpl.build(RestClientBuilderImpl.java:415)\r\n        ... 34 more\r\n\r\n```\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38562/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38562/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

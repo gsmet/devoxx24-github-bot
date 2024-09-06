@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24694",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24694/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24694/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24694/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24694",
+  "id": 1189785285,
+  "node_id": "I_kwDOCFbutM5G6q7F",
+  "number": 24694,
+  "title": "smallrye.mutiny.TimeoutException when trying to connect to redis in Sentinel mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2022-04-01T13:17:36Z",
+  "updated_at": "2024-03-01T16:05:46Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm using quarkus 2.7.5.Final.\r\nWith redis client, In standalone mode, it works fine:\r\n\r\n![image](https://user-images.githubusercontent.com/43664834/161269441-0d128e81-ce3d-4286-ad90-90a41a71ffff.png)\r\n\r\nbut in sentinel mode it doesn't work:\r\n\r\n![image](https://user-images.githubusercontent.com/43664834/161269781-7e32d89c-33d8-444f-b3a6-000cd24f7c80.png)\r\n\r\n\r\ni think this issue could come from the value of quarkus.redis.hosts variable.\n\r\nI actually put this value : \r\nquarkus.redis.hosts=redis://[IP]:8001\r\n\r\nAt this point, quarkus doesn't know my database Name.\r\n\r\nin the help page, i can read this =\r\n\r\n![image](https://user-images.githubusercontent.com/43664834/161270801-267d3179-3b48-40f0-bfe6-532f6d626e1c.png)\r\n\r\nbut i think there is a mistake here: \r\n![image](https://user-images.githubusercontent.com/43664834/161270900-40b9c1d8-c438-4340-be58-6999dac3e71a.png)\r\n\r\r\nif i put my databasename like this:\r\n\r\nquarkus.redis.hosts=redis://[IP]:8001/MYDBNAME\r\n\r\ni got a FormatNumberException.\r\n\r\nthis error seems to be normal, because in the vertx Redis Client documentation (https://vertx.io/docs/vertx-redis-client/java/#_connecting_to_redis) we can see this:\r\n\r\n![image](https://user-images.githubusercontent.com/43664834/161271124-81d1cc31-3935-4a5b-8c34-58bf6efa1eba.png)\r\n\r\nSo the key is :be should not put  a database name, but a database number which is expected by the redis client...\r\n\nAnyway even with a database number it doesn't work for me, I'm getting a timeout exception and I don't know why....\r\n\r\nThank you for you help\r\n\r\nI put my code, juste below.\r\n \r\n\r\n\r\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nhere is my code:\r\n\r\n1. in my pom.xml file:\r\n```\r\n<dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-redis-client</artifactId>\r\n</dependency>\r\n```\r\n\r\n2. in my resource file:\r\n```\r\nimport javax.inject.Inject;\r\nimport javax.ws.rs.GET;\r\nimport javax.ws.rs.Path;\r\n\r\nimport fr.ca.cat.echeance.redis.RedisService;\r\n\r\n@Path(\"/redis\")\r\npublic class RedisResource {\r\n\t\r\n    @Inject RedisService redisService;\r\n\r\n    @GET\r\n    @Path(\"/get\")\r\n    public String sentinel() {\r\n        //redisService.set(\"blah\", \"blih\");\r\n        String result = redisService.get(\"blah\");\r\n        return result;\r\n    }\r\n}\r\n```\r\n\r\n3. in my service file:\r\n\r\n```\r\n@Singleton\r\n@Produces(MediaType.APPLICATION_JSON)\r\n@Consumes(MediaType.APPLICATION_JSON)\r\npublic class RedisService {\r\n\r\n    @Inject RedisClient redisClient;   \r\n\r\n    public String get(String key) {\r\n        return redisClient.get(key).toString();\r\n    }\r\n\r\n    public void set(String key, String value) {\r\n        redisClient.set(Arrays.asList(key, value));\r\n    }\r\n\r\n}\r\n```\r\n\r\n4. in my application.properties file, add (replace [IP_ADRESSE] by the good value):\r\n\r\n#Redis \r\nquarkus.redis.hosts=redis://[IP_ADRESS]:8001\r\nquarkus.redis.client-type=sentinel\r\nquarkus.redis.password=mypass\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nlinux\r\n\r\n### Output of `java -version`\r\n\r\njdk 11\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.5.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn 3.8.2\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24694/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24694/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

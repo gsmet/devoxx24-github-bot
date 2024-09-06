@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27371",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27371/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27371/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27371/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27371",
+  "id": 1343759452,
+  "node_id": "I_kwDOCFbutM5QGCRc",
+  "number": 27371,
+  "title": "TraceId is not propagated completely when using Camel-Quarkus -> Quarkus",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-08-18T23:45:08Z",
+  "updated_at": "2022-08-20T21:39:52Z",
+  "closed_at": "2022-08-20T21:39:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe are building an application where we use Camel-Quarkus/Rest DSL as an Edge Service and we are having a down stream service built on top of Quarkus. I am using \"ottrace\" propagator to propagate tracing information to down stream service and to view both calls in one trace when I view it on Jaeger. I checked traceId at both Edge Service (Gateway) and Downstream service (book-club), the propagated traceId is not being copied completely to the down stream service! here is a sample log :\r\n\r\n> gateway_1              | 23:07:35 INFO  traceId=92e0344493dc16671facf4f5a29aa621, parentId=, spanId=16156fdc1906dac2, sampled=true [get-gateway-route-id] (executor-thread-0) book-club:8080/book\r\n> book-club_1            | 23:07:35 INFO  traceId=00000000000000001facf4f5a29aa621, parentId=95a8413d45490f4c, spanId=09d07d462557779c, sampled=true [co.ki.bo.re.BookResource] (executor-thread-0) Fetching all books with traceId [1facf4f5a29aa621]\r\n\r\nThe propagated traceId is having 16 characters from the upper service and the rest are being replaced with '0', also I printed the header 'ot-tracer-traceid' in log and it is trimmed to 15 characters only.\r\n\r\nI am having the below configuration on both services : \r\n\r\n> quarkus.log.console.format=%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n\r\n> quarkus.opentelemetry.enabled=true\r\n> quarkus.opentelemetry.propagators=ottrace\r\n> quarkus.opentelemetry.tracer.exporter.otlp.endpoint=http://otel-collector:55680\r\n\r\nI have the below tracing dependency on Gateway : \r\n\r\n```\r\n<dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-opentelemetry-exporter-otlp</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.opentelemetry.instrumentation</groupId>\r\n      <artifactId>opentelemetry-jdbc</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.opentelemetry</groupId>\r\n      <artifactId>opentelemetry-extension-trace-propagators</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.apache.camel.quarkus</groupId>\r\n      <artifactId>camel-quarkus-opentelemetry</artifactId>\r\n    </dependency>\r\n```\r\n\r\nAnd the below on down stream service : \r\n\r\n```\r\n<dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-opentelemetry-exporter-otlp</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.opentelemetry.instrumentation</groupId>\r\n      <artifactId>opentelemetry-jdbc</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.opentelemetry</groupId>\r\n      <artifactId>opentelemetry-extension-trace-propagators</artifactId>\r\n    </dependency>\r\n```\n\n### Expected behavior\n\nBoth requests from upstream and downstream service to be linked under the same traceId (both logs & Jaeger view).\n\n### Actual behavior\n\ntraceId is not propagated completely to downstream service and they are not linked together on Jaeger.\n\n### How to Reproduce?\n\nUsing Camel-Quarkus DSL & OpenTelemetry, call a downstream service in Quarkus.\n\n### Output of `uname -a` or `ver`\n\nDarwin huawei_mate_20_pro-813b28-1.home 21.5.0 Darwin Kernel Version 21.5.0: Tue Apr 26 21:08:22 PDT 2022; root:xnu-8020.121.3~4/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Corretto-17.0.4.8.1 (build 17.0.4+8-LTS)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.11.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmvnw\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27371/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27371/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

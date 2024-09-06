@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38205",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38205/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38205/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38205/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38205",
+  "id": 2082672608,
+  "node_id": "I_kwDOCFbutM58Iw_g",
+  "number": 38205,
+  "title": "Current request NPE with micrometer-registry-prometheus",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031886,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxODg2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/metrics",
+      "name": "area/metrics",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-01-15T20:59:53Z",
+  "updated_at": "2024-02-12T08:34:28Z",
+  "closed_at": "2024-02-12T08:34:28Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter installing `micrometer-registry-prometheus`, I am receiving an error after every HTTP request. The HTTP request itself is successful.\r\n\r\nAdded dependency:\r\n\r\n```\r\nroot@2d440fb8440b:/workspace# mvn dependency:tree | grep prometheus\r\n[INFO] +- io.quarkus:quarkus-micrometer-registry-prometheus:jar:3.6.5:compile\r\n[INFO] |  \\- io.micrometer:micrometer-registry-prometheus:jar:1.11.5:compile\r\n[INFO] |     \\- io.prometheus:simpleclient_common:jar:0.16.0:compile\r\n[INFO] |        \\- io.prometheus:simpleclient:jar:0.16.0:compile\r\n[INFO] |           +- io.prometheus:simpleclient_tracer_otel:jar:0.16.0:compile\r\n[INFO] |           |  \\- io.prometheus:simpleclient_tracer_common:jar:0.16.0:compile\r\n[INFO] |           \\- io.prometheus:simpleclient_tracer_otel_agent:jar:0.16.0:compile\r\n```\n\n### Expected behavior\n\nNo errors to be produced related to fetching the current request\n\n### Actual behavior\n\nAn error is produced after every HTTP request.\r\n\r\nStack Trace:\r\n\r\n```\r\n2024-01-15 20:57:32,871 ERROR [io.und.req.io] (executor-thread-1) Exception handling request f41345e2-38cd-4ed5-93c9-5268b2b14be4-5 to /connect/AuthenticationApi/getRegisteredProviders: jakarta.enterprise.inject.IllegalProductException: Normal scoped producer method may not return null: io.quarkus.vertx.http.runtime.CurrentVertxRequest.getCurrent()\r\n        at io.quarkus.vertx.http.runtime.CurrentVertxRequest_ProducerMethod_getCurrent_bcI9FtU7pcNOHntvVCkP17muvXY_Bean.doCreate(Unknown Source)\r\n        at io.quarkus.vertx.http.runtime.CurrentVertxRequest_ProducerMethod_getCurrent_bcI9FtU7pcNOHntvVCkP17muvXY_Bean.create(Unknown Source)\r\n        at io.quarkus.vertx.http.runtime.CurrentVertxRequest_ProducerMethod_getCurrent_bcI9FtU7pcNOHntvVCkP17muvXY_Bean.create(Unknown Source)\r\n        at io.quarkus.arc.impl.RequestContext$1.get(RequestContext.java:79)\r\n        at io.quarkus.arc.impl.RequestContext$1.get(RequestContext.java:75)\r\n        at io.quarkus.arc.generator.Default_jakarta_enterprise_context_RequestScoped_ContextInstances.c9(Unknown Source)\r\n        at io.quarkus.arc.generator.Default_jakarta_enterprise_context_RequestScoped_ContextInstances.computeIfAbsent(Unknown Source)\r\n        at io.quarkus.arc.impl.RequestContext.getIfActive(RequestContext.java:75)\r\n        at io.quarkus.arc.impl.ClientProxies.getSingleContextDelegate(ClientProxies.java:28)\r\n        at io.vertx.ext.web.CurrentVertxRequest_ProducerMethod_getCurrent_bcI9FtU7pcNOHntvVCkP17muvXY_ClientProxy.arc$delegate(Unknown Source)\r\n        at io.vertx.ext.web.CurrentVertxRequest_ProducerMethod_getCurrent_bcI9FtU7pcNOHntvVCkP17muvXY_ClientProxy.request(Unknown Source)\r\n        at io.quarkus.micrometer.runtime.binder.vertx.HttpRequestMetric.getRequestMetric(HttpRequestMetric.java:100)\r\n        at io.quarkus.micrometer.runtime.binder.vertx.VertxMeterBinderUndertowServletFilter.doFilter(VertxMeterBinderUndertowServletFilter.java:31)\r\n        at jakarta.servlet.http.HttpFilter.doFilter(HttpFilter.java:97)\r\n        at io.undertow.servlet.core.ManagedFilter.doFilter(ManagedFilter.java:61)\r\n        at io.undertow.servlet.handlers.FilterHandler$FilterChainImpl.doFilter(FilterHandler.java:131)\r\n        at io.undertow.servlet.handlers.FilterHandler.handleRequest(FilterHandler.java:84)\r\n        at io.undertow.servlet.handlers.security.ServletSecurityRoleHandler.handleRequest(ServletSecurityRoleHandler.java:63)\r\n        at io.undertow.servlet.handlers.ServletChain$1.handleRequest(ServletChain.java:68)\r\n        at io.undertow.servlet.handlers.ServletDispatchingHandler.handleRequest(ServletDispatchingHandler.java:36)\r\n        at io.undertow.servlet.handlers.RedirectDirHandler.handleRequest(RedirectDirHandler.java:67)\r\n        at io.undertow.servlet.handlers.security.SSLInformationAssociationHandler.handleRequest(SSLInformationAssociationHandler.java:133)\r\n        at io.undertow.servlet.handlers.security.ServletAuthenticationCallHandler.handleRequest(ServletAuthenticationCallHandler.java:57)\r\n        at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:43)\r\n        at io.undertow.security.handlers.AbstractConfidentialityHandler.handleRequest(AbstractConfidentialityHandler.java:46)\r\n        at io.undertow.servlet.handlers.security.ServletConfidentialityConstraintHandler.handleRequest(ServletConfidentialityConstraintHandler.java:65)\r\n        at io.undertow.security.handlers.AuthenticationMechanismsHandler.handleRequest(AuthenticationMechanismsHandler.java:60)\r\n        at io.undertow.servlet.handlers.security.CachedAuthenticatedSessionHandler.handleRequest(CachedAuthenticatedSessionHandler.java:77)\r\n        at io.undertow.security.handlers.NotificationReceiverHandler.handleRequest(NotificationReceiverHandler.java:50)\r\n        at io.undertow.security.handlers.AbstractSecurityContextAssociationHandler.handleRequest(AbstractSecurityContextAssociationHandler.java:43)\r\n        at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:43)\r\n        at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:43)\r\n        at io.undertow.servlet.handlers.ServletInitialHandler.handleFirstRequest(ServletInitialHandler.java:247)\r\n        at io.undertow.servlet.handlers.ServletInitialHandler.access$100(ServletInitialHandler.java:56)\r\n        at io.undertow.servlet.handlers.ServletInitialHandler$2.call(ServletInitialHandler.java:111)\r\n        at io.undertow.servlet.handlers.ServletInitialHandler$2.call(ServletInitialHandler.java:108)\r\n        at io.undertow.servlet.core.ServletRequestContextThreadSetupAction$1.call(ServletRequestContextThreadSetupAction.java:48)\r\n        at io.undertow.servlet.core.ContextClassLoaderSetupAction$1.call(ContextClassLoaderSetupAction.java:43)\r\n        at io.quarkus.undertow.runtime.UndertowDeploymentRecorder$9$1.call(UndertowDeploymentRecorder.java:626)\r\n        at io.undertow.servlet.handlers.ServletInitialHandler.dispatchRequest(ServletInitialHandler.java:227)\r\n        at io.undertow.servlet.handlers.ServletInitialHandler.handleRequest(ServletInitialHandler.java:152)\r\n        at io.undertow.server.handlers.CanonicalPathHandler.handleRequest(CanonicalPathHandler.java:49)\r\n        at io.quarkus.undertow.runtime.UndertowDeploymentRecorder$1.handleRequest(UndertowDeploymentRecorder.java:125)\r\n        at io.undertow.server.Connectors.executeRootHandler(Connectors.java:284)\r\n        at io.undertow.server.DefaultExchangeHandler.handle(DefaultExchangeHandler.java:18)\r\n        at io.quarkus.undertow.runtime.UndertowDeploymentRecorder$5$2.run(UndertowDeploymentRecorder.java:441)\r\n        at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)\r\n        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:582)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:1583)\r\n\r\n```\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n6.5.13-orbstack-00121-ge428743e4e98\n\n### Output of `java -version`\n\nopenjdk version \"21.0.1\" 2023-10-17 LTS\n\n### Quarkus version or git rev\n\n3.6.5\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38205/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38205/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

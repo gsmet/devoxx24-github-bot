@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39591",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39591/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39591/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39591/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39591",
+  "id": 2197783213,
+  "node_id": "I_kwDOCFbutM6C_4Kt",
+  "number": 39591,
+  "title": "CycleDetected Error while Build",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-03-20T15:09:22Z",
+  "updated_at": "2024-03-20T15:20:31Z",
+  "closed_at": "2024-03-20T15:20:04Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIf you use following extensions \r\n- quarkus-hibernate-orm\r\n- quarkus-jdbc-oracle\r\n- quarkus-flyway\r\n- flyway-database-oracle\r\n- quarkus-smallrye-metrics\r\n\r\nin additonal to \"writing rest services\" tutorial, then the build breaks with a cycle detected error\r\n\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nsuccessful build\r\n\r\n### Actual behavior\r\n\r\nbuild fails with a cycle detection\r\nand gives the error output\r\n```\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:3.8.3:build (default) on project rest-json-quickstart: Failed to build quarkus application: io.quarkus.builder.ChainBuildException: Cycle detected:\r\n[ERROR]                    io.quarkus.arc.deployment.ArcProcessor#signalBeanContainerReady produced class io.quarkus.arc.deployment.BeanContainerBuildItem\r\n[ERROR]                 to io.quarkus.flyway.deployment.FlywayProcessor#startActions produced class io.quarkus.agroal.spi.JdbcDataSourceSchemaReadyBuildItem\r\n[ERROR]                 to io.quarkus.hibernate.orm.deployment.metrics.HibernateOrmMetricsProcessor#metrics produced class io.quarkus.deployment.metrics.MetricsFactoryConsumerBuildItem\r\n[ERROR]                 to io.quarkus.smallrye.metrics.deployment.SmallRyeMetricsProcessor#extensionMetrics produced class io.quarkus.arc.deployment.UnremovableBeanBuildItem\r\n[ERROR]                 to io.quarkus.arc.deployment.ArcProcessor#validate produced class io.quarkus.arc.deployment.ValidationPhaseBuildItem\r\n[ERROR]                 to io.quarkus.arc.deployment.ObserverValidationProcessor#validateApplicationObserver produced class io.quarkus.arc.deployment.ValidationPhaseBuildItem$ValidationErrorBuildItem\r\n[ERROR]                 to io.quarkus.arc.deployment.ArcProcessor#generateResources produced class io.quarkus.arc.deployment.ResourcesGeneratedPhaseBuildItem\r\n[ERROR]                 to io.quarkus.arc.deployment.ArcProcessor#initializeContainer produced class io.quarkus.arc.deployment.ArcContainerBuildItem\r\n[ERROR]                 to io.quarkus.arc.deployment.ArcProcessor#notifyBeanContainerListeners produced class io.quarkus.arc.deployment.PreBeanContainerBuildItem\r\n[ERROR]                 to io.quarkus.arc.deployment.ArcProcessor#signalBeanContainerReady\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n- create a sample project \r\n```\r\nmvn io.quarkus.platform:quarkus-maven-plugin:3.8.3:create \\\r\n    -DprojectGroupId=org.acme \\\r\n    -DprojectArtifactId=rest-json-quickstart \\\r\n    -Dextensions='resteasy-reactive-jackson' \r\n```\r\n- add following dependencies\r\n```\r\n<dependencies>\r\n    .....\r\n    <!-- ADDED BEGIN  -->\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-hibernate-orm</artifactId>\r\n    </dependency>\r\n\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-jdbc-oracle</artifactId>\r\n    </dependency>\r\n\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-flyway</artifactId>\r\n    </dependency>\r\n\r\n    <dependency>\r\n      <groupId>org.flywaydb</groupId>\r\n      <artifactId>flyway-database-oracle</artifactId>\r\n    </dependency>\r\n\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-smallrye-metrics</artifactId>\r\n    </dependency>\r\n    <!-- ADDED END  -->\r\n     .......\r\n</dependencies>\r\n```\r\n- execute `mvn clean package -DskipTests`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMINGW64_NT-10.0-19045\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12-LTS)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.8.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39591/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39591/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

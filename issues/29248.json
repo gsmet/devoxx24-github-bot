@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29248",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29248/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29248/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29248/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29248",
+  "id": 1447786964,
+  "node_id": "I_kwDOCFbutM5WS3nU",
+  "number": 29248,
+  "title": "Panache reactive sequence - default schema not applied",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2022-11-14T10:25:00Z",
+  "updated_at": "2023-02-06T13:53:44Z",
+  "closed_at": "2023-02-06T13:53:44Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm tying to persist a simple entity, in a custom schema using Panache Reactive\r\n```\r\n@Entity\r\n@Table(name = \"notification\")\r\npublic class NotificationEntity extends PanacheEntityBase {\r\n\r\n    @Id\r\n    @SequenceGenerator(name = \"notification_id_seq\", sequenceName = \"notification_id_seq\")\r\n    @GeneratedValue(generator = \"notification_id_seq\", strategy = GenerationType.IDENTITY)\r\n    Long id;\r\n\r\n    @NaturalId\r\n    @Column(name = \"external_id\", nullable = false)\r\n    private String externalId;\r\n\r\n}\r\n```\r\n\r\nAnd REST call to test: \r\n```\r\n    @GET\r\n    @Path(\"/hello\")\r\n    @ReactiveTransactional\r\n    public Uni<NotificationEntity> hello() {\r\n\r\n        var notification = new NotificationEntity()\r\n                .setExternalId(UUID.randomUUID().toString());\r\n\r\n        return notification.persist();\r\n\r\n    }\r\n```\r\n\r\nI have configured a default schema in yaml ( `ncs` )\r\n```\r\nquarkus:\r\n  datasource:\r\n    reactive:\r\n      url: vertx-reactive:${DATABASE_TYPE:postgresql}://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:}\r\n    db-kind:\r\n      postgresql\r\n    username: ${DATABASE_USERNAME:unset}\r\n    password: ${DATABASE_PASSWORD:unset}\r\n  hibernate-orm:\r\n    database:\r\n      default-schema: ncs\r\n```\r\n\r\nConfirming that `notification_id_seq` exists under my schema. \r\n\r\n### Expected behavior\r\n\r\nIm assuming hibernate can map `ncs.notification_id_seq` and do the persist correctly. \r\n\r\n### Actual behavior\r\n\r\nMy REST endpoint call is never ending. No errors are thrown. \r\n\r\nIf I'm adding the schema on my JPA entity under `SequenceGenerator` annotation:\r\n```\r\n@SequenceGenerator(name = \"notification_id_seq\", sequenceName = \"notification_id_seq\", schema = \"ncs\")\r\n```\r\n\r\nIt works!\r\n\r\nIf I am manually creating the `notification_id_seq` under `public` schema it also works. Somehow `quarkus.hibernate-orm.database.default-schema` is totally ignored by hibernate. \r\n\r\nP.S. \r\n`quarkus.hibernate-orm.database.generation` is set to `none`, because im using Flyway to manually migrate DB. \r\n\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.1\" 2021-10-19\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.12.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29248/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29248/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39082",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39082/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39082/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39082/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39082",
+  "id": 2160936463,
+  "node_id": "I_kwDOCFbutM6AzUYP",
+  "number": 39082,
+  "title": "Cannot open WebSocket with Sec-WebSocket-Protocol header in Quarkus version 3.7.1 and above with quarkus-websockets package",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2748318141,
+      "node_id": "MDU6TGFiZWwyNzQ4MzE4MTQx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/websockets",
+      "name": "area/websockets",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2024-02-29T10:35:07Z",
+  "updated_at": "2024-03-05T19:01:16Z",
+  "closed_at": "2024-03-05T19:01:16Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter upgrading from Quarkus version 3.6.9 to 3.7.1 (and above) cannot use Sec-WebSocket-Protocol header in WebSocket handshake anymore.\r\nI'm using _quarkus-websockets_ dependency\r\n\r\n```\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-websockets</artifactId>\r\n</dependency>\r\n```\r\n\r\nand providing a simple class annotated with ServerEndpoint annotation with `subprotocol` parameter\r\n\r\n```\r\npackage org.acme;\r\n\r\nimport jakarta.enterprise.context.RequestScoped;\r\nimport jakarta.websocket.CloseReason;\r\nimport jakarta.websocket.OnClose;\r\nimport jakarta.websocket.OnError;\r\nimport jakarta.websocket.OnOpen;\r\nimport jakarta.websocket.Session;\r\nimport jakarta.websocket.server.ServerEndpoint;\r\n\r\n@RequestScoped\r\n@ServerEndpoint(value = \"/ws\", subprotocols = \"custom-protocol\")\r\npublic class SocketController {\r\n\r\n    @OnOpen\r\n    public void onOpen(Session socket) {\r\n        System.out.println(\"Socket opened: \" + socket.getId());\r\n    }\r\n\r\n    @OnError\r\n    public void onError(Session socket, Throwable t) {\r\n        System.out.println(\"Socket error: \" + socket.getId() + \" - \" + t.getMessage());\r\n    }\r\n\r\n    @OnClose\r\n    public void onClose(Session socket, CloseReason reason) {\r\n        System.out.println(\"Socket closed: \" + socket.getId() + \" - \" + reason.getReasonPhrase());\r\n    }\r\n}\r\n```\r\n\r\nStarting an instance on localhost listening on port 9999 and trying to open a WebSocket with the following headers\r\n\r\n```\r\nRequest Headers:\r\n    Sec-WebSocket-Version: 13\r\n    Sec-WebSocket-Key: b8AIdJa6JU6639p8l6ksvQ==\r\n    Connection: Upgrade\r\n    Upgrade: websocket\r\n    Sec-WebSocket-Protocol: custom-protocol\r\n    Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n    Host: localhost:9999\r\n```\r\n\r\nproduces the following results:\r\n\r\n- With Quarkus version up to 3.6.9 the connection is successful and the response headers are\r\n```\r\nResponse Headers\r\n    sec-websocket-protocol: custom-protocol\r\n    sec-websocket-location: ws://localhost:9999/ws\r\n    sec-websocket-accept: UO7wLZQUzQFNeu16t2rdcauYHso=\r\n    upgrade: WebSocket\r\n    connection: upgrade\r\n    content-length: 0\r\n```\r\n\r\n- With Quarkus version 3.7.1 and above the connection is denied and the response headers are\r\n```\r\nResponse Headers\r\n    upgrade: websocket\r\n    connection: upgrade\r\n    sec-websocket-accept: qvy6uu3bZV8FQoxVAQIsCer5128=\r\n```\r\n\r\nIt seems that the use of `sec-websocket-protocol` is not supported anymore.\n\n### Expected behavior\n\nOpening a WebSocket with a Sec-WebSocket-Protocol header is accepted and the response headers contains the given `sec-websocket-protocol`\n\n### Actual behavior\n\nPassing a Sec-WebSocket-Protocol header in WebSocket headers does not permit to open a WebSocket in Quarkus version 3.7.1 and above\n\n### How to Reproduce?\n\n- Start a Quarkus instance with Quarkus version 3.7.1 or above able to handle WebSocket connections\r\n- Try to connect a WebSocket with a Sec-WebSocket-Protocol header\r\n\r\nAttachment\r\n[code-with-quarkus.zip](https://github.com/quarkusio/quarkus/files/14446424/code-with-quarkus.zip)\r\n\r\nWith the provided project (Quarkus version 3.7.1 with `quarkus-websockets` dependency and ServerEndpoint annotated class)\r\n- you can launch a local instance in dev mode with `quarkus dev -Dquarkus.http.port=9999`\r\n- open a WebSocket at localhost:9999/ws adding `Sec-WebSocket-Protocol: custom-protocol` header\r\n\r\nIf you switch Quarkus version to 3.6.9 the WebSocket connection will be successful\n\n### Output of `uname -a` or `ver`\n\nLinux 5.15.0-97-generic #107~20.04.1-Ubuntu SMP Fri Feb 9 14:20:11 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10)\n\n### Quarkus version or git rev\n\n3.7.1 and above\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39082/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39082/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34226",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34226/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34226/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34226/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34226",
+  "id": 1768050143,
+  "node_id": "I_kwDOCFbutM5pYk3f",
+  "number": 34226,
+  "title": "quarkus gradle build fails when buildscript contains a listener for added tasks",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-06-21T17:07:41Z",
+  "updated_at": "2023-06-21T17:09:12Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nTrying to run a barebones quarkus gradle project fails if the build script contains  (`tasks.whenTaskAdded`). The error message relates to the io.quarkus plugin.\r\n\r\n```\r\nAn exception occurred applying plugin request [id: 'io.quarkus', version: '3.1.2.Final']\r\n> Failed to apply plugin 'io.quarkus'.\r\n   > SourceSet with name 'quarkus-generated-sources' not found.\r\n```\r\n\r\n### Expected behavior\r\n\r\nsuccessful build\r\n\r\n```\r\n-----------\r\n\r\napplying codestarts...\r\n📚 java\r\n🔨 gradle\r\n📦 quarkus\r\n📝 config-properties\r\n🔧 dockerfiles\r\n🔧 gradle-wrapper\r\n🚀 resteasy-reactive-codestart\r\n\r\n-----------\r\n[SUCCESS] ✅  quarkus project has been successfully generated in:\r\n--> .../code-with-quarkus\r\n-----------\r\nNavigate into this directory and get started: quarkus dev\r\n\r\nDeprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.\r\n\r\nYou can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.\r\n\r\nSee https://docs.gradle.org/8.1.1/userguide/command_line_interface.html#sec:command_line_warnings\r\n\r\nBUILD SUCCESSFUL in 24s\r\n11 actionable tasks: 11 executed\r\n```\r\n\r\n### Actual behavior\r\n\r\nFailed build\r\n\r\n```\r\n-----------\r\n\r\napplying codestarts...\r\n📚 java\r\n🔨 gradle\r\n📦 quarkus\r\n📝 config-properties\r\n🔧 dockerfiles\r\n🔧 gradle-wrapper\r\n🚀 resteasy-reactive-codestart\r\n\r\n-----------\r\n[SUCCESS] ✅  quarkus project has been successfully generated in:\r\n--> .../workspace/code-with-quarkus\r\n-----------\r\nNavigate into this directory and get started: quarkus dev\r\nStarting a Gradle Daemon (subsequent builds will be faster)\r\n\r\n> Configure project :\r\ntask task ':clean' added\r\ntask task ':assemble' added\r\ntask task ':check' added\r\ntask task ':build' added\r\ntask task ':buildNeeded' added\r\ntask task ':buildDependents' added\r\ntask task ':processResources' added\r\ntask task ':compileJava' added\r\ntask task ':classes' added\r\ntask task ':jar' added\r\ntask task ':javadoc' added\r\ntask task ':processTestResources' added\r\ntask task ':compileTestJava' added\r\ntask task ':testClasses' added\r\ntask task ':test' added\r\ntask task ':listExtensions' added\r\ntask task ':listCategories' added\r\ntask task ':listPlatforms' added\r\ntask task ':addExtension' added\r\ntask task ':removeExtension' added\r\ntask task ':quarkusInfo' added\r\ntask task ':quarkusUpdate' added\r\ntask task ':quarkusGoOffline' added\r\ntask task ':quarkusGenerateCode' added\r\n\r\nFAILURE: Build failed with an exception.\r\n\r\n* Where:\r\nBuild file '.../code-with-quarkus/build.gradle' line: 4\r\n\r\n* What went wrong:\r\nAn exception occurred applying plugin request [id: 'io.quarkus', version: '3.1.2.Final']\r\n> Failed to apply plugin 'io.quarkus'.\r\n   > SourceSet with name 'quarkus-generated-sources' not found.\r\n\r\n* Try:\r\n> Run with --stacktrace option to get the stack trace.\r\n> Run with --info or --debug option to get more log output.\r\n> Run with --scan to get full insights.\r\n\r\n* Get more help at https://help.gradle.org\r\n\r\nBUILD FAILED in 13s\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n```\r\nquarkus create app --gradle\r\ncd code-with-quarkus/\r\necho -e 'buildscript { tasks.whenTaskAdded { theTask -> println \"task ${theTask} added\" } }' | cat - build.gradle > build.gradle_new\r\nmv build.gradle_new build.gradle\r\n./gradlew build\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin\r\n\r\n### Output of `java -version`\r\n\r\n```\r\nopenjdk version \"17.0.7\" 2023-04-18 LTS\r\nOpenJDK Runtime Environment Corretto-17.0.7.7.1 (build 17.0.7+7-LTS)\r\nOpenJDK 64-Bit Server VM Corretto-17.0.7.7.1 (build 17.0.7+7-LTS, mixed mode, sharing)\r\n```\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n```\r\n\r\n------------------------------------------------------------\r\nGradle 8.1.1\r\n------------------------------------------------------------\r\n\r\nBuild time:   2023-04-21 12:31:26 UTC\r\nRevision:     1cf537a851c635c364a4214885f8b9798051175b\r\n\r\nKotlin:       1.8.10\r\nGroovy:       3.0.15\r\nAnt:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021\r\nJVM:          17.0.7 (Amazon.com Inc. 17.0.7+7-LTS)\r\nOS:           Mac OS X 12.6.6 x86_64\r\n```\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34226/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34226/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

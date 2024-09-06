@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30668",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30668/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30668/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30668/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30668",
+  "id": 1560104216,
+  "node_id": "I_kwDOCFbutM5c_U0Y",
+  "number": 30668,
+  "title": "Conditionally (required) properties",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-01-27T17:08:12Z",
+  "updated_at": "2023-06-16T05:24:27Z",
+  "closed_at": "2023-06-15T22:42:54Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nI have properties which are conditionally required, where as the conditions are values of certain other properties. Currently, I simply set the conditionally required properties to `\"\"` and check them during build time if the dependent property has a certain value:\r\n```\r\n@ConfigRoot(phase = ConfigPhase.BUILD_AND_RUN_TIME_FIXED, name = \"myfeature\")\r\npublic class WebFilterConfig {\r\n    /**\r\n     *  Enables the web filter for HTTP requests over resteasy. Default: true\r\n     */\r\n    @ConfigItem(name = \"enabled\", defaultValue = \"true\")\r\n    boolean webfilterEnabled;\r\n    /**\r\n     *  Base path on which the filter will be applied. Example \"/api\".\r\n     */\r\n    @ConfigItem(name = \"webfilter.path\", defaultValue = \"\")\r\n    @ConvertWith(MyEmtpyConverter.class)\r\n    String path;\r\n}\r\n```\r\n```\r\n if (webFilterConfig.webfilterEnabled() && getPath().isBlank()) {\r\n            throw new ConfigurationException(\r\n                    \"ContextWebfilter property 'myfeature.webfilter.path' is missing or blank.\");\r\n        }\r\n```\r\n\r\nThis feels and is quite a workaround wich bloats the code and is spread accross the application.\r\n\n\n### Implementation ideas\n\nInstead, it would be much nicer and understandable if I directly could define a conditionally property. I imagine this be done with a new annotation e.g. `@OnlyIf` like this:\r\n```\r\n@ConfigRoot(phase = ConfigPhase.BUILD_AND_RUN_TIME_FIXED, name = \"myfeature\")\r\npublic class ContextWebFilterConfig {\r\n    /**\r\n     *  Enables the web filter for HTTP requests over resteasy. Default: true\r\n     */\r\n    @ConfigItem(name = \"enabled\", defaultValue = \"true\")\r\n    boolean webfilterEnabled;\r\n    /**\r\n     *  Base path on which the filter will be applied. Example \"/api\".\r\n     */\r\n    @OnlyIf(name=\"enabled\", value =\"true\")\r\n    @ConfigItem(name = \"webfilter.path\")\r\n    String path;\r\n}\r\n```\r\nIf `webfilterEnabled` is `true` and `path` is not set, the regular Quarkus exception  for a missing property will be thrown .\r\nIf `webfilterEnabled` is `false`and `path` is not set nothing is happening and the application will start.\r\n\r\nThis way, I have all my configuration code in one class and understand whats going on.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30668/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30668/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37173",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37173/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37173/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37173/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37173",
+  "id": 1998823058,
+  "node_id": "I_kwDOCFbutM53I56S",
+  "number": 37173,
+  "title": "Agroal leaks connections when unwrap is used",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2955097332,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3MzMy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/agroal",
+      "name": "area/agroal",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-11-17T10:51:39Z",
+  "updated_at": "2023-11-17T13:57:23Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe following code leaks connections:\r\n\r\n```java\r\n@Inject AgroalDataSource ds;\r\n\r\npublic void foo() {\r\n    try (var con = this.ds.getConnection()) {\r\n         var pgCon = con.unwrap(PgConnection.class);\r\n         new CopyManager(pgCon).copyOut(\"copy .. to ....\", new FileOutputStream(\"output.csv\");\r\n         pgCon.close();\r\n     }\r\n}\r\n```\r\nIt doesn't matter whether you close `pgCon` or not, it always logs that there is a connection leak:\r\n\r\n> WARN  [io.agr.pool] (agroal-21) Datasource '<default>': A possible cause for the leak of connection org.postgresql.jdbc.PgConnection@2a74e319 is a call to the unwrap() method. close() needs to be called on the connection object provided by the pool.\r\n2023-11-15 15:58:32,373 INFO  [io.agr.pool] (agroal-21) Datasource '<default>': Connection leak of org.postgresql.jdbc.PgConnection@2a74e319\r\nLeaked connection org.postgresql.jdbc.PgConnection@34c8b989 is not enlisted. To return it to the pool us\r\ne the flush(LEAK) operation.\r\n\r\n2023-11-15 15:58:32,375 INFO  [io.agr.pool] (agroal-21) Datasource '<default>': Operations executed on leaked connection org.postgresql.jdbc.PgConnection@2a74e319:\n\n### Expected behavior\n\nThe unwrapped connection should be automatically closed/returned to the pool after usage.\n\n### Actual behavior\n\nConnection leak occurs and after some time we get the `Acquisition errors`, and the pod gets restarted.\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nJDK 17 Temurin\n\n### Quarkus version or git rev\n\n3.2.8.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.8.x\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37173/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37173/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

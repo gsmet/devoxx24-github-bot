@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28639",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28639/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28639/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28639/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28639",
+  "id": 1411570353,
+  "node_id": "I_kwDOCFbutM5UItqx",
+  "number": 28639,
+  "title": "[quarkus-smallrye-openapi] Support configuring common responses for path and status code",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-10-17T13:18:42Z",
+  "updated_at": "2023-05-08T19:22:03Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nCurrently Quarkus smallrye openapi supports automatically adding security OpenAPI metadata using the config [quarkus.smallrye-openapi.auto-add-security-requirement](https://quarkus.io/guides/openapi-swaggerui#quarkus-smallrye-openapi_quarkus.smallrye-openapi.auto-add-security-requirement) (and others).\r\n\r\nIt would also be nice to be able to define common response schemas for certain paths and status codes.\r\n\r\nI have to define the common schema for 401, 403 and 500 for every endpoint I have using the `@APIResponses`, which is a bit boring, since the schema for these status codes is well defined and always the same for all endpoints.\r\n\r\n```\r\n@Path(ENDPOINTS.ROOT)\r\npublic interface RestService {\r\n\r\n    @GET\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    @Path(ENDPOINTS.GET_ACTIVE)\r\n    @Operation(summary = \"Fetch all active ---\")\r\n    @APIResponses(\r\n        {\r\n            @APIResponse(responseCode = \"401\", description = \"Missing or invalid Auth Credential\", content = @Content(schema = @Schema(implementation = UnauthorizedErrorsResponse.class))),\r\n            @APIResponse(responseCode = \"403\", description = \"Missing roles\", content = @Content(schema = @Schema(implementation = ForbiddenErrorsResponse.class))),\r\n            @APIResponse(responseCode = \"500\", description = \"Internal server error\", content = @Content(schema = @Schema(implementation = InternalServerErrorsResponse.class)))\r\n        }\r\n    )\r\n    List<SomeResource> getActive(@QueryParam(\"type\") ResourceType type);\r\n\r\n    @POST\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    @Consumes(MediaType.APPLICATION_JSON)\r\n    @Path(ENDPOINTS.ACTIVATE)\r\n    @Operation(summary = \"Activate ---\")\r\n    @APIResponses(\r\n            {\r\n                    @APIResponse(responseCode = \"401\", description = \"Missing or invalid Auth Credential\", content = @Content(schema = @Schema(implementation = UnauthorizedErrorsResponse.class))),\r\n                    @APIResponse(responseCode = \"403\", description = \"Missing roles\", content = @Content(schema = @Schema(implementation = ForbiddenErrorsResponse.class))),\r\n                    @APIResponse(responseCode = \"500\", description = \"Internal server error\", content = @Content(schema = @Schema(implementation = InternalServerErrorsResponse.class)))\r\n            }\r\n    )\r\n    UserActiveResource activate(ActivateResourceRequestData request);\r\n\r\n    @GET\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    @Path(ENDPOINTS.GET_USER_ACTIVE)\r\n    @Operation(summary = \"Fetch all --- activated for current user\")\r\n    @APIResponses(\r\n            {\r\n                    @APIResponse(responseCode = \"401\", description = \"Missing or invalid Auth Credential\", content = @Content(schema = @Schema(implementation = UnauthorizedErrorsResponse.class))),\r\n                    @APIResponse(responseCode = \"403\", description = \"Missing roles\", content = @Content(schema = @Schema(implementation = ForbiddenErrorsResponse.class))),\r\n                    @APIResponse(responseCode = \"500\", description = \"Internal server error\", content = @Content(schema = @Schema(implementation = InternalServerErrorsResponse.class)))\r\n            }\r\n    )\r\n    List<SomeResource> getUserActivatedResources(@QueryParam(\"user_id\") String userAccountId, \r\n            @QueryParam(\"type\") ResourceType resourceType);\r\n}\r\n```\r\n\r\n\r\nI'd much rather configure something like this:\r\n\r\n```\r\nquarkus.smallrye.openapi.response-schema.unauthorized.paths=/v1/resource1/*,/v1/resource2/*\r\nquarkus.smallrye.openapi.response-schema.unauthorized.description=\"Missing or invalid Auth Credential\"\r\nquarkus.smallrye.openapi.response-schema.unauthorized.schema=com.dfrickert.service.api.UnauthorizedErrorsResponse\r\nquarkus.smallrye.openapi.response-schema.unauthorized.status-code=401\r\n(... other useful fields ...)\r\n\r\n(... repeat for 403 and 500...)\r\n```\r\n\r\nI have no knowledge how the extension works and if this is even doable, but it would be great.\r\n\r\n### Implementation ideas\r\n\r\nConfigs:\r\n```\r\nquarkus.smallrye.openapi.response-schema.<group-name>.paths\r\nquarkus.smallrye.openapi.response-schema.<group-name>.description\r\nquarkus.smallrye.openapi.response-schema.<group-name>.schema\r\nquarkus.smallrye.openapi.response-schema.<group-name>.status-code\r\n(and possibly more...)\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28639/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28639/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

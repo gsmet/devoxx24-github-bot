@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39281",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39281/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39281/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39281/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39281",
+  "id": 2175658792,
+  "node_id": "I_kwDOCFbutM6Breso",
+  "number": 39281,
+  "title": "Invalid channel configuration -  the `connector` attribute must be set for channel `news$1` when setting the concurrency attribute",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-03-08T09:43:20Z",
+  "updated_at": "2024-05-15T16:14:05Z",
+  "closed_at": "2024-04-22T07:31:57Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have Kafka message consumer configured like this:\r\n\r\n```\r\nkafka.group.id=news-api\r\nmp.messaging.incoming.news.connector=smallrye-kafka\r\nmp.messaging.incoming.news.topic=news-events\r\nmp.messaging.incoming.news.value.deserializer=SomeClass\r\nmp.messaging.incoming.news.failure-strategy=dead-letter-queue\r\nmp.messaging.incoming.news.dead-letter-queue.topic=news-events.dead-letter\r\nmp.messaging.incoming.news.value-deserialization-failure-handler=event-deserialization-failure-handler\r\nmp.messaging.incoming.news.concurrency=8\r\n```\r\nThe `mp.messaging.incoming.news.concurrency` was just added and on this moment the error started appearing\r\n\n\n### Expected behavior\n\nConcurrency of the consumer should be set to 8, and all new consuming threads should work correctly\n\n### Actual behavior\n\nThe application fails when starting with error \r\n\r\n```\r\nCaused by: jakarta.enterprise.inject.spi.DeploymentException: java.lang.IllegalArgumentException: SRMSG00071: Invalid channel configuration -  the `connector` attribute must be set for channel `news$1`\r\n\tat io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingLifecycle.onApplicationStart(SmallRyeReactiveMessagingLifecycle.java:58)\r\n\tat io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingLifecycle_Observer_onApplicationStart_qTrMuLFyQ1IvGfeSxRVitl6CCBQ.notify(Unknown Source)\r\n\tat io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:346)\r\n\tat io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:328)\r\n\tat io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:82)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:155)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:106)\r\n\tat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy(Unknown Source)\r\n\t... 13 more\r\n```\r\nBut this shouldn't happen since my config already has `mp.messaging.incoming.news.connector=smallrye-kafka`\r\n\r\n\r\nIf I declare \r\n\r\n```\r\nmp.messaging.incoming.news$1.connector=smallrye-kafka\r\nmp.messaging.incoming.news$2.connector=smallrye-kafka\r\nmp.messaging.incoming.news$3.connector=smallrye-kafka\r\nmp.messaging.incoming.news$4.connector=smallrye-kafka\r\nmp.messaging.incoming.news$5.connector=smallrye-kafka\r\nmp.messaging.incoming.news$6.connector=smallrye-kafka\r\nmp.messaging.incoming.news$7.connector=smallrye-kafka\r\nmp.messaging.incoming.news$8.connector=smallrye-kafka\r\n```\r\n\r\nor remove the dead letter queue config the error goes away\n\n### How to Reproduce?\n\nStart an application with above config\n\n### Output of `uname -a` or `ver`\n\nLinux pc-30.home 6.3.8-100.fc37.x86_64 #1 SMP PREEMPT_DYNAMIC Thu Jun 15 01:51:54 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18 LTS OpenJDK Runtime Environment Microsoft-6841604 (build 17.0.5+8-LTS) OpenJDK 64-Bit Server VM Microsoft-6841604 (build 17.0.5+8-LTS, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.7.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39281/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39281/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

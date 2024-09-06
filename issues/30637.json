@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30637",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30637/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30637/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30637/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30637",
+  "id": 1558427636,
+  "node_id": "I_kwDOCFbutM5c47f0",
+  "number": 30637,
+  "title": "HTTP 404 with j_security_check randomly appears during authentication",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-01-26T16:32:34Z",
+  "updated_at": "2023-01-27T21:28:16Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a form based authentication on my application. Randomly, I have a 404 error with the url /j_security_check when a client send a POST message. Even after a restart of the server, the error can be here. I can't find any logic. Sometimes it works, sometimes it doesn't. It seems to be related to mutual TLS authentication. I want my server to only let through clients that have the correct certificates. So I add that line in my application.properties:\r\nquarkus.http.ssl.client-auth=request\r\nI don't see the error with mutual TLS authentication disabled.\r\n\r\n### Expected behavior\r\n\r\nNo 404 error during authentication\r\n\r\n### Actual behavior\r\n\r\nA 404 error appears during authentication, the url /j_security_check cannot be found.\r\nWith quarkus logs configured in debug mode, I can see this stacktrace:\r\n```\r\nDEBUG [org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext] (vert.x-eventloop-thread-7) Restarting handler chain for exception exception: javax.ws.rs.NotFoundException: HTTP 404 Not Found\r\n        at org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.handle(RestInitialHandler.java:71)\r\n        at io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:94)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n        at org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:48)\r\n        at org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:23)\r\n        at org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:10)\r\n        at io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n        at io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:177)\r\n        at io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n        at io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:84)\r\n        at io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:71)\r\n        at io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n        at io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:177)\r\n        at io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n        at io.quarkus.vertx.http.runtime.VertxHttpRecorder$6.handle(VertxHttpRecorder.java:435)\r\n        at io.quarkus.vertx.http.runtime.VertxHttpRecorder$6.handle(VertxHttpRecorder.java:413)\r\n```\r\n\r\nIt's just the beginning of the stacktrace.\r\n\r\n### How to Reproduce?\r\n\r\nThis is my application.properties:\r\n\r\n```\r\nquarkus.ssl.native=true\r\nquarkus.http.ssl.certificate.key-store-file=data/keystore.pfx\r\nquarkus.http.ssl.certificate.key-store-password=mypassword\r\nquarkus.http.insecure-requests=redirect\r\nquarkus.http.port=8081\r\nquarkus.http.ssl-port=8082\r\nquarkus.http.ssl.certificate.trust-store-file=data/truststore.jks\r\nquarkus.http.ssl.certificate.trust-store-password=mypassword\r\nquarkus.http.ssl.client-auth=request\r\n\r\nquarkus.http.auth.form.enabled=true\r\nquarkus.http.auth.form.redirect-after-login=false\r\nquarkus.http.auth.form.error-page=/auth\r\nquarkus.http.auth.form.login-page=/auth\r\nquarkus.http.auth.form.cookie-name=myapp\r\nquarkus.http.auth.form.post-location=/j_security_check\r\nquarkus.http.auth.form.location-cookie=myapp-redirect-location\r\nquarkus.http.auth.session.encryption-key=XXXXX\r\nquarkus.http.auth.permission.default.paths=/*                              \r\nquarkus.http.auth.permission.default.policy=authenticated\r\n\r\nquarkus.security.users.embedded.enabled=true\r\nquarkus.security.users.embedded.plain-text=true\r\nquarkus.security.users.embedded.users.user=password\r\n\r\nquarkus.http.cors=true\r\nquarkus.http.cors.access-control-allow-credentials=true\r\nquarkus.http.cors.origins=*\r\nquarkus.http.cors.methods=get,post,put,head,options\r\nquarkus.http.cors.headers=accept, authorization, content-type, x-requested-with\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nUbuntu 20.04\r\n\r\n### Output of `java -version`\r\n\r\nAdoptium 11.0.15+10\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.15.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30637/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30637/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

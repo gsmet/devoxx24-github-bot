@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36862",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36862/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36862/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36862/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36862",
+  "id": 1976480486,
+  "node_id": "I_kwDOCFbutM51zrLm",
+  "number": 36862,
+  "title": "Kafka Reactive Streams on Windows: Incoming messages comes way too long after restart",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-11-03T15:47:04Z",
+  "updated_at": "2024-08-21T13:45:20Z",
+  "closed_at": "2024-08-21T13:45:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have app with Kafka Reactive Streams that I run on Windows, when I start application and emit messages to channel `slow-topic`, I get incoming messages from Kafka almost immediately. However when I shutdown application and start it again right now, same procedure produce no results.\r\n\r\n### Expected behavior\r\n\r\nEverything works on Linux just fine. Waiting 50 seconds on Windows after restart (and after app is fully started) before I produce any messages for the topic seems to fix the issue.\r\n\r\n### Actual behavior\r\n\r\nWhen I call `org.eclipse.microprofile.reactive.messaging.Emitter#send(T)` right after app started, I can see in log:\r\n\r\n```\r\n16:45:21,974 INFO  [app] 16:45:21,854 SRMSG18209: Sending message org.eclipse.microprofile.reactive.messaging.Message$8@2e538b4c to Kafka topic 'slow'\r\n16:45:21,974 INFO  [app] 16:45:21,858 SRMSG18209: Sending message org.eclipse.microprofile.reactive.messaging.Message$8@4470c39f to Kafka topic 'slow'\r\n16:45:21,974 INFO  [app] 16:45:21,858 SRMSG18209: Sending message org.eclipse.microprofile.reactive.messaging.Message$8@250d8408 to Kafka topic 'slow'\r\n16:45:21,974 INFO  [app] 16:45:21,858 SRMSG18209: Sending message org.eclipse.microprofile.reactive.messaging.Message$8@6df12b50 to Kafka topic 'slow'\r\n16:45:21,974 INFO  [app] 16:45:21,859 SRMSG18209: Sending message org.eclipse.microprofile.reactive.messaging.Message$8@6b9ecf33 to Kafka topic 'slow'\r\n16:45:21,975 INFO  [app] 16:45:21,859 SRMSG18209: Sending message org.eclipse.microprofile.reactive.messaging.Message$8@293095e4 to Kafka topic 'slow'\r\n16:45:21,975 INFO  [app] 16:45:21,859 SRMSG18209: Sending message org.eclipse.microprofile.reactive.messaging.Message$8@60d4690e to Kafka topic 'slow'\r\n16:45:21,975 INFO  [app] 16:45:21,860 SRMSG18209: Sending message org.eclipse.microprofile.reactive.messaging.Message$8@49b65ef to Kafka topic 'slow'\r\n16:45:21,975 INFO  [app] 16:45:21,860 SRMSG18209: Sending message org.eclipse.microprofile.reactive.messaging.Message$8@19e1c518 to Kafka topic 'slow'\r\n16:45:21,975 INFO  [app] 16:45:21,860 SRMSG18209: Sending message org.eclipse.microprofile.reactive.messaging.Message$8@3453ec75 to Kafka topic 'slow'\r\n16:45:21,975 INFO  [app] 16:45:21,899 SRMSG18211: Message org.eclipse.microprofile.reactive.messaging.Message$8@2e538b4c sent successfully to Kafka topic-partition 'slow-0', with offset 0\r\n16:45:21,976 INFO  [app] 16:45:21,901 SRMSG18211: Message org.eclipse.microprofile.reactive.messaging.Message$8@4470c39f sent successfully to Kafka topic-partition 'slow-0', with offset 1\r\n16:45:21,976 INFO  [app] 16:45:21,902 SRMSG18211: Message org.eclipse.microprofile.reactive.messaging.Message$8@250d8408 sent successfully to Kafka topic-partition 'slow-0', with offset 2\r\n16:45:21,976 INFO  [app] 16:45:21,902 SRMSG18211: Message org.eclipse.microprofile.reactive.messaging.Message$8@6df12b50 sent successfully to Kafka topic-partition 'slow-0', with offset 3\r\n16:45:21,976 INFO  [app] 16:45:21,903 SRMSG18211: Message org.eclipse.microprofile.reactive.messaging.Message$8@6b9ecf33 sent successfully to Kafka topic-partition 'slow-0', with offset 4\r\n16:45:21,976 INFO  [app] 16:45:21,904 SRMSG18211: Message org.eclipse.microprofile.reactive.messaging.Message$8@293095e4 sent successfully to Kafka topic-partition 'slow-0', with offset 5\r\n16:45:21,976 INFO  [app] 16:45:21,904 SRMSG18211: Message org.eclipse.microprofile.reactive.messaging.Message$8@60d4690e sent successfully to Kafka topic-partition 'slow-0', with offset 6\r\n16:45:21,976 INFO  [app] 16:45:21,905 SRMSG18211: Message org.eclipse.microprofile.reactive.messaging.Message$8@49b65ef sent successfully to Kafka topic-partition 'slow-0', with offset 7\r\n16:45:21,977 INFO  [app] 16:45:21,905 SRMSG18211: Message org.eclipse.microprofile.reactive.messaging.Message$8@19e1c518 sent successfully to Kafka topic-partition 'slow-0', with offset 8\r\n16:45:21,977 INFO  [app] 16:45:21,906 SRMSG18211: Message org.eclipse.microprofile.reactive.messaging.Message$8@3453ec75 sent successfully to Kafka topic-partition 'slow-0', with offset 9\r\n```\r\n\r\nbut no incoming messages. When I wait before I emit for 50 seconds, I can see incoming messages. When I don't wait, emit immediately and then wait for 50 seconds, no incoming messages.\r\n\r\n### How to Reproduce?\r\n\r\nSteps to reproduce the behavior:\r\n\r\n1. `git clone https://github.com/michalvavrik/quarkus-test-suite.git`\r\n2. `cd quarkus-test-suite/messaging/kafka-streams-reactive-messaging`\r\n3. `git checkout reproducer/win-kafka-native`\r\n4. `mvn clean verify -Dit.test=KafkaGratefulShutdownIT#shouldWaitForMessagesWhenGratefulShutdownIsEnabled`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows Server 2022\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Temurin-17.0.7+7\r\n\r\n### Quarkus version or git rev\r\n\r\n3.x && 999-SNAPSHOT (didn't try 2.x)\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3\r\n\r\n### Additional information\r\n\r\nKafka Strimzi `quay.io/strimzi/kafka:0.34.0-kafka-3.4.0`\r\nI've tried to add SmallRye Health and everything was ready expect for some issue with topology manager, but that also happens on Linux.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36862/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36862/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

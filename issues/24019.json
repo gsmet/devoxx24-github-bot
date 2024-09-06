@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24019",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24019/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24019/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24019/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24019",
+  "id": 1154578042,
+  "node_id": "I_kwDOCFbutM5E0XZ6",
+  "number": 24019,
+  "title": "In io.quarkus.jackson.ObjectMapperCustomizer, use JsonMapper instead of ObjectMapper ",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-02-28T21:38:20Z",
+  "updated_at": "2024-06-04T06:09:58Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nAs of 2.10, JsonMapper appears to be the preferred system.\r\n\r\nThis will require changing the default ObjectMapper producer and change the interface of ObjectMapperCustomizer.\r\n\r\nWhat backward compatibility is required? \n\n### Implementation ideas\n\n```java\r\npackage io.quarkus.jackson;\r\n\r\nimport com.fasterxml.jackson.databind.ObjectMapper;\r\n\r\nimport com.fasterxml.jackson.databind.json.JsonMapper;\r\nimport io.quarkus.jackson.runtime.ObjectMapperProducer;\r\nimport org.jboss.logging.Logger;\r\n\r\n/**\r\n * Meant to be implemented by a CDI bean that provides arbitrary customization for the default {@link ObjectMapper}.\r\n * <p>\r\n * All implementations (that are registered as CDI beans) are taken into account when producing the default\r\n * {@link ObjectMapper}.\r\n * <p>\r\n * See also {@link ObjectMapperProducer#objectMapper}.\r\n */\r\npublic interface ObjectMapperCustomizer extends Comparable<ObjectMapperCustomizer> {\r\n\r\n    Logger log = Logger.getLogger(ObjectMapperCustomizer.class);\r\n\r\n    int MINIMUM_PRIORITY = Integer.MIN_VALUE;\r\n    // we use this priority to give a chance to other customizers to override serializers / deserializers\r\n    // that might have been added by the modules that Quarkus registers automatically\r\n    // (Jackson will keep the last registered serializer / deserializer for a given type\r\n    // if multiple are registered)\r\n    int QUARKUS_CUSTOMIZER_PRIORITY = MINIMUM_PRIORITY + 100;\r\n    int DEFAULT_PRIORITY = 0;\r\n\r\n    /**\r\n     * Customize the ObjectMapper.  By default, does nothing\r\n     * @param objectMapper The ObjectMapper to customize.\r\n     * @deprecated Use {@link #customize(JsonMapper)}\r\n     */\r\n    @Deprecated(since = \"\")\r\n    default void customize(ObjectMapper objectMapper) {\r\n    }\r\n\r\n    /**\r\n     * Customize the JsonMapper\r\n     * @param jsonMapper The JsonMapper to customize.\r\n     */\r\n    default void customize(JsonMapper jsonMapper) {\r\n        log.info(\"Implement customize(JsonMapper), as customize(ObjectMapper) is deprecated\");\r\n    }\r\n\r\n    /**\r\n     * Defines the priority that the customizers are applied.\r\n     * A lower integer value means that the customizer will be applied after a customizer with a higher priority\r\n     */\r\n    default int priority() {\r\n        return DEFAULT_PRIORITY;\r\n    }\r\n\r\n    default int compareTo(ObjectMapperCustomizer o) {\r\n        return Integer.compare(o.priority(), priority());\r\n    }\r\n}\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24019/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24019/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

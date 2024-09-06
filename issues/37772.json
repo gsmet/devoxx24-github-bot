@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37772",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37772/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37772/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37772/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37772",
+  "id": 2043556503,
+  "node_id": "I_kwDOCFbutM55zjKX",
+  "number": 37772,
+  "title": "[ORM6] Hibernate Search - Class loading issue when starting application",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1664142960,
+      "node_id": "MDU6TGFiZWwxNjY0MTQyOTYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-search",
+      "name": "area/hibernate-search",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Search / Elasticsearch"
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-12-15T11:27:18Z",
+  "updated_at": "2023-12-15T20:47:29Z",
+  "closed_at": "2023-12-15T14:43:46Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm trying to upgrade from Quarkus 3.2.2-Final but facing the same issues as in https://github.com/quarkusio/quarkus/issues/31247 even though the problem should have been fixed upstream.\r\n\r\nI've tried upgrading to 3.2.3-Final, 3.3.0, 3.5.0, 3.6.6 which all fails with the same exception\r\n\r\nQuarkus 3.2.2 was the last version that used hibernate search 6.1.7 before upgrading to 6.2.0.\r\n\r\nmvn help:effective-pom | grep -B 1 -A 1  hibernate-search-engine shows (for 3.2.3-Final)\r\n\r\n          <groupId>org.hibernate.search</groupId>\r\n          <artifactId>hibernate-search-engine</artifactId>\r\n          <version>6.2.0.Final</version>\r\n\r\n(I'm starting the application via mvn quarkus:dev)\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n10:29:00 ERROR traceId=, parentId=, spanId=, sampled= [io.qu.ru.Application] (Quarkus Main Thread) Failed to start application (with profile [dev]): java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat org.niord.core.Main.main(Main.java:19)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:113)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.RuntimeException: jakarta.persistence.PersistenceException: [PersistenceUnit: <default>] Unable to build Hibernate SessionFactory\r\n\tat io.quarkus.hibernate.orm.runtime.JPAConfig.startAll(JPAConfig.java:78)\r\n\tat io.quarkus.hibernate.orm.runtime.HibernateOrmRecorder.startAllPersistenceUnits(HibernateOrmRecorder.java:101)\r\n\tat io.quarkus.deployment.steps.HibernateOrmProcessor$startPersistenceUnits1868654632.deploy_2(Unknown Source)\r\n\tat io.quarkus.deployment.steps.HibernateOrmProcessor$startPersistenceUnits1868654632.deploy(Unknown Source)\r\n\t... 12 more\r\nCaused by: jakarta.persistence.PersistenceException: [PersistenceUnit: <default>] Unable to build Hibernate SessionFactory\r\n\tat io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.persistenceException(FastBootEntityManagerFactoryBuilder.java:126)\r\n\tat io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:86)\r\n\tat io.quarkus.hibernate.orm.runtime.FastBootHibernatePersistenceProvider.createEntityManagerFactory(FastBootHibernatePersistenceProvider.java:74)\r\n\tat jakarta.persistence.Persistence.createEntityManagerFactory(Persistence.java:80)\r\n\tat jakarta.persistence.Persistence.createEntityManagerFactory(Persistence.java:55)\r\n\tat io.quarkus.hibernate.orm.runtime.JPAConfig$LazyPersistenceUnit.get(JPAConfig.java:156)\r\n\tat io.quarkus.hibernate.orm.runtime.JPAConfig$1.run(JPAConfig.java:64)\r\n\t... 1 more\r\nCaused by: org.hibernate.search.util.common.SearchException: HSEARCH700119: Exception while retrieving the Jandex index for code source location 'quarkus:/': HSEARCH900013: Exception while accessing Jandex index for 'quarkus:/': Could not open 'META-INF/jandex.idx' within 'quarkus:/': HSEARCH900016: Cannot open filesystem for code source at 'quarkus:/': HSEARCH900017: Cannot interpret 'quarkus:/' as a local directory or JAR.\r\n\tat org.hibernate.search.mapper.pojo.mapping.definition.annotation.impl.AnnotationMappingConfigurationContextImpl.jandexIndexForCodeSourceLocation(AnnotationMappingConfigurationContextImpl.java:234)\r\n\tat org.hibernate.search.mapper.pojo.mapping.definition.annotation.impl.AnnotationMappingConfigurationContextImpl.buildJandexIndex(AnnotationMappingConfigurationContextImpl.java:201)\r\n\tat org.hibernate.search.mapper.pojo.mapping.definition.annotation.impl.AnnotationMappingConfigurationContextImpl.lambda$configure$0(AnnotationMappingConfigurationContextImpl.java:127)\r\n\tat org.hibernate.search.util.common.jar.spi.JandexBehavior.doWithJandex(JandexBehavior.java:17)\r\n\tat org.hibernate.search.mapper.pojo.mapping.definition.annotation.impl.AnnotationMappingConfigurationContextImpl.configure(AnnotationMappingConfigurationContextImpl.java:126)\r\n\tat org.hibernate.search.mapper.pojo.mapping.spi.AbstractPojoMappingInitiator.configure(AbstractPojoMappingInitiator.java:134)\r\n\tat org.hibernate.search.mapper.orm.mapping.impl.HibernateOrmMappingInitiator.configure(HibernateOrmMappingInitiator.java:163)\r\n\tat org.hibernate.search.engine.common.impl.SearchIntegrationBuilder$MappingBuildingState.collect(SearchIntegrationBuilder.java:270)\r\n\tat org.hibernate.search.engine.common.impl.SearchIntegrationBuilder.prepareBuild(SearchIntegrationBuilder.java:148)\r\n\tat org.hibernate.search.mapper.orm.bootstrap.impl.HibernateSearchPreIntegrationService$NotBooted.doBootFirstPhase(HibernateSearchPreIntegrationService.java:279)\r\n\tat org.hibernate.search.mapper.orm.bootstrap.impl.HibernateOrmIntegrationBooterImpl.bootNow(HibernateOrmIntegrationBooterImpl.java:179)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:646)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n\tat java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2147)\r\n\tat org.hibernate.search.mapper.orm.bootstrap.impl.HibernateSearchSessionFactoryObserver.sessionFactoryCreated(HibernateSearchSessionFactoryObserver.java:41)\r\n\tat org.hibernate.internal.SessionFactoryObserverChain.sessionFactoryCreated(SessionFactoryObserverChain.java:35)\r\n\tat org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:293)\r\n\tat io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:84)\r\n\t... 6 more\r\nCaused by: org.hibernate.search.util.common.SearchException: HSEARCH900013: Exception while accessing Jandex index for 'quarkus:/': Could not open 'META-INF/jandex.idx' within 'quarkus:/': HSEARCH900016: Cannot open filesystem for code source at 'quarkus:/': HSEARCH900017: Cannot interpret 'quarkus:/' as a local directory or JAR.\r\n\tat org.hibernate.search.util.common.jar.impl.JandexUtils.readOrBuildIndex(JandexUtils.java:113)\r\n\tat org.hibernate.search.mapper.pojo.mapping.definition.annotation.impl.AnnotationMappingConfigurationContextImpl.jandexIndexForCodeSourceLocation(AnnotationMappingConfigurationContextImpl.java:227)\r\n\t... 23 more\r\nCaused by: java.io.IOException: Could not open 'META-INF/jandex.idx' within 'quarkus:/': HSEARCH900016: Cannot open filesystem for code source at 'quarkus:/': HSEARCH900017: Cannot interpret 'quarkus:/' as a local directory or JAR.\r\n\tat org.hibernate.search.util.common.jar.impl.CodeSource.readOrNull(CodeSource.java:122)\r\n\tat org.hibernate.search.util.common.jar.impl.JandexUtils.doReadIndex(JandexUtils.java:127)\r\n\tat org.hibernate.search.util.common.jar.impl.JandexUtils.readOrBuildIndex(JandexUtils.java:101)\r\n\t... 24 more\r\nCaused by: java.io.IOException: HSEARCH900016: Cannot open filesystem for code source at 'quarkus:/': HSEARCH900017: Cannot interpret 'quarkus:/' as a local directory or JAR.\r\n\tat org.hibernate.search.util.common.jar.impl.CodeSource.initFileSystem(CodeSource.java:162)\r\n\tat org.hibernate.search.util.common.jar.impl.CodeSource.classesPathOrFail(CodeSource.java:128)\r\n\tat org.hibernate.search.util.common.jar.impl.CodeSource.readOrNull(CodeSource.java:81)\r\n\t... 26 more\r\n\tSuppressed: java.lang.NullPointerException: Cannot read the array length because \"buf\" is null\r\n\t\tat java.base/java.io.ByteArrayInputStream.<init>(ByteArrayInputStream.java:108)\r\n\t\tat io.quarkus.bootstrap.classloading.MemoryClassPathElement$MemoryUrlStreamHandler$1.getInputStream(MemoryClassPathElement.java:146)\r\n\t\tat java.base/java.net.URL.openStream(URL.java:1161)\r\n\t\tat org.hibernate.search.util.common.jar.impl.CodeSource.readOrNull(CodeSource.java:112)\r\n\t\t... 26 more\r\nCaused by: java.io.IOException: HSEARCH900017: Cannot interpret 'quarkus:/' as a local directory or JAR.\r\n\tat org.hibernate.search.util.common.jar.impl.CodeSource.initFileSystem(CodeSource.java:158)\r\n\t... 28 more\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nDarwin Kernel Version 22.6.0\n\n### Output of `java -version`\n\njava version \"17.0.3.1\" 2022-04-22 LTS\n\n### Quarkus version or git rev\n\n3.2.3-Final, 3.3.0, 3.5.0, 3.6.6\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.8.5\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37772/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37772/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

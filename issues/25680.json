@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25680",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25680/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25680/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25680/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25680",
+  "id": 1241684627,
+  "node_id": "I_kwDOCFbutM5KApqT",
+  "number": 25680,
+  "title": "gRPC client error message on application shutdown",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-05-19T12:16:21Z",
+  "updated_at": "2022-09-08T08:00:25Z",
+  "closed_at": "2022-09-08T08:00:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen the grpc client is connected to a service, with a server-side streaming call, on application shutdown the following message is printed in the log:\r\n```\r\njava.lang.Exception: Missing onFailure/onError handler in the subscriber\r\n        at io.smallrye.mutiny.subscription.Subscribers.lambda$static$0(Subscribers.java:19)\r\n        at io.smallrye.mutiny.subscription.Subscribers$CallbackBasedSubscriber.onFailure(Subscribers.java:94)\r\n        at io.smallrye.mutiny.operators.multi.builders.BaseMultiEmitter.failed(BaseMultiEmitter.java:90)\r\n        at io.smallrye.mutiny.operators.multi.builders.BufferItemMultiEmitter.drain(BufferItemMultiEmitter.java:106)\r\n        at io.smallrye.mutiny.operators.multi.builders.BufferItemMultiEmitter.failed(BufferItemMultiEmitter.java:59)\r\n        at io.smallrye.mutiny.operators.multi.builders.BaseMultiEmitter.fail(BaseMultiEmitter.java:79)\r\n        at io.smallrye.mutiny.operators.multi.builders.SerializedMultiEmitter.drainLoop(SerializedMultiEmitter.java:111)\r\n        at io.smallrye.mutiny.operators.multi.builders.SerializedMultiEmitter.drain(SerializedMultiEmitter.java:93)\r\n        at io.smallrye.mutiny.operators.multi.builders.SerializedMultiEmitter.onFailure(SerializedMultiEmitter.java:78)\r\n        at io.smallrye.mutiny.operators.multi.builders.SerializedMultiEmitter.fail(SerializedMultiEmitter.java:150)\r\n        at io.quarkus.grpc.stubs.MultiStreamObserver.onError(MultiStreamObserver.java:21)\r\n        at io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:478)\r\n        at io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)\r\n        at io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)\r\n        at io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)\r\n        at io.quarkus.grpc.runtime.supports.IOThreadClientInterceptor$1$1.onClose(IOThreadClientInterceptor.java:72)\r\n        at io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:562)\r\n        at io.grpc.internal.ClientCallImpl.access$300(ClientCallImpl.java:70)\r\n        at io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:743)\r\n        at io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:722)\r\n        at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)\r\n        at io.grpc.internal.SerializeReentrantCallsDirectExecutor.execute(SerializeReentrantCallsDirectExecutor.java:49)\r\n        at io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl.closedInternal(ClientCallImpl.java:751)\r\n        at io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl.closed(ClientCallImpl.java:687)\r\n        at io.grpc.internal.ForwardingClientStreamListener.closed(ForwardingClientStreamListener.java:34)\r\n        at io.grpc.internal.InternalSubchannel$CallTracingTransport$1$1.closed(InternalSubchannel.java:693)\r\n        at io.grpc.internal.AbstractClientStream$TransportState.closeListener(AbstractClientStream.java:459)\r\n        at io.grpc.internal.AbstractClientStream$TransportState.access$400(AbstractClientStream.java:221)\r\n        at io.grpc.internal.AbstractClientStream$TransportState$1.run(AbstractClientStream.java:442)\r\n        at io.grpc.internal.AbstractClientStream$TransportState.deframerClosed(AbstractClientStream.java:278)\r\n        at io.grpc.internal.Http2ClientStreamTransportState.deframerClosed(Http2ClientStreamTransportState.java:31)\r\n        at io.grpc.internal.MessageDeframer.close(MessageDeframer.java:233)\r\n        at io.grpc.internal.AbstractStream$TransportState.closeDeframer(AbstractStream.java:198)\r\n        at io.grpc.internal.AbstractClientStream$TransportState.transportReportStatus(AbstractClientStream.java:445)\r\n        at io.grpc.internal.AbstractClientStream$TransportState.transportReportStatus(AbstractClientStream.java:401)\r\n        at io.grpc.netty.NettyClientHandler$6.visit(NettyClientHandler.java:789)\r\n        at io.netty.handler.codec.http2.DefaultHttp2Connection$ActiveStreams.forEachActiveStream(DefaultHttp2Connection.java:978)\r\n        at io.netty.handler.codec.http2.DefaultHttp2Connection.forEachActiveStream(DefaultHttp2Connection.java:209)\r\n        at io.grpc.netty.NettyClientHandler.forcefulClose(NettyClientHandler.java:780)\r\n        at io.grpc.netty.NettyClientHandler.write(NettyClientHandler.java:336)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeWrite0(AbstractChannelHandlerContext.java:717)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeWrite(AbstractChannelHandlerContext.java:709)\r\n        at io.netty.channel.AbstractChannelHandlerContext.write(AbstractChannelHandlerContext.java:792)\r\n        at io.netty.channel.AbstractChannelHandlerContext.write(AbstractChannelHandlerContext.java:702)\r\n        at io.netty.channel.AbstractChannelHandlerContext.write(AbstractChannelHandlerContext.java:697)\r\n        at io.netty.channel.DefaultChannelPipeline.write(DefaultChannelPipeline.java:1010)\r\n        at io.netty.channel.AbstractChannel.write(AbstractChannel.java:296)\r\n        at io.grpc.netty.NettyClientTransport$6.run(NettyClientTransport.java:336)\r\n        at io.grpc.netty.WriteQueue$RunnableCommand.run(WriteQueue.java:183)\r\n        at io.grpc.netty.WriteQueue.flush(WriteQueue.java:128)\r\n        at io.grpc.netty.WriteQueue.access$000(WriteQueue.java:34)\r\n        at io.grpc.netty.WriteQueue$1.run(WriteQueue.java:46)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: io.grpc.StatusRuntimeException: UNAVAILABLE: Channel shutdownNow invoked\r\n        at io.grpc.Status.asRuntimeException(Status.java:535)\r\n        ... 48 more\r\n2022-05-19 14:15:16,\r\n```\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25680/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25680/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

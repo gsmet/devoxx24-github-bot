@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33124",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33124/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33124/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33124/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33124",
+  "id": 1695988030,
+  "node_id": "I_kwDOCFbutM5lFrk-",
+  "number": 33124,
+  "title": "Hibernate/Panache issue after migrating to Quarkus 3",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-05-04T13:12:18Z",
+  "updated_at": "2023-05-26T11:07:29Z",
+  "closed_at": "2023-05-09T09:41:09Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have recently migrated my project to Quarkus 3, which was working nicely on Quarkus 2, following all the guides I could find in Quarkus and Hibernate and fixing forward whatever didn't work when running the Tests in my project. After all, I still have some failing tests - with all of them failing because of a `NullPointerException` in Hibernate's `StandardMutationExecutorService#createExecutor`.\r\n\r\nThe problem ocurrs when I am trying to add a new `@Embeddable` to a `@ElementCollection` `@CollectionTable` to an existing entity ([minimalistic reproducer project](https://github.com/mzellho/quarkus-embeddable-reproducer) has a [test case](https://github.com/mzellho/quarkus-embeddable-reproducer/blob/master/src/test/java/org/acme/MyEntityServiceTest.java) prepared).\r\n\r\nWhen I was debugging Hibernate, I may or may not have found some Copy & Paste Error somewhere in the neighbourhood of the executed code. In case that this really is a bug over there and for more context, here's the [corresponding PR](https://github.com/hibernate/hibernate-orm/pull/6493), but I don't really think that this is the issue.\r\n\r\nI also tried to reproduce the situation with a plain Hibernate ORM 6 Reproducer Test Case - with no success, I never got it failing. Therefore, it might have something to do with Panache?\r\n\r\n### Expected behavior\r\n\r\nWhen persisting an existing Entity after adding a new Embeddable, the Entity and the new Embeddable should be persisted.\r\n\r\n### Actual behavior\r\n\r\nA NullPointerException is thrown:\r\n\r\n\r\n```\r\njava.lang.NullPointerException: Cannot invoke \"org.hibernate.sql.model.PreparableMutationOperation.canBeBatched(org.hibernate.engine.jdbc.batch.spi.BatchKey, int)\" because \"jdbcOperation\" is null\r\n\r\n\tat org.hibernate.engine.jdbc.mutation.internal.StandardMutationExecutorService.createExecutor(StandardMutationExecutorService.java:83)\r\n\tat org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorStandard.doUpdate(UpdateRowsCoordinatorStandard.java:52)\r\n\tat org.hibernate.persister.collection.mutation.AbstractUpdateRowsCoordinator.updateRows(AbstractUpdateRowsCoordinator.java:46)\r\n\tat org.hibernate.persister.collection.BasicCollectionPersister.updateRows(BasicCollectionPersister.java:129)\r\n\tat org.hibernate.action.internal.CollectionUpdateAction.execute(CollectionUpdateAction.java:84)\r\n\tat org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:616)\r\n\tat org.hibernate.engine.spi.ActionQueue.lambda$executeActions$1(ActionQueue.java:487)\r\n\tat java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:729)\r\n\tat org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:484)\r\n\tat org.hibernate.event.internal.AbstractFlushingEventListener.performExecutions(AbstractFlushingEventListener.java:358)\r\n\tat org.hibernate.event.internal.DefaultFlushEventListener.onFlush(DefaultFlushEventListener.java:39)\r\n\tat org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:127)\r\n\tat org.hibernate.internal.SessionImpl.doFlush(SessionImpl.java:1412)\r\n\tat org.hibernate.internal.SessionImpl.flush(SessionImpl.java:1398)\r\n\tat io.quarkus.hibernate.orm.runtime.session.TransactionScopedSession.flush(TransactionScopedSession.java:234)\r\n\tat org.hibernate.engine.spi.SessionLazyDelegator.flush(SessionLazyDelegator.java:76)\r\n\tat org.hibernate.Session_3a974b6a18ac399f675913d732c105426414d370_Synthetic_ClientProxy.flush(Unknown Source)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.AbstractJpaOperations.flush(AbstractJpaOperations.java:136)\r\n\tat io.quarkus.hibernate.orm.panache.PanacheEntityBase.persistAndFlush(PanacheEntityBase.java:67)\r\n\tat org.acme.MyEntityService.lambda$addMyEmbeddable$2(MyEntityService.java:50)\r\n\tat java.base/java.util.Optional.map(Optional.java:260)\r\n\tat org.acme.MyEntityService.addMyEmbeddable(MyEntityService.java:49)\r\n\tat org.acme.MyEntityService_Subclass.addMyEmbeddable$$superforward(Unknown Source)\r\n\tat org.acme.MyEntityService_Subclass$$function$$1.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:74)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:63)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.invokeInCallerTx(TransactionalInterceptorBase.java:335)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired.doIntercept(TransactionalInterceptorRequired.java:40)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.intercept(TransactionalInterceptorBase.java:61)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired.intercept(TransactionalInterceptorRequired.java:32)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:38)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:26)\r\n\tat org.acme.MyEntityService_Subclass.addMyEmbeddable(Unknown Source)\r\n\tat org.acme.MyEntityService_ClientProxy.addMyEmbeddable(Unknown Source)\r\n\tat org.acme.MyEntityServiceTest.addMyEmbeddable_withExistingEntity_shouldAddMyEmbeddable(MyEntityServiceTest.java:31)\r\n\tat org.acme.MyEntityServiceTest_Subclass.addMyEmbeddable_withExistingEntity_shouldAddMyEmbeddable$$superforward(Unknown Source)\r\n\tat org.acme.MyEntityServiceTest_Subclass$$function$$1.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:74)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:63)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TestTransactionInterceptor.intercept(TestTransactionInterceptor.java:45)\r\n\tat io.quarkus.narayana.jta.runtime.interceptor.TestTransactionInterceptorGenerated_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:38)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:26)\r\n\tat org.acme.MyEntityServiceTest_Subclass.addMyEmbeddable_withExistingEntity_shouldAddMyEmbeddable(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:578)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.runExtensionMethod(QuarkusTestExtension.java:999)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.interceptTestMethod(QuarkusTestExtension.java:813)\r\n        [...]\r\n\tat com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:55)\r\n\r\n\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nI have created a [minimalistic reproducer project](https://github.com/mzellho/quarkus-embeddable-reproducer). Clone it and run [MyEntityServiceTest](https://github.com/mzellho/quarkus-embeddable-reproducer/blob/master/src/test/java/org/acme/MyEntityServiceTest.java):\r\n\r\n- `createMyEntityAndAddMyEmbeddable_shouldAddMyEmbeddable` creates a new Entity and adds a new Embeddable --> works fine\r\n- `addMyEmbeddable_withExistingEntity_shouldAddMyEmbeddable` fetches an existing Entity and adds a new Embeddable --> fails with NullPointerException\r\n\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n6.2.0-20-generic\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"20\" 2023-03-21 OpenJDK Runtime Environment (build 20+36-2344) OpenJDK 64-Bit Server VM (build 20+36-2344, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33124/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33124/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

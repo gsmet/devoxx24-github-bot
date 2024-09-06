@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38284",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38284/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38284/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38284/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38284",
+  "id": 2088596672,
+  "node_id": "I_kwDOCFbutM58fXTA",
+  "number": 38284,
+  "title": "Smallrye-Reactive-Messages \"dead letter queue\" on Confluent Kafka does not default to Avro serializer for topics that use Avro deserializers",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 4147701997,
+      "node_id": "LA_kwDOCFbutM73OOjt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/m1",
+      "name": "env/m1",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Apple M1 machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2024-01-18T16:02:26Z",
+  "updated_at": "2024-08-21T13:46:26Z",
+  "closed_at": "2024-08-21T13:46:06Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a Kafka topic with an Avro schema, both on the original topic and on the associated dead letter queue topic. \r\nUntil Quarkus < 3.5 I used this configuration and it worked fine (note that there is no serialized specified on the dead letter queue value):\r\n```\r\nmp.messaging.incoming.my-topic.topic=my_topic\r\nmp.messaging.incoming.my-topic.value.deserializer=io.confluent.kafka.serializers.KafkaAvroDeserializer\r\nmp.messaging.incoming.my-topic.specific.avro.reader=true\r\nmp.messaging.incoming.my-topic.failure-strategy=dead-letter-queue\r\nmp.messaging.incoming.my-topic.dead-letter-queue.topic=my_topic_dlq\r\n```\r\n\r\nWith Quarkus >= 3.5 the messages in dead letter do not have anymore the payload from the original message (value was always null).\r\nThe workaround is to specify the serializer for the dead letter queue value:\r\n`mp.messaging.incoming.my-topic.dead-letter-queue.value.serializer=io.confluent.kafka.serializers.KafkaAvroSerializer\r\n`\r\n\n\n### Expected behavior\n\nThe dead letter queue is serialized with the Avro serializer based on the deserializer used on the original topic.\n\n### Actual behavior\n\nThe dead letter queue is serialized with the wrong serializer and the value is null\n\n### How to Reproduce?\n\n1. configure a project with Quarkus < 3.5 that uses Confluent Kafka + Avro on the value\r\n2. update Quarkus >= 3.5\r\n3. the dead letter queue value is null\n\n### Output of `uname -a` or `ver`\n\nDarwin M1-83300006.local 23.2.0 Darwin Kernel Version 23.2.0: Wed Nov 15 21:55:06 PST 2023; root:xnu-10002.61.3~2/RELEASE_ARM64_T6020 arm64\n\n### Output of `java -version`\n\nopenjdk version \"21.0.1\" 2023-10-17 LTS OpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12-LTS) OpenJDK 64-Bit Server VM Temurin-21.0.1+12 (build 21.0.1+12-LTS, mixed mode)\n\n### Quarkus version or git rev\n\n3.5\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /Users/antoniobonifacio/.sdkman/candidates/maven/current Java version: 21.0.1, vendor: Eclipse Adoptium, runtime: /Users/antoniobonifacio/.sdkman/candidates/java/21.0.1-tem Default locale: it_IT, platform encoding: UTF-8 OS name: \"mac os x\", version: \"14.2.1\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\nProbably related to https://github.com/quarkusio/quarkus/pull/36347",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38284/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38284/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

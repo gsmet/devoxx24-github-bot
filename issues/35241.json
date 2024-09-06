@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35241",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35241/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35241/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35241/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35241",
+  "id": 1839570336,
+  "node_id": "I_kwDOCFbutM5tpZ2g",
+  "number": 35241,
+  "title": "Quarkus GELF Logging not working in Native Mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283428650,
+      "node_id": "MDU6TGFiZWwxMjgzNDI4NjUw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/logging",
+      "name": "area/logging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-08-07T14:25:01Z",
+  "updated_at": "2024-08-21T06:37:41Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi, I am trying to use quarkus and send logging to graylog using the kafka transport mechanism. It's all fine with JVM mode, but is not working after building and running the native binary.\r\n\r\nBasically I created a new project using the quarkus CLI and added the `logging-gelf` extension, added the `quarkus-kafka-client` library and setup my appplication properties properly with the folling settings:\r\n\r\n```\r\nquarkus.http.port=9597\r\nquarkus.http.test-port=9598\r\nquarkus.devservices.enabled=false\r\n\r\nquarkus.log.handler.gelf.enabled=true\r\nquarkus.log.handler.gelf.host=kafka://localhost#quarkus-gelf-kafka\r\nquarkus.log.handler.gelf.port=19092\r\nquarkus.log.handler.gelf.facility=quarkus-gelf-kafka\r\nquarkus.log.handler.gelf.include-full-mdc=true\r\nquarkus.log.handler.gelf.origin-host=local\r\nquarkus.log.handler.gelf.skip-hostname-resolution=true\r\n```\r\n\r\n### Expected behavior\r\n\r\nExpect native binary work as the JVM mode\r\n\r\n### Actual behavior\r\n\r\nThe application starts with message `LogManager error of type WRITE_FAILURE: Could not send GELF message` and no logs are sent to the kafka topic.\r\n\r\n### How to Reproduce?\r\n\r\nI created an example project at my github with all the instructions  in the README and a docker-compose.yaml to run kafka and kafka console ui: https://github.com/ericsouza/quarkus-gelf-kafka\r\n\r\nBut basically is just create a new quarkus project using the CLI\r\n\r\n```bash\r\nquarkus create app com.ericsouza:quarkus-gelf-kafka \\\r\n    --extension='resteasy-reactive'\r\n```\r\n\r\nAdd the logging-gelf extension and the quarkus-kafka-client to the pom.xml:\r\n```\r\n<dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-logging-gelf</artifactId>\r\n</dependency>\r\n<dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-kafka-client</artifactId>\r\n      <version>3.2.3.Final</version>\r\n</dependency>\r\n```\r\n\r\nsetup properties properly to work with kafka:\r\n```\r\nquarkus.devservices.enabled=false\r\n\r\nquarkus.log.handler.gelf.enabled=true\r\nquarkus.log.handler.gelf.host=kafka://localhost#quarkus-gelf-kafka\r\nquarkus.log.handler.gelf.port=19092\r\nquarkus.log.handler.gelf.facility=quarkus-gelf-kafka\r\nquarkus.log.handler.gelf.include-full-mdc=true\r\nquarkus.log.handler.gelf.origin-host=local\r\nquarkus.log.handler.gelf.skip-hostname-resolution=true\r\n```\r\n\r\nafter the `#` in the gelf host is the kafka topic name to send the logs\r\n\r\nnow you can call the `/hello` endpoint and see that in the jvm mode logs are produced correctly but in the native mode aren't.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux pop-os 6.0.12-76060012-generic #202212290932~1674066459~20.04~3cd2bf3-Ubuntu SMP PREEMPT_DYNAMI x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17\" 2021-09-14 OpenJDK Runtime Environment Temurin-17+35 (build 17+35) OpenJDK 64-Bit Server VM Temurin-17+35 (build 17+35, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nNone is installed\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35241/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35241/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

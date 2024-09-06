@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41188",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41188/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41188/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41188/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41188",
+  "id": 2350913231,
+  "node_id": "I_kwDOCFbutM6MIBbP",
+  "number": 41188,
+  "title": "Remove @RestClient annotation and handle like normal bean",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 19,
+  "created_at": "2024-06-13T11:34:53Z",
+  "updated_at": "2024-06-15T08:31:01Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nI wondered if it would be possible to remove the `@RestClient` annotation.\r\n\r\n\r\nCurrently I can use the RestClient in my class like this.\r\n\r\n```\r\npackage org.acme;\r\n\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\nimport java.util.Set;\r\nimport org.eclipse.microprofile.rest.client.inject.RestClient;\r\n\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n    @RestClient\r\n    @Inject // this seems not to be mandatory \r\n    MyRemoteService myRemoteService;\r\n\r\n\r\n\r\n    @GET\r\n    public Set<MyRemoteService.Extension> hello()\r\n    {\r\n        return myRemoteService.getExtensionsById(\"io.quarkus:quarkus-rest\");\r\n    }\r\n}\r\n```\r\n\r\nand the rest client is configured like this.\r\n\r\n```\r\npackage org.acme;\r\n\r\nimport jakarta.enterprise.context.ApplicationScoped;\r\nimport org.eclipse.microprofile.rest.client.inject.RegisterRestClient;\r\n\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\nimport jakarta.ws.rs.QueryParam;\r\nimport java.util.List;\r\nimport java.util.Set;\r\n\r\n@RegisterRestClient(baseUri = \"https://stage.code.quarkus.io/api\")\r\n@ApplicationScoped\r\npublic interface MyRemoteService {\r\n\r\n    @GET\r\n    @Path(\"/extensions\")\r\n    Set<Extension> getExtensionsById(@QueryParam(\"id\") String id);\r\n\r\n    class Extension {\r\n        public String id;\r\n        public String name;\r\n        public String shortName;\r\n        public List<String> keywords;\r\n    }\r\n}\r\n```\r\n\r\nNow I thought to myself if we could completely remove the `@RestClient` annotation and instead handle it like a normal bean which can be injected with constructor injection. \r\nThis would result in code like this\r\n\r\n```\r\npackage org.acme;\r\n\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\nimport java.util.Set;\r\n\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n    \r\n    private final MyRemoteService myRemoteService;\r\n\r\n    public GreetingResource(MyRemoteService myRemoteService) {\r\n        this.myRemoteService = myRemoteService;\r\n    }\r\n\r\n\r\n    @GET\r\n    public Set<MyRemoteService.Extension> hello()\r\n    {\r\n        return myRemoteService.getExtensionsById(\"io.quarkus:quarkus-rest\");\r\n    }\r\n}\r\n```\r\n\r\nif we do it like this my other class does not even have to know that we are injecting a rest client instead of a normal bean. \r\nI think we could decouple both classes more from each other and testing may become easier if we could use constructor injection instead of field injection.\r\n\r\n\r\nDoes this make any sense or did I miss some real obvious points?\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41188/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41188/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

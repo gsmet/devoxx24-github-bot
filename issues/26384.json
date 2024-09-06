@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26384",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26384/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26384/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26384/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26384",
+  "id": 1285959591,
+  "node_id": "I_kwDOCFbutM5Mpi-n",
+  "number": 26384,
+  "title": "Quarkus error after compiling native with Jaeger Tracing",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102616,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyNjE2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jaeger",
+      "name": "area/jaeger",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-06-27T15:16:07Z",
+  "updated_at": "2022-12-20T15:10:02Z",
+  "closed_at": "2022-12-20T15:10:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am trying to compile an application in Quarkus Native and monitor it using Jaeger Traicing, however, I am encountering a problem that when compiling it is taking the wrong url and not the one I should use to work with opentracing:\r\n\r\nExample application.properties file:\r\n\r\n```\r\nquarkus.datasource.db-kind=oracle\r\nquarkus.datasource.jdbc.driver=io.opentracing.contrib.jdbc.TracingDriver\r\nquarkus.datasource.jdbc.url=jdbc:tracing:oracle:thin:@172.28.2.134:1522/IVR\r\nquarkus.datasource.username=${USERNAME_CONNECTION_BD:xxxxxxxxxxxxx}\r\nquarkus.datasource.password=${PASSWORD_CONNECTION_BD:xxxxxxxxxx}\r\nquarkus.http.port=${PORT:8082}\r\nquarkus.http.ssl-port=${PORT-SSl:8083}\r\n\r\nquarkus.jaeger.service-name=find-puk-code-tracing\r\nquarkus.jaeger.sampler-type=const\r\nquarkus.jaeger.sampler-param=1\r\nquarkus.jaeger.endpoint=${URL_JAEGER:http://10.161.169.24:14268/api/traces}\r\nquarkus.native.add-all-charsets=true\r\nquarkus.swagger-ui.path=/api/FindPukCodeBS/swagger-ui\r\nquarkus.smallrye-openapi.path=/api/FindPukCodeBS/swagger\r\nquarkus.swagger-ui.always-include=true\r\n```\r\n\r\nLocally it works wonderfully, but when I deploy at the kubernetes level it is not taking the url correctly, as follows::\r\n\r\nquarkus.datasource.jdbc.url=jdbc:tracing:oracle:thin:@172.28.2.134:1522/IVR\r\n\r\nIn the logs that appear to me it seems to take the url without the word tracing, however as you can see at the log level it prints the url that is being passed in the application.properties:\r\n\r\n![error](https://user-images.githubusercontent.com/31625237/175974197-5e6ea911-4305-427e-9bb1-259d85ef1a41.png)\r\n\r\nThat could be happening? I don't understand, and I don't have the value burned anywhere, I'm taking it directly from the application.properties.\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nMonitoring with Jaeger Tracing\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.3\" 2022-04-19 OpenJDK Runtime Environment GraalVM CE 22.1.0 (build 17.0.3+7-jvmci-22.1-b06) OpenJDK 64-Bit Server VM GraalVM CE 22.1.0 (build 17.0.3+7-jvmci-22.1-b06, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nGraalVM CE 22.1.0\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.5.4 (Red Hat 3.5.4-5)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26384/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26384/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

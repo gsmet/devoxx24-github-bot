@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35704",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35704/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35704/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35704/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35704",
+  "id": 1879718542,
+  "node_id": "I_kwDOCFbutM5wCjqO",
+  "number": 35704,
+  "title": "Hibernate Reactive persist does nothing and does not fail",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2023-09-04T07:53:25Z",
+  "updated_at": "2023-09-04T21:01:45Z",
+  "closed_at": "2023-09-04T11:21:41Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm facing an odd behavior trying to persist some entities using Hibernate Reactive.\r\n\r\nThe persist call works without errors and the primary key is attached to the entity, but **nothing is persisted** to the database and there is no error at all.\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nTo either fail if something is wrong or store the entity accordingly, but not silently do nothing.\r\n\r\n### Actual behavior\r\n\r\nThese are the logs I'm getting for\r\n```\r\n2023-09-04 09:43:20,237 INFO  [com.lau.aut.dev.DevAuthApi] (vert.x-eventloop-thread-2) now storing User\r\n2023-09-04 09:43:20,243 INFO  [io.qua.mut.run.MutinyInfrastructure] (vert.x-eventloop-thread-2) user.0 | onSubscribe()\r\nHibernate:\r\n    select\r\n        nextval('myschema.User_SEQ')\r\n2023-09-04 09:43:20,256 INFO  [io.qua.mut.run.MutinyInfrastructure] (vert.x-eventloop-thread-2) user.0 | onItem(User(super=BaseUser(super=BaseUUIDEntity(super=BaseEntity(id=51, createdAt=null, updatedAt=null), uuid=28378386-\r\n8d83-41bb-a6d3-c09a7850c581),  name=Dev, email=dev@dev.com, birthdate=null, role=null, password=null, verified=false, address=null,  additionalProperties=null)))\r\n2023-09-04 09:43:20,258 INFO  [com.lau.aut.dev.DevAuthApi] (vert.x-eventloop-thread-2) User newly created\r\nHibernate: \r\n    select\r\n        nextval('myschema.file_SEQ')\r\n```\r\n\r\nThis related code\r\n\r\n```\r\n    private <T extends BaseEntity> Function<? super T, Uni<?>> storeUserInDatabase() {\r\n        return user -> {\r\n            log.info(\"now storing User\");\r\n            return repository.persist((User) user)\r\n                      .log(\"user\")\r\n                      .onItem().ifNotNull().invoke(() -> log.info(\"User newly created\"));\r\n        };\r\n    }\r\n```\r\n\r\n\r\nThe id is assigned by the sequence generator\r\n\r\n```\r\n\r\n    @Id\r\n    @GeneratedValue(strategy = GenerationType.SEQUENCE)\r\n    @GenericGenerator(name = \"sequenceIdGenerator\",\r\n            type = SequenceStyleGenerator.class,\r\n            parameters = @Parameter(name = SequenceStyleGenerator.\r\n                    CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, value = \"true\"))\r\n    public Long id;\r\n```\r\n\r\nand the persist call does not persist anything\r\n\r\n### How to Reproduce?\r\n\r\nNot sure if this is related to any config properties, entity setup, reactive dependencies or anything else.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.3.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n8.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35704/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35704/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23967",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23967/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23967/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23967/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23967",
+  "id": 1150389355,
+  "node_id": "I_kwDOCFbutM5EkYxr",
+  "number": 23967,
+  "title": "Bouncy Castle and Bouncy Castle FIPS Native test failures: Cannot load new security provider at runtime: BC / BCFIPS",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3866841773,
+      "node_id": "LA_kwDOCFbutM7me1Kt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/securepipeline",
+      "name": "area/securepipeline",
+      "color": "0366d6",
+      "default": false,
+      "description": "issues related to ensure Quarkus can be used in a secure pipeline setups like FIPS or similar"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2022-02-25T12:27:15Z",
+  "updated_at": "2022-05-23T12:06:58Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nBouncy Castle and Bouncy Castle FIPS tests work fine with FIPS aware HotSpot, but those tests fail to start with FIPS aware native-image.\r\n```\r\n[INFO] Quarkus - Integration Tests - Bouncy Castle ........ SUCCESS [ 18.434 s]\r\n[INFO] Quarkus - Integration Tests - Bouncy Castle FIPS ... SUCCESS [ 13.958 s]\r\n```\r\n\r\nNotes from Severin:\r\n> Bouncy Castle provider isn't supported in FIPS mode. The RHEL certified FIPS provider via OpenJDK is NSS, thus BC\r\n> cannot be used (without recertification). The same would be true for BCFIPS.\r\n\r\n**TODO:**\r\n- [ ]  Check what is going on in HotSpot mode and how come it seems to pass.\r\n- [ ]  These components should be probably documented as FIPS incompatible in this setup...?\r\n\r\n## Bouncy Castle native\r\n```\r\nCaused by: com.oracle.svm.core.jdk.UnsupportedFeatureError: Cannot load new security provider at runtime: BC.\r\n```\r\nFull log: [gh-q-23967-bc.txt](https://karms.biz/pastebin/gh-q-23967-bc.txt)\r\n\r\n## Bouncy Castle FIPS native\r\n```\r\nCaused by: com.oracle.svm.core.jdk.UnsupportedFeatureError: Cannot load new security provider at runtime: BCFIPS.\r\n```\r\nFull log: [gh-q-23967-bcfips.txt](https://karms.biz/pastebin/gh-q-23967-bcfips.txt)\r\n\r\n## BC JSSE and BC FIPS JSSE\r\n**HotSpot:**\r\n```\r\n[INFO] Quarkus - Integration Tests - Bouncy Castle FIPS JSSE SUCCESS [ 15.017 s]\r\nStat: OK\r\n```\r\n```\r\n[INFO] Quarkus - Integration Tests - Bouncy Castle JSSE ... FAILURE [  7.559 s]\r\nStat: Caused by: sun.security.pkcs11.wrapper.PKCS11Exception: CKR_SESSION_READ_ONLY\r\n```\r\n**Native:**\r\n```\r\n[INFO] Quarkus - Integration Tests - Bouncy Castle FIPS JSSE FAILURE [01:10 min]\r\nStat: Error: Detected an instance of Random/SplittableRandom class in the image heap. \r\n```\r\nFull log: [gh-q-23967-bcfipsjsse.txt](https://karms.biz/pastebin/gh-q-23967-bcfipsjsse.txt)\r\n```\r\n[INFO] Quarkus - Integration Tests - Bouncy Castle JSSE ... FAILURE [  4.739 s]\r\nStat: Caused by: sun.security.pkcs11.wrapper.PKCS11Exception: CKR_SESSION_READ_ONLY\r\n```\r\n### Expected behavior\r\n\r\nTests pass the same with FIPS aware HotSpot and FIPS aware native-image.\r\n\r\n### Actual behavior\r\n\r\nTests fail with FIPS aware native-image.\r\n\r\n### How to Reproduce?\r\n\r\nOn a FIPS enforcing system, using FIPS aware native-image:\r\n```\r\n./mvnw clean install -Dquickly -pl '!devtools/gradle,!devtools/gradle/gradle-model,!devtools/gradle/gradle-extension-plugin,!devtools/gradle/gradle-application-plugin,!integration-tests/gradle'\r\n./mvnw verify -f integration-tests/pom.xml --fail-at-end --batch-mode -Dno-format -DfailIfNoTests=false -Dnative -pl bouncycastle,bouncycastle-fips\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux rhel9fips 5.14.0-63.el9.x86_64\r\n\r\n### Output of `java -version`\r\n\r\nRed Hat build of OpenJDK 64-Bit Server VM 18.9 (build 11.0.14.1+1-LTS, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n95cc838\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23967/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23967/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

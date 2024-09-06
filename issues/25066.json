@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25066",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25066/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25066/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25066/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25066",
+  "id": 1210873886,
+  "node_id": "I_kwDOCFbutM5ILHge",
+  "number": 25066,
+  "title": "Kafka emitter unusable within imperative code (both imperative and emitter are mandatory)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-04-21T11:05:54Z",
+  "updated_at": "2022-06-29T13:55:24Z",
+  "closed_at": "2022-06-01T12:34:35Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nStarted happily coding Quarkus, the imperative way.\r\nI already have a multi project / multi repo architecture that works in production.\r\nI'm using multiple named PUs, and panache repositories.\r\n\r\nThen I need to do the following\r\n- start in a `@Scheduled` method\r\n- read database (imperative), with `@Transactional` of course\r\n- emit a Kafka event with `Emitter`\r\n- write database (imperative)\r\n\r\nHere the pain starts\r\n\r\n## 1. The `@Scheduled` method throws an exception\r\n`Enlisted connection used without active transaction`\r\nsee https://github.com/quarkusio/quarkus/issues/22834\r\n\r\n## 2. No proper way to switch back to imperative\r\n`emitter.send(user).thenAccept(` is reactive, so there is no transaction here.\r\nHow do I switch back to imperative?\r\n\r\n## 3. Managed to work with `EventBus` (very ugly solution), but still have an exception\r\nFrom the async context I call `EventBus.send`, that way I switch back to imperative and can write into database.\r\nSee https://github.com/quarkusio/quarkus/issues/22834#issuecomment-1094308403\r\nIt's an ugly solution, and still the  `@Scheduled` method throws the exception\r\n\r\n##  4. Tryed with `Reactive panache` - Quarkus won't start\r\n**Are Hibernate `Reactive` and `Imperative` compatible to each other??**\r\n\r\nI added `quarkus-hibernate-reactive-panache` extension and the following code, but quarkus won't start.\r\n~~~\r\nPanache.withTransaction(() -> {\r\n    sysOutboundEventRepository.setSentToKafka(sysOutboundEvent);\r\n    return null;\r\n});\r\n~~~\r\n\r\nQuarkus fails to start with the following exception\r\n~~~\r\nCaused by: javax.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type javax.persistence.EntityManagerFactory and qualifiers [@Default]\r\n        - java member: io.quarkus.hibernate.reactive.runtime.ReactiveSessionFactoryProducer#emf\r\n        - declared on CLASS bean [types=[io.quarkus.hibernate.reactive.runtime.ReactiveSessionFactoryProducer, java.lang.Object], qualifiers=[@Default, @Any], target=io.quarkus.hibernate.reactive.runtime.ReactiveSessionFactoryProducer]\r\n        The following beans match by type, but none have matching qualifiers:\r\n                - Bean [class=org.hibernate.SessionFactory, qualifiers=[@io.quarkus.hibernate.orm.PersistenceUnit(value = \"frontend\"), @Named(value = \"frontend\"), @Any]]\r\n        at io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:411)\r\n        at io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:527)\r\n        at io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:263)\r\n        ... 13 more\r\n~~~\r\n\r\n\r\n\n\n### Expected behavior\n\n- As of point 2, I expect there should be a proper way to switch from imperative to reactive and back.\r\n- As of point 1, I expect there should be a way to avoid the exception.\r\n- As of point 3, I expect hibernate `imperative` and `reactive` to coexists.\r\n\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.8.0 Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nMaybe there is no _real_ bug, but the fact I'm spending more than 1h to do that simple thing should be indicative that something's wrong... actually I spent much more time circling the problem...\r\n\r\nPlease folks, let's assume we are not all reactive experts, nor quarkus experts.\r\nWe need more in-deep docs, and more complex examples.\r\n\r\nThanks",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25066/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25066/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

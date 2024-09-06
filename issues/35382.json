@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35382",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35382/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35382/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35382/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35382",
+  "id": 1853492979,
+  "node_id": "I_kwDOCFbutM5ueg7z",
+  "number": 35382,
+  "title": "@BeanParam not work for Kotlin",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-08-16T15:41:03Z",
+  "updated_at": "2023-08-31T10:46:27Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn resteasy-reactive + kotlin\r\n\r\n```kotlin\r\ndata class MyBean(@QueryParam(\"a\") val a: Int)\r\n\r\n@Path(\"/\")\r\nclass GreetingResource {\r\n    @GET\r\n    fun intTest(@BeanParam query: MyBean): Int {\r\n        Log.info(query)\r\n        return query.a\r\n    }\r\n}\r\n```\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nExtract the variable `query` as type of `MyBean`.\r\n\r\n### Actual behavior\r\n\r\nthrow error\r\n\r\n```\r\n2023-08-16 23:36:57,118 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Restarting quarkus due to changes in MyBean.class, GreetingResource.class.\r\n2023-08-16 23:36:57,325 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (vert.x-worker-thread-1) Failed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: jakarta.enterprise.inject.spi.DeploymentException: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type int and qualifiers [@Default]\r\n\t- java member: org.acme.MyBean():a\r\n\t- declared on CLASS bean [types=[org.acme.MyBean, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.MyBean]\r\n\tThe following beans match by type, but none have matching qualifiers:\r\n\t\t- Bean [class=java.lang.Integer, qualifiers=[@ConfigProperty, @Any]]\r\n\tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1435)\r\n\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:310)\r\n\tat io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:155)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:469)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:578)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:864)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1589)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\nCaused by: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type int and qualifiers [@Default]\r\n\t- java member: org.acme.MyBean():a\r\n\t- declared on CLASS bean [types=[org.acme.MyBean, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.MyBean]\r\n\tThe following beans match by type, but none have matching qualifiers:\r\n\t\t- Bean [class=java.lang.Integer, qualifiers=[@ConfigProperty, @Any]]\r\n\tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:477)\r\n\tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:624)\r\n\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:298)\r\n\t... 11 more\r\n\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:336)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.reloadExistingApplication(AugmentActionImpl.java:266)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.reloadExistingApplication(AugmentActionImpl.java:60)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.restartApp(IsolatedDevModeMain.java:196)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.restartCallback(IsolatedDevModeMain.java:179)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:541)\r\n\tat io.quarkus.deployment.dev.RuntimeUpdatesProcessor.doScan(RuntimeUpdatesProcessor.java:441)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:152)\r\n\tat io.quarkus.vertx.http.runtime.devmode.VertxHttpHotReplacementSetup$4.handle(VertxHttpHotReplacementSetup.java:139)\r\n\tat io.vertx.core.impl.ContextBase.lambda$null$0(ContextBase.java:137)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\tat io.vertx.core.impl.ContextBase.lambda$executeBlocking$1(ContextBase.java:135)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1589)\r\nCaused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: jakarta.enterprise.inject.spi.DeploymentException: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type int and qualifiers [@Default]\r\n\t- java member: org.acme.MyBean():a\r\n\t- declared on CLASS bean [types=[org.acme.MyBean, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.MyBean]\r\n\tThe following beans match by type, but none have matching qualifiers:\r\n\t\t- Bean [class=java.lang.Integer, qualifiers=[@ConfigProperty, @Any]]\r\n\tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1435)\r\n\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:310)\r\n\tat io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:155)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:469)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:578)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:864)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1589)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\nCaused by: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type int and qualifiers [@Default]\r\n\t- java member: org.acme.MyBean():a\r\n\t- declared on CLASS bean [types=[org.acme.MyBean, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.MyBean]\r\n\tThe following beans match by type, but none have matching qualifiers:\r\n\t\t- Bean [class=java.lang.Integer, qualifiers=[@ConfigProperty, @Any]]\r\n\tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:477)\r\n\tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:624)\r\n\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:298)\r\n\t... 11 more\r\n\r\n\tat io.quarkus.builder.Execution.run(Execution.java:123)\r\n\tat io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:79)\r\n\tat io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:160)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:332)\r\n\t... 18 more\r\nCaused by: jakarta.enterprise.inject.spi.DeploymentException: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type int and qualifiers [@Default]\r\n\t- java member: org.acme.MyBean():a\r\n\t- declared on CLASS bean [types=[org.acme.MyBean, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.MyBean]\r\n\tThe following beans match by type, but none have matching qualifiers:\r\n\t\t- Bean [class=java.lang.Integer, qualifiers=[@ConfigProperty, @Any]]\r\n\tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1435)\r\n\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:310)\r\n\tat io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:155)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:469)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:578)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:864)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1589)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\nCaused by: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type int and qualifiers [@Default]\r\n\t- java member: org.acme.MyBean():a\r\n\t- declared on CLASS bean [types=[org.acme.MyBean, java.lang.Object], qualifiers=[@Default, @Any], target=org.acme.MyBean]\r\n\tThe following beans match by type, but none have matching qualifiers:\r\n\t\t- Bean [class=java.lang.Integer, qualifiers=[@ConfigProperty, @Any]]\r\n\tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:477)\r\n\tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:624)\r\n\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:298)\r\n\t... 11 more\r\n\r\n2023-08-16 23:36:57,334 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Live reload total time: 0.802s \r\n\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n[quarkus-@BeanParam-kotlin-fail.zip](https://github.com/quarkusio/quarkus/files/12361088/quarkus-%40BeanParam-kotlin-fail.zip)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava version \"19.0.1\" 2022-10-18 Java(TM) SE Runtime Environment (build 19.0.1+10-21)                        Java HotSpot(TM) 64-Bit Server VM (build 19.0.1+10-21, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.4.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39) Maven home: C:\\Users\\ptrue\\.m2\\wrapper\\dists\\apache-maven-3.8.8-bin\\67c30f74\\apache-maven-3.8.8 Java version: 19.0.1, vendor: Oracle Corporation, runtime: C:\\Program Files\\Java\\jdk-19 Default locale: en_US, platform encoding: UTF-8 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35382/reactions",
+    "total_count": 2,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35382/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

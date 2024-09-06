@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36559",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36559/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36559/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36559/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36559",
+  "id": 1949976340,
+  "node_id": "I_kwDOCFbutM50OkcU",
+  "number": 36559,
+  "title": "Reactive datasource parse MariaDB version error",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2955124662,
+      "node_id": "MDU6TGFiZWwyOTU1MTI0NjYy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-sql-clients",
+      "name": "area/reactive-sql-clients",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-10-18T15:04:00Z",
+  "updated_at": "2023-11-14T10:46:10Z",
+  "closed_at": "2023-11-14T10:46:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n```kt\r\n@ApplicationScoped\r\n@Path(\"/hello\")\r\nclass GreetingResource(@ReactiveDataSource(\"cool\") val db: MySQLPool) {\r\n    @GET\r\n    suspend fun hello(): List<Int> {\r\n        return db.query(\"SELECT 1\").execute().awaitSuspending().map { it.getInteger(\"1\") }\r\n    }\r\n}\r\n```\r\n\r\n\r\n\r\nAccessing mariadb datasource with `MySQLPool` shows warning: parse database version error. (However, it has no problem when connecting to mysql datasource)\r\n\r\n### Expected behavior\r\n\r\naccess datasource without error or warning.\r\n\r\n### Actual behavior\r\n```\r\n2023-10-18 22:54:39,310 WARN  [io.ver.mys.imp.MySQLDatabaseMetadata] (vert.x-eventloop-thread-2) Incorrect parsing server version tokens: java.lang.NumberFormatException: For input string: \"\"\r\n        at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)\r\n        at java.base/java.lang.Integer.parseInt(Integer.java:675)\r\n        at java.base/java.lang.Integer.parseInt(Integer.java:781)\r\n        at io.vertx.mysqlclient.impl.MySQLDatabaseMetadata.parse(MySQLDatabaseMetadata.java:57)\r\n        at io.vertx.mysqlclient.impl.codec.InitialHandshakeCommandCodec.handleInitialHandshake(InitialHandshakeCommandCodec.java:74)\r\n        at io.vertx.mysqlclient.impl.codec.InitialHandshakeCommandCodec.decodePayload(InitialHandshakeCommandCodec.java:59)\r\n        at io.vertx.mysqlclient.impl.codec.MySQLDecoder.decodePackets(MySQLDecoder.java:72)\r\n        at io.vertx.mysqlclient.impl.codec.MySQLDecoder.channelRead(MySQLDecoder.java:48)\r\n        at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:251)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:346)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:318)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n        at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1410)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n        at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:919)\r\n        at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:788)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:1589)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n[github repo](https://github.com/red010182/quarkus-reactive-client-mariadb-error-reproduce)\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n```\r\njava version \"19.0.1\" 2022-10-18 Java(TM) SE Runtime Environment (build 19.0.1+10-21) Java HotSpot(TM) 64-Bit Server VM (build 19.0.1+10-21, mixed mode, sharing)\r\n```\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.6.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n```\r\nMaven home: C:\\Users\\ptrue\\.m2\\wrapper\\dists\\apache-maven-3.9.3-bin\\326f10f4\\apache-maven-3.9.3 Java version: 19.0.1, vendor: Oracle Corporation, runtime: C:\\Program Files\\Java\\jdk-19 Default locale: en_US, platform encoding: UTF-8 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n```\r\n### Additional information\r\n\r\n\r\n```yml\r\nquarkus.http.port=9000\r\nquarkus.datasource.cool.db-kind=mariadb\r\nquarkus.datasource.cool.reactive.url=mariadb://localhost:3308/test\r\nquarkus.datasource.cool.username=root\r\nquarkus.datasource.cool.password=root\r\n```\r\n\r\nDocker compose file for mariadb (v11):\r\n\r\n```\r\nversion: '3.1'\r\n\r\nservices:\r\n\r\n  mysql:\r\n    image: mysql:8.1\r\n    restart: always\r\n    ports:\r\n      - 3306:3306\r\n    volumes:\r\n      - ./mysql_db_data:/var/lib/mysql\r\n    environment:\r\n      MYSQL_ROOT_PASSWORD: root \r\n  \r\n  mariadb:\r\n    image: mariadb:11\r\n    restart: always\r\n    ports:\r\n      - 3308:3306\r\n    volumes:\r\n      - ./maria_db_data:/var/lib/mysql\r\n    environment:\r\n      MARIADB_ROOT_PASSWORD: root\r\n  adminer:\r\n    image: adminer\r\n    restart: always\r\n    ports:\r\n      - 8080:8080\r\n\r\n\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36559/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36559/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

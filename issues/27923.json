@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27923",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27923/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27923/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27923/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27923",
+  "id": 1372744911,
+  "node_id": "I_kwDOCFbutM5R0mzP",
+  "number": 27923,
+  "title": "[Windows Native] UnsatisfiedLinkError using Quarkus Picocli with Jansi ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 3232344833,
+      "node_id": "MDU6TGFiZWwzMjMyMzQ0ODMz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/picocli",
+      "name": "area/picocli",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-09-14T10:28:30Z",
+  "updated_at": "2022-09-14T10:33:36Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nStarting from a fresh Quarkus CLI application, add the `picocli-jansi-graalvm` dependency\r\n\r\n```\r\n<dependency>\r\n    <groupId>info.picocli</groupId>\r\n    <artifactId>picocli-jansi-graalvm</artifactId>\r\n    <version>1.2.0</version>\r\n</dependency>\r\n```\r\n\r\nInitialize Jansi in your main class\r\n\r\n```kotlin\r\n@QuarkusMain\r\n@Command(\r\n    name = \"cli\",\r\n    mixinStandardHelpOptions = true,\r\n    ...\r\n)\r\nclass MyCommand : Runnable, QuarkusApplication {\r\n    @Inject\r\n    lateinit var factory: CommandLine.IFactory\r\n\r\n    override fun run() {\r\n        ...\r\n    }\r\n\r\n    override fun run(vararg args: String?): Int {\r\n        AnsiConsole.windowsInstall().use {\r\n            return CommandLine(this, factory).execute(*args)\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nPackage with \r\n```\r\nmvn package -Pnative\r\n```\r\n\r\nRun, and you'll see the result: \r\n\r\n```\r\nException in thread \"main\" java.lang.UnsatisfiedLinkError: org.fusesource.jansi.internal.Kernel32.SetConsoleTextAttribute(JS)I [symbol: Java_org_fusesource_jansi_internal_Kernel32_SetConsoleTextAttribute or Java_org_fusesource_jansi_internal_Kernel32_SetConsoleTextAttribute__JS]\r\n        at com.oracle.svm.jni.access.JNINativeLinkage.getOrFindEntryPoint(JNINativeLinkage.java:154)\r\n        at com.oracle.svm.jni.JNIGeneratedMethodSupport.nativeCallAddress(JNIGeneratedMethodSupport.java:52)\r\n        at org.fusesource.jansi.internal.Kernel32.SetConsoleTextAttribute(Kernel32.java)\r\n        at org.fusesource.jansi.WindowsAnsiPrintStream.applyAttribute(WindowsAnsiPrintStream.java:131)\r\n        at org.fusesource.jansi.WindowsAnsiPrintStream.processSetAttribute(WindowsAnsiPrintStream.java:299)\r\n        at org.fusesource.jansi.AnsiPrintStream.processEscapeCommand(AnsiPrintStream.java:363)\r\n        at org.fusesource.jansi.AnsiPrintStream.filter(AnsiPrintStream.java:134)\r\n        at org.fusesource.jansi.FilterPrintStream.write(FilterPrintStream.java:98)\r\n        at org.fusesource.jansi.FilterPrintStream.write(FilterPrintStream.java:108)\r\n        at org.fusesource.jansi.FilterPrintStream.print(FilterPrintStream.java:157)\r\n        at org.fusesource.jansi.FilterPrintStream.println(FilterPrintStream.java:241)\r\n        at com.lppedd.cli.ScanCopyrightsCommand.run(ScanCopyrightsCommand.kt:45)\r\n        at picocli.CommandLine.executeUserObject(CommandLine.java:1939)\r\n        at picocli.CommandLine.access$1300(CommandLine.java:145)\r\n        at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2358)\r\n        at picocli.CommandLine$RunLast.handle(CommandLine.java:2352)\r\n        at picocli.CommandLine$RunLast.handle(CommandLine.java:2314)\r\n        at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2179)\r\n        at picocli.CommandLine$RunLast.execute(CommandLine.java:2316)\r\n        at picocli.CommandLine.execute(CommandLine.java:2078)\r\n        at com.lppedd.cli.MyCommand.run(ClientEclipseCommand.kt:29)\r\n        at com.lppedd.cli.MyCommand_ClientProxy.run(Unknown Source)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:131)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:69)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:42)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n```\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n11.0.15, vendor: Amazon.com Inc.\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n22.2.0\r\n\r\n### Quarkus version or git rev\r\n\r\n2.12.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven (standalone) 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27923/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27923/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

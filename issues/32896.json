@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32896",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32896/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32896/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32896/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32896",
+  "id": 1684516728,
+  "node_id": "I_kwDOCFbutM5kZ694",
+  "number": 32896,
+  "title": "\"Error occurs during batch execution\" when execution \"SqlConnection.preparedQuery(sql).executeBatch(batchParams)\"",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2023-04-26T08:21:25Z",
+  "updated_at": "2023-06-06T01:35:38Z",
+  "closed_at": "2023-06-06T01:35:36Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMy project originally used `Quarkus2.7.6.Final`, after upgrading to `Quarkus2.16.6.Final`, the following error occurred when running:\r\n```\r\n2023-04-26 15:11:15.122[WARN]-[vert.x-eventloop-thread-7]-[c.e.s.i.a.c.d.DeviceStatisticsDao(69)]: Batch upsert exception (601ms)：INSERT INTO device_statistics(id,org_id,type,statistics_time,statistics_date,day_of_second,number,create_time,update_time) VALUES (?,?,?,?,?,?,?,UNIX_TIMESTAMP(NOW()),UNIX_TIMESTAMP(NOW())) ON DUPLICATE KEY UPDATE number = number + ?,update_time=UNIX_TIMESTAMP(NOW()) - [668472021644669145,0,fuelConsumption,1682493000,1682438400,54600,472,472], [668472021644734681,0,driveMileage,1682493000,1682438400,54600,1790,1790], [668472021644800217,0,driveTime,1682493000,1682438400,54600,515,515], [668472021644865753,0,idleSpeedTime,1682493000,1682438400,54600,176,176], [668472021644931289,0,carbonEmissions,1682493000,1682438400,54600,726,726]: io.vertx.mysqlclient.MySQLBatchException: Error occurs during batch execution\r\n        at io.vertx.mysqlclient.impl.codec.ExtendedBatchQueryCommandCodec.reportError(ExtendedBatchQueryCommandCodec.java:122)\r\n        at io.vertx.mysqlclient.impl.codec.ExtendedBatchQueryCommandCodec.handleErrorPacketPayload(ExtendedBatchQueryCommandCodec.java:58)\r\n        at io.vertx.mysqlclient.impl.codec.ExtendedQueryCommandBaseCodec.handleInitPacket(ExtendedQueryCommandBaseCodec.java:42)\r\n        at io.vertx.mysqlclient.impl.codec.QueryCommandBaseCodec.decodePayload(QueryCommandBaseCodec.java:56)\r\n        at io.vertx.mysqlclient.impl.codec.MySQLDecoder.decodePackets(MySQLDecoder.java:72)\r\n        at io.vertx.mysqlclient.impl.codec.MySQLDecoder.channelRead(MySQLDecoder.java:48)\r\n        at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:251)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:346)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:318)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n        at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1410)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n        at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:919)\r\n        at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:788)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833) \r\n```\r\nMy code:\r\n```java\r\npublic Uni<Integer> batchUpsert(SqlConnection conn, String sql, List<Tuple> batchParams) {\r\n    long startTime = System.currentTimeMillis();\r\n    return conn.preparedQuery(sql).executeBatch(batchParams).map(SqlResult::rowCount)\r\n            .onFailure(t -> t.getMessage().contains(\"Deadlock\") || t.getMessage().contains(\"try restarting transaction\")).retry().withBackOff(Duration.ofMillis(50), Duration.ofMillis(100)).atMost(3)\r\n            .onFailure().invoke(t -> log.warn(\"Batch upsert exception({}ms)：{} - {}\", System.currentTimeMillis() - startTime, sql, batchParams.stream().limit(35).map(Tuple::deepToString).collect(Collectors.joining(\", \")), t));\r\n}\r\n```\r\nmysql version:5.7.23\r\nI can't locate the problem according to the error description.\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus2.16.6.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32896/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32896/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

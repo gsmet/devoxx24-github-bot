@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21088",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21088/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21088/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21088/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21088",
+  "id": 1039463123,
+  "node_id": "I_kwDOCFbutM499PLT",
+  "number": 21088,
+  "title": "@ConfigMapping validation fails and ignores @WithDefault if no/default prefix is defined",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-10-29T11:23:11Z",
+  "updated_at": "2021-11-02T12:57:22Z",
+  "closed_at": "2021-11-02T10:36:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nFor @ConfigMapping (with default prefix) and fields with @WithDefault annotation validation fails on startup if no properties found were found in any of ConfigSources.\n\n### Expected behavior\n\nSuccessful startup and validation for properties with @WithDefault if they are not existing in any ConfigSource\n\n### Actual behavior\n\nFor example @ConfigMapping with @WithDefault taken from documentation -> https://quarkus.io/guides/config-mappings#defaults and no properties defined anywhere\r\n\r\n```\r\n@ConfigMapping\r\npublic interface Defaults {\r\n    @WithDefault(\"foo\")\r\n    String foo();\r\n\r\n    @WithDefault(\"bar\")\r\n    String bar();\r\n}\r\n```\r\napplication fails to start with following stacktrace\r\n\r\n```\r\n2021-10-29 11:55:20,042 ERROR [io.qua.run.Application] (Quarkus Main Thread) Failed to start application (with profile dev): io.smallrye.config.ConfigValidationException: Configuration validation failed:\r\n\tPATH does not map to any root\r\n\tjava.specification.version does not map to any root\r\n\tsun.cpu.isalist does not map to any root\r\n\tmanagerpid does not map to any root\r\n        --- cut ------\r\n\tSSH_AUTH_SOCK does not map to any root\r\n\tjava.util.logging.manager does not map to any root\r\n\tjava.vm.version does not map to any root\r\n\tlessopen does not map to any root\r\n\tquarkus-internal.serialized-app-model.path does not map to any root\r\n\tuser does not map to any root\r\n\tat io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:855)\r\n\tat io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:811)\r\n\tat io.smallrye.config.SmallRyeConfigBuilder.build(SmallRyeConfigBuilder.java:403)\r\n\tat io.quarkus.runtime.generated.Config.readConfig(Config.zig:1373)\r\n\tat io.quarkus.deployment.steps.RuntimeConfigSetup.deploy(RuntimeConfigSetup.zig:42)\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(ApplicationImpl.zig:446)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:105)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n\tat io.quarkus.runner.GeneratedMain.main(GeneratedMain.zig:29)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:103)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n```\r\n\r\nEverything is fine for following code:\r\n\r\n```\r\n@ConfigMapping(prefix = \"dummy\")\r\npublic interface Defaults {\r\n    @WithDefault(\"foo\")\r\n    String foo();\r\n\r\n    @WithDefault(\"bar\")\r\n    String bar();\r\n}\r\n```\n\n### How to Reproduce?\n\n1. generate sample project\r\n```\r\n$ mvn io.quarkus.platform:quarkus-maven-plugin:2.3.1.Final:create \\\r\n    -DprojectGroupId=org.acme \\\r\n    -DprojectArtifactId=getting-started \\\r\n    -DclassName=\"org.acme.getting.started.GreetingResource\" \\\r\n    -Dpath=\"/hello\"\r\ncd getting-started\r\n```\r\n\r\n2. create @ConfigMapping `src/main/java/org/acme/getting/started/Defaults.java`\r\n```\r\npackage org.acme.getting.started;\r\n\r\nimport io.smallrye.config.ConfigMapping;\r\nimport io.smallrye.config.WithDefault;\r\n\r\n@ConfigMapping\r\npublic interface Defaults {\r\n    @WithDefault(\"foo\")\r\n    String foo();\r\n\r\n    @WithDefault(\"bar\")\r\n    String bar();\r\n}\r\n```\r\n\r\n3. Inject config object into GreetingResource\r\n```\r\npackage org.acme.getting.started;\r\n\r\nimport javax.inject.Inject;\r\nimport javax.ws.rs.GET;\r\nimport javax.ws.rs.Path;\r\nimport javax.ws.rs.Produces;\r\nimport javax.ws.rs.core.MediaType;\r\n\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n    @Inject\r\n    Defaults defaults;\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello() {\r\n        return \"Hello RESTEasy\";\r\n    }\r\n}\r\n```\r\n4. run `$ ./mvnw quarkus:dev`\n\n### Output of `uname -a` or `ver`\n\nLinux localhost.localdomain 5.14.13-200.fc34.x86_64 #1 SMP Mon Oct 18 12:39:31 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17\" 2021-09-14 OpenJDK Runtime Environment (build 17+35-2724) OpenJDK 64-Bit Server VM (build 17+35-2724, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n-\n\n### Quarkus version or git rev\n\n2.3.1, 2.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d)\n\n### Additional information\n\nIf validation is disabled with `smallrye.config.mapping.validate-unknown=false` application starts and all @WithDefault properties are correctly initialized with values from annotation.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21088/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21088/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

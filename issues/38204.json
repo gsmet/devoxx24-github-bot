@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38204",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38204/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38204/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38204/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38204",
+  "id": 2082655307,
+  "node_id": "I_kwDOCFbutM58IsxL",
+  "number": 38204,
+  "title": "Building a native image with the --bundle-create build arg fails",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-01-15T20:44:38Z",
+  "updated_at": "2024-01-16T10:12:22Z",
+  "closed_at": "2024-01-16T10:12:22Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have created a base quarkus project (with `quarkus create`), and added a `quarkus.native.additional-build-args` option specifying `--bundle-create=someName.nib` (both with and without an additional `,dry-build` \"flag\"). Issuing `./mvnw package -Dnative` results in an exception being thrown, even though the build/creation of nib file seems to have been successful -- I get the following files in `target`:\r\n\r\n```\r\n├── quarkus.nib\r\n└── quarkus.output\r\n    ├── default\r\n    │   ├── code-with-quarkus-1.0.0-SNAPSHOT-runner\r\n    └── other\r\n        └── code-with-quarkus-1.0.0-SNAPSHOT-runner-build-output-stats.json\r\n```\r\n\r\nSo I believe the only problem is that quarkus's build expects a binary at a given location, while this graal native image argument uses a different location instead.\n\n### Expected behavior\n\nA build that returns without exception.\n\n### Actual behavior\n\nI get the following exception:\r\n\r\n```\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] objcopy --strip-debug code-with-quarkus-1.0.0-SNAPSHOT-runner\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  01:24 min\r\n[INFO] Finished at: 2024-01-15T23:27:33+01:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:3.6.5:build (default) on project code-with-quarkus: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR]         [error]: Build step io.quarkus.deployment.pkg.steps.NativeImageBuildStep#build threw an exception: java.lang.RuntimeException: Failed to build native image\r\n[ERROR]         at io.quarkus.deployment.pkg.steps.NativeImageBuildStep.build(NativeImageBuildStep.java:301)\r\n[ERROR]         at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n[ERROR]         at java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n[ERROR]         at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n[ERROR]         at io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n[ERROR]         at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n[ERROR]         at java.base/java.lang.Thread.run(Thread.java:1583)\r\n[ERROR]         at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n[ERROR] Caused by: java.nio.file.NoSuchFileException: /home/florian/Documents/git/graal-enterprise/vm-enterprise/tests/native-image/obfuscation/code-with-quarkus/target/code-with-quarkus-1.0.0-SNAPSHOT-native-image-source-jar/code-with-quarkus-1.0.0-SNAPSHOT-runner\r\n[ERROR]         at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)\r\n[ERROR]         at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:106)\r\n[ERROR]         at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)\r\n[ERROR]         at java.base/sun.nio.fs.UnixFileSystem.copy(UnixFileSystem.java:1005)\r\n[ERROR]         at java.base/sun.nio.fs.UnixFileSystemProvider.copy(UnixFileSystemProvider.java:300)\r\n[ERROR]         at java.base/java.nio.file.Files.copy(Files.java:1304)\r\n[ERROR]         at io.quarkus.bootstrap.util.IoUtils.copy(IoUtils.java:149)\r\n[ERROR]         at io.quarkus.deployment.pkg.steps.NativeImageBuildStep.build(NativeImageBuildStep.java:260)\r\n[ERROR]         ... 9 more\r\n[ERROR] -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR] \r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException\r\n```\r\n\n\n### How to Reproduce?\n\n1. `quarkus create`\r\n2. Add `<quarkus.native.additional-build-args>--bundle-create=quarkus.nib</quarkus.native.additional-build-args>` to `pom.xml` (also, possibly with `=quarkus.nib,dry-build`)\r\n3.  `./mvnw package -Dnative`\n\n### Output of `uname -a` or `ver`\n\nLinux fedora 6.5.11-300\n\n### Output of `java -version`\n\n21 GraalVM\n\n### Mandrel or GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.6.5\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.9.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38204/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38204/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

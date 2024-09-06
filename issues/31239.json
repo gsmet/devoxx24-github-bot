@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31239",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31239/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31239/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31239/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31239",
+  "id": 1588914971,
+  "node_id": "I_kwDOCFbutM5etOsb",
+  "number": 31239,
+  "title": "ManyToMany Hibernate w/ Panache insert two entities within the same persistence context",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-02-17T08:06:46Z",
+  "updated_at": "2023-02-20T07:27:41Z",
+  "closed_at": "2023-02-20T07:27:40Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello, \r\n\r\nI have created an Rest API application that performs creating an Entity and save it into a database. The schema of the database is including 3 tables:\r\n\r\nchat_user (user_id, full_name, ...)\r\nchat_group (group_id, group_name, ...)\r\nchat_join_record (group_id, user_id, date, ...)\r\n\r\nBy using Quarkus Hibernate w/ Panache, I was able to create new users and save it into database. However, when I was trying to create a group and associate these users into the group, I have faced an exception of \"Illegal attempt to associate a ManagedEntity with two open persistence contexts...\"\r\n\r\n### Entities definitions:\r\n\r\n```java\r\n@Entity\r\n@Table(name = \"chat_user\")\r\npublic class ChatUser {\r\n    @Id\r\n    @Column(name = \"user_id\", length = 127)\r\n    private String userId;\r\n\r\n    @OneToMany(mappedBy = \"chatUser\")\r\n    private Set<ChatJoinRecord> chatJoinRecords;\r\n    ....\r\n}\r\n\r\n@Entity\r\n@Table(name = \"chat_group\")\r\npublic class ChatGroup {\r\n    @Id\r\n    @Column(name = \"group_id\", nullable = false, length = 127)\r\n    private String groupId;\r\n\r\n    @OneToMany(mappedBy = \"chatGroup\", cascade = CascadeType.ALL, orphanRemoval = true)\r\n    private Set<ChatJoinRecord> chatJoinRecords = new HashSet<>();\r\n    ....\r\n\r\n    public void addMember(ChatUser chatUser, GroupRole role) {\r\n        var chatJoinRecord = new ChatJoinRecord(this, chatUser, role);\r\n        chatUser.getChatJoinRecords().add(chatJoinRecord);\r\n        chatJoinRecords.add(chatJoinRecord);\r\n    }\r\n}\r\n\r\n@Entity\r\n@Table(name = \"chat_join_record\")\r\npublic class ChatJoinRecord {\r\n    @EmbeddedId\r\n    private ChatUserGroupKey userGroupKey;\r\n\r\n    @ManyToOne\r\n    @MapsId(\"groupId\")\r\n    @JoinColumn(name = \"group_id\")\r\n    private ChatGroup chatGroup;\r\n\r\n    @ManyToOne\r\n    @MapsId(\"userId\")\r\n    @JoinColumn(name = \"user_id\")\r\n    private ChatUser chatUser;\r\n    ....\r\n}\r\n\r\n\r\n@Embeddable\r\n@Getter\r\n@Setter\r\n@EqualsAndHashCode\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@ToString\r\npublic class ChatUserGroupKey implements Serializable {\r\n\r\n    @Column(name = \"group_id\", length = 127)\r\n    private String groupId;\r\n\r\n    @Column(name = \"user_id\", length = 127)\r\n    private String userId;\r\n}\r\n```\r\n\r\n\r\n### Repository definitions:\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class ChatGroupRepository implements PanacheRepositoryBase<ChatGroup, String> {\r\n}\r\n```\r\n\r\n### Service definitions:\r\n\r\n```java\r\n@ApplicationScoped\r\n@AllArgsConstructor\r\npublic class ChatGroupService {\r\n    private final ChatGroupRepository chatGroupRepository;\r\n\r\n    @Transactional\r\n    public ChatGroup createChatGroup(ChatGroup chatGroup) {\r\n        chatGroup.setGroupId(generateGroupId(chatGroup));\r\n        chatGroupRepository.persist(chatGroup);\r\n        return chatGroup;\r\n    }\r\n}\r\n```\r\n\r\n### Logic call:\r\n\r\n```java\r\nvar chatUsers = new ArrayList<ChatUser>();\r\nfor (String participant : listUserIds) {\r\n    var chatUser = chatUserService.getUser(participant);\r\n    chatUsers.add(chatUser);\r\n}\r\n\r\nvar chatGroup = new ChatGroup();\r\nfor (var chatUser : chatUsers) {\r\n    var role = chatUser.getUserId().equals(principal.getName()) ? GroupRole.ADMIN : GroupRole.MEMBER;\r\n    chatGroup.addMember(chatUser, role);\r\n}\r\n\r\nchatGroupService.createChatGroup(chatGroup);             // Exception occurred here !\r\n\r\n```\r\n\r\nCould you please help me to check what is the root cause of the problem ?\n\n### Expected behavior\n\nThe Panache repository should be able to save the record to database\n\n### Actual behavior\n\njavax.persistence.PersistenceException: org.hibernate.HibernateException: Illegal attempt to associate a ManagedEntity with two open persistence contexts. EntityEntry[com.mtvu.usermanagementservice.model.ChatUser#alice](MANAGED)\r\n\n\n### How to Reproduce?\n\n```bash\r\ngit clone https://github.com/chat-socket/user-management-service.git \r\ncd user-management-service\r\ngit checkout quarkus-jpa-issue\r\n./gradlew test --tests com.mtvu.usermanagementservice.api.GroupManagementControllerTest.whenCreateGroupWithValidUsersThenAcceptTheRequest\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin Manhs-Mac-mini.local 22.3.0 Darwin Kernel Version 22.3.0: Mon Jan 30 20:42:11 PST 2023; root:xnu-8792.81.3~2/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment GraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13) OpenJDK 64-Bit Server VM GraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\nGraalVM CE 22.3.1\n\n### Quarkus version or git rev\n\n2.16.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n------------------------------------------------------------ Gradle 7.5.1 ------------------------------------------------------------  Build time:   2022-08-05 21:17:56 UTC Revision:     d1daa0cbf1a0103000b71484e1dbfe096e095918  Kotlin:       1.6.21 Groovy:       3.0.10 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          17.0.6 (GraalVM Community 17.0.6+10-jvmci-22.3-b13) OS:           Mac OS X 13.2.1 x86_64\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31239/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31239/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

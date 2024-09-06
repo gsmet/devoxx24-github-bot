@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25863",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25863/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25863/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25863/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25863",
+  "id": 1252952661,
+  "node_id": "I_kwDOCFbutM5KropV",
+  "number": 25863,
+  "title": "Invalid RabbitMQ message causes silent NACKing of valid messages",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-05-30T16:40:50Z",
+  "updated_at": "2022-05-31T08:10:03Z",
+  "closed_at": "2022-05-31T08:10:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen the application receives a message that it cannot handle, e.g. because it has no content_type property set (leading to a byte array as payload on the receiving end), that message is correctly NACKed. However, valid messages appear to be automatically NACKed as well, without any noticeable error logging. I have no idea where exactly this occurs, though.\r\nThis was first discovered on 2.8 but can still be reproduced using the latest Quarkus version (2.9.2).\n\n### Expected behavior\n\nInvalid messages are simply NACKed without impacting anything else. Maybe they should not even be called by a handler that cannot handle them, although I'm not familiar enough with the inner workings to say anything sensible about that.\n\n### Actual behavior\n\nWhen the application receives a message it cannot handle (e.g. not a JSON message), it is NACKed (which is good), but subsequent valid messages appear to be automatically NACKed as well, without any noticeable error logging (which is bad).\n\n### How to Reproduce?\n\nI've made a quick reproducer: https://github.com/sandersteenhoudt/quarkus-reproducer-sr-rabbitmq\r\nI've also added all the info related to the suspected bug to the README, I'll repeat them here if that makes things more helpful.\r\n\r\n1. Start an instance of RabbitMQ with the web ui port exposed, or find a way to easily publish a message. A Docker Compose file has been added for this purpose. The RabbitMQ instance provided by Dev Services currently doesn't expose the web UI port.\r\n2. Start the application, which will declare the required exchange and queue.\r\n3. As a bonus, check the [application's health endpoint output](http://localhost:9090/q/health). It should be UP.\r\n4. In the [rabbitMQ web ui](http://localhost:15762/), log in using the default credentials (`guest/guest`).\r\n5. In the web ui, go to the [exchanges overview page](http://localhost:15672/#/exchanges/%2F/some-message-exchange)\r\n   and publish a message with a property `content_type` set to `application/json` and a simple JSON payload, e.g. `{\"message\":\"This works\"}`\r\n6. Check the logs for correct handling of the message. It should log the raw `IncomingRabbitMQMessage` being received and the payload being deserialized to a `SomeMessage` instance (see the [implementation] (src/main/java/be/steen/reproducer/quarkus/rabbitmq/SomeMessageListener.java) as to why).\r\n7. Optionally check the application health again, which should still be UP.\r\n8. In the RabbitMQ web ui, remove the `content_type` property and hit Publish again.\r\n9. Check the application logs. There should be an exception and a log entry stating the message was NACKed.\r\n10. Check the application health. It should now say DOWN, with a new \"channel\" with the message listener method as its name, and the exception as its value.\r\n11. Repeat step 5 (by adding the `content_type` property back). Hit the button a few times for good measure.\r\n12. Check the logs, they should not mention the new valid messages. (it's possible new error logs are being added due to the NACKed message being redelivered)\r\n13. In the RabbitMQ web UI, check [the queue's overview page](http://localhost:15672/#/queues/%2F/some-queue). The number of NACKed messages is higher than one, which leads me to believe all subsequent messages are silently NACKed despite being valid (due to *something* being in an invalid state, maybe?).\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux thinkpad 5.18.0-arch1-1 #1 SMP PREEMPT_DYNAMIC Tue, 24 May 2022 22:00:36 +0000 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.3\" 2022-04-19 OpenJDK Runtime Environment (build 17.0.3+7) OpenJDK 64-Bit Server VM (build 17.0.3+7, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Java version: 17.0.3, vendor: N/A, runtime: /usr/lib/jvm/java-17-openjdk Default locale: en_US, platform encoding: ANSI_X3.4-1968 OS name: \"linux\", version: \"5.18.0-arch1-1\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\nThis is mostly unrelated to the bug, but during development, I encountered an issue where consuming a payload directly (rather than the SmallRye Message, as described [here](https://smallrye.io/smallrye-reactive-messaging/3.17.0/concepts/model/#consuming-payloads)). I've only included this at all because if this is also unreported the reproducer of this bug can be reused for that with only a minor code change. Not sure if this (or this whole bug report) needs to be in the Quarkus repo or somewhere in SmallRye, so if anyone could direct me on what to do with this, that would be nice. More info on that in the listener implementation.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25863/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25863/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

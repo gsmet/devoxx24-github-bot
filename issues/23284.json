@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23284",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23284/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23284/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23284/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23284",
+  "id": 1118659080,
+  "node_id": "I_kwDOCFbutM5CrWII",
+  "number": 23284,
+  "title": "Dev build profile test run fail when using Maven multi module project and dependency with its own unit tests.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-01-30T18:27:32Z",
+  "updated_at": "2022-01-31T00:42:23Z",
+  "closed_at": "2022-01-31T00:42:22Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen using Maven multi module project for instance:\r\n**multi_proj**:\r\n+- **A_lib** (has JUnit test scope dep)\r\n+- **B_quarkus** (has dependency on **A_lib**)\r\n\r\nAnd when running in **B_quarkus** project:\r\n`./mvnw quarkus:dev`\r\nif pressing [r] tests fail with:\r\n\r\n```\r\n2022-01-30 18:49:59,179 INFO  [io.quarkus] (Quarkus Main Thread) getting-started 1.0.0-SNAPSHOT on JVM (powered by Quarkus 2.6.3.Final) started in 1.076s. Listening on: http://localhost:8080\r\n\r\n2022-01-30 18:49:59,191 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2022-01-30 18:49:59,191 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, resteasy, smallrye-context-propagation, vertx]\r\n2022-01-30 18:50:02,018 ERROR [io.qua.test] (Test runner thread) Internal error running tests: java.util.ServiceConfigurationError: org.junit.platform.engine.TestEngine: org.junit.jupiter.engine.JupiterTestEngine not a subtype\r\n        at java.base/java.util.ServiceLoader.fail(ServiceLoader.java:589)\r\n        at java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNextService(ServiceLoader.java:1237)\r\n        at java.base/java.util.ServiceLoader$LazyClassPathLookupIterator.hasNext(ServiceLoader.java:1265)\r\n        at java.base/java.util.ServiceLoader$2.hasNext(ServiceLoader.java:1300)\r\n        at java.base/java.util.ServiceLoader$3.hasNext(ServiceLoader.java:1385)\r\n        at java.base/java.lang.Iterable.forEach(Iterable.java:74)\r\n        at org.junit.platform.launcher.core.LauncherFactory.collectTestEngines(LauncherFactory.java:145)\r\n        at org.junit.platform.launcher.core.LauncherFactory.createDefaultLauncher(LauncherFactory.java:131)\r\n        at org.junit.platform.launcher.core.LauncherFactory.create(LauncherFactory.java:125)\r\n        at io.quarkus.deployment.dev.testing.JunitTestRunner.prepare(JunitTestRunner.java:146)\r\n        at io.quarkus.deployment.dev.testing.ModuleTestRunner.prepare(ModuleTestRunner.java:83)\r\n        at io.quarkus.deployment.dev.testing.TestSupport.runInternal(TestSupport.java:337)\r\n        at io.quarkus.deployment.dev.testing.TestSupport$2.run(TestSupport.java:296)\r\n        at java.base/java.lang.Thread.run(Thread.java:829)\r\n```\r\n\r\nIf **B_quarkus** project is isloated from multi module then everything works as it should.\r\nRunning tests with maven all work w/o issues.\r\n\r\nAssumptions:\r\n\r\nIt seems that class paths which Quarkus uses from multi module Maven project are infected with JUnit5 dep, which in turn produce class loading incompatibility issues when running tests in dev build mode. \r\nAs if JupiterTestEngine is not correct type, even though all versions are the same.\r\n\n\n### Expected behavior\n\nTest runner in dev build profile should not fail.\n\n### Actual behavior\n\nWhen running:\r\n`./mvnw quarkus:dev`\r\nand pressing [r] tests fail.\n\n### How to Reproduce?\n\n1. Unzip example\r\n2. `mvn clean install`\r\n3. cd `getting-started`\r\n4. `./mvnw quarkus:dev`\r\n5. press [r]\r\n\r\n[example.zip](https://github.com/quarkusio/quarkus/files/7966598/example.zip)\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux bemtem 5.16.2-arch1-1 #1 SMP PREEMPT Thu, 20 Jan 2022 16:18:29 +0000 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.13\" 2021-10-19 OpenJDK Runtime Environment (build 11.0.13+8) OpenJDK 64-Bit Server VM (build 11.0.13+8, mixed mode)\n\n### GraalVM version (if different from Java)\n\nopenjdk 11.0.12 2021-07-20 OpenJDK Runtime Environment GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08) OpenJDK 64-Bit Server VM GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n2.6.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23284/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23284/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

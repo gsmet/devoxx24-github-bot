@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21376",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21376/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21376/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21376/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21376",
+  "id": 1051059318,
+  "node_id": "I_kwDOCFbutM4-peR2",
+  "number": 21376,
+  "title": "Provide redirect support for UI auth, Qute template redirection",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1282147660,
+      "node_id": "MDU6TGFiZWwxMjgyMTQ3NjYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/resteasy-classic",
+      "name": "area/resteasy-classic",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1714005220,
+      "node_id": "MDU6TGFiZWwxNzE0MDA1MjIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/qute",
+      "name": "area/qute",
+      "color": "0366d6",
+      "default": false,
+      "description": "The template engine"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2021-11-11T14:51:10Z",
+  "updated_at": "2023-07-03T14:24:23Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nI am using Qute to implement a web ui in the following way:\r\n\r\n```\r\n@Slf4j\r\n@Path(\"/\")\r\n@Tags({@Tag(name = \"UI\")})\r\n@RequestScoped\r\n@Produces(MediaType.TEXT_HTML)\r\npublic class Index extends UiProvider {\r\n\r\n    @Inject\r\n    @Location(\"webui/pages/index\")\r\n    Template index;\r\n    @Inject\r\n    @Location(\"webui/pages/overview\")\r\n    Template overview;\r\n\r\n    @Inject\r\n    UserService userService;\r\n\r\n    @Inject\r\n    JsonWebToken jwt;\r\n\r\n    @GET\r\n    @PermitAll\r\n    @Produces(MediaType.TEXT_HTML)\r\n    public TemplateInstance index(\r\n            @Context SecurityContext securityContext\r\n    ) {\r\n        logRequestContext(jwt, securityContext);\r\n        return index.instance();\r\n    }\r\n\r\n    @GET\r\n    @Path(\"overview\")\r\n    @RolesAllowed(\"user\")\r\n    @Produces(MediaType.TEXT_HTML)\r\n    public TemplateInstance overview(\r\n            @Context SecurityContext securityContext\r\n    ) {\r\n        logRequestContext(jwt, securityContext);\r\n        return overview.instance();\r\n    }\r\n}\r\n```\r\n\r\nI am getting jwt authentication through a cookie and restricting access to web pages via `@RolesAllowed`. This works as intended, except for a user whose cookie or token expires and tries to go to `/overview`, the page simply doesn't load at all. Ideally there would be a way to specify \"if no auth, redirect to this URL\", so the user would be able to login. I know I could rework how I am using the JWT's to implement by hand, but I feel like this shouldn't be necessary.\r\n\r\nAdditionally, on a similar note, it is hard to do redirects when using Qute templates. With a normal endpoint, returning a `Response`, I could return the applicable response. When returning a straight `TemplateBuilder` though, that makes it hard. I could probably throw a custom exception and handle it and provide the redirect there, but that feels annoying and might want an easier way to do it.\r\n\r\n### Implementation ideas\r\n\r\n## No-Auth Redirection idea:\r\n\r\n```\r\n    @GET\r\n    @Path(\"overview\")\r\n    @RolesAllowed(\"user\")\r\n\r\n    @UnauthRedirect(\"/login\") // suggested annotation, provides a url/ endpoint to go to to when not authrorized (no jwt/ no role/ expired, etc)\r\n\r\n    @Produces(MediaType.TEXT_HTML)\r\n    public TemplateInstance overview(\r\n            @Context SecurityContext securityContext\r\n    ) {\r\n        logRequestContext(jwt, securityContext);\r\n        return overview.instance();\r\n    }\r\n```\r\n\r\n## Redirect for Qute idea:\r\n\r\nCreate an exception that is automatically handled to redirect the user of the webui to a different endpoint\r\n\r\n\r\n```\r\n@GET\r\n    @Path(\"overview\")\r\n    @RolesAllowed(\"user\")\r\n    @Produces(MediaType.TEXT_HTML)\r\n    public TemplateInstance overview(\r\n            @Context SecurityContext securityContext,\r\n            String someParameter\r\n    ) {\r\n        logRequestContext(jwt, securityContext);\r\n\r\n        if(someParameter.equals(\"BAD\")){\r\n            throw new UiRedirect(\"/path/or/url\");\r\n        }\r\n\r\n        return overview.instance();\r\n    }\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21376/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21376/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

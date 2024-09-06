@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33739",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33739/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33739/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33739/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33739",
+  "id": 1734410690,
+  "node_id": "I_kwDOCFbutM5nYQHC",
+  "number": 33739,
+  "title": "JDBC Object Store is not working with a datasource which is using the default transaction setting",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1633508165,
+      "node_id": "MDU6TGFiZWwxNjMzNTA4MTY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/narayana",
+      "name": "area/narayana",
+      "color": "0366d6",
+      "default": false,
+      "description": "Transactions / Narayana"
+    },
+    {
+      "id": 2955097332,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3MzMy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/agroal",
+      "name": "area/agroal",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-05-31T14:50:56Z",
+  "updated_at": "2024-03-06T14:45:21Z",
+  "closed_at": "2024-03-06T14:45:21Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm testing the camel-quarkus [jta-jpa](https://github.com/apache/camel-quarkus-examples/tree/main/jta-jpa) example by using the JDBC Object Store with following configurations:\r\n\r\n```properties\r\nquarkus.datasource.tslog.db-kind=mysql\r\nquarkus.datasource.tslog.username=admin\r\nquarkus.datasource.tslog.password=admin\r\nquarkus.datasource.tslog.jdbc.url=jdbc:mysql://localhost:3306/testdb\r\n\r\nquarkus.transaction-manager.object-store.type=jdbc\r\nquarkus.transaction-manager.object-store.datasource=tslog\r\nquarkus.transaction-manager.object-store.create-table=true\r\n\r\nquarkus.transaction-manager.enable-recovery=true\r\n```\r\n\r\nIt throws a Exception when doing commit a transaction\r\n\r\n```\r\nARJUNA012258: JDBCImple:write_state caught exception: java.lang.IllegalStateException: No transaction is running\r\n\tat com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionSynchronizationRegistryImple.getTransactionImple(TransactionSynchronizationRegistryImple.java:228)\r\n\tat com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionSynchronizationRegistryImple.getResource(TransactionSynchronizationRegistryImple.java:125)\r\n\tat jakarta.transaction.NarayanaJtaProducers_ProducerMethod_transactionSynchronizationRegistry_6c1ae1f6c0015764ef2a5d1837652baa9054bdb5_ClientProxy.getResource(Unknown Source)\r\n\tat io.agroal.narayana.NarayanaTransactionIntegration.getTransactionAware(NarayanaTransactionIntegration.java:72)\r\n\tat io.agroal.pool.ConnectionPool.handlerFromTransaction(ConnectionPool.java:267)\r\n\tat io.agroal.pool.ConnectionPool.getConnection(ConnectionPool.java:237)\r\n\tat io.agroal.pool.DataSource.getConnection(DataSource.java:86)\r\n\tat io.quarkus.narayana.jta.runtime.QuarkusDataSource.getConnection(QuarkusDataSource.java:38)\r\n\tat com.arjuna.ats.internal.arjuna.objectstore.jdbc.accessors.DirectDataSourceJDBCAccess.getConnection(DirectDataSourceJDBCAccess.java:27)\r\n\tat com.arjuna.ats.internal.arjuna.objectstore.jdbc.JDBCImple_driver.write_state(JDBCImple_driver.java:626)\r\n\tat com.arjuna.ats.internal.arjuna.objectstore.jdbc.JDBCStore.write_committed(JDBCStore.java:161)\r\n\tat com.arjuna.ats.arjuna.coordinator.BasicAction.prepare(BasicAction.java:2316)\r\n\tat com.arjuna.ats.arjuna.coordinator.BasicAction.End(BasicAction.java:1508)\r\n\tat com.arjuna.ats.arjuna.coordinator.TwoPhaseCoordinator.end(TwoPhaseCoordinator.java:96)\r\n\tat com.arjuna.ats.arjuna.AtomicAction.commit(AtomicAction.java:162)\r\n\tat com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionImple.commitAndDisassociate(TransactionImple.java:1295)\r\n\tat com.arjuna.ats.internal.jta.transaction.arjunacore.BaseTransaction.commit(BaseTransaction.java:128)\r\n\tat io.quarkus.narayana.jta.runtime.NotifyingTransactionManager.commit(NotifyingTransactionManager.java:70)\r\n\tat org.apache.camel.quarkus.component.jta.TransactionalJtaTransactionPolicy.commit(TransactionalJtaTransactionPolicy.java:63)\r\n\tat org.apache.camel.quarkus.component.jta.TransactionalJtaTransactionPolicy.runWithTransaction(TransactionalJtaTransactionPolicy.java:53)\r\n\tat org.apache.camel.quarkus.component.jta.RequiredJtaTransactionPolicy.run(RequiredJtaTransactionPolicy.java:26)\r\n\tat org.apache.camel.jta.TransactionErrorHandler.doInTransactionTemplate(TransactionErrorHandler.java:186)\r\n\tat org.apache.camel.jta.TransactionErrorHandler.processInTransaction(TransactionErrorHandler.java:137)\r\n\tat org.apache.camel.jta.TransactionErrorHandler.process(TransactionErrorHandler.java:101)\r\n\tat org.apache.camel.jta.TransactionErrorHandler.process(TransactionErrorHandler.java:110)\r\n\tat org.apache.camel.processor.errorhandler.RedeliveryErrorHandler$SimpleTask.run(RedeliveryErrorHandler.java:475)\r\n\tat org.apache.camel.impl.engine.DefaultReactiveExecutor$Worker.schedule(DefaultReactiveExecutor.java:181)\r\n\tat org.apache.camel.impl.engine.DefaultReactiveExecutor.scheduleMain(DefaultReactiveExecutor.java:59)\r\n\tat org.apache.camel.processor.Pipeline.process(Pipeline.java:164)\r\n\tat org.apache.camel.impl.engine.CamelInternalProcessor.process(CamelInternalProcessor.java:379)\r\n\tat org.apache.camel.component.platform.http.vertx.VertxPlatformHttpConsumer.lambda$handleRequest$2(VertxPlatformHttpConsumer.java:206)\r\n\tat io.vertx.core.impl.ContextBase.lambda$null$0(ContextBase.java:137)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\tat io.vertx.core.impl.ContextBase.lambda$executeBlocking$1(ContextBase.java:135)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n```\r\n\r\nI have to add `quarkus.datasource.tslog.jdbc.transactions=disabled` to make it working.\n\n### Expected behavior\n\nIt should commit the transaction when using JDBC object store.\n\n### Actual behavior\n\nThe exception is throwing and transaction is not committed.\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nThe potenial issue could be a difference of checking a transaction is running between `narayana` and `agroal`.\r\n\r\nOn narayana side:\r\nhttps://github.com/jbosstm/narayana/blob/main/ArjunaJTA/jta/classes/com/arjuna/ats/internal/jta/transaction/arjunacore/TransactionSynchronizationRegistryImple.java#L226-L229\r\n\r\n```java\r\nif (transactionImple == null || (transactionImple.getStatus() != Status.STATUS_ACTIVE && transactionImple.getStatus() != Status.STATUS_MARKED_ROLLBACK)) \r\n```\r\n\r\nOn agroal side:\r\nhttps://github.com/agroal/agroal/blob/master/agroal-narayana/src/main/java/io/agroal/narayana/NarayanaTransactionIntegration.java#L119-L121\r\n\r\n```java\r\nreturn status != STATUS_UNKNOWN && status != STATUS_NO_TRANSACTION && status != STATUS_COMMITTED && status != STATUS_ROLLEDBACK;\r\n            // other states are active transaction: ACTIVE, MARKED_ROLLBACK, PREPARING, PREPARED, COMMITTING, ROLLING_BACK\r\n```\r\n\r\nThen when writing a transaction log through a jdbc connection in the `COMMITTING` phase, `agroal` thinks the transaction is running but `narayana` does not.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33739/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33739/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

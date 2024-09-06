@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31018",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31018/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31018/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31018/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31018",
+  "id": 1576807162,
+  "node_id": "I_kwDOCFbutM5d_Cr6",
+  "number": 31018,
+  "title": "Provide enhanced support of Hibernate Envers' Custom Revision Entity Listener usage (panache?)",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-02-08T21:13:23Z",
+  "updated_at": "2024-08-14T15:11:04Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nEnvers currently provides support to apply revision \"metadata\" / entity data:\r\n\r\nhttps://docs.jboss.org/envers/docs/#revisionlog\r\n\r\nThe problem with this setup is adding data into the Revision Entity is done through a Entity Listener such as:\r\n\r\nquarkus example:\r\n\r\n```java\r\npublic class CustomRevisionEntityListener implements RevisionListener {\r\n\r\n    public void newRevision(Object revisionEntity) {\r\n        MyRevisionEntity customRevisionEntity = (MyRevisionEntity) revisionEntity;\r\n        var revisionRequestBean = CDI.current().select(RevisionRequest.class);\r\n        if (revisionRequestBean.isResolvable()){\r\n            RevisionRequest data = CDI.current().select(RevisionRequest.class).get();\r\n            customRevisionEntity.myProperty = data.myProperty\r\n        }\r\n    }\r\n}\r\n\r\n@RequestScoped\r\npublic class RevisionRequest {\r\n    public String myProperty = null;\r\n}\r\n```\r\n\r\nand then on services that are not activated through a HTTP request it looks like we need to apply the `@ActivateRequestContext` annotation on methods so the RequestContext scoped bean would be created.\r\n\r\nThis feels very complicated.  We could get rid of the RequestScoped bean and go directly to thread local, but again it feels it adds to complexity.\r\n\r\nThis also gets \"weird\" to handle when dealing with multiple persists within a single transaction: where you are updating the Request scope multiple times just before creating the entity so the revision entity has the correct contextual data for the entity being persisted.  (Imagine 1 transaction with two actions running that each save 1 entity, each save has a \"comment\" as part of the revision entity.)\r\n\r\nIs there a better way to handle this in Quarkus?  Could something be refined?\r\n\r\nThe envers api used to provide a specific function to call instead of using the listener, but the function was deprecated.\r\n\r\n(given that envers also uses a single table for holding all revision entity data for all entities, maybe using of the revision entity is poor form now and better practice to add the fields directly into the entities.)\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31018/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31018/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

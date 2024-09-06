@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34843",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34843/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34843/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34843/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34843",
+  "id": 1811430229,
+  "node_id": "I_kwDOCFbutM5r-DtV",
+  "number": 34843,
+  "title": "warning on transactional method after one hour and service didn't work",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1633508165,
+      "node_id": "MDU6TGFiZWwxNjMzNTA4MTY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/narayana",
+      "name": "area/narayana",
+      "color": "0366d6",
+      "default": false,
+      "description": "Transactions / Narayana"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-07-19T08:22:45Z",
+  "updated_at": "2024-04-06T07:20:00Z",
+  "closed_at": "2024-04-06T07:20:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\ni migrated quarkus from 2.7.1 to 3.1.2. all of system worked perfectly for one hour **but** i got below warning on transactional method and service didn't work after one hour. what is problem? (this method worked in quarkus 2.7.1)  \r\n\r\n```java\r\n**my service code:**\r\n    @Transactional\r\n    public GenerateOtpResponse generateOtp(GenerateOtpRequest request) {\r\n\r\n        Optional<Otp> optional = otpRepository.findNotExpiredOtpWithPessimisticWriteLock(\r\n                request.getMobileNumber()\r\n        );\r\n\r\n       Otp otp = Otp.builder()\r\n                .mobileNumber(request.getMobileNumber())\r\n                .otp(codeGenerator.generateOtp(6))\r\n                .expirationTime(calculateExpiredTime(otpUsage))\r\n                .creationTime(new Date())\r\n                .build();\r\n\r\n       sendOtp(request.getMobileNumber(),newOtp)\r\n\r\n        otpRepository.persistAndFlush(otp);\r\n}\r\n\r\nprivate void sendSms(String mobileNumber, String otp) {\r\n   smsClient.sendSms(mobileNumber,otp)\r\n}\r\n```\r\n\r\n```posh\r\n-----------------------<<<*>>>-----------------------\r\n[WARN] *** 2023-07-19 06:56:57,378 TID:  *** \r\nARJUNA012117: TransactionReaper::check processing TX 0:ffffac120005:a39c:64b751e6:540 in state  RUN\r\n-----------------------<<<*>>>-----------------------\r\n[WARN] *** 2023-07-19 06:56:57,379 TID:  *** \r\nARJUNA012095: Abort of action id 0:ffffac120005:a39c:64b751e6:540 invoked while multiple threads active within it.\r\n-----------------------<<<*>>>-----------------------\r\n[WARN] *** 2023-07-19 06:56:57,380 TID:  *** \r\nARJUNA012381: Action id 0:ffffac120005:a39c:64b751e6:540 completed with multiple threads - thread executor-thread-6 was in progress with java.base@17.0.7/jdk.internal.misc.Unsafe.park(Native Method)\r\njava.base@17.0.7/java.util.concurrent.locks.LockSupport.park(LockSupport.java:341)\r\njava.base@17.0.7/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:506)\r\njava.base@17.0.7/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3463)\r\njava.base@17.0.7/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3434)\r\njava.base@17.0.7/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1623)\r\norg.apache.http.pool.AbstractConnPool.getPoolEntryBlocking(AbstractConnPool.java:391)\r\norg.apache.http.pool.AbstractConnPool.access$300(AbstractConnPool.java:70)\r\norg.apache.http.pool.AbstractConnPool$2.get(AbstractConnPool.java:253)\r\norg.apache.http.pool.AbstractConnPool$2.get(AbstractConnPool.java:198)\r\norg.apache.http.impl.conn.PoolingHttpClientConnectionManager.leaseConnection(PoolingHttpClientConnectionManager.java:306)\r\norg.apache.http.impl.conn.PoolingHttpClientConnectionManager$1.get(PoolingHttpClientConnectionManager.java:282)\r\norg.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:190)\r\norg.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)\r\norg.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)\r\norg.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)\r\norg.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)\r\norg.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)\r\norg.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)\r\norg.jboss.resteasy.client.jaxrs.engines.ManualClosingApacheHttpClient43Engine.invoke(ManualClosingApacheHttpClient43Engine.java:344)\r\norg.jboss.resteasy.client.jaxrs.internal.ClientInvocation.invoke(ClientInvocation.java:427)\r\norg.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.invokeSync(ClientInvoker.java:134)\r\norg.jboss.resteasy.client.jaxrs.internal.proxy.ClientInvoker.invoke(ClientInvoker.java:103)\r\norg.jboss.resteasy.client.jaxrs.internal.proxy.ClientProxy.invoke(ClientProxy.java:61)\r\njdk.proxy2/jdk.proxy2.$Proxy84.sendSms(Unknown Source)\r\njdk.internal.reflect.GeneratedMethodAccessor79.invoke(Unknown Source)\r\njava.base@17.0.7/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\njava.base@17.0.7/java.lang.reflect.Method.invoke(Method.java:568)\r\norg.jboss.resteasy.microprofile.client.ProxyInvocationHandler.invoke(ProxyInvocationHandler.java:168)\r\njdk.proxy2/jdk.proxy2.$Proxy87.sendSms(Unknown Source)\r\n...\r\nio.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\nio.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\nir.co.isc.mss.authentication.app.controllers.AuthenticationOtpController_Subclass.generateOtpForActivation(Unknown Source)\r\nir.co.isc.mss.authentication.app.controllers.AuthenticationOtpController_ClientProxy.generateOtpForActivation(Unknown Source)\r\njdk.internal.reflect.GeneratedMethodAccessor87.invoke(Unknown Source)\r\njava.base@17.0.7/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\njava.base@17.0.7/java.lang.reflect.Method.invoke(Method.java:568)\r\norg.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:154)\r\norg.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:118)\r\norg.jboss.resteasy.core.ResourceMethodInvoker.internalInvokeOnTarget(ResourceMethodInvoker.java:560)\r\norg.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTargetAfterFilter(ResourceMethodInvoker.java:452)\r\norg.jboss.resteasy.core.ResourceMethodInvoker.lambda$invokeOnTarget$2(ResourceMethodInvoker.java:413)\r\norg.jboss.resteasy.core.ResourceMethodInvoker$$Lambda$858/0x00000008018141c8.get(Unknown Source)\r\norg.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\norg.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:415)\r\norg.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:378)\r\norg.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:356)\r\norg.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:70)\r\norg.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:429)\r\norg.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:240)\r\norg.jboss.resteasy.core.SynchronousDispatcher$$Lambda$856/0x0000000801810b40.run(Unknown Source)\r\norg.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:154)\r\norg.jboss.resteasy.core.SynchronousDispatcher$$Lambda$857/0x0000000801811450.get(Unknown Source)\r\norg.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\norg.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:157)\r\norg.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:229)\r\nio.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:82)\r\nio.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:147)\r\nio.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:93)\r\nio.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\norg.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\norg.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\norg.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\norg.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\nio.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\njava.base@17.0.7/java.lang.Thread.run(Thread.java:833)\r\n-----------------------<<<*>>>-----------------------\r\n[WARN] *** 2023-07-19 06:56:57,380 TID:  *** \r\nARJUNA012108: CheckedAction::check - atomic action 0:ffffac120005:a39c:64b751e6:540 aborting with 1 threads active!\r\n-----------------------<<<*>>>-----------------------\r\n[WARN] *** 2023-07-19 06:56:57,382 TID:  *** \r\nHHH000451: Transaction afterCompletion called by a background thread; delaying afterCompletion processing until the original thread can handle it. [status=4]\r\n-----------------------<<<*>>>-----------------------\r\n[WARN] *** 2023-07-19 06:56:57,382 TID:  *** \r\nARJUNA012121: TransactionReaper::doCancellations worker Thread[Transaction Reaper Worker 0,5,main] successfully canceled TX 0:ffffac120005:a39c:64b751e6:540\r\n-----------------------<<<*>>>-----------------------\r\n\r\n\r\n Caused by: jakarta.transaction.RollbackException: ARJUNA016102: The transaction is not active! Uid is 0:ffffac12000e:852b:64abece2:be8\r\n         at com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionImple.commitAndDisassociate(TransactionImple.java:1285)\r\n         at com.arjuna.ats.internal.jta.transaction.arjunacore.BaseTransaction.commit(BaseTransaction.java:128)\r\n         at io.quarkus.narayana.jta.runtime.NotifyingTransactionManager.commit(NotifyingTransactionManager.java:70)\r\n         at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.endTransaction(TransactionalInterceptorBase.java:406)\r\n         at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.invokeInOurTx(TransactionalInterceptorBase.java:175)\r\n         at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.invokeInOurTx(TransactionalInterceptorBase.java:107)\r\n         at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired.doIntercept(TransactionalInterceptorRequired.java:38)\r\n         at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.intercept(TransactionalInterceptorBase.java:61)\r\n         at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired.intercept(TransactionalInterceptorRequired.java:32)\r\n         at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired_Bean.intercept(Unknown Source)\r\n \r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34843/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34843/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

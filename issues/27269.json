@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27269",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27269/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27269/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27269/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27269",
+  "id": 1337050804,
+  "node_id": "I_kwDOCFbutM5Psca0",
+  "number": 27269,
+  "title": "uuidRepresentation not passed to CodeRegistry of MongoCollection behind a Panache repo",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2022-08-12T10:49:10Z",
+  "updated_at": "2022-10-31T20:50:58Z",
+  "closed_at": "2022-10-31T20:22:47Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen using Panache with MongoDB, the underlying MongoCollection behind and Entity or the repository abstractions is accessible for special needs. In my case, I am using UUIDs in MongoDB documents. To work properly, MongoDB requires the `uuidRepresentation` connection parameter to be present. For tests and the dev mode, this is realized by specifying this property:\r\n\r\n```ini\r\nquarkus.mongodb.devservices.properties.uuidRepresentation = STANDARD\r\n```\r\n\r\nThat way, I can handle entities containing UUIDs without problem. However, as soon as I try to use underlying MongoCollection instance, the configured UUID representation doesn't seem to be propagated there and operations using UUIDs fail with a message indicating that the representation is not configured.\n\n### Expected behavior\n\nThe CodecRegistry used by MongoCollections behind Panache entities is configured with a UUID representation.\n\n### Actual behavior\n\nNo UUID representation is configured, resulting in exceptions like the following:\r\n\r\n```\r\n2022-08-12 12:43:49,557 ERROR [org.jbo.res.rea.com.cor.AbstractResteasyReactiveContext] (executor-thread-0) Request failed: org.bson.codecs.configuration.CodecConfigurationException: The uuidRepresentation has not been specified, so the UUID cannot be encoded.\r\n\tat org.bson.codecs.UuidCodec.encode(UuidCodec.java:72)\r\n\tat org.bson.codecs.UuidCodec.encode(UuidCodec.java:37)\r\n\tat org.bson.codecs.EncoderContext.encodeWithChildContext(EncoderContext.java:91)\r\n\tat org.bson.codecs.DocumentCodec.writeValue(DocumentCodec.java:210)\r\n\tat org.bson.codecs.DocumentCodec.encode(DocumentCodec.java:168)\r\n\tat org.bson.codecs.DocumentCodec.encode(DocumentCodec.java:44)\r\n\tat org.bson.internal.LazyCodec.encode(LazyCodec.java:38)\r\n\tat org.bson.codecs.EncoderContext.encodeWithChildContext(EncoderContext.java:91)\r\n\tat org.bson.codecs.DocumentCodec.writeValue(DocumentCodec.java:210)\r\n\tat org.bson.codecs.DocumentCodec.encode(DocumentCodec.java:168)\r\n\tat org.bson.codecs.DocumentCodec.encode(DocumentCodec.java:44)\r\n\tat org.bson.codecs.BsonDocumentWrapperCodec.encode(BsonDocumentWrapperCodec.java:63)\r\n\tat org.bson.codecs.BsonDocumentWrapperCodec.encode(BsonDocumentWrapperCodec.java:29)\r\n\tat com.mongodb.internal.connection.SplittablePayload$WriteRequestEncoder.encode(SplittablePayload.java:221)\r\n\tat com.mongodb.internal.connection.SplittablePayload$WriteRequestEncoder.encode(SplittablePayload.java:187)\r\n\tat org.bson.codecs.BsonDocumentWrapperCodec.encode(BsonDocumentWrapperCodec.java:63)\r\n\tat org.bson.codecs.BsonDocumentWrapperCodec.encode(BsonDocumentWrapperCodec.java:29)\r\n\tat com.mongodb.internal.connection.BsonWriterHelper.writeDocument(BsonWriterHelper.java:77)\r\n\tat com.mongodb.internal.connection.BsonWriterHelper.writePayload(BsonWriterHelper.java:59)\r\n\tat com.mongodb.internal.connection.CommandMessage.encodeMessageBodyWithMetadata(CommandMessage.java:170)\r\n\tat com.mongodb.internal.connection.RequestMessage.encode(RequestMessage.java:138)\r\n\tat com.mongodb.internal.connection.CommandMessage.encode(CommandMessage.java:63)\r\n\tat com.mongodb.internal.connection.InternalStreamConnection.sendAndReceive(InternalStreamConnection.java:325)\r\n\tat com.mongodb.internal.connection.UsageTrackingInternalConnection.sendAndReceive(UsageTrackingInternalConnection.java:116)\r\n\tat com.mongodb.internal.connection.DefaultConnectionPool$PooledConnection.sendAndReceive(DefaultConnectionPool.java:644)\r\n\tat com.mongodb.internal.connection.CommandProtocolImpl.execute(CommandProtocolImpl.java:71)\r\n\tat com.mongodb.internal.connection.DefaultServer$DefaultServerProtocolExecutor.execute(DefaultServer.java:240)\r\n\tat com.mongodb.internal.connection.DefaultServerConnection.executeProtocol(DefaultServerConnection.java:226)\r\n\tat com.mongodb.internal.connection.DefaultServerConnection.command(DefaultServerConnection.java:126)\r\n\tat com.mongodb.internal.connection.DefaultServer$OperationCountTrackingConnection.command(DefaultServer.java:354)\r\n\tat com.mongodb.internal.operation.MixedBulkWriteOperation.executeCommand(MixedBulkWriteOperation.java:517)\r\n\tat com.mongodb.internal.operation.MixedBulkWriteOperation.executeBulkWriteBatch(MixedBulkWriteOperation.java:379)\r\n\tat com.mongodb.internal.operation.MixedBulkWriteOperation.lambda$execute$2(MixedBulkWriteOperation.java:300)\r\n\tat com.mongodb.internal.operation.OperationHelper.lambda$withSourceAndConnection$2(OperationHelper.java:575)\r\n\tat com.mongodb.internal.operation.OperationHelper.withSuppliedResource(OperationHelper.java:600)\r\n\tat com.mongodb.internal.operation.OperationHelper.lambda$withSourceAndConnection$3(OperationHelper.java:574)\r\n\tat com.mongodb.internal.operation.OperationHelper.withSuppliedResource(OperationHelper.java:600)\r\n\tat com.mongodb.internal.operation.OperationHelper.withSourceAndConnection(OperationHelper.java:573)\r\n\tat com.mongodb.internal.operation.MixedBulkWriteOperation.lambda$execute$3(MixedBulkWriteOperation.java:272)\r\n\tat com.mongodb.internal.async.function.RetryingSyncSupplier.get(RetryingSyncSupplier.java:65)\r\n\tat com.mongodb.internal.operation.MixedBulkWriteOperation.execute(MixedBulkWriteOperation.java:308)\r\n\tat com.mongodb.internal.operation.MixedBulkWriteOperation.execute(MixedBulkWriteOperation.java:85)\r\n\tat com.mongodb.client.internal.MongoClientDelegate$DelegateOperationExecutor.execute(MongoClientDelegate.java:212)\r\n\tat com.mongodb.client.internal.MongoCollectionImpl.executeSingleWriteRequest(MongoCollectionImpl.java:1010)\r\n\tat com.mongodb.client.internal.MongoCollectionImpl.executeUpdate(MongoCollectionImpl.java:994)\r\n\tat com.mongodb.client.internal.MongoCollectionImpl.updateMany(MongoCollectionImpl.java:625)\r\n\tat com.mongodb.client.internal.MongoCollectionImpl.updateMany(MongoCollectionImpl.java:620)\r\n\tat org.acme.mongodb.panache.repository.PersonResource.bug(PersonResource.java:28)\r\n\tat org.acme.mongodb.panache.repository.PersonResource_Subclass.bug$$superforward1(Unknown So\r\n```\n\n### How to Reproduce?\n\nhttps://github.com/languitar/quarkus-mongodb-uuidRepresentation-reproducer\r\n\r\n1. launch the project in dev mode\r\n2. `curl -v http://localhost:8080/repository/persons/bug`\r\n\r\nThe endpoint behind this shows that an entity with UUID can be managed using the high-level panache concepts, but not with direct MongoDB commands: https://github.com/languitar/quarkus-mongodb-uuidRepresentation-reproducer/blob/main/src/main/java/org/acme/mongodb/panache/repository/PersonResource.java#L21\n\n### Output of `uname -a` or `ver`\n\nLinux pres 5.15.59-2-lts #1 SMP Sat, 06 Aug 2022 21:34:17 +0000 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.16\" 2022-07-19\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.11.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27269/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27269/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

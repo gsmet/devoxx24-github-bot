@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40058",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40058/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40058/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40058/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40058",
+  "id": 2241544113,
+  "node_id": "I_kwDOCFbutM6Fmz-x",
+  "number": 40058,
+  "title": "Openapi Spec wrong for \"FileUpload\"",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-04-13T12:40:03Z",
+  "updated_at": "2024-04-13T22:11:51Z",
+  "closed_at": "2024-04-13T22:11:51Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIf I use the class FileUpload in a Rest Service, it somehow overwrites the generated Openapi Specs.\r\n\r\nI have a quarkus application where I defined a resource with two files in a multipart/form-data upload:\r\n\r\n```\r\n    @Path(\"v1\")\r\n    public interface IMultiPartResource {\r\n    @POST\r\n    @Path(\"/multipart\")\r\n    @Consumes(MediaType.MULTIPART_FORM_DATA)\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    Object multipart(\r\n        @RequestBody(\r\n            description = \"The multipart data.\",\r\n            required = true,\r\n            content = @Content(\r\n                mediaType = MediaType.MULTIPART_FORM_DATA,\r\n                schema = @Schema(\r\n                    type = SchemaType.OBJECT,\r\n                    properties = {\r\n                        @SchemaProperty(name = \"data1\", type = SchemaType.STRING, format = \"binary\"),\r\n                        @SchemaProperty(name = \"data2\", type = SchemaType.STRING, format = \"binary\"),\r\n                    }\r\n                )))\r\n        @NotNull @RestForm(\"data1\") FileUpload data1,\r\n        @RestForm(\"data2\") Optional<FileUpload> data2,\r\n    }\r\n```\r\n\r\nMy Problem is, that the generated openapi spec is not correct. It produces something like:\r\n\r\n```\r\n    ---\r\n      ...\r\n      /clv-api/v1/importer/gino-production-data:\r\n        post:\r\n          requestBody:\r\n            description: \"The multipart data.\"\r\n            content:\r\n              multipart/form-data:\r\n                schema:\r\n                  type: object\r\n                  properties:\r\n                    data1:\r\n                      $ref: '#/components/schemas/FileUpload'\r\n                    data2:\r\n                      $ref: '#/components/schemas/FileUpload'\r\n            required: true\r\n      ...\r\n    components:\r\n      schemas:\r\n        FileUpload:\r\n          type: object\r\n```\r\n\r\n\r\nBut I expect something like that:\r\n\r\n```\r\n    ---\r\n      ...\r\n      /clv-api/v1/importer/gino-production-data:\r\n        post:\r\n          requestBody:\r\n            description: \"The multipart data.\"\r\n            content:\r\n              multipart/form-data:\r\n                schema:\r\n                  type: object\r\n                  properties:\r\n                    data1:\r\n                      type: string\r\n                      format: binary\r\n                    data2:\r\n                      type: string\r\n                      format: binary\r\n            required: true\r\n      ...\r\n    components:\r\n      schemas:\r\n        FileUpload:\r\n          type: object\r\n```\r\n\r\nIt works correctly, if a use the class \"File\".\r\n\r\n### Expected behavior\r\n\r\nFor it to not overwrite the Openapi Specs, like how it is supposed to work.\r\n\r\n### Actual behavior\r\n\r\nSee above.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn --version\r\nApache Maven 3.9.3 (21122926829f1ead511c958d89bd2f672198ae9f)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40058/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40058/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

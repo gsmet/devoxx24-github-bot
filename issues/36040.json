@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36040",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36040/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36040/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36040/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36040",
+  "id": 1905241613,
+  "node_id": "I_kwDOCFbutM5xj64N",
+  "number": 36040,
+  "title": "OpenTelemetry QuarkusContextStorage does not work correctly outside of vert-x duplicated context",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 31,
+  "created_at": "2023-09-20T15:27:51Z",
+  "updated_at": "2023-09-22T10:00:58Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIn code running in Quarkus but inside of vert-x but without a duplicated context (e.g. one uses the vert-x web HTTP client), Opentelemetry context calls such as attach() and then current() do not work as expected in that the context passed in attach() is not that when calling current() immediately thereafter.\n\n### Expected behavior\n\nOpentelemetry API's should work outside of a vert-x duplicated context and should fall back to the FALLBACK_CONTEXT_STORAGE\n\n### Actual behavior\n\nThis code in QuarkusContextStorage results in a call to attach() and then a call to current() both creating a new duplicated context. The state set in attach() is thus not available in the subsequent call to current().\r\nSee this:\r\n```\r\npublic static io.vertx.core.Context getVertxContext() {\r\n        io.vertx.core.Context context = Vertx.currentContext();\r\n        if (context != null && VertxContext.isOnDuplicatedContext()) {\r\n            return context;\r\n        } else if (context != null) {\r\n            io.vertx.core.Context dc = VertxContext.createNewDuplicatedContext(context);\r\n            setContextSafe(dc, true);\r\n            return dc;\r\n        }\r\n            return null;\r\n        }\r\n    }\r\n```\r\n\r\nThe above code always returns a brand new duplicated context when running within vert-x but outside of a quarkus extension that has set up a duplicated context. This results in the QuarkusContextStorage being unusable as every call looses the prior calls context. I would say it would be better to do this:\r\n```\r\npublic static io.vertx.core.Context getVertxContext() {\r\n        io.vertx.core.Context context = Vertx.currentContext();\r\n        if (context != null && VertxContext.isOnDuplicatedContext()) {\r\n            return context;\r\n        } else {\r\n            return null;\r\n        }\r\n    }\r\n```\r\nThat way the fallback context is used and propagation works as expected.\n\n### How to Reproduce?\n\nUse a vert-x plugin directly along with calls to activate a child span and then get the current span\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.3.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36040/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36040/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

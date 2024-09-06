@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38573",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38573/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38573/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38573/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38573",
+  "id": 2116619998,
+  "node_id": "I_kwDOCFbutM5-KQ7e",
+  "number": 38573,
+  "title": "Using DBRef raises InvalidDefinitionException",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-02-03T18:03:47Z",
+  "updated_at": "2024-02-10T14:18:57Z",
+  "closed_at": "2024-02-10T11:44:42Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nUsing Quarkus 3.7.1. Here is an excerpt of the domain model:\r\n\r\n    @MongoEntity(database = \"mdb\", collection=\"Customers\")\r\n    public class Customer\r\n    {\r\n      @BsonId\r\n      private Long id;\r\n      private String firstName, lastName;\r\n      ...\r\n    }\r\n    ...\r\n    @MongoEntity(database = \"mdb\", collection=\"Orders\")\r\n    public class Order\r\n    {\r\n      @BsonId\r\n      private Long id;\r\n      private DBRef customer;\r\n      private Address shippingAddress;\r\n      ...\r\n    }\r\n\r\nI'm generating the CRUD associated to this model using the `quarkus-mongodb-rest-data-panache` extension and I'm trying to test it through Swagger. Using the following payload to test the `POST /order` endpoint:\r\n\r\n    {\r\n      \"id\": 0,\r\n      \"customer\": {\r\n        \"id\": \"0\",\r\n        \"collectionName\": \"Customers\",\r\n        \"databaseName\": \"mdb\"\r\n      },\r\n      \"shippingAddress\": {\r\n        \"street\": \"string\",\r\n        \"city\": \"string\",\r\n        \"country\": \"string\"\r\n      },\r\n      \"billingAddress\": {\r\n        \"street\": \"string\",\r\n        \"city\": \"string\",\r\n        \"country\": \"string\"\r\n      },\r\n      \"orderItemSet\": [\r\n        {\r\n          \"id\": 0,\r\n          \"product\": {\r\n            \"id\": \"string\",\r\n            \"collectionName\": \"string\",\r\n            \"databaseName\": \"string\"\r\n          },\r\n          \"price\": 0,\r\n          \"amount\": 0\r\n        }\r\n      ]\r\n    }\r\n\r\nI get the following exception:\r\n\r\n     2024-02-03 17:48:41,996 ERROR [org.jbo.res.plu.pro.jackson] (executor-thread-1) RESTEASY-JACKSON000100: Not able to deserialize data provided: com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Cannot construct instance of `com.mongodb.DBRef` (no Creators, like default constructor, exist): cannot deserialize from Object value (no delegate- or property-based Creator)\r\n      at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 4, column: 5] (through reference chain: fr.simplex_software.docstore.domain.Order[\"customer\"])\r\n            at com.fasterxml.jackson.databind.exc.InvalidDefinitionException.from(InvalidDefinitionException.java:67)\r\n            at com.fasterxml.jackson.databind.DeserializationContext.reportBadDefinition(DeserializationContext.java:1887)\r\n            at com.fasterxml.jackson.databind.DatabindContext.reportBadDefinition(DatabindContext.java:414)\r\n            at com.fasterxml.jackson.databind.DeserializationContext.handleMissingInstantiator(DeserializationContext.java:1375)\r\n            at com.fasterxml.jackson.databind.deser.BeanDeserializerBase.deserializeFromObjectUsingNonDefault(BeanDeserializerBase.java:1508)\r\n            at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserializeFromObject(BeanDeserializer.java:348)\r\n            at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:185)\r\n            at com.fasterxml.jackson.databind.deser.impl.FieldProperty.deserializeAndSet(FieldProperty.java:138)\r\n            at com.fasterxml.jackson.databind.deser.BeanDeserializer.vanillaDeserialize(BeanDeserializer.java:310)\r\n            at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:177)\r\n            at com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:342)\r\n            at com.fasterxml.jackson.databind.ObjectReader._bind(ObjectReader.java:2099)\r\n            at com.fasterxml.jackson.databind.ObjectReader.readValue(ObjectReader.java:1249)\r\n            at org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider.readFrom(ResteasyJackson2Provider.java:184)\r\n            at org.jboss.resteasy.core.interception.jaxrs.AbstractReaderInterceptorContext.readFrom(AbstractReaderInterceptorContext.java:99)\r\n            at org.jboss.resteasy.core.interception.jaxrs.ServerReaderInterceptorContext.readFrom(ServerReaderInterceptorContext.java:60)\r\n            at org.jboss.resteasy.core.interception.jaxrs.AbstractReaderInterceptorContext.proceed(AbstractReaderInterceptorContext.java:81)\r\n            at org.jboss.resteasy.core.MessageBodyParameterInjector.inject(MessageBodyParameterInjector.java:192)\r\n            at org.jboss.resteasy.core.MethodInjectorImpl.injectArguments(MethodInjectorImpl.java:87)\r\n            at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:116)\r\n            at org.jboss.resteasy.core.ResourceMethodInvoker.internalInvokeOnTarget(ResourceMethodInvoker.java:560)\r\n           at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTargetAfterFilter(ResourceMethodInvoker.java:452)\r\n           at org.jboss.resteasy.core.ResourceMethodInvoker.lambda$invokeOnTarget$2(ResourceMethodInvoker.java:413)\r\n            at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n            at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:415)\r\n            at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:378)\r\n            at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:356)\r\n            at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:70)\r\n            at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:429)\r\n            at org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:240)\r\n            at org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:154)\r\n            at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n            at org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:157)\r\n            at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:229)\r\n            at io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:82)\r\n            at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:147)\r\n            at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:93)\r\n            at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:582)\r\n            at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n            at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n            at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n            at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n            at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n            at java.base/java.lang.Thread.run(Thread.java:840)\r\n \r\nWhat am I doing wrong here ?\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38573/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38573/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

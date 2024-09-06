@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41971",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41971/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41971/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41971/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41971",
+  "id": 2416019805,
+  "node_id": "I_kwDOCFbutM6QAYld",
+  "number": 41971,
+  "title": "Support connection reset on cancellation for generated REST clients",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2024-07-18T10:36:04Z",
+  "updated_at": "2024-07-19T05:53:44Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nIn PR https://github.com/quarkusio/quarkus/pull/41710, cancellation support was added to the reactive REST services. However, the generated REST clients were never updated to support the scenario. What this means is that if the REST clients are used to call reactive endpoints, then the server will never be notified of the cancellation and will keep running the request to completion.\r\n\r\nI have a sample project showing this issue attached below.\r\n\r\nIn the project, calling:\r\n```\r\ncurl -X GET --location \"http://localhost:9000/call/cancel1\"\r\n```\r\nwill reset the connection and the service will stop processing, but calling:\r\n```\r\ncurl -X GET --location \"http://localhost:9000/call/cancel2\"\r\n```\r\nwill not.\r\n\r\n[Sample project](https://github.com/calebkiage/quarkus-kotlin-cancellation-test)\n\n### Implementation ideas\n\nThe code below adds cancellation for a Vert.x HttpClient:\r\n\r\n```kotlin\r\nwithTimeoutOrNull(delayLong) {\r\n    suspendCancellableCoroutine { cont->\r\n        val options = HttpClientOptions().setDefaultHost(\"localhost\").setDefaultPort(9000)\r\n        val client = ctx.vertx().createHttpClient(options)\r\n        client.request(io.vertx.core.http.HttpMethod.GET, \"/long/a\").onComplete { conn->\r\n            if (conn.succeeded()) {\r\n                cont.invokeOnCancellation {\r\n                    // Trigger a connection reset on cancellation\r\n                    conn.result().reset()\r\n                }\r\n                val request = conn.result()\r\n                request.send().onComplete { resp->\r\n                    if (resp.succeeded()) {\r\n                        val body = resp.result().body()\r\n                        body.onComplete { bodyState->\r\n                            if (bodyState.succeeded()) {\r\n                                cont.resume(bodyState.result().toString(Charsets.UTF_8))\r\n                            } else {\r\n                                cont.resumeWithException(bodyState.cause())\r\n                            }\r\n                        }\r\n                    } else {\r\n                        cont.resumeWithException(resp.cause())\r\n                    }\r\n                }\r\n            } else {\r\n                cont.resumeWithException(conn.cause())\r\n            }\r\n        }\r\n    }\r\n}\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41971/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41971/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

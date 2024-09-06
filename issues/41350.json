@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41350",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41350/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41350/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41350/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41350",
+  "id": 2366160465,
+  "node_id": "I_kwDOCFbutM6NCL5R",
+  "number": 41350,
+  "title": "[GraalVM] Jackson serialisation test gives false positive for AWS Lambda",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-06-21T09:47:02Z",
+  "updated_at": "2024-06-25T10:40:23Z",
+  "closed_at": "2024-06-25T10:40:17Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello everyone. \r\n\r\nI would like to report unexpected behaviour when running my quarkus native lambda on AWS and how testing in native mode gives me probably false positive results (not sure at this point if it is issue on GraalVM side which I use for native compilation or AWS environment and how I run my lambda there).\r\n\r\n### Expected behavior\r\n\r\nWhen you check provided reproducer you will see:\r\n1. __Lambda__ class **LambdaEndToEnd** test class. \r\n\r\n2. In Lambda.class here is **handleRequest** function which looks like that:\r\n\r\n    ``` \r\n    override fun handleRequest(event: Any, context: Context): String {\r\n        logger.info { \"Triggering native serialization\" }\r\n        val serializedValue = ObjectMapper().writeValueAsString(listOf(TestData(\"Data\")))\r\n        logger.info { \"Processed with serializedValue=$serializedValue\" }\r\n        if (serializedValue != \"\"\"[{\"data\":\"Data\"}]\"\"\") {\r\n            throw IllegalArgumentException(\"Native serialization doesn't work!\")\r\n        }\r\n        return serializedValue\r\n    } \r\n    ```\r\n    \r\nThis method is supposed to use ObjectMapper (no custom configuration provided, all default) to serialize given value.\r\nThe result should be json format __[{\"data\":\"Data\"}]__\r\n\r\n3. In LambdaEndToEnd.class there is basic and simple test to check above function's behaviour (running with @QuarkusTest). \r\n4. In **LambdaEndToEndNative.class** there is @QuarkusIntegrationTest for native testing.\r\n5. Expected behaviour is simple -> serializedValue should always equals [{\"data\":\"Data\"}] either using JVM, GraalVM or running it on AWS environment.\r\n\r\n### Actual behavior\r\n\r\nUnfortunately when I run my lambda on AWS then serializedValue is always **[{}]**, unless I annotate TestData.class (which is being serialized) with **@RegisterForReflection** (from io.quarkus.runtime.annotations) whereas it is not required whenever I run test either with JVM or natively using GraalVM. \r\n\r\nSo in nutshell, outside of AWS environment (basic config info below) serialisation doesn't work as expected but when JVM or GraalVM is used then everything is fine (even without @RegisterForReflection set anywhere). \r\n\r\nI do not understand where is the issue located. Is it unexpected \"native\" behaviour when testing serialisation with GraalVM or there is something wrong on AWS side?\r\n\r\n### How to Reproduce?\r\n\r\n1. Download reproducer from https://github.com/DudekJakub/test-quarkus-native-graalvm-lambda\r\n2. Run test LambdaEndToEnd.class with JVM -> OK\r\n3. Run test with GraalVM (natively) by using _./gradlew clean quarkusIntTest_ -> OK\r\n4. Deploy lambda on AWS and run \"test\" on lambda -> IllegalArgumentException(\"Native serialization doesn't work!\") is being thrown -> serializedValue unexpectedly equals **[{}]**\r\n\r\nBelow two screenshots from AWS:\r\n\r\nThis one shows result from CloudWatch logs when lambda is run\r\n![screenshot1](https://github.com/DudekJakub/test-quarkus-native-graalvm-lambda/blob/github/src/main/resources/AWS-cloudwatch-logs-lambda.png)\r\n\r\nThis shows lambda configuration\r\n![screenshot2](https://github.com/DudekJakub/test-quarkus-native-graalvm-lambda/blob/github/src/main/resources/AWS-lambda-configuration.png)\r\n\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Corretto-17.0.9.8.1 (build 17.0.9+8-LTS)\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\nGraalVM version 21.0.1\r\n\r\n### Quarkus version or git rev\r\n\r\n3.10.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.5\r\n\r\n### Additional information\r\n\r\nKotlin: 1.9.20\r\nGroovy: 3.0.17\r\nAnt: Apache Ant(TM) version 1.10.13 compiled on January 4 2023\r\nJVM: 17.0.9 (Amazon.com Inc. 17.0.9+8-LTS)\r\nOS: Mac OS X 13.5 aarch64\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41350/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41350/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

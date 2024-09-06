@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34779",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34779/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34779/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34779/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34779",
+  "id": 1806549835,
+  "node_id": "I_kwDOCFbutM5rrcNL",
+  "number": 34779,
+  "title": "Quarkus Cache: Improved Fallback Fault Tolerance",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236032526,
+      "node_id": "MDU6TGFiZWwyMjM2MDMyNTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/fault-tolerance",
+      "name": "area/fault-tolerance",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-07-16T11:41:33Z",
+  "updated_at": "2023-10-18T12:15:12Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nThis is probably mostly relevent for the Redis backend for Quarkus Cache.\r\n\r\nConsider the following:\r\n\r\n```\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n    @GET\r\n    public String hello() {\r\n        return expensive();\r\n    }\r\n\r\n    @CacheResult(cacheName = \"myCache\")\r\n    @Fallback(fallbackMethod = \"expensiveFallback\")\r\n    String expensive() {\r\n        return expensiveFallback();\r\n    }\r\n\r\n    String expensiveFallback() {\r\n        return \"Hello from RESTEasy Reactive\";\r\n    }\r\n}\r\n```\r\n\r\nusing Quarkus 3.2.0, `quarkus-redis-cache` and `quarkus-smallrye-fault-tolerance`.\r\n\r\nFirst I make a call to `hello()` thus populating the cache. When I then close Redis, to simulate a failure to get values from the cache, and call `hello()`, I get the following exception:\r\n\r\n```\r\n13:30:04 ERROR [io.qu.ve.ht.ru.QuarkusErrorHandler] (executor-thread-1) HTTP Request to /hello failed, error id: dc914983-726f-4830-8b4e-20ccba36894e-1: java.util.concurrent.CompletionException: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:6379\r\n        at io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:79)\r\n        at io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n        at io.smallrye.mutiny.groups.UniAwait.indefinitely(UniAwait.java:46)\r\n        at io.quarkus.cache.runtime.CacheResultInterceptor.intercept(CacheResultInterceptor.java:104)\r\n        at io.quarkus.cache.runtime.CacheResultInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n        at org.acme.GreetingResource_Subclass.expensive(Unknown Source)\r\n        at org.acme.GreetingResource.hello(GreetingResource.java:15)\r\n        at org.acme.GreetingResource$quarkusrestinvoker$hello_e747664148511e1e5212d3e0f4b40d45c56ab8a1.invoke(Unknown Source)\r\n        at org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n        at io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:141)\r\n        at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: localhost/127.0.0.1:6379\r\nCaused by: java.net.ConnectException: Connection refused\r\n        at java.base/sun.nio.ch.Net.pollConnect(Native Method)\r\n        at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672)\r\n        at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:946)\r\n        at io.netty.channel.socket.nio.NioSocketChannel.doFinishConnect(NioSocketChannel.java:337)\r\n        at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.finishConnect(AbstractNioChannel.java:334)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:776)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\nThe `@Fallback` annotation does not work in combination with `@CacheResult`. Instead, I have to wrap my cached method in order to achieve fallback fault tolerance:\r\n\r\n```\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n    @GET\r\n    public String hello() {\r\n        return wrappedExpensive();\r\n    }\r\n\r\n    @Fallback(fallbackMethod = \"expensiveFallback\")\r\n    String wrappedExpensive() {\r\n        return expensive();\r\n    }\r\n\r\n    @CacheResult(cacheName = \"myCache\")\r\n    String expensive() {\r\n        return expensiveFallback();\r\n    }\r\n\r\n    String expensiveFallback() {\r\n        return \"Hello from RESTEasy Reactive\";\r\n    }\r\n}\r\n```\r\n\r\nI see a number of issues:\r\n\r\n1. `@Fallback` does not work as expected in combination with `@CacheResult`\r\n2. The exception thrown by the cached method `expensive()` when Redis is closed is too generic: A `CompletionException` with a root cause of `ConnectException`. If the code inside the cached method could also throw a `ConnectException`, then it is not possible to define a `@Fallback` that only applies for the case where the cache itself fails.\r\n3. The two examples given include a lot of boilerplate that I have to add to every single cached method, in order to have fallback fault tolerance. For my case, I would like the code in the cached method to be executed, in case the cache fails.\r\n\r\nI would like to request:\r\n\r\n1. `@Fallback` should work in combination with `@CacheResult`\r\n2. A specific exception thrown when retrieving from the cache failed, for example a `CacheFailure` exception\r\n3. A convenient way of adding fallback fault tolerance to cached method. Maybe this could be done by simply annotating the cached method with `@Fallback` and not providing a `fallbackMethod`? I'm not sure how this would follow the Fault Tolerance spec. Alternatively, add an option to `@CacheResult(fallback=true)` that would execute the code inside the cached method, in case of a cache retrieval failure.\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34779/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34779/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40027",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40027/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40027/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40027/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40027",
+  "id": 2238394774,
+  "node_id": "I_kwDOCFbutM6FazGW",
+  "number": 40027,
+  "title": "Encoding issue when upgrading to Quarkus 3 using Dockerfile.native-micro",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2024-04-11T19:16:35Z",
+  "updated_at": "2024-04-20T13:59:30Z",
+  "closed_at": "2024-04-19T23:08:44Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen upgrading to Quarkus 3.7.3 from Quarkus 2 (2.16.12.Final), logs started having problems printing some chars (áéíóú). This happened when running in a Kubernetes server.\r\n\r\n`Dockerfile.native-micro` doesn't seem to be defaulting to UTF-8. Is this expected?\r\n\r\nOutput on remote running pod (`Dockerfile.native-micro`):\r\n```sh\r\nbash-4.4$ locale charmap\r\nANSI_X3.4-1968\r\n\r\nbash-4.4$ locale -a\r\nC\r\nC.utf8\r\nPOSIX\r\n```\r\n\r\n### Expected behavior\r\n\r\nAt least chars with accent (áéíóú) should correctly appear in logs\r\n\r\n### Actual behavior\r\n\r\nChars with accent (áéíóú) appear as \"?\" in the log\r\n\r\n### How to Reproduce?\r\n\r\nImage used to build: `ghcr.io/graalvm/graalvm-ce:ol8-java17-22`\r\n\r\nSteps to build:\r\n1. gu install native-image\r\n2. ./mvnw -B package -Dnative -Dmaven.test.skip\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17.0.8+7-jvmci-22.3-b22\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\nGraalVM 22.3.3 Java 17 CE\r\n\r\n### Quarkus version or git rev\r\n\r\n3.7.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6\r\n\r\n### Additional information\r\n\r\nSame image/steps to build worked fine with Quarkus 2\r\n\r\nMaybe some related issues:\r\nhttps://github.com/quarkusio/quarkus/issues/11222\r\nhttps://github.com/quarkusio/quarkus-images/issues/86\r\n\r\n\r\nFragment build log:\r\n```log\r\n...\r\n[INFO] [io.quarkus.deployment.pkg.steps.JarResultBuildStep] Building native image source jar: /workspace/71bbac2e-06fd-4bda-8b47-4bfc7bd331be/target/<edited-app-name>-1.0.0-SNAPSHOT-native-image-source-jar/<edited-app-name>-1.0.0-SNAPSHOT-runner.jar\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildStep] Building native image from /workspace/71bbac2e-06fd-4bda-8b47-4bfc7bd331be/target/<edited-app-name>-1.0.0-SNAPSHOT-native-image-source-jar/<edited-app-name>-1.0.0-SNAPSHOT-runner.jar\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildStep] Running Quarkus native-image plugin on GRAALVM 22.3.3 JDK 17.0.8+7-jvmci-22.3-b22\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] /opt/graalvm-ce-java17-22.3.3/bin/native-image -J-Dsun.nio.ch.maxUpdateArraySize=100 -J-Djava.util.logging.manager=org.jboss.logmanager.LogManager -J-DCoordinatorEnvironmentBean.transactionStatusManagerEnable=false -J-Dlogging.initial-configurator.min-level=500 -J-Dio.quarkus.caffeine.graalvm.recordStats=true -J-Dvertx.logger-delegate-factory-class-name=io.quarkus.vertx.core.runtime.VertxLogDelegateFactory -J-Dvertx.disableDnsResolver=true -J-Dio.netty.leakDetection.level=DISABLED -J-Dio.netty.allocator.maxOrder=3 -J-Duser.language=en -J-Duser.country=US -J-Dfile.encoding=UTF-8 --features=io.quarkus.hibernate.orm.runtime.graal.DisableLoggingFeature,org.hibernate.graalvm.internal.GraalVMStaticFeature,io.quarkus.runner.Feature,io.quarkus.runtime.graal.DisableLoggingFeature,io.quarkus.caffeine.runtime.graal.CacheConstructorsFeature,io.quarkus.jdbc.postgresql.runtime.graal.SQLXMLFeature -J--add-exports=java.security.jgss/sun.security.krb5=ALL-UNNAMED -J--add-opens=java.base/java.text=ALL-UNNAMED -J--add-opens=java.base/java.io=ALL-UNNAMED -J--add-opens=java.base/java.lang.invoke=ALL-UNNAMED -J--add-opens=java.base/java.util=ALL-UNNAMED -H:+CollectImageBuildStatistics -H:ImageBuildStatisticsFile=<edited-app-name>-1.0.0-SNAPSHOT-runner-timing-stats.json -H:BuildOutputJSONFile=<edited-app-name>-1.0.0-SNAPSHOT-runner-build-output-stats.json -H:+AllowFoldMethods -J-Djava.awt.headless=true --no-fallback --link-at-build-time -H:+ReportExceptionStackTraces -H:-AddAllCharsets --enable-url-protocols=http,https -H:NativeLinkerOption=-no-pie --enable-monitoring=heapdump -H:-UseServiceLoaderFeature -H:+StackTrace -J--add-exports=org.graalvm.sdk/org.graalvm.nativeimage.impl=ALL-UNNAMED --exclude-config io\\.netty\\.netty-codec /META-INF/native-image/io\\.netty/netty-codec/generated/handlers/reflect-config\\.json --exclude-config io\\.netty\\.netty-handler /META-INF/native-image/io\\.netty/netty-handler/generated/handlers/reflect-config\\.json <edited-app-name>-1.0.0-SNAPSHOT-runner -jar <edited-app-name>-1.0.0-SNAPSHOT-runner.jar\r\n========================================================================================================================\r\nGraalVM Native Image: Generating '<edited-app-name>-1.0.0-SNAPSHOT-runner' (executable)...\r\n========================================================================================================================\r\n[1/7] Initializing...                                                                                   (25.4s @ 0.52GB)\r\n Version info: 'GraalVM 22.3.3 Java 17 CE'\r\n Java version info: '17.0.8+7-jvmci-22.3-b22'\r\n C compiler: gcc (redhat, x86_64, 8.5.0)\r\n Garbage collector: Serial GC\r\n 8 user-specific feature(s)\r\n - com.oracle.svm.thirdparty.gson.GsonFeature\r\n - io.quarkus.caffeine.runtime.graal.CacheConstructorsFeature\r\n - io.quarkus.hibernate.orm.runtime.graal.DisableLoggingFeature: Disables INFO logging during the analysis phase\r\n - io.quarkus.jdbc.postgresql.runtime.graal.SQLXMLFeature\r\n - io.quarkus.runner.Feature: Auto-generated class by Quarkus from the existing extensions\r\n - io.quarkus.runtime.graal.DisableLoggingFeature: Disables INFO logging during the analysis phase\r\n - org.eclipse.angus.activation.nativeimage.AngusActivationFeature\r\n - org.hibernate.graalvm.internal.GraalVMStaticFeature: Hibernate ORM's static reflection registrations for GraalVM\r\n17:53:31,534 WARN  [org.hib.orm.deprecation] HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)\r\n[2/7] Performing analysis...  [*************]                                                          (187.0s @ 2.14GB)\r\n  22,782 (91.35%) of 24,940 classes reachable\r\n  32,503 (63.48%) of 51,204 fields reachable\r\n 111,958 (54.04%) of 207,177 methods reachable\r\n     919 classes,   442 fields, and 5,487 methods registered for reflection\r\n      63 classes,    68 fields, and    55 methods registered for JNI access\r\n       4 native libraries: dl, pthread, rt, z\r\n[3/7] Building universe...                                                                              (21.6s @ 2.85GB)\r\n[4/7] Parsing methods...      [****]                                                                    (15.1s @ 2.52GB)\r\n[5/7] Inlining methods...     [***]                                                                      (8.3s @ 2.33GB)\r\n[6/7] Compiling methods...    [**********]                                                             (108.1s @ 2.85GB)\r\n[7/7] Creating image...                                                                                  (9.0s @ 2.95GB)\r\n  40.95MB (48.96%) for code area:    74,027 compilation units\r\n  42.37MB (50.66%) for image heap:  501,746 objects and 24 resources\r\n 325.91KB ( 0.38%) for other data\r\n  83.63MB in total\r\n------------------------------------------------------------------------------------------------------------------------\r\nTop 10 packages in code area:                               Top 10 object types in image heap:\r\n   1.64MB sun.security.ssl                                     9.25MB byte[] for code metadata\r\n   1.16MB java.util                                            5.71MB java.lang.Class\r\n 840.74KB io.quarkus.runtime.generated                         4.81MB byte[] for general heap data\r\n 764.25KB java.lang.invoke                                     4.59MB java.lang.String\r\n 717.68KB com.sun.crypto.provider                              4.39MB byte[] for java.lang.String\r\n 533.40KB jdk.proxy4                                           1.91MB com.oracle.svm.core.hub.DynamicHubCompanion\r\n 514.90KB io.netty.buffer                                      1.31MB byte[] for reflection metadata\r\n 508.97KB java.lang                                          923.16KB java.lang.String[]\r\n 491.57KB java.util.concurrent                               794.10KB c.o.svm.core.hub.DynamicHub$ReflectionMetadata\r\n 488.04KB org.postgresql.jdbc                                786.80KB java.util.HashMap$Node\r\n  32.84MB for 931 more packages                                7.83MB for 5037 more object types\r\n------------------------------------------------------------------------------------------------------------------------\r\n                       39.7s (10.3% of total time) in 81 GCs | Peak RSS: 5.10GB | CPU load: 1.81\r\n------------------------------------------------------------------------------------------------------------------------\r\nProduced artifacts:\r\n /workspace/71bbac2e-06fd-4bda-8b47-4bfc7bd331be/target/<edited-app-name>-1.0.0-SNAPSHOT-native-image-source-jar/<edited-app-name>-1.0.0-SNAPSHOT-runner (executable)\r\n /workspace/71bbac2e-06fd-4bda-8b47-4bfc7bd331be/target/<edited-app-name>-1.0.0-SNAPSHOT-native-image-source-jar/<edited-app-name>-1.0.0-SNAPSHOT-runner-build-output-stats.json (json)\r\n /workspace/71bbac2e-06fd-4bda-8b47-4bfc7bd331be/target/<edited-app-name>-1.0.0-SNAPSHOT-native-image-source-jar/<edited-app-name>-1.0.0-SNAPSHOT-runner-timing-stats.json (raw)\r\n /workspace/71bbac2e-06fd-4bda-8b47-4bfc7bd331be/target/<edited-app-name>-1.0.0-SNAPSHOT-native-image-source-jar/<edited-app-name>-1.0.0-SNAPSHOT-runner.build_artifacts.txt (txt)\r\n========================================================================================================================\r\nFinished generating '<edited-app-name>-1.0.0-SNAPSHOT-runner' in 6m 25s.\r\n[INFO] [io.quarkus.deployment.pkg.steps.NativeImageBuildRunner] objcopy --strip-debug <edited-app-name>-1.0.0-SNAPSHOT-runner\r\n[INFO] [io.quarkus.deployment.QuarkusAugmentor] Quarkus augmentation completed in 394360ms\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD SUCCESS\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  06:57 min\r\n...\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40027/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40027/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

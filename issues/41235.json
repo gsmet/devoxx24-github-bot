@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41235",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41235/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41235/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41235/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41235",
+  "id": 2355838206,
+  "node_id": "I_kwDOCFbutM6Mazz-",
+  "number": 41235,
+  "title": "[BytecodeTransformerBuildItem] unable to add Singleton scope to a bean",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2323889171,
+      "node_id": "MDU6TGFiZWwyMzIzODg5MTcx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jbang",
+      "name": "area/jbang",
+      "color": "0052cc",
+      "default": false,
+      "description": "Issues related to when using jbang.dev with Quarkus"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-06-16T15:26:04Z",
+  "updated_at": "2024-06-16T15:42:15Z",
+  "closed_at": "2024-06-16T15:41:50Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn a domain driven development architecture I would like to define Command and CommandHandler in the domain side without using Quarkus annotations likes `@Singleton`\r\n\r\nSo I've developed a tiny extension to transform the bytecode of CommandHandler implementations by adding the singleton scope.\r\n\r\nI am doing it this way:\r\n\r\n```java\r\n    @BuildStep\r\n    void registerCommandHandlersAsSingletonBean(final ApplicationIndexBuildItem applicationIndexBuildItem,\r\n                                                final BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerBuildItemProducer) {\r\n        applicationIndexBuildItem.getIndex()\r\n                .getAllKnownImplementors(DotName.createSimple(CommandHandler.class))\r\n                .forEach(classInfo ->\r\n                        bytecodeTransformerBuildItemProducer.produce(\r\n                                new BytecodeTransformerBuildItem.Builder()\r\n                                        .setClassToTransform(classInfo.name().toString())\r\n                                        .setVisitorFunction((s, classVisitor) -> // NOT CALLED :/\r\n                                                new AddSingletonAnnotationClassVisitor(classVisitor))\r\n                                        .setCacheable(true)\r\n                                        .build()\r\n                        )\r\n                );\r\n    }\r\n```\r\n\r\nwith\r\n\r\n```java\r\npublic final class AddSingletonAnnotationClassVisitor extends ClassVisitor {\r\n\r\n    public AddSingletonAnnotationClassVisitor(final ClassVisitor classVisitor) {\r\n        super(Gizmo.ASM_API_VERSION, classVisitor);\r\n    }\r\n\r\n    @Override\r\n    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {\r\n        super.visit(version, access, name, signature, superName, interfaces);\r\n        // Add the @Singleton annotation to the class\r\n        final AnnotationVisitor av = super.visitAnnotation(\"Ljavax/inject/Singleton;\", true);\r\n        av.visitEnd();\r\n    }\r\n}\r\n```\r\n\r\nAnd next I inject the bean this way in a rest controller:\r\n\r\n```java\r\n@Path(\"/sample-singleton-bytecode-transformer\")\r\n@ApplicationScoped\r\npublic class SampleSingletonBytecodeTransformerResource {\r\n    private final SayHelloCommandHandler sayHelloCommandHandler;\r\n\r\n    public SampleSingletonBytecodeTransformerResource(final SayHelloCommandHandler sayHelloCommandHandler) {\r\n        this.sayHelloCommandHandler = sayHelloCommandHandler;\r\n    }\r\n    // add some rest methods here\r\n\r\n    @GET\r\n    public String hello() {\r\n        return sayHelloCommandHandler.handle(new SayHelloCommand());\r\n    }\r\n}\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\nThe `SayHelloCommandHandler` should be injected and calling the endpoint should return `Hello sample-singleton-bytecode-transformer`\r\n\r\n### Actual behavior\r\n\r\nThe bean is not resolved\r\n\r\n```\r\nCaused by: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type com.damdamdeo.sample.singleton.bytecode.transformer.it.SayHelloCommandHandler and qualifiers [@Default]\r\n        - injection target: parameter 'sayHelloCommandHandler' of com.damdamdeo.sample.singleton.bytecode.transformer.it.SampleSingletonBytecodeTransformerResource constructor\r\n```\r\n\r\nMoreover the `AddSingletonAnnotationClassVisitor` inside `setVisitorFunction` is never called.\r\n\r\n\r\n### How to Reproduce?\r\n\r\n1. checkout this sample here https://github.com/dcdh/sample-singleton-bytecode-transformer\r\n2. do `mvn clean install`\r\n3. The integrations test will fail.\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux 2a02-8428-dff8-c601-234b-8c10-a3c4-2308.rev.sfr.net 6.8.11-200.fc39.x86_64 #1 SMP PREEMPT_DYNAMIC Sun May 26 20:05:41 UTC 2024 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.11\" 2024-04-16 OpenJDK Runtime Environment Temurin-17.0.11+9 (build 17.0.11+9) OpenJDK 64-Bit Server VM Temurin-17.0.11+9 (build 17.0.11+9, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.11.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.1 (Red Hat 3.9.1-3) Maven home: /usr/share/maven Java version: 17.0.11, vendor: Eclipse Adoptium, runtime: /home/damien/.jbang/cache/jdks/17 Default locale: fr_FR, platform encoding: UTF-8 OS name: \"linux\", version: \"6.8.11-200.fc39.x86_64\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\nIs it possible to overcome this issue by declaring the producer in the infrastructure part.\r\nBut it would be nice to do it automagically using a BuildStep.\r\n\r\nThe setVisitorFunction is executed if the @Singleton scope is explicity defined.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41235/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41235/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

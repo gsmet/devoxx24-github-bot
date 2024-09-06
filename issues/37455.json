@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37455",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37455/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37455/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37455/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37455",
+  "id": 2021015999,
+  "node_id": "I_kwDOCFbutM54dkG_",
+  "number": 37455,
+  "title": "Building native executables when using deps that does not have native binaries on arm platform not working",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 4147701997,
+      "node_id": "LA_kwDOCFbutM73OOjt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/m1",
+      "name": "env/m1",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Apple M1 machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-12-01T14:39:10Z",
+  "updated_at": "2024-06-20T19:32:22Z",
+  "closed_at": "2024-06-20T19:32:22Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nReporting this per @maxandersen. This is to report that the changes made in #36628 do not seem to work.\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nFollow these steps to reproduce on a Mac M1 (or any other ARM machine):\r\n\r\n1. Clone the [Quarkus Superheroes](https://github.com/quarkusio/quarkus-super-heroes) locally\r\n2. `cd` into `rest-fights`.\r\n    - Currently this app uses Quarkus community 3.6.0\r\n4. Update the `pom.xml` by adding the Red Hat Maven repo:\r\n```xml\r\n <repositories>\r\n    <repository>\r\n      <id>red-hat-enterprise-maven-repository</id>\r\n      <url>https://maven.repository.redhat.com/ga/</url>\r\n      <releases>\r\n        <enabled>true</enabled>\r\n      </releases>\r\n      <snapshots>\r\n        <enabled>false</enabled>\r\n      </snapshots>\r\n    </repository>\r\n  </repositories>\r\n  <pluginRepositories>\r\n    <pluginRepository>\r\n      <id>red-hat-enterprise-maven-repository</id>\r\n      <url>https://maven.repository.redhat.com/ga/</url>\r\n      <releases>\r\n        <enabled>true</enabled>\r\n      </releases>\r\n      <snapshots>\r\n        <enabled>false</enabled>\r\n      </snapshots>\r\n    </pluginRepository>\r\n  </pluginRepositories>\r\n```\r\n\r\n5. Update the `pom.xml` by adding the following dependency:\r\n```xml\r\n    <dependency>\r\n      <groupId>com.github.luben</groupId>\r\n      <artifactId>zstd-jni</artifactId>\r\n      <version>1.5.2.3-redhat-00002</version>\r\n    </dependency>\r\n```\r\n\r\n6. Run `./mvnw clean package -DskipTests -Pnative`\r\n7. Native build will fail with something like this (you can also see something similar in https://github.com/quarkusio/quarkus-super-heroes/actions/runs/7060779473/job/19221013171#step:9:3996):\r\n```\r\nError: Class specified as onlyWith for io.quarkus.netty.runtime.graal.HttpContentCompressorSubstitutions$ZstdEncoderFactorySubstitution cannot be loaded or instantiated: io.quarkus.netty.runtime.graal.HttpContentCompressorSubstitutions$IsZstdAbsent\r\ncom.oracle.svm.core.util.UserError$UserException: Class specified as onlyWith for io.quarkus.netty.runtime.graal.HttpContentCompressorSubstitutions$ZstdEncoderFactorySubstitution cannot be loaded or instantiated: io.quarkus.netty.runtime.graal.HttpContentCompressorSubstitutions$IsZstdAbsent\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:85)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.substitute.AnnotationSubstitutionProcessor.findTargetClass(AnnotationSubstitutionProcessor.java:1052)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.substitute.AnnotationSubstitutionProcessor.handleClass(AnnotationSubstitutionProcessor.java:373)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.substitute.AnnotationSubstitutionProcessor.init(AnnotationSubstitutionProcessor.java:351)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.createAnnotationSubstitutionProcessor(NativeImageGenerator.java:1029)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.setupNativeImage(NativeImageGenerator.java:907)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:590)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:550)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:538)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:720)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.start(NativeImageGeneratorRunner.java:142)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:97)\r\nCaused by: java.lang.reflect.InvocationTargetException\r\n        at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:74)\r\n        at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)\r\n        at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)\r\n        at org.graalvm.nativeimage.base/com.oracle.svm.util.ReflectionUtil.newInstance(ReflectionUtil.java:106)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.substitute.AnnotationSubstitutionProcessor.findTargetClass(AnnotationSubstitutionProcessor.java:1050)\r\n        ... 10 more\r\nCaused by: java.lang.UnsatisfiedLinkError: no zstd-jni-1.5.2.3-redhat-00002 in java.library.path: /Users/edeandre/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.\r\nUnsupported OS/arch, cannot find /darwin/aarch64/libzstd-jni-1.5.2.3-redhat-00002.dylib or load zstd-jni-1.5.2.3-redhat-00002 from system libraries. Please try building from source the jar or providing libzstd-jni-1.5.2.3-redhat-00002 in your system.\r\n        at java.base/java.lang.ClassLoader.loadLibrary(ClassLoader.java:2458)\r\n        at java.base/java.lang.Runtime.loadLibrary0(Runtime.java:916)\r\n        at java.base/java.lang.System.loadLibrary(System.java:2059)\r\n        at com.github.luben.zstd.util.Native.load(Native.java:87)\r\n        at com.github.luben.zstd.util.Native.load(Native.java:55)\r\n        at com.github.luben.zstd.Zstd.<clinit>(Zstd.java:13)\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Class.java:421)\r\n        at java.base/java.lang.Class.forName(Class.java:412)\r\n        at io.quarkus.netty.runtime.graal.HttpContentCompressorSubstitutions$IsZstdAbsent.<init>(HttpContentCompressorSubstitutions.java:38)\r\n        at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)\r\n        ... 14 more\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n`Darwin edeandrea-m1pro 23.1.0 Darwin Kernel Version 23.1.0: Mon Oct  9 21:27:24 PDT 2023; root:xnu-10002.41.9~6/RELEASE_ARM64_T6000 arm64`\r\n\r\n### Output of `java -version`\r\n\r\n```                \r\nopenjdk version \"17.0.9\" 2023-10-17\r\nOpenJDK Runtime Environment Temurin-17.0.9+9 (build 17.0.9+9)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.9+9 (build 17.0.9+9, mixed mode)\r\n```\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\n```\r\nopenjdk 21.0.1 2023-10-17\r\nOpenJDK Runtime Environment GraalVM CE 21.0.1+12.1 (build 21.0.1+12-jvmci-23.1-b19)\r\nOpenJDK 64-Bit Server VM GraalVM CE 21.0.1+12.1 (build 21.0.1+12-jvmci-23.1-b19, mixed mode, sharing)\r\n```\r\n\r\n### Quarkus version or git rev\r\n\r\n3.6.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n```\r\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546)\r\nMaven home: /Users/edeandre/.m2/wrapper/dists/apache-maven-3.9.5-bin/32db9c34/apache-maven-3.9.5\r\nJava version: 17.0.9, vendor: Eclipse Adoptium, runtime: /Users/edeandre/.sdkman/candidates/java/17.0.9-tem\r\nDefault locale: en_US, platform encoding: UTF-8\r\nOS name: \"mac os x\", version: \"14.1.1\", arch: \"aarch64\", family: \"mac\"\r\n```\r\n\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37455/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37455/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

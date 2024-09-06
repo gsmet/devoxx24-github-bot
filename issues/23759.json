@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23759",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23759/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23759/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23759/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23759",
+  "id": 1139974025,
+  "node_id": "I_kwDOCFbutM5D8p-J",
+  "number": 23759,
+  "title": "io.quarkus:quarkus-jacoco does not work with `QuarkusUnitTest`",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-02-16T12:45:45Z",
+  "updated_at": "2022-02-17T07:45:49Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe guide on https://quarkus.io/guides/tests-with-coverage#setting-up-jacoco has improved a lot, the quarkus-jacoco extension is a great idea. I wanted to correctly measure my Neo4j-Migrations extensions (https://github.com/michael-simons/neo4j-migrations/tree/main/neo4j-migrations-quarkus-parent) but the new plugin does not work with `QuarkusUnitTest` (it fails hard on deploy). \r\n\r\nThe reason being that `outputDirectory` in a `io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem` is `null` and the `JacocoProcessor` doesn't check against that (see https://github.com/quarkusio/quarkus/blob/68dff2c1da771fd2131e0ade904854282b4c8503/test-framework/jacoco/deployment/src/main/java/io/quarkus/jacoco/deployment/JacocoProcessor.java#L58). \n\n### Expected behavior\n\nI expect that I can enhance classes subject to `QuarkusUnitTest` the same way as I can with `@QuarkusTest`, as the underlying mechanism is similar seen from the outside.\r\n\r\nIf this is not possible, I would like the quarkus-jacoco plugin to not fail.\n\n### Actual behavior\n\nTests registering `QuarkusUnitTest` doesn't even start but fail during augmentation when the jacoco plugin is on the test classpath:\r\n\r\n```\r\njava.lang.RuntimeException: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.jacoco.deployment.JacocoProcessor#transformerBuildItem threw an exception: java.lang.NullPointerException: Cannot invoke \"java.nio.file.Path.toAbsolutePath()\" because the return value of \"io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem.getOutputDirectory()\" is null\r\n\tat io.quarkus.jacoco.deployment.JacocoProcessor.transformerBuildItem(JacocoProcessor.java:58)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$2.execute(ExtensionLoader.java:882)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:277)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\n\r\n\tat io.quarkus.test.QuarkusUnitTest.beforeAll(QuarkusUnitTest.java:613)\r\n\tat org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeBeforeAllCallbacks$10(ClassBasedTestDescriptor.java:381)\r\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n\tat org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeBeforeAllCallbacks(ClassBasedTestDescriptor.java:381)\r\n\tat org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:205)\r\n\tat org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:80)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:148)\r\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)\r\n\tat org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)\r\n\tat org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)\r\n\tat org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)\r\n```\r\n\r\n\n\n### How to Reproduce?\n\nGenerate a new extension, i.e. like this\r\n\r\n```\r\nmvn io.quarkus.platform:quarkus-maven-plugin:2.7.1.Final:create-extension -N \\\r\n  -DgroupId=io.quarkiverse.foo \\\r\n    -DextensionId=my-ext \\\r\n    -Dname=\"My Extension\"\r\n```\r\n\r\nadd \r\n\r\n```\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-jacoco</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n```\r\n\r\nto the deployment module, do an `mvn package`.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.8.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23759/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23759/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

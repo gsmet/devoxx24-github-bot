@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41099",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41099/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41099/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41099/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41099",
+  "id": 2344427638,
+  "node_id": "I_kwDOCFbutM6LvSB2",
+  "number": 41099,
+  "title": "Upstream Jackson bug causing `BigDecimal` deserialization issues when missing leading zeros",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-06-10T17:07:26Z",
+  "updated_at": "2024-06-10T17:24:37Z",
+  "closed_at": "2024-06-10T17:24:37Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter trying to make the leap from Quarkus `3.2` to `3.8` I noticed an expected crash in automated tests around Jackson deserialization of the value `.2` into a BigDecimal field. I believe this issue was tracked and resolved upstream with details found [here](https://github.com/FasterXML/jackson-databind/issues/4435).\r\n\r\nIt looks like the `jackson-databind` patch `2.17.1` with the fix was already included in Quarkus `3.11.1`. I did upgrade to `3.11.1` and found the issue solved. Any chance you'd consider bringing this fix into the latest LTS branch `3.8` as well? \n\n### Expected behavior\n\nA contract with field set correctly.\n\n### Actual behavior\n\n```\r\ncom.fasterxml.jackson.databind.exc.InvalidFormatException: Cannot deserialize value of type `java.math.BigDecimal` from String \".2\": not a valid representation\r\n```\n\n### How to Reproduce?\n\nSee linked issue for a better example. Here is a minimalistic example.\r\n\r\nExample contract\r\n\r\n```\r\n@Schema()\r\npublic class Contract {\r\n\r\n    @JsonProperty(\"fee\")\r\n    @Schema(description = \"a charge\")\r\n    private BigDecimal fee;\r\n\r\n}\r\n\r\n```\r\n\r\nExample input\r\n\r\n```\r\n{\r\n  \"fee\": .2,\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux dev 6.5.0-35-generic #35~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May  7 09:00:52 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.6\" 2023-01-17 LTS OpenJDK Runtime Environment Corretto-17.0.6.10.1 (build 17.0.6+10-LTS) OpenJDK 64-Bit Server VM Corretto-17.0.6.10.1 (build 17.0.6+10-LTS, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.8.5\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.8.6\n\n### Additional information\n\nPlacing this in the project's `pom.xml` seems to workaround the bug while staying on the Quarkus `3.2` track.\r\n\r\n```\r\n<dependencyManagement>\r\n  <dependencies>\r\n    <dependency>\r\n      <groupId>com.fasterxml.jackson</groupId>\r\n      <artifactId>jackson-bom</artifactId>\r\n      <version>2.17.1</version>\r\n      <scope>import</scope>\r\n      <type>pom</type>\r\n    </dependency>\r\n  </dependencies>\r\n</dependencyManagement>\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41099/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41099/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

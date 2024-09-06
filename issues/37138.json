@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37138",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37138/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37138/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37138/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37138",
+  "id": 1996487540,
+  "node_id": "I_kwDOCFbutM52__t0",
+  "number": 37138,
+  "title": "[Extension Proposal] Zombie detector - quarkus-business-score",
+  "labels": [
+    {
+      "id": 1553869078,
+      "node_id": "MDU6TGFiZWwxNTUzODY5MDc4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/extension-proposal",
+      "name": "kind/extension-proposal",
+      "color": "abfcbb",
+      "default": false,
+      "description": "Discuss and Propose new extensions"
+    },
+    {
+      "id": 2388070055,
+      "node_id": "MDU6TGFiZWwyMzg4MDcwMDU1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/quarkiverse",
+      "name": "area/quarkiverse",
+      "color": "a01441",
+      "default": false,
+      "description": "This issue/PR is part of the Quarkiverse organization"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2023-11-16T09:58:43Z",
+  "updated_at": "2024-05-22T09:54:00Z",
+  "closed_at": "2024-05-13T12:12:23Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nSo after reading @holly-cummins's blog [The necessary death of software systems](https://hollycummins.com/death-and-software/) I realized that Quarkus might offer a more convenient way of detecting application \"zombies\", i.e. applications that live/communicate but **do not produce any business value**. \r\n\r\nWhen I say \"business value\" I mean anything that helps to solve a problem of an application user, i.e. anything the app was build for. For example storing orders, serving content or performing computational tasks. Infrastructure stuff (logs, stats, metrics, health checks) usually does not produce a business value.\r\n\r\n### Why not use existing extensions?\r\n\r\nThere are two extensions that seem appropriate for this task. [quarkus-smallrye-health](https://quarkus.io/guides/smallrye-health) and [quarkus-micrometer](https://quarkus.io/guides/telemetry-micrometer). The problem with `quarkus-smallrye-health` is that an application health does not necessary say anything about the business value. In other words, an application could be in excellent condition but totally useless and just consuming resources. You could define a custom health check and maintain the \"business value\" data in the app but that's not very convenient. `quarkus-micrometer` on the other hand is IMO too generic. The truth is that [`DistributionSummary`](https://quarkus.io/guides/telemetry-micrometer#summaries-and-timers) is almost a perfect match but it lacks a simple and intuitive API.\r\n\r\n### The concepts\r\n\r\nIn a nutshell, the extension will manage the **business score** which is a numeric representation of the business value. Application will emit score records (increase the business score), either directly via the API or with an interceptor binding. The sum of all score records in the current time window is the **current business score**. The records are only kept for the specific amount of time - **time window**. The app defines the point at which the application is considered a zombie - **zombie threshold**. An external system or the application itself can periodically check the business score and react appropriately.\r\n\r\n### API and usage\r\n\r\nThis extension will introduce a `BusinessScore` API like:\r\n\r\n```java\r\ninterface BusinessScore {\r\n\r\n    void score(int value, String... labels);\r\n    void reset();\r\n\r\n    // the sum of all score records in the current time window\r\n    long getCurrentScore();\r\n\r\n    // the point at which the application is considered a zombie, configurable \r\n    long getZombieThreshold();\r\n    default boolean isZombie() {\r\n        return getCurrentScore() < getZombieThreshold();\r\n    }\r\n\r\n    // the amount of time a score record is kept alive, configurable\r\n    Duration getTimeWindow();\r\n\r\n    List<ScoreRecord> getRecords();\r\n\r\n    interface ScoreRecord {\r\n        int value();\r\n        long timestamp();\r\n        Set<String> labels();\r\n    }\r\n}\r\n\r\n```\r\nAn app could `@Inject  BusinessScore` like any other bean and increase/query the score direcly.\r\n\r\nThis extension would introduce a `@Scored` interceptor binding that could be used like:\r\n\r\n```java\r\nclass MyService {\r\n   \r\n    @Scored // increate the business core by 1\r\n    void storeOrder() {\r\n      // ... \r\n    }\r\n}\r\n```\r\n\r\n### Management endpoint\r\n\r\nA management endpoint is registered automatically. HTTP GET `/q/business-score` would return something like:\r\n```json\r\n{\r\n    \"serverTime\": \"2023-11-16T09:30:19.690771661\",\r\n    \"application\": {\r\n        \"name\": \"my-app\",\r\n        \"version\": \"1.0\"\r\n    },\r\n    \"score\": 1,\r\n    \"zombieThreshold\": 10,\r\n    \"timeWindow\": \"PT168H\"\r\n}\r\n```\r\n\r\n### Detecting zombies\r\n\r\nAn external system could query the mgmt endpoint. But even the app itself could be more proactive and e.g. register a scheduled method like this:\r\n```java\r\nclass ZombieDetector {\r\n\r\n    @Inject\r\n    BusinessScore businessScore;\r\n\r\n    @Scheduled(cron = \"0 15 10 * * ?\")\r\n    void detect() {\r\n       if (businessScore.isZombie()) {\r\n          // send a notification...\r\n       }\r\n    }\r\n}\r\n\r\n```\r\n\r\n\n\n### Repository name\n\nquarkus-business-score\n\n### Short description\n\nCollects application business score and detects zombies.\n\n### Repository Homepage URL\n\nhttps://quarkiverse.github.io/quarkiverse-docs/quarkus-business-score/dev/\n\n### Repository Topics\n\n- quarkus-extension\r\n- \r\n...\r\n\n\n### Team Members\n\n- \r\n\n\n### Additional context\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37138/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37138/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

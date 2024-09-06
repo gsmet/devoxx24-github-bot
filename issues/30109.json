@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30109",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30109/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30109/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30109/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30109",
+  "id": 1514864523,
+  "node_id": "I_kwDOCFbutM5aSv-L",
+  "number": 30109,
+  "title": "OIDC - quarkus.oidc.authentication.java-script-auto-redirect is not working",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-12-30T21:44:35Z",
+  "updated_at": "2022-12-30T22:21:32Z",
+  "closed_at": "2022-12-30T22:21:32Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI've got pretty simple Quarkus application with OIDC, Qute and htmx.\r\n\r\nI can authenticate in my application using OIDC (github) but after 5 minutes my requests are failing.\r\n\r\nMost of the requests are AJAX calls initiated by htmx. After 5 minutes (token expiration) I am getting 302 response  which is trying to redirect me to ` https://github.com/login/oauth/authorize` but for AJAX calls it is blocked by github's CORS configuration.\r\n\r\nAccording to documentation:\r\n\r\n[quarkus.oidc.authentication.java-script-auto-redirect](https://quarkus.io/guides/all-config#quarkus-oidc_quarkus.oidc.authentication.java-script-auto-redirect)\r\n\r\n> If this property is set to 'true' then a normal 302 redirect response will be returned if the request was initiated via JavaScript API such as XMLHttpRequest or Fetch and the current user needs to be (re)authenticated which may not be desirable for Single Page Applications since it automatically following the redirect may not work given that OIDC authorization endpoints typically do not support CORS. If this property is set to false then a status code of '499' will be returned to allow the client to handle the redirect manually\r\n\r\nIn my configuration I've set this value to false but I am still getting 302 instead of 499\r\n\r\nMoreover after refreshing page after token expiration I am getting 401 error page with the following message in logs:\r\n```ERROR [io.qua.oid.run.CodeAuthenticationMechanism] (vert.x-eventloop-thread-2) State verification has failed, completing the code flow with HTTP status 401```\r\n\r\n\r\nMy OIDC related configuration:\r\n\r\n```\r\nquarkus.oidc.provider=github\r\nquarkus.oidc.client-id=${QUARKUS_OIDC_CLIENT_ID}\r\nquarkus.oidc.credentials.secret=${QUARKUS_OIDC_CREDENTIALS_SECRET}\r\nquarkus.oidc.application-type=web-app\r\nquarkus.oidc.authentication.redirect-path=/auth/success\r\n\r\nquarkus.oidc.authentication.user-info-required=true\r\nquarkus.oidc.cache-user-info-in-idtoken=true\r\n\r\nquarkus.oidc.token-state-manager.split-tokens=true\r\nquarkus.oidc.token-state-manager.encryption-required=true\r\nquarkus.oidc.token-state-manager.encryption-secret=${QUARKUS_OIDC_TOKEN_STATE_MANAGER_ENCRYPTION_SECRET}\r\n\r\nquarkus.oidc.authentication.java-script-auto-redirect=false\r\n\r\nquarkus.http.auth.proactive=false\r\nquarkus.security.jaxrs.deny-unannotated-endpoints=true\r\n```\n\n### Expected behavior\n\nIn case of AJAX request I should  get 499 response code after token expiration and I should be able to handle in in javascript.\n\n### Actual behavior\n\nI am getting 302 response code which is failing for AJAX requests.\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux tardis 6.0.15-300.fc37.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Dec 21 18:33:23 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18 OpenJDK Runtime Environment (Red_Hat-17.0.5.0.8-1.fc37) (build 17.0.5+8) OpenJDK 64-Bit Server VM (Red_Hat-17.0.5.0.8-1.fc37) (build 17.0.5+8, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.0.Alpha2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63) Maven home: /home/shardis/.m2/wrapper/dists/apache-maven-3.8.6-bin/67568434/apache-maven-3.8.6 Java version: 17.0.5, vendor: Red Hat, Inc., runtime: /usr/lib/jvm/java-17-openjdk-17.0.5.0.8-1.fc37.x86_64 Default locale: pl_PL, platform encoding: UTF-8 OS name: \"linux\", version: \"6.0.15-300.fc37.x86_64\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30109/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30109/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34130",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34130/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34130/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34130/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34130",
+  "id": 1763384781,
+  "node_id": "I_kwDOCFbutM5pGx3N",
+  "number": 34130,
+  "title": "Lombok @EqualsAndHashCode conflict with Quarkus caching",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-06-19T11:58:32Z",
+  "updated_at": "2023-07-03T14:13:21Z",
+  "closed_at": "2023-07-03T14:13:20Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe are using:\r\nlombok 1.18.24\r\nQuarkus [2.16.7.Final]\r\n\r\nWhen using EqualsAndHashCode at both parent and child class, all configs that were set are ignored.\n\n### Expected behavior\n\nWhen using EqualsAndHashCode at both parent and child class, all configs already defined at config application.properties should work\n\n### Actual behavior\n\nWhen using EqualsAndHashCode at both parent and child class, all configs that were set are ignored.\n\n### How to Reproduce?\n\n1. Create new project with 1 endpoint\r\n     **ShapeController**\r\n      getShape(Circle circle)\r\n    **ShapeService**\r\n       @CacheResult(cacheName = \"shape\")\r\n       getShape(Circle circle)\r\n\r\n\r\n```\r\n%dev.quarkus.cache.enabled=true\r\n%dev.quarkus.cache.type=caffeine\r\n%dev.quarkus.cache.caffeine.\"shape\".initial-capacity=1\r\n%dev.quarkus.cache.caffeine.\"shape\".maximum-size=2\r\n%dev.quarkus.cache.caffeine.\"shape\".expire-after-write=1M\r\n```\r\n```\r\n@Getter\r\n@Setter\r\n@NoArgsConstructor\r\n@EqualsAndHashCode(callSuper = true)\r\npublic class Circle extends Shapes {\r\n\r\nprivate double radius;\r\n}\r\n```\r\n\r\n```\r\n@NoArgsConstructor\r\n@Getter\r\n@Setter\r\n@EqualsAndHashCode\r\npublic class Shapes {\r\nprivate String color;\r\n}\r\n```\r\n\r\n2. Create another endpoint to retrieve the the caching keys\r\n   **CacheController**\r\n```\r\n    @CacheName(\"shape)\r\n    Cache cache;\r\n\r\n    @GET\r\n    @Path(\"/cache\")\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public Response retrieveCache() {\r\n        return Response.ok().entity(cache.as(CaffeineCache.class).keySet()).build();\r\n    }\r\n```\r\n3. Hit the endpoint for getShape 3 times with different Circle data\r\n4. Retrieve /cache endpoint, it will return 3 keys even we already defined maximum-size=2\r\n5. After 2 mins the /cache endpoint will still return those 3 keys even we already defined expire-after-write=1M\r\n\r\n_When we removed the @EqualsAndHashCode at Shape class. It will work as expected but the problem is when I hit 2 times the endpoint with same color, it will create 2 keys for that color because of EqualsAndHashCode does not defined._\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\njava 11.0.6\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.7.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34130/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34130/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

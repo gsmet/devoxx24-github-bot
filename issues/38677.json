@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38677",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38677/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38677/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38677/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38677",
+  "id": 2125104866,
+  "node_id": "I_kwDOCFbutM5-qobi",
+  "number": 38677,
+  "title": "Generated OpenAPI Document SecurityScheme wrong after Upgrade to Qurkus 3.0.4 from 2.16.6",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-02-08T12:47:47Z",
+  "updated_at": "2024-02-09T15:28:51Z",
+  "closed_at": "2024-02-09T15:24:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe have configured a SecurityScheme via OpenAPIDefinition annotation in our application.\r\n\r\n```kotlin\r\n@OpenAPIDefinition(\r\n    info = Info(title = \"Foo Service\", version = \"1.0.0\"),\r\n    components = Components(\r\n        securitySchemes = [SecurityScheme(\r\n            securitySchemeName = \"SecurityScheme\",\r\n            type = SecuritySchemeType.OAUTH2,\r\n            flows = OAuthFlows(\r\n                authorizationCode = OAuthFlow(\r\n                    authorizationUrl = \"https://example.com/authorize\",\r\n                    tokenUrl = \"https://example.com/oauth/token\",\r\n                    scopes = [\r\n                        OAuthScope(name = someScope),\r\n                    ]\r\n                )\r\n            )\r\n        )]\r\n    )\r\n)\r\n```\r\n\r\nrelevant application.properties:\r\n```\r\nquarkus.oidc.auth-server-url=https://example.com\r\nquarkus.oidc.application-type=SERVICE\r\nquarkus.oidc.client-id=foo\r\nquarkus.oidc.token.audience=example.com\r\nquarkus.oidc.token.issuer=any\r\nquarkus.oidc.roles.role-claim-path=scope\r\n\r\nquarkus.smallrye-openapi.auto-add-security=false\r\nquarkus.smallrye-openapi.path=/openapi\r\nquarkus.swagger-ui.path=/swagger\r\nquarkus.swagger-ui.always-include=true\r\n```\n\n### Expected behavior\n\nAfter the upgrade to Quarkus 3.0.4 from 2.16.6 the `openapi` document should remain the same\r\n\r\n```yaml\r\n...\r\n  securitySchemes:\r\n    SecurityScheme:\r\n      type: oauth2\r\n      flows:\r\n        authorizationCode:\r\n          authorizationUrl: https://example.com/authorize\r\n          tokenUrl: https://example.com/oauth/token\r\n          scopes:\r\n            someScope: \"null\"\r\n```\n\n### Actual behavior\n\nThe openapi document changed to:\r\n\r\n```yaml\r\n...\r\n  securitySchemes:\r\n    SecurityScheme:\r\n      type: openIdConnect\r\n      description: Authentication\r\n      openIdConnectUrl: https://example.com/.well-known/openid-configuration\r\n```\n\n### How to Reproduce?\n\nUse the above Quarkus version and provided code snippets\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n ------------------------------------------------------------ Gradle 7.4 ------------------------------------------------------------  Build time:   2022-02-08 09:58:38 UTC Revision:     f0d9291c04b90b59445041eaa75b2ee744162586  Kotlin:       1.5.31 Groovy:       3.0.9 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          17.0.9 (Private Build 17.0.9+9-Ubuntu-122.04) OS:           Linux 6.5.0-15-generic amd64\n\n### Additional information\n\nMay be related to https://github.com/quarkusio/quarkus/pull/31671",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38677/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38677/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

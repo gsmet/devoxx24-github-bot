@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28844",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28844/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28844/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28844/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28844",
+  "id": 1423692288,
+  "node_id": "I_kwDOCFbutM5U29IA",
+  "number": 28844,
+  "title": "Simplify projection of a single field when using Panache with Hibernate",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 19,
+  "created_at": "2022-10-26T09:11:28Z",
+  "updated_at": "2022-11-22T15:55:43Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "With the current version of Panache with Hibernate, if we want to project a field from an entity, we need to do this:\r\n```\r\nimport io.quarkus.runtime.annotations.RegisterForReflection;\r\n\r\n@RegisterForReflection \r\npublic class PersonName {\r\n    public final String name; \r\n\r\n    public PersonName(String name){ \r\n        this.name = name;\r\n    }\r\n}\r\n\r\n// only 'name' will be loaded from the database\r\nPanacheQuery<PersonName> query = Person.find(\"status\", Status.Alive).project(PersonName.class);\r\n```\r\n\r\nIt seems a lot of work for returning a single field.\r\n\r\nIt would be nice ot have a way to specify a field:\r\n```\r\nPanacheQuery<String> query = Person.find(\"status\", Status.Alive).project(\"name\");\r\n```\r\n\r\nor, maybe,\r\n```\r\nPanacheQuery<String> query = Person.find(\"status\", Status.Alive).project(Person.attribute(\"name\", String.class));\r\n```\r\n\r\nFor comparison, using HIbernate one can do:\r\n```\r\nsession.createQuery(\"select name from Fruit ...\")\r\n```\r\n\r\nThis issue applies to both Panache with Hibernate ORM and Panache with Hibernate Reactive\r\n\r\nMaybe we should also consider what happens when a user run a query like this:\r\n```\r\nList<String> distinctNames = Person.find(\"select distinct p.name from Person p\").???.list();\r\n```\r\nOne idea:\r\n```\r\nList<String> names = Person.distinct().find(\"status\", Status.Alive).project(\"name\", String.class).list()\r\n```\r\n\r\n**WORKAROUND**:\r\nI haven't tested but [it seems that this will work](https://quarkusio.zulipchat.com/#narrow/stream/187038-dev/topic/panach.20HQP.2FJP-QL.20transforms.20attribute.20names.20in.20all.20lowercase/near/308353008):\r\n```\r\nList<String> names = Person\r\n    .find(\"select distinct name from Person where ...\")\r\n    .project(String.class)\r\n    .list()\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28844/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28844/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

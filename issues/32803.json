@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32803",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32803/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32803/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32803/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32803",
+  "id": 1676832737,
+  "node_id": "I_kwDOCFbutM5j8m_h",
+  "number": 32803,
+  "title": "Quarkus uses wrong repository when executing integration tests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-04-20T14:22:11Z",
+  "updated_at": "2023-05-16T07:49:56Z",
+  "closed_at": "2023-05-16T07:49:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nActually i am not sure if this is a Quarkus Bug or something else. Also when i run maven verify locally it works fine and uses the correct release repository.\r\n\r\nThere are two profiles defined in the pom.xml. One is for snapshot builds, the other is for release builds.\r\n\r\n**pom.xml profiles**\r\n\r\n``` \r\n<profiles>\r\n\t\t<profile>\r\n\t\t\t<id>snapshot</id>\r\n\t\t\t<activation>\r\n\t\t\t\t<property>\r\n\t\t\t\t\t<name>release</name>\r\n\t\t\t\t\t<value>!true</value>\r\n\t\t\t\t</property>\r\n\t\t\t\t<activeByDefault>true</activeByDefault>\r\n\t\t\t</activation>\r\n\t\t\t<repositories>\r\n\t\t\t\t<repository>\r\n\t\t\t\t\t<id>commons snapshot</id>\r\n\t\t\t\t\t<url>http://url.de/maven/commons-snapshot</url>\r\n\t\t\t\t</repository>\r\n\t\t\t</repositories>\r\n\t\t</profile>\r\n\t\t<profile>\r\n\t\t\t<id>release</id>\r\n\t\t\t<activation>\r\n\t\t\t\t<property>\r\n\t\t\t\t\t<name>release</name>\r\n\t\t\t\t\t<value>true</value>\r\n\t\t\t\t</property>\r\n\t\t\t</activation>\r\n\t\t\t<repositories>\r\n\t\t\t\t<repository>\r\n\t\t\t\t\t<id>commons release</id>\r\n\t\t\t\t\t<url>http://url.de/maven/commons-release</url>\r\n\t\t\t\t</repository>\r\n\t\t\t</repositories>\r\n\t\t</profile>\r\n  </profiles>\r\n``` \r\n\r\n**pom.xml failsafe plugin**\r\n\r\n``` \r\n<plugin>\r\n\t<groupId>org.apache.maven.plugins</groupId>\r\n\t<artifactId>maven-failsafe-plugin</artifactId>\r\n\t<version>3.0.0</version>\r\n\t<executions>\r\n\t\t<execution>\r\n\t\t\t<goals>\r\n\t\t\t\t<goal>integration-test</goal>\r\n\t\t\t\t<goal>verify</goal>\r\n\t\t\t</goals>\r\n\t\t\t<configuration>\r\n\t\t\t\t<failIfNoTests>true</failIfNoTests>\r\n\t\t\t\t<skip>${skipITs}</skip>\r\n\t\t\t\t<includes>**/*IT*</includes>\r\n\t\t\t\t<excludes>**/*Test*</excludes>\r\n\t\t\t\t<systemPropertyVariables>\r\n\t\t\t\t\t<native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>\r\n\t\t\t\t\t<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>\r\n\t\t\t\t\t<maven.settings>.mvn/local-settings.xml</maven.settings>\r\n\t\t\t\t</systemPropertyVariables>\r\n\t\t\t</configuration>\r\n\t\t</execution>\r\n\t</executions>\r\n</plugin>\r\n``` \r\n\r\n**.mvn/local-settings.xml**\r\n\r\n``` \r\n<settings xmlns=\"http://maven.apache.org/SETTINGS/1.2.0\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.2.0 http://maven.apache.org/xsd/settings-1.2.0.xsd\">\r\n\t<mirrors>\r\n\t\t<mirror>\r\n\t\t\t<id>maven-default-http-blocker</id>\r\n\t\t\t<mirrorOf>external:dummy:*</mirrorOf>\r\n\t\t\t<name>Pseudo repository to mirror external repositories initially\r\n\t\t\t\tusing HTTP.\r\n\t\t\t</name>\r\n\t\t\t<url>http://0.0.0.0/</url>\r\n\t\t\t<blocked>false</blocked>\r\n\t\t</mirror>\r\n\t</mirrors>\r\n</settings>\r\n```\r\n\r\n**gitlab-ci.yml**\r\n```\r\nvariables:\r\n  MAVEN_OPTS: \"-Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true -Drelease=$RELEASE\"\r\n  MAVEN_CLI_OPTS: \"--batch-mode --errors --show-version --fail-at-end help:active-profiles\"\r\n\r\nimage: maven:3-openjdk-17\r\n\r\ncache:\r\n  key: $CI_COMMIT_REF_SLUG\r\n\r\nstages:\r\n    - build\r\n    - verify\r\n\r\nbuild:\r\n  stage: build\r\n  script:\r\n    - mvn $MAVEN_CLI_OPTS compile\r\n  artifacts:\r\n    paths:\r\n     - \"target/\"\r\n    expire_in: 1 week\r\n\r\nverify:\r\n  stage: verify\r\n  needs: \r\n    - job: build\r\n      artifacts: true\r\n  script:\r\n    - mvn $MAVEN_CLI_OPTS verify\r\n  artifacts:\r\n    when: always\r\n    reports:\r\n      junit:\r\n        - target/failsafe-reports/TEST-*.xml\r\n        - target/surefire-reports/TEST-*.xml\r\n```\r\n\r\nAs I said it is working locally (thats why im not sure if this is even quarkus related).\r\nWhen its run in gitlab the build stage is working and using the correct release repository. When running the verify stage it says\r\n```\r\n230318 [INFO] -------------------------------------------------------\r\n230318 [INFO]  T E S T S\r\n230318 [INFO] -------------------------------------------------------\r\n231542 [INFO] Running eu.gemtec.star.asterisk.integration.ITBase\r\n```\r\n\r\nITBase is a @QuarkusIntegrationTest\r\nThen there are some downloads from the wrong repository.\r\n\r\n```\r\nDownloaded from commons snapshot: http://url.de/maven/commons-snapshot/eu/model/model1/1.1.0-SNAPSHOT/device-1.1.0-20230308.144121-1.jar (9.9 kB at 12 kB/s)\r\n```\r\n\r\nThen it fails because maven tries to download a dependency that doesnt event exist in this version in both of the channels.\r\nBut i think the real problem here is that somehow the snapshot repository is used instead of the release repository.\r\n```\r\nCaused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find artifact model:status.rest.api:jar:1.4.1-20221026.115121-1 in commons snapshot (http://url.de/maven/commons-snapshot)\r\n\tat org.eclipse.aether.connector.basic.ArtifactTransportListener.transferFailed(ArtifactTransportListener.java:48)\r\n\tat org.eclipse.aether.connector.basic.BasicRepositoryConnector$TaskRunner.run(BasicRepositoryConnector.java:369)\r\n\tat org.eclipse.aether.util.concurrency.RunnableErrorForwarder$1.run(RunnableErrorForwarder.java:75)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\nAlso what i am wondering about is that this version model:status.rest.api:jar:1.4.1-20221026.115121-1 doesnt exist in either the release nor the snapshot repository.\r\n\r\n\n\n### Expected behavior\n\nRelease repository should be used when building with the release profile\n\n### Actual behavior\n\nSnapshot repository is used.\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux runner-wgxkyhte-project-39-concurrent-0 5.15.0-70-generic #77-Ubuntu SMP Tue Mar 21 14:02:37 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk 17.0.2 2022-01-18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.6.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.5 (3599d3414f046de2324203b78ddcf9b5e4388aa0)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32803/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32803/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

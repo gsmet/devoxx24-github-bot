@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29803",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29803/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29803/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29803/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29803",
+  "id": 1492052022,
+  "node_id": "I_kwDOCFbutM5Y7ug2",
+  "number": 29803,
+  "title": "Avoid errors on `JaxbContextCustomizer` priority order. ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1683744663,
+      "node_id": "MDU6TGFiZWwxNjgzNzQ0NjYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jaxb",
+      "name": "area/jaxb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-12-12T14:45:47Z",
+  "updated_at": "2022-12-13T09:58:52Z",
+  "closed_at": "2022-12-13T09:58:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nQuarkus 2.13.4 +\r\n\r\nInterface `io.quarkus.jaxb.runtime.JaxbContextCustomizer` allows you to customize the JAXBContext. Is possible to have more than one JaxbContext in the same application. The CDI resolution that will prioritizes one bean on the other is based on the method \"priority()\"\r\n\r\n```\r\nint DEFAULT_PRIORITY = 0;\r\n/**\r\n     * Defines the priority that the customizers are applied.\r\n     * A lower integer value means that the customizer will be applied after a customizer with a higher priority\r\n     */\r\n    default int priority() {\r\n        return DEFAULT_PRIORITY;\r\n    }\r\n```\r\n\r\nBy default if the end user doesn't override the `priority()`, then the priority is going to be set to `0`, so an other bean on this project or in a dependency with a lower priority could override the intended behavior (I am thinking about hacking or a possible vulnerability). \r\n\r\nFor example: \r\n\r\nEnd user app\r\n\r\n```\r\n@Singleton\r\npublic class CustomJaxbContextCustomizer implements JaxbContextCustomizer {\r\n\r\n    @Override\r\n    public void customizeMarshaller(Marshaller marshaller) throws PropertyException {\r\n        marshaller.setProperty(\"jaxb.formatted.output\", Boolean.TRUE);\r\n    }\r\n}\r\n\r\n```\r\n\r\nDependency\r\n```\r\n@Singleton\r\npublic class CustomJaxbContextCustomizer implements JaxbContextCustomizer {\r\n\r\n    @Override\r\n    public void customizeMarshaller(Marshaller marshaller) throws PropertyException {\r\n        marshaller.setProperty(\"jaxb.formatted.output\", false);\r\n    }\r\n\r\n    @Override\r\n    public int priority() {\r\n        return -1;\r\n    }\r\n}\r\n```\r\n\r\nSuggested change:\r\n```\r\nint DEFAULT_PRIORITY = Integer.MIN_VALUE;\r\n\r\nAlso in the compare method check \"if the incoming priority is the same as the current one\" and in this case be sure to give priority to the current one(I think that the current implementation is fine on this topic, but just double check). \r\n```\r\n\r\nIf the enduser wants to leave open the `CustomJaxbContextCustomizer`, she/he could always `Override` his priority and set it to 0.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29803/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29803/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

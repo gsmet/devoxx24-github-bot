@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40370",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40370/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40370/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40370/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40370",
+  "id": 2271698530,
+  "node_id": "I_kwDOCFbutM6HZ15i",
+  "number": 40370,
+  "title": "Wrong casting of NUMBER(10) columns by Query.getResultList",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-04-30T14:48:43Z",
+  "updated_at": "2024-05-14T09:55:06Z",
+  "closed_at": "2024-05-08T07:13:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nQuarkus version: 3.7.4\r\nUnderlying database version: Oracle 19c\r\n\r\nNUMBER(10) columns are wrongly casted as Integer when parsing a result list after executing EntityManager.createNamedQuery(...).getResultList()\r\n\r\nWhen the column value is smaller than the maximum value of Integer, the driver identifies it as Integer. This is wrong, the correct data type should be Long. Why? Because the maximum value of this data type in Java is \"only\" 2,147,483,647. If the column value is bigger than this maximum, then the casting will obviously fail as it does not fit in the data type, see below:\r\n\r\n```\r\nCaused by: org.hibernate.exception.GenericJDBCException: Could not extract column [38] from JDBC ResultSet [ORA-17026: Numerischer Überlauf\r\nhttps://docs.oracle.com/error-help/db/ora-17026/] [n/a]\r\n        at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:63)\r\n        at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)\r\n        at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:94)\r\n        at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.getCurrentRowValue(JdbcValuesResultSetImpl.java:310)\r\n        at org.hibernate.sql.results.internal.RowProcessingStateStandardImpl.getJdbcValue(RowProcessingStateStandardImpl.java:119)\r\n        at org.hibernate.sql.results.graph.basic.BasicResultAssembler.extractRawValue(BasicResultAssembler.java:52)\r\n        at org.hibernate.sql.results.graph.basic.BasicResultAssembler.assemble(BasicResultAssembler.java:59)\r\n        at org.hibernate.sql.results.internal.StandardRowReader.readRow(StandardRowReader.java:93)\r\n        at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:203)\r\n        at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:33)\r\n        at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:209)\r\n        at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:83)\r\n        at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:76)\r\n        at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:65)\r\n        at org.hibernate.query.sql.internal.NativeSelectQueryPlanImpl.performList(NativeSelectQueryPlanImpl.java:138)\r\n        at org.hibernate.query.sql.internal.NativeQueryImpl.doList(NativeQueryImpl.java:621)\r\n        at org.hibernate.query.spi.AbstractSelectionQuery.list(AbstractSelectionQuery.java:427)\r\n        at org.hibernate.query.Query.getResultList(Query.java:120)\r\n        at [... MY CUSTOM ...]\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:73)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext$NextAroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:97)\r\n        at io.quarkus.hibernate.validator.runtime.interceptor.AbstractMethodValidationInterceptor.validateMethodInvocation(AbstractMethodValidationInterceptor.java:71)\r\n        at io.quarkus.hibernate.validator.runtime.jaxrs.JaxrsEndPointValidationInterceptor.validateMethodInvocation(JaxrsEndPointValidationInterceptor.java:38)\r\n        at io.quarkus.hibernate.validator.runtime.jaxrs.JaxrsEndPointValidationInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:70)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:62)\r\n        at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.invokeInCallerTx(TransactionalInterceptorBase.java:335)\r\n        at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired.doIntercept(TransactionalInterceptorRequired.java:40)\r\n        at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorBase.intercept(TransactionalInterceptorBase.java:61)\r\n        at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired.intercept(TransactionalInterceptorRequired.java:32)\r\n        at io.quarkus.narayana.jta.runtime.interceptor.TransactionalInterceptorRequired_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n        at [... MY CUSTOM ...]\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:154)\r\n        at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:118)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.internalInvokeOnTarget(ResourceMethodInvoker.java:560)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTargetAfterFilter(ResourceMethodInvoker.java:452)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.lambda$invokeOnTarget$2(ResourceMethodInvoker.java:413)\r\n        at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:321)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:415)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:378)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:356)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:70)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:429)\r\n        ... 52 more\r\nCaused by: java.sql.SQLException: ORA-17026: Numerischer Überlauf\r\nhttps://docs.oracle.com/error-help/db/ora-17026/\r\n        at oracle.jdbc.driver.NumberCommonAccessor.throwOverflow(NumberCommonAccessor.java:4301)\r\n        at oracle.jdbc.driver.NumberCommonAccessor.decodeInt(NumberCommonAccessor.java:1943)\r\n        at oracle.jdbc.driver.NumberCommonAccessor.getInt(NumberCommonAccessor.java:78)\r\n        at oracle.jdbc.driver.GeneratedStatement.getInt(GeneratedStatement.java:172)\r\n        at oracle.jdbc.driver.GeneratedScrollableResultSet.getInt(GeneratedScrollableResultSet.java:258)\r\n        at io.agroal.pool.wrapper.ResultSetWrapper.getInt(ResultSetWrapper.java:148)\r\n        at org.hibernate.type.descriptor.jdbc.IntegerJdbcType$2.doExtract(IntegerJdbcType.java:87)\r\n        at org.hibernate.type.descriptor.jdbc.BasicExtractor.extract(BasicExtractor.java:44)\r\n        at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.getCurrentRowValue(JdbcValuesResultSetImpl.java:302)\r\n        ... 112 more\r\n```\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nCreate a database table having at least one NUMBER(10) column. Insert one record in the table by defining the value for the NUMBER(10) column as 9,999,999,999. Create a native query for this table and call Query.getResultList.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### Quarkus version or git rev\n\n3.7.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40370/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40370/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

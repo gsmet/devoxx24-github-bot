@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35961",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35961/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35961/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35961/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35961",
+  "id": 1898406992,
+  "node_id": "I_kwDOCFbutM5xJ2RQ",
+  "number": 35961,
+  "title": "Request freeze in Resteasy Reactive during writing of body",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2023-09-15T13:09:21Z",
+  "updated_at": "2024-03-12T13:58:41Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe had a Resteasy Reactive request that hanged in production, and we investigated via thread and heap dump. \r\n\r\nOur analysis suggests the underlying cause to be a vert.x bug, which has been reported to vert.x too.\r\n\r\n### Expected behavior\r\n\r\nRequest should not hang.\r\n\r\n### Actual behavior\r\n\r\nRequest hanged, with the stack given below.\r\n\r\nBasically, the thread entered the `request.connection().wait()`; statement in `ResteasyReactiveOutputStream.awaitWriteable()` and never was woken up. The heap dump showed that `request.response().writeQueueFull()` -- which had to return true to reach this statement -- had changed to false at the time of the heap dump. Thus, the statement should have been woken up but was not.\r\n\r\nStack:\r\n\r\n```\r\n\"executor-thread-56316\" #700597 daemon prio=5 os_prio=0 cpu=806.56ms elapsed=41638.06s tid=0x00007fe620237aa0 nid=0x23f3f2 in Object.wait()  [0x00007fe575829000]\r\n   java.lang.Thread.State: WAITING (on object monitor)\r\n\tat java.lang.Object.wait(java.base@17.0.7/Native Method)\r\n\t- waiting on <no object reference available>\r\n\tat java.lang.Object.wait(java.base@17.0.7/Object.java:338)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveOutputStream.awaitWriteable(ResteasyReactiveOutputStream.java:140)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveOutputStream.write(ResteasyReactiveOutputStream.java:89)\r\n\t- locked <0x00000005d56763d0> (a io.vertx.core.http.impl.Http2ServerConnection)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveOutputStream.writeBlocking(ResteasyReactiveOutputStream.java:231)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveOutputStream.write(ResteasyReactiveOutputStream.java:218)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveOutputStream.write(ResteasyReactiveOutputStream.java:189)\r\n\tat com.mercur.server.endpoint.support.CborBody$CborBodyWriter.writeTo(CborBody.java:203)\r\n\tat com.mercur.server.endpoint.support.CborBody$CborBodyWriter.writeTo(CborBody.java:191)\r\n\tat org.jboss.resteasy.reactive.server.core.ServerSerialisers.invokeWriter(ServerSerialisers.java:233)\r\n\tat org.jboss.resteasy.reactive.server.core.serialization.DynamicEntityWriter.write(DynamicEntityWriter.java:106)\r\n\tat org.jboss.resteasy.reactive.server.handlers.ResponseWriterHandler.handle(ResponseWriterHandler.java:32)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:120)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:581)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.lang.Thread.run(java.base@17.0.7/Thread.java:833)\r\n\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nIntermittent and rather low-frequency -- once per some hundreds of millions of requests. However, theoretical analysis suggests sequence is something similar to the following.\r\n\r\n1. Thread A: `ResteasyReactiveOutputStream.awaitWriteable()` checks if queue is full -- it is, that is `VertxHttp2Stream.writable` == false (synchronized on connection throughout, synchronized on stream during check itself)\r\n2. Thread B: Drains the queue (or observes it has been drained, not clear on where this is done)\r\n3. Thread B: Sets `VertxHttp2Stream.writable` to true (synchronized on stream)\r\n4. Thread B: Checks `Http2ServerResponse.drainHandler` (it is null -- it is checked without any locks held; unclear if that is correct)\r\n5. Thread A: Registers a `Http2ServerResponse.drainHandler` (still synchronized on connection)\r\n6. Thread A: Goes to sleep via `request.connection().wait()` -- expecting to be woken up when writability changes, but that has already happened so it waits forever instead\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nI believe the underlying problem is in vert.x, reported as https://github.com/eclipse-vertx/vert.x/issues/4858",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35961/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35961/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27434",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27434/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27434/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27434/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27434",
+  "id": 1347622911,
+  "node_id": "I_kwDOCFbutM5QUxf_",
+  "number": 27434,
+  "title": "Kubernetes Config extension richer injection",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-08-23T09:23:17Z",
+  "updated_at": "2022-08-25T06:23:40Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nCurrently Kubernetes Config extension allows you to inject multiple secrets by doing `quarkus.kubernetes-config.secrets=my-connect,my-cluster-cluster-ca-cert`. That's fine, but if I am correct, what's is doing is putting all keys in the same `map`, and then you refer to them as values in each key:\r\n\r\n`kafka.ssl.truststore.password=${ca.password}`\r\n\r\nBut what happens if there is a key with the same name in both secrets?\r\n\r\nI think it will be nice to have something like Strimzi project to inject secrets/configmaps adding a richer expression language:\r\n\r\n```\r\n${secrets:debezium-example/debezium-secret:password}\r\n```\r\n\r\nThe format is `namespace/secretName:key`. This gives you more flexibility, and you know exactly that:\r\n\r\n1. The property comes from a secret (in the current case, you have the `${key}`, and this property could come from a secret or not.\r\n2. You know exactly the namespace and the secret the value is coming\r\n\r\nApart from that, there is one use case that would be nice to cover; let me show an example:\r\n\r\n```\r\nkafka.ssl.truststore.location=/tmp/cluster/ca.p12\r\nkafka.ssl.truststore.password=${ca.password}\r\n```\r\n\r\nTrustStore needs to be a file; the thing is that the content of this file is created as a Kubernetes Secret, so we've got a Kubernetes Secret with the certificate authority in one key (`ca.p12)` and the password in another key (`ca.password)`. The problem is since it's a location, we need to materialize the content into a file, so we need to create a secret volume and so on.\r\n\r\nSo, after all, we are mixing two strategies, injecting secrets from a volume and injecting using the Kube API. It would be great if we could do something like:\r\n\r\n```\r\nkafka.ssl.truststore.location=${materializedsecret:debezium-example:my-cluster:ca.p12}\r\nkafka.ssl.truststore.password=${secrets:debezium-example:my-cluster:ca.password}\r\n```\r\n\r\nWhere `materializedSecret` takes the key, creates a file in the filesystem, and injects its location.\r\n\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27434/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27434/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31461",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31461/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31461/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31461/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31461",
+  "id": 1602638794,
+  "node_id": "I_kwDOCFbutM5fhlPK",
+  "number": 31461,
+  "title": "Extension runtime config not recognized when passing as env",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-02-28T09:09:15Z",
+  "updated_at": "2023-03-01T08:15:56Z",
+  "closed_at": "2023-03-01T07:43:06Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have an extension that defines a runtime config containing a map. It does work when directly defining the property in applications.properties, but when I pass the arguments as ENV var, the config fails to parse.\r\n\r\n### Expected behavior\r\n\r\nA config containing a map like\r\n```\r\n@ConfigMapping(prefix = \"my.props\")\r\n@ConfigRoot(phase = ConfigPhase.RUN_TIME)\r\npublic interface BadConfig {\r\n\r\n    /**\r\n     * @return\r\n     */\r\n    @WithParentName\r\n    Map<String, NestedProperties> nested();\r\n\r\n    public interface NestedProperties {\r\n\r\n        /**\r\n         * @return\r\n         */\r\n        @WithName(\"sub.id\")\r\n        int id();\r\n    }\r\n\r\n}\r\n````\r\n\r\nshould successfully be initialized when passing the config property as env variables like so:\r\n`MY_PROPS__THIS__SUB_ID=1 ./gradlew :application:quarkusDev`\r\n\r\n### Actual behavior\r\n\r\nException gets thrown\r\n`io.smallrye.config.ConfigValidationException: Configuration validation failed:\r\n        java.util.NoSuchElementException: SRCFG00014: The config property my.props.this.sub.id is required but it could not be found in any config source`\r\n        \r\nThis shows that the property got picked up, as the error includes the `this` property token in the message, but then somhow failed to resolve the nested group.\r\n\r\nWhen adding an additional wrapper interface to the config like: https://github.com/HerrDerb/extension-config-issue/blob/main/runtime/src/main/java/com/example/GoodConfig.java, it will work.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\nhttps://github.com/HerrDerb/extension-config-issue\r\n\r\nExecute steps for error\r\n\r\n1. `./gradlew clean publishToMavenLocal`\r\n2. `MY_PROPS__THIS__SUB_ID=1 ./gradlew :application:quarkusDev`\r\n\r\nWhen removing BadConfig an republish, GoodConfig with the additional wrapper will work.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31461/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31461/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

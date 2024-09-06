@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23744",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23744/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23744/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23744/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23744",
+  "id": 1139536226,
+  "node_id": "I_kwDOCFbutM5D6_Fi",
+  "number": 23744,
+  "title": "Failed to load a directory from a classpath when build as a fast-jar",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-02-16T04:56:07Z",
+  "updated_at": "2022-02-16T05:14:08Z",
+  "closed_at": "2022-02-16T05:14:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nFailed to load a directory from a classpath root when build as a fast-jar with Quarkus 2.7.1.Final.\r\n~~~\r\nThread.currentThread().getContextClassLoader().getResource(\"<a directory that exists in classpath root>\");\r\n~~~\r\nIt worked with Quarkus 1.11.7.Final-redhat-00009.\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\n~~~\r\nThread.currentThread().getContextClassLoader().getResource(\"<a directory that exists in classpath root>\");\r\n~~~\r\nshould return `URL` instance\r\n\r\n### Actual behavior\r\n\r\n~~~\r\nThread.currentThread().getContextClassLoader().getResource(\"<a directory that exists in classpath root>\");\r\n~~~\r\nreturns `null`\r\n\r\n### How to Reproduce?\r\n\r\nI made a reproducer:\r\nhttps://github.com/ynojima/quarkus-issue-reproducer\r\n\r\n## fast-jar(default), Quarkus 2.7\r\nbuild it as a `fast-jar` (./mvnw package) with Quarkus 2.7, \r\n~~~\r\n$cd quarkus-playground-2.7\r\n$./mvnw package -Dquarkus.package.type=uber-jar \r\n$java -jar target/quarkus-app/quarkus-run.jar\r\n__  ____  __  _____   ___  __ ____  ______\r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2022-02-16 12:01:13,992 INFO  [io.quarkus] (main) quarkus-playground 1.0.0-SNAPSHOT on JVM (powered by Quarkus 2.7.1.Final) started in 0.544s.\r\n2022-02-16 12:01:14,012 INFO  [io.quarkus] (main) Profile prod activated.\r\n2022-02-16 12:01:14,012 INFO  [io.quarkus] (main) Installed features: [cdi]\r\nsample directory is NOT found.\r\n2022-02-16 12:01:14,054 INFO  [io.quarkus] (main) quarkus-playground stopped in 0.029s\r\n~~~\r\nThe directory is NOT found.\r\n\r\n## uber-jar, Quarkus 2.2\r\nBut when I build it as `uber-jar`, \r\n~~~\r\n$./mvnw package -Dquarkus.package.type=uber-jar \r\n$java -jar target/quarkus-playground-1.0.0-SNAPSHOT-runner.jar\r\n__  ____  __  _____   ___  __ ____  ______\r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2022-02-16 12:03:30,754 INFO  [io.quarkus] (main) quarkus-playground 1.0.0-SNAPSHOT on JVM (powered by Quarkus 2.7.1.Final) started in 0.517s.\r\n2022-02-16 12:03:30,773 INFO  [io.quarkus] (main) Profile prod activated.\r\n2022-02-16 12:03:30,774 INFO  [io.quarkus] (main) Installed features: [cdi]\r\nsample directory is found.\r\n2022-02-16 12:03:30,817 INFO  [io.quarkus] (main) quarkus-playground stopped in 0.029s\r\n~~~\r\nThe directory is found.\r\n\r\n## fast-jar(default), Quarkus 1.11\r\nWhen I buid it with Quarkus 1.11, It also find the directory succcessfully.\r\n~~~\r\n$cd quarkus-playground-1.11\r\n$./mvnw package\r\n$ java -jar target/quarkus-playground-1.11-1.0.0-SNAPSHOT-runner.jar\r\n__  ____  __  _____   ___  __ ____  ______\r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2022-02-16 12:09:59,087 INFO  [io.quarkus] (main) quarkus-playground-1.11 1.0.0-SNAPSHOT on JVM (powered by Quarkus 1.11.7.Final-redhat-00009) started in 0.467s.\r\n2022-02-16 12:09:59,105 INFO  [io.quarkus] (main) Profile prod activated.\r\n2022-02-16 12:09:59,106 INFO  [io.quarkus] (main) Installed features: [cdi]\r\nsample directory is found.\r\n2022-02-16 12:09:59,119 INFO  [io.quarkus] (main) quarkus-playground-1.11 stopped in 0.007s\r\n~~~\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux redcap 5.10.16.3-microsoft-standard-WSL2 #1 SMP Fri Apr 2 22:23:49 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.11\" 2021-04-20 OpenJDK Runtime Environment (build 11.0.11+9-Ubuntu-0ubuntu2.20.04) OpenJDK 64-Bit Server VM (build 11.0.11+9-Ubuntu-0ubuntu2.20.04, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23744/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23744/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

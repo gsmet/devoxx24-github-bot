@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40317",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40317/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40317/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40317/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40317",
+  "id": 2266056009,
+  "node_id": "I_kwDOCFbutM6HEUVJ",
+  "number": 40317,
+  "title": "Upgraded to 3.10.0.CR1 failed In-Memory Message Tests",
+  "labels": [
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2024-04-26T15:45:15Z",
+  "updated_at": "2024-05-01T15:59:39Z",
+  "closed_at": "2024-05-01T15:59:39Z",
+  "active_lock_reason": null,
+  "body": "### Discussed in https://github.com/quarkusio/quarkus/discussions/40219\r\n\r\n<div type='discussions-op-text'>\r\n\r\n<sup>Originally posted by **hantsy** April 23, 2024</sup>\r\nAll messaging examples in my repository are failed when upgrading to the newest Quarkus 3.10.0.CR1, eg. https://github.com/hantsy/quarkus-sandbox/tree/master/amqp\r\n\r\nI followed this guide to clean up the dependency artifact id and use the new name in all messaging examples, https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.9#resteasy-reactive-extensions-renamed-to-quarkus-rest-gear-white_check_mark\r\n\r\n```java\r\n@QuarkusTest\r\n@TestProfile(InMemoryProfile.class)\r\nclass MessageHandlerTest {\r\n\r\n    @Inject\r\n    @Any\r\n    InMemoryConnector connector;\r\n\r\n    @Inject\r\n    MessageHandler handler;\r\n\r\n    @BeforeEach\r\n    void setUp() {\r\n    }\r\n\r\n    @Test\r\n    void receive() {\r\n        InMemorySource<String> messages = connector.source(\"messages\");\r\n        InMemorySink<String> sink = connector.sink(\"send\");\r\n        InMemorySink<Message> dataStream = connector.sink(\"data-stream\");\r\n\r\n\r\n        handler.send(\"hello\");\r\n        assertThat(sink.received().getFirst().getPayload()).isEqualTo(\"hello\");\r\n\r\n        messages.send(\"hello-123\");\r\n        assertThat(dataStream.received().getFirst().getPayload().body()).isEqualTo(\"hello-123\");\r\n    }\r\n}\r\n\r\n```\r\n\r\nThe `assertThat(dataStream.received().getFirst().getPayload().body()).isEqualTo(\"hello-123\");` throws the following exceptions\r\n\r\n```bash\r\njava.util.NoSuchElementException\r\n\tat java.base/java.util.ArrayList.getFirst(ArrayList.java:439)\r\n\tat com.example.MessageHandlerTest.receive(MessageHandlerTest.java:41)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.runExtensionMethod(QuarkusTestExtension.java:1018)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.interceptTestMethod(QuarkusTestExtension.java:832)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1596)\r\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1596)\r\n\r\n2024-04-23 22:38:03,206 INFO  [io.quarkus] (main) quarkus-example-rabbitmq stopped in 0.033s\r\n\r\nProcess finished with exit code -1\r\n```</div>",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40317/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40317/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

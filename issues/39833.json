@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39833",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39833/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39833/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39833/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39833",
+  "id": 2220575023,
+  "node_id": "I_kwDOCFbutM6EW0kv",
+  "number": 39833,
+  "title": "GraalVM JS Engine does not work with version 3.8.3",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 18,
+  "created_at": "2024-04-02T13:46:10Z",
+  "updated_at": "2024-05-17T12:29:26Z",
+  "closed_at": "2024-05-17T12:28:17Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen want to use graalvm js with quarkus 3.8.3, the js engine cannot be instantiated, receiving message:\r\n\r\n```\r\nScriptEngineManager providers.next(): javax.script.ScriptEngineFactory: Provider com.oracle.truffle.js.scriptengine.GraalJSEngineFactory could not be instantiated\r\n```\r\n\r\ncreated a reproducer here:\r\nhttps://github.com/csviri/quarkus-graalvm-js-reproducer\r\n\r\nNote that this uses graalvm version `23.1.2`. \r\nWith GraalVM version `24.0.0` the engine can be instantiated but I receive an error:\r\n\r\n```\r\njava.lang.reflect.InvocationTargetException\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:118)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:113)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\nCaused by: java.lang.NoClassDefFoundError: org/graalvm/collections/UnmodifiableEconomicSet\r\n\tat com.oracle.truffle.js.scriptengine.GraalJSScriptEngine.createNashornHostAccess(GraalJSScriptEngine.java:105)\r\n\tat com.oracle.truffle.js.scriptengine.GraalJSScriptEngine.<clinit>(GraalJSScriptEngine.java:102)\r\n\tat com.oracle.truffle.js.scriptengine.GraalJSEngineFactory.getScriptEngine(GraalJSEngineFactory.java:151)\r\n\tat java.scripting/javax.script.ScriptEngineManager.lambda$getEngineBy$2(ScriptEngineManager.java:237)\r\n\tat java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\r\n\tat java.base/java.util.stream.StreamSpliterators$WrappingSpliterator.tryAdvance(StreamSpliterators.java:300)\r\n\tat java.base/java.util.stream.Streams$ConcatSpliterator.tryAdvance(Streams.java:723)\r\n\tat java.base/java.util.stream.ReferencePipeline.forEachWithCancel(ReferencePipeline.java:129)\r\n\tat java.base/java.util.stream.AbstractPipeline.copyIntoWithCancel(AbstractPipeline.java:527)\r\n\tat java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:513)\r\n\tat java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\r\n\tat java.base/java.util.stream.FindOps$FindOp.evaluateSequential(FindOps.java:150)\r\n\tat java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\r\n\tat java.base/java.util.stream.ReferencePipeline.findFirst(ReferencePipeline.java:647)\r\n\tat java.scripting/javax.script.ScriptEngineManager.getEngineBy(ScriptEngineManager.java:246)\r\n\tat java.scripting/javax.script.ScriptEngineManager.getEngineByName(ScriptEngineManager.java:185)\r\n\tat org.acme.Main$MyApp.run(Main.java:28)\r\n\tat org.acme.Main_MyApp_ClientProxy.run(Unknown Source)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:132)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat org.acme.Main.main(Main.java:15)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\t... 3 more\r\nCaused by: java.lang.ClassNotFoundException: org.graalvm.collections.UnmodifiableEconomicSet\r\n\tat java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)\r\n\tat java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)\r\n\t... 25 more\r\n```\r\n\r\nSee branch `graal-24` in same repo.\r\n\n\n### Expected behavior\n\nJava sctript engine instantiated and can execute scripts.\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nUse the mentioned reproducer project. Just simply run the project on main branch.\n\n### Output of `uname -a` or `ver`\n\nLinux csviri-desctop 5.15.0-101-generic #111-Ubuntu SMP Tue Mar 5 20:16:58 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk 21.0.2 2024-01-16\n\n### Quarkus version or git rev\n\n3.8.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /home/csviri/Applications/apache-maven-3.9.6 Java version: 21.0.2, vendor: Private Build, runtime: /usr/lib/jvm/java-21-openjdk-amd64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.0-101-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39833/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39833/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

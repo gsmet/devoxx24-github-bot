@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35939",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35939/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35939/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35939/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35939",
+  "id": 1897244232,
+  "node_id": "I_kwDOCFbutM5xFaZI",
+  "number": 35939,
+  "title": "build in docker result in GLIBC_2.32",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-09-14T20:17:08Z",
+  "updated_at": "2023-09-15T04:58:49Z",
+  "closed_at": "2023-09-15T04:58:49Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI want to build Quarkus native executable in `Dockerfile` instead of some configured environment, \r\nalready tried `-Dquarkus.native.container-build=true` but it exits with `docker-daemon not found` (yes there is no docker in this build environment) \r\nHere is my `Dockerfile` which `builds executable` in first stage and `copy-and-serve`\r\nit successfully produce an image:\r\n```Dockerfile\r\nFROM findepi/graalvm:java20-all as build\r\n\r\nENV APP_HOME=/app/\r\nWORKDIR $APP_HOME\r\n\r\nCOPY build.gradle.kts settings.gradle.kts gradlew $APP_HOME\r\nCOPY gradle $APP_HOME/gradle\r\nRUN chmod +x gradlew\r\nRUN ./gradlew build || return 0\r\nCOPY . .\r\nRUN chmod +x gradlew\r\nRUN ./gradlew build -Dquarkus.package.type=native -x test\r\n\r\nFROM registry.access.redhat.com/ubi8/ubi-minimal:8.8 as run\r\n\r\nENV APP_HOME=/app/\r\nWORKDIR $APP_HOME\r\n\r\nRUN chown 1001 $APP_HOME \\\r\n    && chmod \"g+rwX\" $APP_HOME \\\r\n    && chown 1001:root $APP_HOME\r\n\r\nCOPY --from=build --chown=1001:root $APP_HOME/build/*-runner $APP_HOME/application\r\n\r\nEXPOSE 8080\r\nUSER 1001\r\n\r\nCMD [\"./application\", \"-Dquarkus.http.host=0.0.0.0\"]\r\n```\r\n\r\nwhen i run produced image i get:\r\n\r\n```\r\n./application: /lib64/libc.so.6: version `GLIBC_2.32' not found (required by ./application)\r\n./application: /lib64/libc.so.6: version `GLIBC_2.34' not found (required by ./application)\r\n```\r\n\r\nwhat am i missing here?\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35939/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35939/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

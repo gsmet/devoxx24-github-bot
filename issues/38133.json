@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38133",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38133/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38133/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38133/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38133",
+  "id": 2075300618,
+  "node_id": "I_kwDOCFbutM57spMK",
+  "number": 38133,
+  "title": "Kubernetes client request times out when called from a vert.x eventbus consumer",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2024-01-10T22:10:21Z",
+  "updated_at": "2024-03-04T17:37:44Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn our application we have a Kubernetes informer listening on ConfigMaps and posting changes to the Vert.x event bus. A consumer listening on these eventbus messages will then fetch another resource from Kubernetes using the same client. These requests do not complete and eventually are aborted with a timeout exception.\r\n\r\n### Expected behavior\r\n\r\nThe [KubernetesClient](https://quarkus.io/guides/kubernetes-client) can be used in all contexts throughout the application and does not timeout.\r\n\r\n### Actual behavior\r\n\r\nThe same request to the Kubernetes API with the same KubernetesClient succeeds from another context (e.g. a REST Call) but blocks and fails when called from an eventbus consumer method.\r\n\r\nThis is the exception and stack trace we see when calling the Kubernetes API from the eventbus consumer:\r\n```posh\r\n io.fabric8.kubernetes.client.KubernetesClientException\r\n        at io.fabric8.kubernetes.client.dsl.internal.OperationSupport.waitForResult(OperationSupport.java:509)\r\n        at io.fabric8.kubernetes.client.dsl.internal.OperationSupport.handleResponse(OperationSupport.java:524)\r\n        at io.fabric8.kubernetes.client.dsl.internal.OperationSupport.handleGet(OperationSupport.java:467)\r\n        at io.fabric8.kubernetes.client.dsl.internal.BaseOperation.handleGet(BaseOperation.java:791)\r\n        at io.fabric8.kubernetes.client.dsl.internal.BaseOperation.requireFromServer(BaseOperation.java:192)\r\n        at io.fabric8.kubernetes.client.dsl.internal.BaseOperation.get(BaseOperation.java:148)\r\n        at io.fabric8.kubernetes.client.dsl.internal.BaseOperation.get(BaseOperation.java:97)\r\n        at ch.sbb.esta.service.KubernetesApiService.getConfigMapByName(KubernetesApiService.java:16)\r\n        at ch.sbb.esta.service.KubernetesApiService_ClientProxy.getConfigMapByName(Unknown Source)\r\n        at ch.sbb.esta.service.ConfigMapListener.configMapModified(ConfigMapListener.java:26)\r\n        at ch.sbb.esta.service.ConfigMapListener_ClientProxy.configMapModified(Unknown Source)\r\n        at ch.sbb.esta.service.ConfigMapListener_VertxInvoker_configMapModified_7811ecff56b0d4c0b09e6cf8d655b75eea64c1e9.invokeBean(Unknown Source)\r\n        at io.quarkus.vertx.runtime.EventConsumerInvoker.invoke(EventConsumerInvoker.java:45)\r\n        at io.quarkus.vertx.runtime.VertxEventBusConsumerRecorder$3$1.handle(VertxEventBusConsumerRecorder.java:167)\r\n        at io.quarkus.vertx.runtime.VertxEventBusConsumerRecorder$3$1.handle(VertxEventBusConsumerRecorder.java:111)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:277)\r\n        at io.vertx.core.eventbus.impl.MessageConsumerImpl.dispatch(MessageConsumerImpl.java:177)\r\n        at io.vertx.core.eventbus.impl.HandlerRegistration$InboundDeliveryContext.execute(HandlerRegistration.java:137)\r\n        at io.vertx.core.eventbus.impl.DeliveryContextBase.next(DeliveryContextBase.java:80)\r\n        at io.vertx.core.eventbus.impl.DeliveryContextBase.dispatch(DeliveryContextBase.java:43)\r\n        at io.vertx.core.eventbus.impl.HandlerRegistration.dispatch(HandlerRegistration.java:98)\r\n        at io.vertx.core.eventbus.impl.MessageConsumerImpl.deliver(MessageConsumerImpl.java:183)\r\n        at io.vertx.core.eventbus.impl.MessageConsumerImpl.doReceive(MessageConsumerImpl.java:168)\r\n        at io.vertx.core.eventbus.impl.HandlerRegistration.lambda$receive$0(HandlerRegistration.java:49)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:1583)\r\nCaused by: java.util.concurrent.TimeoutException\r\n        at io.fabric8.kubernetes.client.utils.AsyncUtils.lambda$withTimeout$0(AsyncUtils.java:42)\r\n        at io.fabric8.kubernetes.client.utils.Utils.lambda$schedule$6(Utils.java:473)\r\n        at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)\r\n        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)\r\n        at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)\r\n        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n        ... 1 more\r\n\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nSee this minimal example project: https://github.com/thomascube/quarkus-kubernetes-informer\r\nSteps to reproduce are described in the README there.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kernel Version 23.1.0\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12-LTS)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.6.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6\r\n\r\n### Additional information\r\n\r\nIf this is not an actual bug, I'm glad the get suggestions how to configure the KubernetesClient to work in all contexts of a Quarkus application. I already tried to create different instances of a KubernetesClient but that didn't resolve the problematic behavior.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38133/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38133/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

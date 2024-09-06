@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23609",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23609/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23609/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23609/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23609",
+  "id": 1132550167,
+  "node_id": "I_kwDOCFbutM5DgVgX",
+  "number": 23609,
+  "title": "Query param converters for lists & sets are not handled correctly in Resteasy reactive",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-02-11T12:45:28Z",
+  "updated_at": "2022-11-28T12:45:35Z",
+  "closed_at": "2022-11-28T12:45:30Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThis is a follow-up of #23486.\r\n\r\nNow that custom parameter converters are used for query parameters, there are some cases, where this fails:\r\n\r\nAccording to the [JAX-RS resources documentation](https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest3x/jaxrs-resources.html) a valid method parameter has to fulfill one of the following:\r\n> In general the Java type of the method parameter may:\r\n> \r\n>     1) Be a primitive type;\r\n> \r\n>     2) Have a constructor that accepts a single String argument;\r\n> \r\n>     3) Have a static method named valueOf or fromString that accepts a single String argument (see, for example, Integer.valueOf(String) and java.util.UUID.fromString(String));\r\n> \r\n>     4) Have a registered implementation of jakarta.ws.rs.ext.ParamConverterProvider JAX-RS extension SPI that returns a jakarta.ws.rs.ext.ParamConverter instance capable of a \"from string\" conversion for the type. or\r\n> \r\n>     5) Be List<T>, Set<T> or SortedSet<T>, where T satisfies 2 or 3 above. The resulting collection is read-only. \r\n\r\nIn cases where 4) AND 5) are fulfilled, the current implementation extracts the parameters according to bullet point 5 and then calls the parameter converter with the result, which in turn fails. \r\n\r\nSo for example if the there is a parameter converter which is able to handle List<PojoType> and a request is made with `param = [{...pojo field here}]` then the parameter converter get called with `[[{...}]]` (square brackets duplicated). \r\n\r\nThis is due to the way [ResteasyReactiveRequestContext extracts the query parameters here](https://github.com/pravussum/quarkus/blob/main/independent-projects/resteasy-reactive/server/runtime/src/main/java/org/jboss/resteasy/reactive/server/core/ResteasyReactiveRequestContext.java#L806) and [RuntimeResolvedConverter here](https://github.com/pravussum/quarkus/blob/main/independent-projects/resteasy-reactive/server/runtime/src/main/java/org/jboss/resteasy/reactive/server/core/parameters/converters/RuntimeResolvedConverter.java#L22). \r\nThe `single` parameter controls whether the parameter object will be a collection or not and the toString() methods adds the additional brackets, because single in `QueryParamExtractor` is not correctly set during processing. \r\n\r\nI added some additional tests to demonstrate the problematic cases in `MapWithParamConverterTest`.\r\n\r\nI tried to [fix this in ServerEndpointIndexer](https://github.com/pravussum/quarkus/blob/resteasy-reactive-complex-parameter-handling/independent-projects/resteasy-reactive/server/processor/src/main/java/org/jboss/resteasy/reactive/server/processor/ServerEndpointIndexer.java#L352), but again face some challenges:\r\n\r\nThe `extractConverter()` code in `ServerEndpointIndexer` is not aware of the runtime param converters they way that it is build right now. Thus, it cannot be decided whether to handle e. g. a List type according to 5) or as 4), using a parameter converter. Currently, if there is ANY converter, a [RuntimeResolvedConverter is created](https://github.com/pravussum/quarkus/blob/main/independent-projects/resteasy-reactive/server/processor/src/main/java/org/jboss/resteasy/reactive/server/processor/generation/converters/GeneratedConverterIndexerExtension.java#L101), which [then later cannot be resolved during runtime](https://github.com/pravussum/quarkus/blob/main/independent-projects/resteasy-reactive/server/runtime/src/main/java/org/jboss/resteasy/reactive/server/core/parameters/converters/RuntimeResolvedConverter.java#L37)\r\n\r\nThe existingProviders map didn't use the full type, thus with the better support for generic types we have now there are clashes. \r\n\r\nI am unsure how to continue from here. Should the param converter providers be made available during processor time, so they can be used in `ServerEndpointIndexer` to decide?\r\nOr should the parameter handling during runtime be adapted, so it creates a generated converter on-the-fly?\r\nOr am I completely on the wrong track?\r\n\r\n/cc @geoand \r\n\r\n\r\n### Expected behavior\r\n\r\nMapWithParamConverterTest are all green. \r\n\r\n### Actual behavior\r\n\r\nSee description\r\n\r\n### How to Reproduce?\r\n\r\nMapWithParamConverterTest\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n5.13.0-27-generic #29-Ubuntu SMP Wed Jan 12 17:36:47 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk-15.0.2\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\nhttps://github.com/pravussum/quarkus\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23609/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23609/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

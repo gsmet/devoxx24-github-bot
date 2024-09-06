@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22183",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22183/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22183/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22183/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22183",
+  "id": 1079674722,
+  "node_id": "I_kwDOCFbutM5AWodi",
+  "number": 22183,
+  "title": "HibernateOrmProcessor complains about abstract model classes not mapped to a PersistenceUnit",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2021-12-14T12:04:18Z",
+  "updated_at": "2023-02-20T07:29:01Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIf hibernate entity packages are explicitly listed (e.g. to map them to a specific `PersistenceUnit`), the `HibernateOrmProcessor` complains that their abstract super classes and interfaces are not mapped to a PersistenceUnit:\r\n\r\napplication.yaml\r\n```\r\nquarkus:\r\n  hibernate-orm:\r\n    packages:\r\n      - 'com.github.renegrob.entity'\r\n```      \r\nBuild output:\r\n```\r\n./gradlew clean build\r\n\r\n> Task :quarkusGenerateCode\r\npreparing quarkus application\r\n\r\n> Task :quarkusGenerateCodeTests\r\npreparing quarkus application\r\nCould not find a suitable persistence unit for model classes:\r\n        - com.github.renegrob.INamedEntity\r\n        - io.quarkus.hibernate.orm.panache.PanacheEntity\r\n\r\n> Task :quarkusBuild\r\nbuilding quarkus jar\r\n\r\nBUILD SUCCESSFUL in 6s\r\n```\r\n\r\nThe log message seems to be produced in io.quarkus.hibernate.orm.deployment.HibernateOrmProcessor line 1054.\r\nIn my opinion abstract classes (and those annoted with @MappedSuperclass) and interfaces should not be listed - but maybe I'm mistaken.\r\nI would expect that abstract super classes and interfaces can be shared among different PersistentUnits.\r\n\r\n### Expected behavior\r\n\r\nIn the describe scenario no such log message is produced.\r\n\r\n### Actual behavior\r\n\r\nSee bug description\r\n\r\n### How to Reproduce?\r\n\r\n1. Checkout https://github.com/renegrob/reproducer-base/tree/no-suitable-persistence-unit\r\n2. `./gradlew clean build`\r\n3. You will see the following build output:\r\n```\r\n...\r\npreparing quarkus application\r\nCould not find a suitable persistence unit for model classes:\r\n        - com.github.renegrob.INamedEntity\r\n        - io.quarkus.hibernate.orm.panache.PanacheEntity\r\n...\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux automatix 5.11.0-41-generic #45~20.04.1-Ubuntu SMP Wed Nov 10 10:20:10 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.13\" 2021-10-19 LTS OpenJDK Runtime Environment Zulu11.52+13-CA (build 11.0.13+8-LTS) OpenJDK 64-Bit Server VM Zulu11.52+13-CA (build 11.0.13+8-LTS, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nn/a\r\n\r\n### Quarkus version or git rev\r\n\r\n2.5.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n```\r\n------------------------------------------------------------\r\nGradle 7.3.1\r\n------------------------------------------------------------\r\n\r\nBuild time:   2021-12-01 15:42:20 UTC\r\nRevision:     2c62cec93e0b15a7d2cd68746f3348796d6d42bd\r\n\r\nKotlin:       1.5.31\r\nGroovy:       3.0.9\r\nAnt:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021\r\nJVM:          11.0.13 (Azul Systems, Inc. 11.0.13+8-LTS)\r\nOS:           Linux 5.11.0-41-generic amd64\r\n```\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22183/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22183/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27237",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27237/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27237/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27237/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27237",
+  "id": 1335257036,
+  "node_id": "I_kwDOCFbutM5PlmfM",
+  "number": 27237,
+  "title": "ContextNotActiveException: SessionScoped context was not active when trying to obtain a bean instance for a client proxy of CLASS bean",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 19,
+  "created_at": "2022-08-10T22:12:58Z",
+  "updated_at": "2023-01-17T14:28:21Z",
+  "closed_at": "2022-10-05T07:50:03Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have code like the below:\r\n\r\n```java\r\n@ApplicationScoped\r\n@Path(\"/\")\r\npublic class Application {\r\n\r\n    @Inject\r\n    SessionScopedCalciteSchema sessionScopedCalciteSchema;\r\n\r\n    @CheckedTemplate(requireTypeSafeExpressions = false)\r\n    static class Templates {\r\n        public static native TemplateInstance index(SchemaPlus rootSchema);\r\n    }\r\n\r\n    @GET\r\n    public TemplateInstance index() {\r\n        SchemaPlus rootSchema = sessionScopedCalciteSchema.getCalciteConnection().getRootSchema();\r\n        return Templates.index(rootSchema);\r\n    }\r\n}\r\n```\r\n```java\r\n@SessionScoped\r\npublic class SessionScopedCalciteSchema implements java.io.Serializable {\r\n\r\n    private UUID id;\r\n    private DataSource h2DataSource;\r\n    private CalciteConnection calciteConnection;\r\n\r\n    public SessionScopedCalciteSchema() {\r\n    }\r\n\r\n    @PostConstruct\r\n    void init() {\r\n        this.id = UUID.randomUUID();\r\n        this.h2DataSource = ChinookDatabaseService.createChinookDatabase(id.toString());\r\n        this.calciteConnection = initCalciteConnection();\r\n\r\n        SchemaPlus rootSchema = calciteConnection.getRootSchema();\r\n        JdbcCatalogSchema catalog = JdbcCatalogSchema.create(rootSchema, \"chinook\", h2DataSource, null);\r\n        rootSchema.add(\"chinook\", catalog);\r\n    }\r\n\r\n    private static CalciteConnection initCalciteConnection() {\r\n      // ...\r\n    }\r\n\r\n    // getters/setters\r\n}\r\n```\r\n\r\nRunning it throws this error:\r\n```java\r\njavax.enterprise.context.ContextNotActiveException: SessionScoped context was not active when trying to obtain a bean instance for a client proxy of CLASS bean [class=io.github.gavinray97.service.SessionScopedCalciteSchema, id=5ceb6548b8253f07699efa8b7c65908ba6b0a510]\r\n\tat io.quarkus.arc.impl.ClientProxies.getDelegate(ClientProxies.java:53)\r\n\tat io.github.gavinray97.service.SessionScopedCalciteSchema_ClientProxy.arc$delegate(Unknown Source)\r\n\tat io.github.gavinray97.service.SessionScopedCalciteSchema_ClientProxy.getCalciteConnection(Unknown Source)\r\n\tat io.github.gavinray97.Application.index(Application.java:30)\r\n\tat io.github.gavinray97.Application_Subclass.index$$superforward1(Unknown Source)\r\n\tat io.github.gavinray97.Application_Subclass$$function$$7.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:53)\r\n```\r\n\r\nMy dependencies are:\r\n```kts\r\nimplementation(\"io.quarkus:quarkus-arc\")\r\nimplementation(\"io.quarkus:quarkus-jdbc-h2\")\r\nimplementation(\"io.quarkus:quarkus-resteasy-reactive-jackson\")\r\nimplementation(\"io.quarkus:quarkus-resteasy-reactive-qute\")\r\nimplementation(\"io.quarkus:quarkus-resteasy-reactive\")\r\nimplementation(\"io.quarkus:quarkus-undertow\")\r\n```\r\n\r\nUsing version `2.11.1.Final`\r\n\r\nWhat does this error mean? 🤔 \r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27237/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27237/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31264",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31264/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31264/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31264/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31264",
+  "id": 1589839226,
+  "node_id": "I_kwDOCFbutM5ewwV6",
+  "number": 31264,
+  "title": "@QuarkusTest - java.lang.ClassNotFoundException: jakarta.interceptor.Interceptor",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    },
+    {
+      "id": 3941059466,
+      "node_id": "LA_kwDOCFbutM7q58uK",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jakarta",
+      "name": "area/jakarta",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-02-17T19:07:22Z",
+  "updated_at": "2023-03-02T09:59:54Z",
+  "closed_at": "2023-03-02T09:59:54Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAfter migrating to Quarkus 3.0.0.Alpha4 there are a couple of scenarios where I'm seeing `[error]: Build step io.quarkus.arc.deployment.ArcProcessor#quarkusMain threw an exception: java.lang.NoClassDefFoundError: jakarta/interceptor/Interceptor`.\r\n\r\nI'm seeing it for a `@QuarkusTest` in a library project (the test simulates an app proving the library) and for a very simple service when performing `mvn quarkus:dev`.  15 other services are fine.  Initial suspicion is that it's related to the limited dependencies in these projects.  Only direct Quarkus dependencies in the library project are `quarkus-resteasy-reactive-common` and `quarkus-smallrye-openapi`.  Only direct Quarkus dependency in the service is `quarkus-resteasy-reactive-jackson`.\r\n\r\nI note that other services obtain `jakarata.interceptor-api` transitively via `quarkus-hibernate-orm`, `quarkus-security` and probably others.  I can resolve by adding `jakarata.interceptor-api` myself.\r\n\r\nHopefully this just means `jakarata.interceptor-api` needs to be added to `quarkus-resteasy-reactive-common`?\r\n\r\nI can try and make a simple reproducer if the answer is not already obvious.\r\n\r\nSample stack trace:\r\n```\r\njava.lang.RuntimeException: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#quarkusMain threw an exception: java.lang.NoClassDefFoundError: jakarta/interceptor/Interceptor\r\n\tat io.quarkus.arc.processor.DotNames.<clinit>(DotNames.java:88)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.quarkusMain(ArcProcessor.java:759)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1452)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\nCaused by: java.lang.ClassNotFoundException: jakarta.interceptor.Interceptor\r\n\tat java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)\r\n\tat java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:516)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:466)\r\n\t... 13 more\r\n\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.throwBootFailureException(QuarkusTestExtension.java:625)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.interceptTestClassConstructor(QuarkusTestExtension.java:696)\r\n```\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus 3.0.0.Alpha4\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31264/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31264/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

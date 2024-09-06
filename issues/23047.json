@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23047",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23047/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23047/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23047/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23047",
+  "id": 1109034117,
+  "node_id": "I_kwDOCFbutM5CGoSF",
+  "number": 23047,
+  "title": "@Blocking with reactive causes NoStackTraceThrowable: Timeout exception",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 20,
+  "created_at": "2022-01-20T09:00:33Z",
+  "updated_at": "2022-01-20T10:12:50Z",
+  "closed_at": "2022-01-20T10:12:06Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nGiven the following bean:\r\n```\r\n@Path(\"/payload\")\r\npublic class ReceivedDataPayloadResource {\r\n\r\n\t@GET\r\n\t@Path(\"/blocking/{rd_id}\")\r\n\t@Blocking\r\n\tpublic ReceivedDataPayload getBlockingPart(@PathParam(\"rd_id\") Long rdId) {\r\n\t\treturn ReceivedDataPayload.<ReceivedDataPayload>find( \"rdId\", rdId )\r\n\t\t\t\t.firstResult().await().indefinitely();\r\n\t}\r\n}\r\n```\r\nAfter calling the api 4-5 times, the following error occurs:\r\n```\r\n2022-01-20 08:50:22,582 ERROR [org.hib.rea.errors] (vert.x-eventloop-thread-2) HR000057: Failed to execute statement [$1select receivedda0_.id as id1_0_, receivedda0_.source as source2_0_, receivedda0_.rd_id as rd_id3_0_ from received_data_source receivedda0_ where receivedda0_.rd_id=$1]: $2could not execute query: java.util.concurrent.CompletionException: io.vertx.core.impl.NoStackTraceThrowable: Timeout\r\n\tat java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:332)\r\n\tat java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:347)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:636)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n\tat java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2162)\r\n\tat io.vertx.core.Future.lambda$toCompletionStage$2(Future.java:362)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onFailure(FutureImpl.java:153)\r\n\tat io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:75)\r\n\tat io.vertx.core.impl.future.FutureImpl.tryFail(FutureImpl.java:230)\r\n\tat io.vertx.core.impl.future.Mapping.onFailure(Mapping.java:45)\r\n\tat io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:75)\r\n\tat io.vertx.core.impl.future.FutureImpl.tryFail(FutureImpl.java:230)\r\n\tat io.vertx.core.impl.future.PromiseImpl.tryFail(PromiseImpl.java:23)\r\n\tat io.vertx.core.impl.future.PromiseImpl.onFailure(PromiseImpl.java:54)\r\n\tat io.vertx.core.impl.future.PromiseImpl.handle(PromiseImpl.java:43)\r\n\tat io.vertx.core.impl.future.PromiseImpl.handle(PromiseImpl.java:23)\r\n\tat io.vertx.sqlclient.impl.pool.SqlConnectionPool$1PoolRequest.lambda$null$0(SqlConnectionPool.java:202)\r\n\tat io.vertx.core.net.impl.pool.SimpleConnectionPool$Cancel.run(SimpleConnectionPool.java:666)\r\n\tat io.vertx.core.net.impl.pool.CombinerExecutor.submit(CombinerExecutor.java:50)\r\n\tat io.vertx.core.net.impl.pool.SimpleConnectionPool.execute(SimpleConnectionPool.java:240)\r\n\tat io.vertx.core.net.impl.pool.SimpleConnectionPool.cancel(SimpleConnectionPool.java:629)\r\n\tat io.vertx.sqlclient.impl.pool.SqlConnectionPool$1PoolRequest.lambda$onEnqueue$1(SqlConnectionPool.java:199)\r\n\tat io.vertx.core.impl.VertxImpl$InternalTimerHandler.handle(VertxImpl.java:893)\r\n\tat io.vertx.core.impl.VertxImpl$InternalTimerHandler.handle(VertxImpl.java:860)\r\n\tat io.vertx.core.impl.EventLoopContext.emit(EventLoopContext.java:50)\r\n\tat io.vertx.core.impl.DuplicatedContext.emit(DuplicatedContext.java:168)\r\n\tat io.vertx.core.impl.AbstractContext.emit(AbstractContext.java:53)\r\n\tat io.vertx.core.impl.VertxImpl$InternalTimerHandler.run(VertxImpl.java:883)\r\n\tat io.netty.util.concurrent.PromiseTask.runTask(PromiseTask.java:98)\r\n\tat io.netty.util.concurrent.ScheduledFutureTask.run(ScheduledFutureTask.java:170)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:500)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: io.vertx.core.impl.NoStackTraceThrowable: Timeout\r\n```\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nA reproducer is available here: https://github.com/DavideD/reactive-panache-reproducer\r\n\r\n1. `./mvnw clean test`\r\n\r\nor\r\n\r\n1. `./mvnw quarkus:dev`\r\n2. `http http://localhost:8080/payload/blocking/22`\r\n\r\n\r\nThe first http requst will work, but after several attempts the exception should appear.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.6.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nI'm using Panache but I think it will happen with any reactive approach",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23047/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23047/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

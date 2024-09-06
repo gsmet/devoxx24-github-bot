@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24183",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24183/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24183/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24183/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24183",
+  "id": 1162909391,
+  "node_id": "I_kwDOCFbutM5FUJbP",
+  "number": 24183,
+  "title": "Context as a method parameter in GraphQLApi class + Java Bean Validation input",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-03-08T17:10:11Z",
+  "updated_at": "2022-06-24T02:43:23Z",
+  "closed_at": "2022-06-24T02:43:23Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI upgraded the quarkus version to **2.7.3.Final** and I'm using Jakarta validation API to validate GraphQL inputs.  For instance, in this example my GraphQL input deal with the _Size_, _Email_, _Past_ and _NotBlank_ annotations:\r\n```java\r\nimport java.time.LocalDate;\r\n\r\nimport javax.json.bind.annotation.JsonbDateFormat;\r\nimport javax.validation.constraints.Email;\r\nimport javax.validation.constraints.NotBlank;\r\nimport javax.validation.constraints.Past;\r\nimport javax.validation.constraints.Size;\r\n\r\nimport lombok.AllArgsConstructor;\r\nimport lombok.Builder;\r\nimport lombok.Data;\r\nimport lombok.NoArgsConstructor;\r\n\r\n@Builder\r\n@Data\r\n@AllArgsConstructor\r\n@NoArgsConstructor\r\npublic class CreatePersonUseCaseInput {\r\n    @NotBlank(message=\"'${validatedValue}' cannot be null\")\r\n    private String name;\r\n    @Past(message=\"Date must be in past. found '${validatedValue}'\")\r\n    @JsonbDateFormat(value = \"dd/MM/yyyy\")\r\n    private LocalDate dateOfBirth;\r\n    @Email(message=\"email should be valid\")\r\n    private String email;\r\n    @Size(max = 5, message = \"'${validatedValue}' must be at least {max} characters long. Length found : '${validatedValue.length()}'\")\r\n    private String civility;\r\n \r\n}\r\n``` \r\nWhen I run a mutation from the GraphQL playground an exception is thrown saying :\r\n```\r\nERROR [io.sma.graphql] (vert.x-worker-thread-0) SRGQL012000: Data Fetching Error: java.lang.IndexOutOfBoundsException: index (1) must be less than size (1)\r\n```\r\nIn my mutation method I'm using the io.smallrye.graphql.api.Context as a parameter to handle the graphql request and I see it's the source of the error because when I remove it everything goes okay.\r\n```java\r\npublic Class GraphQLResource{\r\n   @Inject\r\n    ObjectMapper objectMapper;\r\n\r\n    @Mutation\r\n    @Description(\"create person\")\r\n    public String createPerson(Context context, @Valid @Name(\"person\") CreatePersonUseCaseInput input) throws Exception {\r\n        System.out.println(\"Mutation Context : \"+ context);\r\n        /*\r\n         * do something\r\n         * */\r\n        CreatePersonUseCaseBO personBO=new CreatePersonUseCaseBO(\"Raoua\",null, \"test@test\", \"M\");\r\n        CreatePersonUseCaseBO objectUpdated = MutationRequestHandler.getObject(context, \"person\", objectMapper, personBO);\r\n       System.out.println(objectUpdated.toString());\r\n        return \"successful creation\";\r\n    }\r\n}\r\n```\r\nI see it is related to the **size** annotation in combination with the Context as a parameter in the method.\r\n\r\n\r\n### Expected behavior\r\n\r\nThe Context as a parameter in the method works well with input validation\r\n\r\n### Actual behavior\r\n```\r\nERROR [io.sma.graphql] (vert.x-worker-thread-0) SRGQL012000: Data Fetching Error: java.lang.IndexOutOfBoundsException: index (1) must be less than size (1)\r\n    at graphql.com.google.common.base.Preconditions.checkElementIndex(Preconditions.java:1345)\r\n    at graphql.com.google.common.base.Preconditions.checkElementIndex(Preconditions.java:1327)\r\n    at graphql.com.google.common.collect.SingletonImmutableList.get(SingletonImmutableList.java:43)\r\n    at io.smallrye.graphql.cdi.validation.BeanValidationException$RequestNodeBuilder.requestedArgument(BeanValidationException.java:66)\r\n    at io.smallrye.graphql.cdi.validation.BeanValidationException$RequestNodeBuilder.build(BeanValidationException.java:54)\r\n    at io.smallrye.graphql.cdi.validation.BeanValidationException.lambda$appendDataFetcherResult$0(BeanValidationException.java:35)\r\n    at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)\r\n    at java.base/java.util.HashMap$KeySpliterator.forEachRemaining(HashMap.java:1603)\r\n    at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:484)\r\n    at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)\r\n    at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:150)\r\n    at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:173)\r\n    at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\r\n    at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:497)\r\n    at io.smallrye.graphql.cdi.validation.BeanValidationException.appendDataFetcherResult(BeanValidationException.java:36)\r\n    at io.smallrye.graphql.execution.datafetcher.AbstractDataFetcher.get(AbstractDataFetcher.java:56)\r\n    at graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation.lambda$instrumentDataFetcher$0(DataLoaderDispatcherInstrumentation.java:87)\r\n    at graphql.execution.ExecutionStrategy.fetchField(ExecutionStrategy.java:279)\r\n    at graphql.execution.ExecutionStrategy.resolveFieldWithInfo(ExecutionStrategy.java:210)\r\n    at graphql.execution.ExecutionStrategy.resolveField(ExecutionStrategy.java:182)\r\n    at graphql.execution.AsyncSerialExecutionStrategy.lambda$execute$1(AsyncSerialExecutionStrategy.java:43)\r\n    at graphql.execution.Async.eachSequentiallyImpl(Async.java:80)\r\n    at graphql.execution.Async.eachSequentially(Async.java:69)\r\n    at graphql.execution.AsyncSerialExecutionStrategy.execute(AsyncSerialExecutionStrategy.java:38)\r\n    at graphql.execution.Execution.executeOperation(Execution.java:159)\r\n    at graphql.execution.Execution.execute(Execution.java:105)\r\n    at graphql.GraphQL.execute(GraphQL.java:613)\r\n    at graphql.GraphQL.parseValidateAndExecute(GraphQL.java:538)\r\n    at graphql.GraphQL.executeAsync(GraphQL.java:502)\r\n    at graphql.GraphQL.execute(GraphQL.java:433)\r\n    at io.smallrye.graphql.execution.ExecutionService.execute(ExecutionService.java:126)\r\n    at io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLExecutionHandler.doRequest(SmallRyeGraphQLExecutionHandler.java:299)\r\n    at io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLExecutionHandler.handlePost(SmallRyeGraphQLExecutionHandler.java:113)\r\n    at io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLExecutionHandler.doHandle(SmallRyeGraphQLExecutionHandler.java:73)\r\n    at io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLAbstractHandler.handleWithIdentity(SmallRyeGraphQLAbstractHandler.java:66)\r\n    at io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLAbstractHandler.handle(SmallRyeGraphQLAbstractHandler.java:48)\r\n    at io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLAbstractHandler.handle(SmallRyeGraphQLAbstractHandler.java:23)\r\n    at io.vertx.ext.web.impl.BlockingHandlerDecorator.lambda$handle$0(BlockingHandlerDecorator.java:48)\r\n    at io.vertx.core.impl.ContextImpl.lambda$null$0(ContextImpl.java:159)\r\n    at io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n    at io.vertx.core.impl.ContextImpl.lambda$executeBlocking$1(ContextImpl.java:157)\r\n    at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n    at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n    at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n    at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n    at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n    at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n    at java.base/java.lang.Thread.run(Thread.java:834)\r\n\r\n```\r\n### How to Reproduce?\r\n\r\nAs a reproducer, please see [https://github.com/raoua-eng/Quarkus](url).\r\nTo reproduce the issue we need the following graphql input:\r\n```\r\nmutation{\r\n  createPerson(\r\n    person:{\r\n      name:\"test\"\r\n      email: \"test@test.com\"\r\n      civility:\"testttt\"\r\n     dateOfBirth:\"26/12/2000\"\r\n    }\r\n  )\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n11.0.1\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24183/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24183/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

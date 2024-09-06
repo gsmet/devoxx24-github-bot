@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39808",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39808/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39808/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39808/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39808",
+  "id": 2217367608,
+  "node_id": "I_kwDOCFbutM6EKlg4",
+  "number": 39808,
+  "title": "Flags passed to quarkus.native.container-runtime-options not recognized when separated by whitespace rather than equal sign",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-04-01T02:21:33Z",
+  "updated_at": "2024-08-28T13:23:51Z",
+  "closed_at": "2024-08-28T13:23:51Z",
+  "active_lock_reason": null,
+  "body": "## Describe the bug\r\n\r\nAs discussed in #39670 , the configuration property `quarkus.native.container-runtime-options` fails if whitespace is used as a separator between the flag and its value instead of an equal sign.\r\n\r\nBoth syntaxes (using either an equal sign or whitespace as the separator) are supported in Podman and in the Docker CLI interface (see Additional Information section if you're using Docker).\r\n\r\nYou'll encounter the same error when using whitespace as a separator as when you misspell the flag name, for example, passing `--archh=...` instead of `--arch=...`.\r\n\n- Happy Path\n\r\n```bash\r\n# BUILD SUCCESS\r\nquarkus.native.container-runtime-options=--arch=amd64\r\n```\r\n- Erro Path\n\r\n```bash\r\n# BUILD FAILURE\r\n# Error: unknown flag: --arch amd64\r\nquarkus.native.container-runtime-options=--arch amd64\r\n```\r\n\r\n## Logs:\r\n\r\n[happy_path.log](https://github.com/quarkusio/quarkus/files/14818645/happy_path.log)\r\n[error_path.log](https://github.com/quarkusio/quarkus/files/14818646/error_path.log)\r\n\r\n\r\r\n## Expected behavior\r\n\r\nNative image builds successfully.\r\n\r\n## Actual behavior\r\n\r\nNative image build fails with `Error: unknown flag: --arch amd64`.\r\n\r\n## How to Reproduce?\r\n\r\n1. Install [SDKMAN](https://sdkman.io/install) and [Podman](https://podman.io/docs/installation).\r\n2. Install the Java 21 (Java 17 will yield the same results) and the Quarkus CLI:\r\n\r\n```bash\r\nsdk install java &&\r\nsdk install quarkus\r\n```\r\n\r\n3. Create a sample Quarkus project and `cd` into it.\r\n\r\n```bash\r\nquarkus create &&\r\ncd code-with-quarkus\r\n```\r\n\r\n4. Set configuration for native image and build it:\r\n\r\n- Happy Path\r\n\r\n```bash\r\n# BUILD SUCCESS\r\n\r\ncat > src/main/resources/application.properties <<EOF && quarkus build --native > happy_path.log 2>&1\r\nquarkus.log.level=DEBUG\r\nquarkus.native.container-build=true\r\nquarkus.native.container-runtime=podman\r\nquarkus.native.container-runtime-options=--arch=amd64\r\nEOF\r\n```\r\n\r\n- Error Path\r\n\r\n```bash\r\n# BUILD FAILURE\r\n\r\ncat > src/main/resources/application.properties <<EOF && quarkus build --native > error_path.log 2>&1\r\nquarkus.log.level=DEBUG\r\nquarkus.native.container-build=true\r\nquarkus.native.container-runtime=podman\r\nquarkus.native.container-runtime-options=--arch amd64\r\nEOF\r\n```\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux DESKTOP-OR8HCTU 5.15.146.1-microsoft-standard-WSL2 #1 SMP Thu Jan 11 04:09:03 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.2\" 2024-01-16 LTS OpenJDK Runtime Environment Temurin-21.0.2+13 (build 21.0.2+13-LTS) OpenJDK 64-Bit Server VM Temurin-21.0.2+13 (build 21.0.2+13-LTS, mixed mode, sharing)\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.9.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /home/wsl/.m2/wrapper/dists/apache-maven-3.9.6-bin/3311e1d4/apache-maven-3.9.6 Java version: 21.0.2, vendor: Eclipse Adoptium, runtime: /home/wsl/.sdkman/candidates/java/21.0.2-tem Default locale: en, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.146.1-microsoft-standard-wsl2\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\nJava 17 (17.0.10-tem) and/or [Docker](https://docs.docker.com/engine/install/) will yield the same results.\r\n\r\nIf you're using Docker:\r\n\r\n4. Set configuration for native image and build it:\r\n\r\n- Happy Path\r\n\r\n```bash\r\n# BUILD SUCCESS\r\n\r\ncat > src/main/resources/application.properties <<EOF && quarkus build --native > happy_path.log 2>&1\r\nquarkus.log.level=DEBUG\r\nquarkus.native.container-build=true\r\nquarkus.native.container-runtime=docker\r\nquarkus.native.container-runtime-options=--platform=amd64\r\nEOF\r\n```\r\n\r\n- Error Path\r\n\r\n```bash\r\n# BUILD FAILURE\r\n\r\ncat > src/main/resources/application.properties <<EOF && quarkus build --native > error_path.log 2>&1\r\nquarkus.log.level=DEBUG\r\nquarkus.native.container-build=true\r\nquarkus.native.container-runtime=docker\r\nquarkus.native.container-runtime-options=--platform amd64\r\nEOF\r\n```\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39808/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39808/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

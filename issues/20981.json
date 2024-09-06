@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20981",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20981/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20981/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20981/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20981",
+  "id": 1035048939,
+  "node_id": "I_kwDOCFbutM49sZfr",
+  "number": 20981,
+  "title": "Smallrye JWT decryption issue after migrating from Quarkus 2.2.3 to 2.3.0",
+  "labels": [
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-10-25T12:02:16Z",
+  "updated_at": "2021-10-26T13:49:37Z",
+  "closed_at": "2021-10-26T12:27:39Z",
+  "active_lock_reason": null,
+  "body": "Hi,\r\n\r\nI'd like to report a bug that I was able to solve but might be worth to look at and document somewhere for other people.\r\n\r\nFirst a bit of context, I'm using quarkus to create an API gateway that will do some orchestrations and forward requests to microservices written with node.js. \r\nThis API gateway is also responsible for generating and verifying JWTs that are also forwarded to the microservices.\r\nThese JWTs are signed (PS256) and encrypted (RSA-OAEP-256).\r\n\r\nI was expecting some possible issues when migrating from quarkus 1.13 to 2.0 because of the new MP JWT 1.2 spec, but everything went smooth.\r\n\r\nHowever, starting with 2.3.0, the JWT are refused by the nodes.js microservices with this weird error message: \r\n>invalid JWT: \"alg\" (Algorithm) Header Parameter not allowed\r\n\r\nQuarkus itself is still able to generate/sign/encrypt and decrypt/verify the tokens without problem though.\r\n\r\nHere's my code to generate the tokens:\r\n```\r\nString token = Jwt\r\n            .upn(\"some identifier\")\r\n            .subject(\"another identifier\")\r\n            .groups(\"some role\") \r\n            .claim(\"some claim\")\r\n            .jws().algorithm(SignatureAlgorithm.PS256).innerSign(jwtKeyFactory.getSignKey())\r\n            .encrypt(jwtKeyFactory.getEncryptKey());\r\n```\r\nand the configuration:\r\n```\r\nmp.jwt.verify.publickey.algorithm=PS256\r\nsmallrye.jwt.decrypt.algorithm=RSA_OAEP_256\r\n```\r\nSince I was suspecting some issue with the encryption algorithm, I changed my code to this:\r\n```\r\nString token = Jwt\r\n            .upn(\"some identifier\")\r\n            .subject(\"another identifier\")\r\n            .groups(\"some role\") \r\n            .claim(\"some claim\")\r\n            .jws().algorithm(SignatureAlgorithm.PS256).innerSign(jwtKeyFactory.getSignKey())\r\n            .keyAlgorithm(KeyEncryptionAlgorithm.RSA_OAEP_256).encrypt(jwtKeyFactory.getEncryptKey());\r\n``` \r\n\r\nAnd then it works.\r\n\r\nI believe it's because RSA_OAEP_256 was the default **encryption** alg before, and according to the javadoc, it's now RSA_OAEP.\r\n\r\nI remember having to specify RSA_OAEP_256 as **decryption** algorithm in application.properties when I implemented all this, because RSA_OAEP was the default but it didn't work.\r\n\r\nSo basically, until now, the default encryption and default decryption algorithms weren't the same. This made me struggle back then because it's not explained in the guide so I had to figure it out by myself.\r\n\r\nNow, it seems that both default to RSA_OAEP so it shouldn't cause issue anymore.\r\n\r\nWhat I still don't understand though, is that my implementation was still working up to quarkus 2.2.3, although the change to RSA_OAEP seems to have appeared with MP JWT 1.2, as stated [here](https://download.eclipse.org/microprofile/microprofile-jwt-auth-1.2/microprofile-jwt-auth-spec-1.2.html#_api_changes):\r\n> Support for decrypting JWT tokens which have been encrypted using RSA-OAEP and A256GCM algorithms and contain the claims or inner-signed JWT tokens \r\n\r\nAnd so I would have expected it to fail already with quarkus 2.0.\r\n\r\nAnyway, all this might deserve to be emphasized in the jwt guide and migration guide, and in any case, I hope it might help people who would come across the same issue.\r\n\r\n\r\n\r\n\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20981/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20981/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

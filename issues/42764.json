@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42764",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42764/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42764/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42764/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42764",
+  "id": 2487226995,
+  "node_id": "I_kwDOCFbutM6UQBJz",
+  "number": 42764,
+  "title": "IllegalStateException: Client is closed when using quarkus-rest-client with virtual threads",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 6031725549,
+      "node_id": "LA_kwDOCFbutM8AAAABZ4TT7Q",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/virtual-threads",
+      "name": "area/virtual-threads",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to Java's Virtual Threads"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-08-26T16:11:16Z",
+  "updated_at": "2024-08-27T06:12:44Z",
+  "closed_at": "2024-08-27T06:09:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn a Quarkus test I use `quarkus-rest-client` in order to invoke a REST endpoint. It works when invoked in the carrier thread but, as soon as I'm doing the same in a  virtual thread, it raises the mentioned exception.\r\n\r\nFor example:\r\n\r\n    ...\r\n    try (Client client = ClientBuilder.newClient())\r\n    {\r\n      client.target(...).request().get(...);\r\n      ...\r\n    }\r\n    ...\r\n\r\nworks as expected while:\r\n\r\n    ...\r\n    try (Client client = ClientBuilder.newClient())\r\n    {\r\n     Thread.startVirtualThread(() ->\r\n      {\r\n        client.target(...).request().get(...);\r\n      ...\r\n      });\r\n    }\r\n    ...\r\n\r\nraises the following stack:\r\n\r\n    [INFO] Running fr.simplex_software.react.loom.tests.TimeZoneResourceIT\r\n    2024-08-26 17:55:54,177 INFO  [io.quarkus] (main) simple-loom 1.0-SNAPSHOT on JVM (powered by Quarkus 3.11.0) started in 2.206s. Listening on: http://localhost:8081\r\n    2024-08-26 17:55:54,179 INFO  [io.quarkus] (main) Profile test activated. \r\n    2024-08-26 17:55:54,179 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, rest, rest-client, rest-client-jsonb, rest-jsonb, smallrye-context-propagation, vertx]\r\n    2024-08-26 17:55:55,789 DEBUG [org.jbo.res.rea.cli.log.DefaultClientLogger] (vert.x-eventloop-thread-2) Request: GET http://localhost:8080... Headers[User-Agent=Quarkus REST Client], Empty body\r\n    2024-08-26 17:55:56,394 DEBUG [org.jbo.res.rea.cli.log.DefaultClientLogger] (vert.x-eventloop-thread-2) Response: GET http://localhost:8080..., Status[200 OK], Headers[content-length=22 Content-Type=application/json;charset=UTF-8], Body:\r\n    ...\r\n    Exception in thread \"\" java.lang.IllegalStateException: Client is closed\r\n        at org.jboss.resteasy.reactive.client.impl.ClientImpl.abortIfClosed(ClientImpl.java:240)\r\n        at org.jboss.resteasy.reactive.client.impl.ClientImpl.target(ClientImpl.java:263)\r\n        at org.jboss.resteasy.reactive.client.impl.ClientImpl.target(ClientImpl.java:251)\r\n        at fr.simplex_software.react.loom.tests.TimeZoneResourceIT.lambda$testTimeZoneResource$0(TimeZoneResourceIT.java:31)\r\n        at java.base/java.lang.VirtualThread.run(VirtualThread.java:309\r\n\r\n\r\n### Expected behavior\r\n\r\nI expect that the `jakarta.ws.rs.client.Client` instance be available in a virtual thread the same way as in a carrier thread.\r\n\r\n### Actual behavior\r\n\r\nRaises the following exception:\r\n\r\n    [INFO] Running fr.simplex_software.react.loom.tests.TimeZoneResourceIT\r\n    2024-08-26 17:55:54,177 INFO  [io.quarkus] (main) simple-loom 1.0-SNAPSHOT on JVM (powered by Quarkus 3.11.0) started in 2.206s. Listening on: http://localhost:8081\r\n    2024-08-26 17:55:54,179 INFO  [io.quarkus] (main) Profile test activated. \r\n    2024-08-26 17:55:54,179 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, rest, rest-client, rest-client-jsonb, rest-jsonb, smallrye-context-propagation, vertx]\r\n    2024-08-26 17:55:55,789 DEBUG [org.jbo.res.rea.cli.log.DefaultClientLogger] (vert.x-eventloop-thread-2) Request: GET http://localhost:8080... Headers[User-Agent=Quarkus REST Client], Empty body\r\n    2024-08-26 17:55:56,394 DEBUG [org.jbo.res.rea.cli.log.DefaultClientLogger] (vert.x-eventloop-thread-2) Response: GET http://localhost:8080..., Status[200 OK], Headers[content-length=22 Content-Type=application/json;charset=UTF-8], Body:\r\n    ...\r\n    Exception in thread \"\" java.lang.IllegalStateException: Client is closed\r\n        at org.jboss.resteasy.reactive.client.impl.ClientImpl.abortIfClosed(ClientImpl.java:240)\r\n        at org.jboss.resteasy.reactive.client.impl.ClientImpl.target(ClientImpl.java:263)\r\n        at org.jboss.resteasy.reactive.client.impl.ClientImpl.target(ClientImpl.java:251)\r\n        at fr.simplex_software.react.loom.tests.TimeZoneResourceIT.lambda$testTimeZoneResource$0(TimeZoneResourceIT.java:31)\r\n        at java.base/java.lang.VirtualThread.run(VirtualThread.java:309\r\n\r\n### How to Reproduce?\r\n\r\nNo reproducer\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux nicolas-XPS-15-9570 5.15.0-119-generic #129-Ubuntu SMP Fri Aug 2 19:25:20 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\njava version \"21.0.3\" 2024-04-16 LTS Java(TM) SE Runtime Environment (build 21.0.3+7-LTS-152) Java HotSpot(TM) 64-Bit Server VM (build 21.0.3+7-LTS-152, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.11.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546) Maven home: /opt/apache-maven-3.9.5 Java version: 21.0.3, vendor: Oracle Corporation, runtime: /usr/lib/jvm/jdk-21-oracle-x64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.0-119-generic\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\nN/A",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42764/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42764/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

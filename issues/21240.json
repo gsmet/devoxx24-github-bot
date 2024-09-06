@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21240",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21240/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21240/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21240/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21240",
+  "id": 1046237864,
+  "node_id": "I_kwDOCFbutM4-XFKo",
+  "number": 21240,
+  "title": "AWS Lambda - Quarkus - ClassNotFound",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-11-05T20:55:24Z",
+  "updated_at": "2022-01-11T14:08:59Z",
+  "closed_at": "2022-01-11T14:08:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello all,\r\n\r\nI am trying to run my quarkus project from aws lambda. I run into this issue when I test:\r\n\r\n````\r\n{\r\n  \"errorMessage\": \"Quarkus bootstrap failed.\\njava.lang.ClassNotFoundException: io.quarkus.runner.ApplicationImpl. Current classpath: file:/var/task/\\n\\tat lambdainternal.CustomerClassLoader.findClass(CustomerClassLoader.java:63)\\n\\tat java.base/java.lang.ClassLoader.loadClass(Unknown Source)\\n\\tat java.base/java.lang.ClassLoader.loadClass(Unknown Source)\\n\\tat java.base/java.lang.Class.forName0(Native Method)\\n\\tat java.base/java.lang.Class.forName(Unknown Source)\\n\\tat io.quarkus.amazon.lambda.runtime.QuarkusStreamHandler.<clinit>(QuarkusStreamHandler.java:30)\\n\\tat java.base/java.lang.Class.forName0(Native Method)\\n\\tat java.base/java.lang.Class.forName(Unknown Source)\\n\\tat lambdainternal.HandlerInfo.fromString(HandlerInfo.java:33)\\n\\tat lambdainternal.AWSLambda.findUserMethods(AWSLambda.java:108)\\n\\tat lambdainternal.AWSLambda.startRuntime(AWSLambda.java:226)\\n\\tat lambdainternal.AWSLambda.startRuntime(AWSLambda.java:195)\\n\\tat lambdainternal.AWSLambda.main(AWSLambda.java:189)\\n\",\r\n  \"errorType\": \"java.io.IOException\",\r\n  \"stackTrace\": [\r\n    \"io.quarkus.amazon.lambda.runtime.QuarkusStreamHandler.handleRequest(QuarkusStreamHandler.java:56)\",\r\n    \"java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\",\r\n    \"java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)\",\r\n    \"java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)\",\r\n    \"java.base/java.lang.reflect.Method.invoke(Unknown Source)\"\r\n  ]\r\n}\r\n````\r\n\r\nI am using this function handler:\r\n**io.quarkus.amazon.lambda.runtime.QuarkusStreamHandler::handleRequest**\r\n\r\nHere is an excerpt of my function handler class:\r\n\r\n````\r\n@Named(\"stream\")\r\npublic class LambdaSolver implements RequestStreamHandler{\r\n\r\n    private static final long PROBLEM_ID = 0L;\r\n\r\n    private final AtomicReference<Throwable> solverError = new AtomicReference<>();\r\n    private static final AtomicLong sequence = new AtomicLong();\r\n   \r\n    @Inject\r\n    ScoreManager<VehicleRoutingSolution, HardSoftLongScore> scoreManager;\r\n    @Inject \r\n    VehicleRoutingSolutionRepository repository;\r\n    @Inject\r\n    SolverManager<VehicleRoutingSolution, Long> solverManager;\r\n    \r\n    @Override\r\n    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {\r\n     \r\n    \tint letter;\r\n        while ((letter = inputStream.read()) != -1) {\r\n            int character = Character.toUpperCase(letter);\r\n            outputStream.write(character);\r\n        }\r\n    \t\r\n    \t\r\n    \t\r\n    \t\r\n        \r\n    }\r\n````\r\n\r\nI do not know how to proceed.\r\n\n\n### Expected behavior\n\nThe lambda should execute handleRequest() from my LambdaSolver class.\n\n### Actual behavior\n\nI receive a ClassNotFound exception\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\narwin Macs-MBP.attlocal.net 20.6.0 Darwin Kernel Version 20.6.0: Wed Jun 23 00:26:31 PDT 2021; root:xnu-7195.141.2~5/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\njava version \"13\" 2019-09-17 Java(TM) SE Runtime Environment (build 13+33) Java HotSpot(TM) 64-Bit Server VM (build 13+33, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.1.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.2 (ea98e05a04480131370aa0c110b8c54cf726c06f) Maven home: /usr/local/Cellar/maven/3.8.2/libexec Java version: 13, vendor: Oracle Corporation, runtime: /Library/Java/JavaVirtualMachines/jdk-13.jdk/Contents/Home Default locale: en_US, platform encoding: UTF-8 OS name: \"mac os x\", version: \"10.16\", arch: \"x86_64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21240/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21240/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

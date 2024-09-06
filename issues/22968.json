@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22968",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22968/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22968/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22968/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22968",
+  "id": 1106885392,
+  "node_id": "I_kwDOCFbutM5B-bsQ",
+  "number": 22968,
+  "title": "Unhandled VertxException when client closes http connection",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-01-18T13:04:10Z",
+  "updated_at": "2022-01-20T15:16:13Z",
+  "closed_at": "2022-01-20T15:16:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhenever a http client closes the connection to a quarkus service, while quarkus writes the response object, an io.vertx.core.VertxException \"Connection was closed\" is thrown and not handled at all.\r\n\r\n### Expected behavior\r\n\r\nI expect quarkus to handle the exception that occurs when a http client closes the http connection, while quarkus writes the response without logging it on error level. It should be normal behavior that a http client can close the connection at any time. \r\n\r\n\r\n\r\n### Actual behavior\r\n\r\nAn io.vertx.core.VertxException with the message Connection was closed is thrown and not handled. This causes  the org.jboss.threads.LoggingUncaughtExceptionHandler to log the exception on error level.\r\n\r\n### How to Reproduce?\r\n\r\n- call a GET endpoint \r\n- close the connection on the client side while the the response data is written\r\n- get an error log from org.jboss.threads.LoggingUncaughtExceptionHandler\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.19044.1415]\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.7\" 2020-04-14 LTS OpenJDK Runtime Environment Corretto-11.0.7.10.1 (build 11.0.7+10-LTS) OpenJDK 64-Bit Server VM Corretto-11.0.7.10.1 (build 11.0.7+10-LTS, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.5.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven home: C:\\Program Files (Dev)\\apache-maven-3.8.3 Java version: 11.0.7, vendor: Amazon.com Inc., runtime: C:\\Program Files\\Amazon Corretto\\jdk11.0.7_10 Default locale: en_US, platform encoding: Cp1252 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\nExample Stacktrace of the Unhandled Exception:\r\n\r\nva.lang.RuntimeException: java.io.IOException: java.io.IOException: io.vertx.core.VertxException: Connection was closed\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxHttpRequest$VertxExecutionContext$VertxHttpAsyncResponse.vertxFlush(VertxHttpRequest.java:396)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxHttpRequest$VertxExecutionContext$VertxHttpAsyncResponse$1.run(VertxHttpRequest.java:326)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$13.runWith(VertxCoreRecorder.java:543)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:834)\r\nCaused by: java.io.IOException: java.io.IOException: io.vertx.core.VertxException: Connection was closed\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxOutputStream.close(VertxOutputStream.java:124)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxHttpResponse.finish(VertxHttpResponse.java:145)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxHttpRequest$VertxExecutionContext$VertxHttpAsyncResponse.vertxFlush(VertxHttpRequest.java:394)\r\n\t... 8 more\r\nCaused by: java.io.IOException: io.vertx.core.VertxException: Connection was closed\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxBlockingOutput.write(VertxBlockingOutput.java:82)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxHttpResponse.writeBlocking(VertxHttpResponse.java:172)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxOutputStream.close(VertxOutputStream.java:122)\r\n\t... 10 more\r\nCaused by: io.vertx.core.VertxException: Connection was closed",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22968/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22968/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

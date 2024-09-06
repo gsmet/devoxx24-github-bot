@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42900",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42900/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42900/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42900/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42900",
+  "id": 2496725313,
+  "node_id": "I_kwDOCFbutM6U0QFB",
+  "number": 42900,
+  "title": "Update Panache docs to mention that `Sort` requires users to disable escaping when using functions",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1218486975,
+      "node_id": "MDU6TGFiZWwxMjE4NDg2OTc1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/documentation",
+      "name": "area/documentation",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-08-30T09:34:50Z",
+  "updated_at": "2024-08-30T14:15:59Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm updating Quarkus from 3.8.4 to the latest version, 3.14.1. (using gradle, btw)\r\nWhen doing this upgrade, some of our integration tests started failing, specifically some of the ones using Panache queries, with Sort options, when trying to sort with case insensitive, by using the lower() or upper() functions.\r\n\r\n\r\nLet's take a simple example, from my codebase:\r\n\r\n```\r\n@Table(name = \"user\")\r\npublic class User extends PanacheEntityBase { \r\n     .....\r\n     String name;\r\n}\r\n\r\npublic class UserRepository implements PanacheRepository<User> {\r\n\r\n    ......\r\n    public List<User> getUsers() {\r\n        Sort sortCaseInsensitive = Sort.by(\"lower(name)\").direction(Sort.Direction.Descending);\r\n        List<User> users = find(\"SELECT u FROM User u\", sortCaseInsensitive);\r\n        return users;\r\n    }  \r\n}\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\nIn Quarkus 3.8.4, this should allow the query to execute correctly without throwing any exceptions, enabling a case-insensitive sort.\r\n\r\n### Actual behavior\r\n\r\nThe following exception is now thrown:\r\n\r\n```\r\nCould not interpret path expression 'lower(name)'\r\norg.hibernate.query.SemanticException: Could not interpret path expression 'lower(name)'\r\n\tat org.hibernate.query.hql.internal.BasicDotIdentifierConsumer$BaseLocalSequencePart.resolvePathPart(BasicDotIdentifierConsumer.java:240)\r\n\tat org.hibernate.query.hql.internal.BasicDotIdentifierConsumer.consumeIdentifier(BasicDotIdentifierConsumer.java:92)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.resolveOrderByOrGroupByExpression(SemanticQueryBuilder.java:1707)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSortExpression(SemanticQueryBuilder.java:1796)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSortSpecification(SemanticQueryBuilder.java:1755)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitOrderByClause(SemanticQueryBuilder.java:1738)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitOrderByClause(SemanticQueryBuilder.java:1727)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitQueryOrder(SemanticQueryBuilder.java:1194)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitQuerySpecExpression(SemanticQueryBuilder.java:1043)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitQuerySpecExpression(SemanticQueryBuilder.java:277)\r\n\tat org.hibernate.grammars.hql.HqlParser$QuerySpecExpressionContext.accept(HqlParser.java:2134)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSimpleQueryGroup(SemanticQueryBuilder.java:1025)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSimpleQueryGroup(SemanticQueryBuilder.java:277)\r\n\tat org.hibernate.grammars.hql.HqlParser$SimpleQueryGroupContext.accept(HqlParser.java:2005)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitSelectStatement(SemanticQueryBuilder.java:492)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.visitStatement(SemanticQueryBuilder.java:451)\r\n\tat org.hibernate.query.hql.internal.SemanticQueryBuilder.buildSemanticModel(SemanticQueryBuilder.java:324)\r\n\tat org.hibernate.query.hql.internal.StandardHqlTranslator.translate(StandardHqlTranslator.java:71)\r\n\tat org.hibernate.query.internal.QueryInterpretationCacheStandardImpl.createHqlInterpretation(QueryInterpretationCacheStandardImpl.java:145)\r\n\tat org.hibernate.query.internal.QueryInterpretationCacheStandardImpl.resolveHqlInterpretation(QueryInterpretationCacheStandardImpl.java:132)\r\n\tat org.hibernate.query.spi.QueryEngine.interpretHql(QueryEngine.java:54)\r\n\tat org.hibernate.internal.AbstractSharedSessionContract.interpretHql(AbstractSharedSessionContract.java:831)\r\n\tat org.hibernate.internal.AbstractSharedSessionContract.interpretAndCreateSelectionQuery(AbstractSharedSessionContract.java:809)\r\n\tat org.hibernate.internal.AbstractSharedSessionContract.createSelectionQuery(AbstractSharedSessionContract.java:856)\r\n\tat io.quarkus.hibernate.orm.runtime.session.TransactionScopedSession.createSelectionQuery(TransactionScopedSession.java:1277)\r\n\tat org.hibernate.engine.spi.SessionLazyDelegator.createSelectionQuery(SessionLazyDelegator.java:749)\r\n\tat org.hibernate.Session_Su2omAGHZ_IxR-fCiSpnKyfZVSw_Synthetic_ClientProxy.createSelectionQuery(Unknown Source)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.CommonPanacheQueryImpl.createBaseQuery(CommonPanacheQueryImpl.java:387)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.CommonPanacheQueryImpl.createQuery(CommonPanacheQueryImpl.java:348)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.CommonPanacheQueryImpl.list(CommonPanacheQueryImpl.java:301)\r\n\tat io.quarkus.hibernate.orm.panache.runtime.PanacheQueryImpl.list(PanacheQueryImpl.java:150)\r\n\tat my.packages.here.UserRepository.getUsers(UserRepository.java:58)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nJust reproduce this with the simple scenario I provided above, or any other by your choice, and change your `gradle.properties` file (not sure the process for maven):\r\n\r\n```\r\nquarkusPluginVersion=3.8.4\r\nquarkusPlatformVersion=3.8.4\r\n```\r\n\r\nto\r\n\r\n```\r\nquarkusPluginVersion=3.14.1\r\nquarkusPlatformVersion=3.14.1\r\n```\r\n\r\n### Quarkus version or git rev\r\n\r\n3.14.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.5\r\n\r\n### Additional information\r\n\r\nIm using Postgres for the database, and then just using the default libraries from Quarkus, the main one for this case being the Hibernate:\r\n\r\n`implementation 'io.quarkus:quarkus-hibernate-orm-panache'`",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42900/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42900/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

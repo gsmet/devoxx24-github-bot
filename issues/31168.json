@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31168",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31168/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31168/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31168/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31168",
+  "id": 1584880723,
+  "node_id": "I_kwDOCFbutM5ed1xT",
+  "number": 31168,
+  "title": "IndexOutOfBoundsException on gRPC request received after Quarkus shutdown initiated",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-02-14T21:53:04Z",
+  "updated_at": "2023-03-22T07:39:25Z",
+  "closed_at": "2023-03-22T07:39:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe following exception is sometimes observed, if there is incoming gRPC traffic when Quarkus app is shutting down. \r\n\r\n```\r\n2023-02-10 05:59:46,459 WARNING [io.grp.net.NettyServerStream] (vert.x-eventloop-thread-4) Exception processing message: java.lang.IndexOutOfBoundsException: Index 0 out of bounds for length 0\r\n        at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:64)\r\n        at java.base/jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:70)\r\n        at java.base/jdk.internal.util.Preconditions.checkIndex(Preconditions.java:248)\r\n        at java.base/java.util.Objects.checkIndex(Objects.java:372)\r\n        at java.base/java.util.ArrayList.get(ArrayList.java:459)\r\n        at io.vertx.grpc.VertxServer$ActualServer.lambda$new$1(VertxServer.java:91)\r\n        at io.grpc.internal.SerializingExecutor.schedule(SerializingExecutor.java:102)\r\n        at io.grpc.internal.SerializingExecutor.execute(SerializingExecutor.java:95)\r\n        at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener.messagesAvailable(ServerImpl.java:845)\r\n        at io.grpc.internal.AbstractStream$TransportState.messagesAvailable(AbstractStream.java:182)\r\n        at io.grpc.internal.MessageDeframer.processBody(MessageDeframer.java:412)\r\n        at io.grpc.internal.MessageDeframer.deliver(MessageDeframer.java:275)\r\n        at io.grpc.internal.MessageDeframer.deframe(MessageDeframer.java:177)\r\n        at io.grpc.internal.AbstractStream$TransportState.deframe(AbstractStream.java:210)\r\n        at io.grpc.internal.AbstractServerStream$TransportState.inboundDataReceived(AbstractServerStream.java:255)\r\n        at io.grpc.netty.NettyServerStream$TransportState.inboundDataReceived(NettyServerStream.java:226)\r\n        at io.grpc.netty.NettyServerHandler.onDataRead(NettyServerHandler.java:508)\r\n        at io.grpc.netty.NettyServerHandler.access$900(NettyServerHandler.java:106)\r\n        at io.grpc.netty.NettyServerHandler$FrameListener.onDataRead(NettyServerHandler.java:840)\r\n        at io.netty.handler.codec.http2.DefaultHttp2ConnectionDecoder$FrameReadListener.onDataRead(DefaultHttp2ConnectionDecoder.java:307)\r\n        at io.netty.handler.codec.http2.Http2InboundFrameLogger$1.onDataRead(Http2InboundFrameLogger.java:48)\r\n        at io.netty.handler.codec.http2.DefaultHttp2FrameReader.readDataFrame(DefaultHttp2FrameReader.java:415)\r\n        at io.netty.handler.codec.http2.DefaultHttp2FrameReader.processPayloadState(DefaultHttp2FrameReader.java:250)\r\n        at io.netty.handler.codec.http2.DefaultHttp2FrameReader.readFrame(DefaultHttp2FrameReader.java:159)\r\n        at io.netty.handler.codec.http2.Http2InboundFrameLogger.readFrame(Http2InboundFrameLogger.java:41)\r\n        at io.netty.handler.codec.http2.DefaultHttp2ConnectionDecoder.decodeFrame(DefaultHttp2ConnectionDecoder.java:173)\r\n        at io.netty.handler.codec.http2.Http2ConnectionHandler$FrameDecoder.decode(Http2ConnectionHandler.java:393)\r\n        at io.netty.handler.codec.http2.Http2ConnectionHandler.decode(Http2ConnectionHandler.java:453)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.decodeRemovalReentryProtection(ByteToMessageDecoder.java:510)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:449)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:279)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n        at io.netty.handler.ssl.SslHandler.unwrap(SslHandler.java:1373)\r\n        at io.netty.handler.ssl.SslHandler.decodeJdkCompatible(SslHandler.java:1236)\r\n        at io.netty.handler.ssl.SslHandler.decode(SslHandler.java:1285)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.decodeRemovalReentryProtection(ByteToMessageDecoder.java:510)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:449)\r\n        at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:279)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n        at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n        at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1410)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n        at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:919)\r\n        at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:722)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:658)\r\n        at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:584)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:496)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:829)\r\n```\n\n### Expected behavior\n\nReject new incoming calls, close existing calls. Not throw IndexOutOfBoundsException\r\n\n\n### Actual behavior\n\nIndexOutOfBoundsException is logged. Not clear what happens with gRPC calls after it\n\n### How to Reproduce?\n\nStart a Quarkus app with gRPC server. Send gRPC traffic to it. Shutdown Quarkus app while still under load\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\njava 11\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.12.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31168/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31168/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

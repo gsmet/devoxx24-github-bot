@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33624",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33624/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33624/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33624/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33624",
+  "id": 1727176105,
+  "node_id": "I_kwDOCFbutM5m8p2p",
+  "number": 33624,
+  "title": "SnapStart optimizations (PreloadClassBuildItem?) not executed during build for Lambda",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-05-26T08:46:10Z",
+  "updated_at": "2024-01-31T16:51:07Z",
+  "closed_at": "2024-01-31T16:51:07Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi all,\r\nI want to deploy my quarkus application to Lambda with Snapstart Optimizations in place.\r\nHowever, even though the documentation states that the optimizations are enabled by default when using the extension, I do not see anything related to preloading the classes.\r\nI followed the guideline defined here: https://quarkus.io/guides/amazon-snapstart but still the application is super slow.\r\n\r\n### Expected behavior\r\n\r\nI would expect that there is somewhere some log output (at least for debug output) describing that the list of classes that is defined in `app/src/main/resources/META-INF/quarkus-preload-classes.txt` is somehow ingested and used for the snapstart opimizations. So could also be that the optimizations don't run at all?\r\n\r\n### Actual behavior\r\n\r\nThe build succeeds and the application runs, but even with Lambda Snapstart enabled and the lambda restoring from the snapshot when invoked via its version, the execution time of the Lambda is still super slow.\r\nThere is no log output indicating that any snapstart optimizations are being run, therefore I'm guessing that they are not running?\r\n\r\n### How to Reproduce?\r\n\r\nSteps to reproduce:\r\n\r\n1. Set up project with extension \"quarkus-amazon-lambda\"\r\n```\r\ndependencies {\r\n    implementation enforcedPlatform(\"${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}\")\r\n    implementation 'io.quarkiverse.amazonservices:quarkus-amazon-dynamodb:1.6.3'\r\n    implementation 'io.quarkus:quarkus-amazon-lambda'\r\n    implementation 'io.quarkus:quarkus-amazon-lambda-xray'\r\n``` \r\n2.  Add file with list of classes under `app/src/main/resources/META-INF/quarkus-preload-classes.txt`\r\n\r\n```\r\n...\r\ncom.amazonaws.services.lambda.runtime.LambdaRuntime\r\ncom.amazonaws.services.lambda.runtime.LambdaRuntime$1\r\ncom.amazonaws.services.lambda.runtime.RequestHandler\r\ncom.amazonaws.services.lambda.runtime.RequestStreamHandler\r\ncom.amazonaws.services.lambda.runtime.api.client.AWSLambda\r\ncom.amazonaws.services.lambda.runtime.api.client.CustomerClassLoader\r\n...\r\n```\r\n3. Execute build: `./gradlew -d build`\r\n4. Check log output, it states nothing there that classes are preloaded \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin C02CJ3MJLVDL 22.4.0 Darwin Kernel Version 22.4.0: Mon Mar  6 21:00:17 PST 2023; root:xnu-8796.101.5~3/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment GraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13) OpenJDK 64-Bit Server VM GraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.7.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.6\r\n\r\n### Additional information\r\n\r\nI have also added this to my application.properties, even though they are just the defaults anyway, but still don't see that it's actually applied.\r\n\r\n```\r\nquarkus:\r\n  snapstart:\r\n    enable: true\r\n    generate-application-class-list: true\r\n    full-warmup: true\r\n```\r\n\r\n\r\nAlso, I'm also using client priming and this already reduced the runtime by 3 seconds. I'm just missing any proof that also the class preloading is working, because the Lambda still takes 4 seconds to resolve the invocation.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33624/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33624/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

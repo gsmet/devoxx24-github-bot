@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31208",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31208/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31208/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31208/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31208",
+  "id": 1587382855,
+  "node_id": "I_kwDOCFbutM5enYpH",
+  "number": 31208,
+  "title": "Quarkus Vertx throwing java.nio.BufferOverflowException during test when run from command line but not intellij",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-02-16T10:01:21Z",
+  "updated_at": "2023-03-16T08:03:01Z",
+  "closed_at": "2023-03-16T08:03:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a service that is making use of the Quarkus Event bus. Quarkus version in use is 2.9.0.CR1\r\n\r\nWhen I run my tests through intellij, all tests pass and i do not get issues. However, when I try to run with mvn clean install from command line, I am getting this excpetion:\r\n\r\n```\r\n(RECIPIENT_FAILURE,8185) java.nio.BufferOverflowException\r\n        at io.vertx.core.eventbus.Message.fail(Message.java:141)\r\n        at io.quarkus.vertx.runtime.VertxRecorder$3$1$1.handle(VertxRecorder.java:117)\r\n        at io.quarkus.vertx.runtime.VertxRecorder$3$1$1.handle(VertxRecorder.java:107)\r\n        at io.vertx.core.impl.ContextImpl.lambda$null$0(ContextImpl.java:159)\r\n        at io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n        at io.vertx.core.impl.ContextImpl.lambda$executeBlocking$1(ContextImpl.java:157)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:548)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\nThe object I am trying to send over the event bus is this:\r\n\r\n```\r\npublic record TransportSendMessage(MimeMessage message, String from, String to) {\r\n\r\n}\r\n```\r\n(For the record, the MimeMessage in that is the jakarta one to send mail with. It also contains an image as an attachment in it, so it is posisble that there isa bit of heft to the message in terms of bytes)\r\n\r\nThe Codec for this is:\r\n\r\n```\r\npublic class TransportSendMessageCodec implements MessageCodec<TransportSendMessage, TransportSendMessage> {\r\n  @Override\r\n  public void encodeToWire(Buffer buffer, TransportSendMessage scheduledPubsubMessage) {\r\n    // NO-OP\r\n  }\r\n\r\n  @Override\r\n  public TransportSendMessage decodeFromWire(int pos, Buffer buffer) {\r\n    // NO-OP\r\n    return null;\r\n  }\r\n\r\n  @Override\r\n  public TransportSendMessage transform(TransportSendMessage transportSendMessage) {\r\n    // we pass the object by reference over the eventbus.\r\n    return transportSendMessage;\r\n  }\r\n\r\n  @Override\r\n  public String name() {\r\n    return getClass().getName();\r\n  }\r\n\r\n  @Override\r\n  public byte systemCodecID() {\r\n    return -1;\r\n  }\r\n}\r\n```\r\nMy handler class:\r\n\r\n```\r\n@Slf4j\r\n@Startup\r\n@ApplicationScoped\r\npublic class TransportSendHandler {\r\n\r\n  public static final String TRANSPORT_HANDLER_EVENT_BUS_ADDRESS = \"emailTransportSendEventBus\";\r\n\r\n  @Inject\r\n  EventBus eventBus;\r\n\r\n\r\n  @PostConstruct\r\n  public void init() {\r\n    eventBus.registerCodec(new TransportSendMessageCodec());\r\n  }\r\n\r\n  /**\r\n   * We consume a message from the event bus. The message received will then be emailed\r\n   *\r\n   * @param message The message to email\r\n   */\r\n  @ConsumeEvent(value = TRANSPORT_HANDLER_EVENT_BUS_ADDRESS)\r\n  @Blocking\r\n  public Uni<Void> consumeMessage(TransportSendMessage message) {\r\n    try {\r\n      log.debug(\"Attempting to send email: from {}, to {}\", message.from(), message.to());\r\n      Transport.send(message.message());\r\n      log.debug(\"Email has been sent: from {}, to {} \", message.from(), message.to());\r\n      return Uni.createFrom().voidItem();\r\n    } catch (MessagingException e) {\r\n      log.warn(\"Failed sending email: from {}, to {}\", message.from(), message.to());\r\n      return Uni.createFrom().failure(e);\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nAnd the code sending the message:\r\n\r\n```\r\neventBus.request(TransportSendHandler.TRANSPORT_HANDLER_EVENT_BUS_ADDRESS,\r\n            new TransportSendMessage(myMimeMessage, fromADdress, toAddress)))\r\n```\r\nI'm a bit lost really as to why this is happening just when run from command line.\n\n### Expected behavior\n\nNo error when running from commandline\n\n### Actual behavior\n\nBufferOverflowException\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [Version 10.0.22621.1105]\n\n### Output of `java -version`\n\nopenjdk version \"18.0.1.1\" 2022-04-22 OpenJDK Runtime Environment (build 18.0.1.1+2-6) OpenJDK 64-Bit Server VM (build 18.0.1.1+2-6, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.0.CR1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.5 (3599d3414f046de2324203b78ddcf9b5e4388aa0) Maven home: C:\\Program Files\\Maven\\apache-maven-3.8.5 Java version: 18.0.1.1, vendor: Oracle Corporation, runtime: C:\\Users\\Aaron Work\\.jdks\\openjdk-18.0.1.1 Default locale: en_GB, platform encoding: UTF-8 OS name: \"windows 11\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31208/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31208/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

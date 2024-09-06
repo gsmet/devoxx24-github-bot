@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39155",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39155/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39155/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39155/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39155",
+  "id": 2167053915,
+  "node_id": "I_kwDOCFbutM6BKp5b",
+  "number": 39155,
+  "title": "Custom Exception in SecurityIdentityAugmentor",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2024-03-04T14:59:49Z",
+  "updated_at": "2024-03-05T08:27:19Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm currently making an implementation of `SecurityIdentityAugmentor` that extracts data from the headers and use it to validate that the user currently logged has access to the ressource.\r\nIf something goes wrong in analyzing the header value such as a wrong value, I want to throw a custom exception `ResourceNotFoundException` and send a 404 not found since the ressource being asked is not valid.\r\n\r\nIt kinda looks like this \r\n``` java\r\n@ApplicationScoped\r\npublic class AccountRoleAugmentor implements SecurityIdentityAugmentor {\r\n\r\n    @Override\r\n    public Uni<SecurityIdentity> augment(@NonNull final SecurityIdentity securityIdentity,\r\n                                         @NonNull final AuthenticationRequestContext context) {\r\n        // Get your user from DB, add roles etc.\r\n\r\n        if (whatever) {\r\n            throw new ResourceNotFoundException();\r\n        }\r\n\r\n        // ...\r\n    }\r\n}\r\n```\r\n``` java\r\npublic class ResourceNotFoundException extends RuntimeException {\r\n    // All default exception constructors\r\n}\r\n```\r\n``` java\r\n@Provider\r\npublic class ResourceNotFoundExceptionMapper implements ExceptionMapper<ResourceNotFoundException> {\r\n\r\n    @Override\r\n    public Response toResponse(final ResourceNotFoundException exception) {\r\n        // ResourceNotFoundExceptionMapper.logger.error(\"Resource not found from ExceptionMapper\", exception);\r\n        return Response.status(Response.Status.NOT_FOUND).build();\r\n    }\r\n}\r\n```\r\n\r\nIt looks like the exception is always causing a 500 internal server error instead of going through the `ExceptionMapper`.\r\n\r\nFor information, when I'm trying to throw the same exception from a controller, it's working just fine and I get my 404 without any issues.\n\n### Expected behavior\n\nI would except my custom exception to behave in the same way as exceptions such as `io.quarkus.security.ForbiddenException` but with my custom exception.\n\n### Actual behavior\n\nAn error 500 is always sent to the client despite the `ExceptionMapper`.\n\n### How to Reproduce?\n\n1. Create a `SecurityIdentityAugmentor`\r\n2. Create a custom exception with the proper `ExceptionMapper`\r\n3. Throw a custom exception\r\n4. See an error 500 instead of going through the `ExceptionMapper`\n\n### Output of `uname -a` or `ver`\n\nWindows\n\n### Output of `java -version`\n\nOpenJDK 21\n\n### Quarkus version or git rev\n\n3.8.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.9.5\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39155/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39155/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

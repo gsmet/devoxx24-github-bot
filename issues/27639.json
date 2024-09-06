@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27639",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27639/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27639/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27639/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27639",
+  "id": 1357696579,
+  "node_id": "I_kwDOCFbutM5Q7M5D",
+  "number": 27639,
+  "title": "java.lang.VerifyError: class GcpQuarkusJsonLoggingProvider_Subclass overrides final method org.jboss.logmanager.ExtFormatter.format(Ljava/util/logging/LogRecord;)Ljava/lang/String;",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-08-31T18:21:17Z",
+  "updated_at": "2022-09-01T12:14:24Z",
+  "closed_at": "2022-09-01T09:42:04Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen running `mvn quarkus:dev` on the attached reproducer, Quarkus seems to override the wrong method.\r\n\r\n`ExtFormatter` has:\r\n```\r\n    public final String format(final LogRecord record) {\r\n        return format(ExtLogRecord.wrap(record));\r\n    }\r\n\r\n    public abstract String format(ExtLogRecord record);\r\n```\r\n\r\n`GcpQuarkusJsonLoggingProvider` overrides:\r\n```\r\n    @Override\r\n    public String format(ExtLogRecord extLogRecord) {\r\n        return null;\r\n    }\r\n```\r\n\r\nbut Quarkus complains:\r\n```\r\n2022-08-31 20:08:20,805 ERROR [io.qua.run.Application] (Quarkus Main Thread) Failed to start application (with profile dev): java.lang.VerifyError: class org.acme.getting.started.logging.GcpQuarkusJsonLoggingProvider_Subclass overrides final method org.jboss.logmanager.ExtFormatter.format(Ljava/util/logging/LogRecord;)Ljava/lang/String;\r\n        at java.base/java.lang.ClassLoader.defineClass1(Native Method)\r\n        at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1017)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:480)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:440)\r\n        at org.acme.getting.started.logging.GcpQuarkusJsonLoggingProvider_Bean.create(Unknown Source)\r\n        at org.acme.getting.started.logging.GcpQuarkusJsonLoggingProvider_Bean.create(Unknown Source)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:111)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:35)\r\n        at io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:32)\r\n        at io.quarkus.arc.impl.LazyValue.get(LazyValue.java:26)\r\n        at io.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:69)\r\n        at io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:32)\r\n        at org.acme.getting.started.logging.GcpQuarkusJsonLoggingProvider_Bean.get(Unknown Source)\r\n        at org.acme.getting.started.logging.GcpQuarkusJsonLoggingProvider_Bean.get(Unknown Source)\r\n        at io.quarkus.arc.impl.InstanceImpl.getBeanInstance(InstanceImpl.java:223)\r\n        at io.quarkus.arc.impl.InstanceImpl$InstanceIterator.next(InstanceImpl.java:259)\r\n        at java.base/java.lang.Iterable.forEach(Iterable.java:74)\r\n        at io.quarkiverse.loggingjson.LoggingJsonRecorder.initializeJsonLogging(LoggingJsonRecorder.java:38)\r\n        at io.quarkus.deployment.steps.LoggingJsonProcessor$setUpFormatter614569086.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.LoggingJsonProcessor$setUpFormatter614569086.deploy(Unknown Source)\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:110)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:103)\r\n        at java.base/java.lang.Thread.run(Thread.java:829)\r\n```\r\n\r\n\r\n\n\n### Expected behavior\n\nQuarkus should choose `public abstract String format(ExtLogRecord record)` instead of `public final String format(final LogRecord record)`.\r\n \n\n### Actual behavior\n\nQuarkus complains as above.\n\n### How to Reproduce?\n\nRun `mvn quarkus:dev` on attached reproducer (modified quickstart). Check console output.\r\n\r\n[reproducer.zip](https://github.com/quarkusio/quarkus/files/9463944/reproducer.zip)\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux a 5.15.60-1-MANJARO #1 SMP PREEMPT Thu Aug 11 13:14:05 UTC 2022 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"18.0.2\" 2022-07-19 OpenJDK Runtime Environment (build 18.0.2+9) OpenJDK 64-Bit Server VM (build 18.0.2+9, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.12.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\n\n### Additional information\n\nBTW: It was working with an older Quarkus version:\r\n```\r\n<quarkus-version>1.10.5.Final</quarkus-version>\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27639/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27639/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

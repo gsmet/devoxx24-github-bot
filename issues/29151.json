@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29151",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29151/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29151/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29151/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29151",
+  "id": 1442083698,
+  "node_id": "I_kwDOCFbutM5V9HNy",
+  "number": 29151,
+  "title": "A Kafka header baggage is propagated to the TracingMetadata. previousSpancontext, but not to the currentSpanContext",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2022-11-09T13:15:50Z",
+  "updated_at": "2023-10-16T18:14:52Z",
+  "closed_at": "2023-10-16T16:46:48Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe ` KafkaSource` maps an incoming OTEL baggage header to the `TracingMetadata.previousSpanContext`. \r\nThe baggage cannot be accessed via `Baggage.current()` in an incoming method for instance. \r\nInstead, one has to do something like \r\n`Baggage.fromContext(message.getMetadata(TracingMetadata.class).get().getPreviousContext());` \r\nin order to access the baggage. \r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nIn an incoming method, independently of the type of the method argument (it could be a payload type only), the baggage from the incoming Kafka record can be accessed with `Baggage.current()`.\r\n\r\n### Actual behavior\r\n\r\nIn an `@Incoming` method with a `Message<Offer>` argument type (where `Offer` is a trivial dto), the `Baggage.current()` is empty. In order to access the baggage, one has to do `Baggage.fromContext(message.getMetadata(TracingMetadata.class).get().getPreviousContext());`, which wouldn't work if the argument type wasn't a `Message`. \r\n\r\n### How to Reproduce?\r\nClass with incoming method and QuarkusTest class: \r\n\r\n```\r\n@ApplicationScoped\r\npublic class OfferProcessor {\r\n\r\n    private static final Logger LOGGER = Logger.getLogger(OfferProcessor.class);\r\n\r\n    public static final String EXPECTED_BAGGAGE_KEY = \"mykey\";\r\n\r\n    @Incoming(\"offer\")\r\n    public CompletionStage<Void> process(Message<Offer> message) {\r\n        if (Baggage.current().isEmpty()) {\r\n            LOGGER.info(\"baggage current is empty\");\r\n        }\r\n        Baggage baggageFromCurrentContext =\r\n                Baggage.fromContext(message.getMetadata(TracingMetadata.class).get().getCurrentContext());\r\n        if (baggageFromCurrentContext.isEmpty()) {\r\n            LOGGER.info(\"empty baggage in current context\");\r\n        }\r\n        Baggage baggageFromPreviousContext =\r\n                Baggage.fromContext(message.getMetadata(TracingMetadata.class).get().getPreviousContext());\r\n        if (!baggageFromPreviousContext.isEmpty()) {\r\n            String entryValue = baggageFromPreviousContext.getEntryValue(EXPECTED_BAGGAGE_KEY);\r\n            LOGGER.info(String.format(\"found non-empty baggage in previous context: key=%s, value=%s \", EXPECTED_BAGGAGE_KEY,\r\n                    entryValue));\r\n        } return message.ack();\r\n    }\r\n\r\n}\r\n\r\n@QuarkusTest\r\n@QuarkusTestResource(KafkaCompanionResource.class)\r\npublic class NoBaggageIT {\r\n\r\n    @InjectKafkaCompanion\r\n    KafkaCompanion kafkaCompanion;\r\n\r\n    @Test\r\n    void willLogBaggagesReceivedByProcessor() throws InterruptedException {\r\n        kafkaCompanion.registerSerde(Offer.class, new ObjectMapperSerializer<>(), new ObjectMapperDeserializer<>(Offer.class));\r\n        String key = UUID.randomUUID().toString();\r\n        String offerId = UUID.randomUUID().toString();\r\n        Offer offer = new Offer(offerId, \"offer details\");\r\n        List<Header> headers = new ArrayList<>();\r\n        RecordHeader baggageHeader =\r\n                new RecordHeader(\"baggage\", (EXPECTED_BAGGAGE_KEY + \"=\" + \"myvalue\").getBytes(StandardCharsets.UTF_8));\r\n        headers.add(baggageHeader);\r\n        kafkaCompanion.produce(String.class, Offer.class).fromRecords(new ProducerRecord<>(\"offer\", null, key, offer, headers));\r\n        Thread.sleep(2000L);\r\n    }\r\n\r\n}\r\n\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17.0.2\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmaven 3.8.4\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29151/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29151/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39358",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39358/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39358/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39358/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39358",
+  "id": 2181472586,
+  "node_id": "I_kwDOCFbutM6CBqFK",
+  "number": 39358,
+  "title": "unclear exceptions from quarkus-maven-plugin 3.8 when used on Java 11",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-03-12T12:15:28Z",
+  "updated_at": "2024-07-27T01:42:28Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nQuarkus 3.8.x requires Java 17. However quarkus-maven-plugin [still targets Java 11](https://github.com/quarkusio/quarkus/blame/3.8.2/independent-projects/extension-maven-plugin/pom.xml#L37) for some reason (EDIT: [explained further down](https://github.com/quarkusio/quarkus/issues/39358#issuecomment-1991596713)). This allows things to proceed further than it would seem they should if someone runs it on Java 11 for Quarkus 3.8.x, and then it fails in an obscure way that isnt obviously 'oops, you need to use Java 17'.\r\n\r\nIf someone tries to use it on Java 11, for example by running a quickstart they had used ok with an earlier Quarkus version that only requires Java 11, then a fairly unclear _NoSuchElementException_ is ultimately reported, after a QuarkusBootstrapProvider related failure, rather than a more useful error or perhaps a much earlier failure and more typical/known class version error if quarkus-maven-plugin had required Java 17.\r\n\r\n### Expected behavior\r\n\r\nNo weird _NoSuchElementException_ etc failures reported. Either a more obvious / already-understood class version error from quarkus-maven-plugin 3.8.x requiring Java 17 like Quarkus 3.8.x itself, or clearer 'You need to use Java 17+ with this version of quarkus' style error if there is some reason the plugin should actually still be targeting Java 11.\r\n\r\n### Actual behavior\r\n\r\n```\r\nmvn clean verify\r\n[INFO] Scanning for projects...\r\n[WARNING] ClassRealm[extension>io.quarkus.platform:quarkus-maven-plugin:3.8.2, parent: jdk.internal.loader.ClassLoaders$AppClassLoader@55054057]\r\ncom.google.inject.CreationException: Unable to create injector, see the following errors:\r\n\r\n1) [Guice/MissingImplementation]: No implementation for QuarkusBootstrapProvider annotated with interface TypeArguments$Implicit was bound.\r\n\r\nDid you mean?\r\n    QuarkusBootstrapProvider bound at LocatorWiring\r\n\r\nRequested by:\r\n1  : LocatorWiring\r\n\r\nLearn more:\r\n  https://github.com/google/guice/wiki/MISSING_IMPLEMENTATION\r\n\r\n1 error\r\n\r\n======================\r\nFull classname legend:\r\n======================\r\nLocatorWiring:            \"org.eclipse.sisu.wire.LocatorWiring\"\r\nQuarkusBootstrapProvider: \"io.quarkus.maven.QuarkusBootstrapProvider\"\r\nTypeArguments$Implicit:   \"org.eclipse.sisu.inject.TypeArguments$Implicit\"\r\n========================\r\nEnd of classname legend:\r\n========================\r\n\r\n    at com.google.inject.internal.Errors.throwCreationExceptionIfErrorsExist (Errors.java:576)\r\n    at com.google.inject.internal.InternalInjectorCreator.initializeStatically (InternalInjectorCreator.java:163)\r\n    at com.google.inject.internal.InternalInjectorCreator.build (InternalInjectorCreator.java:110)\r\n    at com.google.inject.Guice.createInjector (Guice.java:87)\r\n    at com.google.inject.Guice.createInjector (Guice.java:69)\r\n    at com.google.inject.Guice.createInjector (Guice.java:59)\r\n    at org.codehaus.plexus.DefaultPlexusContainer.addPlexusInjector (DefaultPlexusContainer.java:481)\r\n    at org.codehaus.plexus.DefaultPlexusContainer.discoverComponents (DefaultPlexusContainer.java:460)\r\n    at org.apache.maven.plugin.internal.DefaultMavenPluginManager.discoverPluginComponents (DefaultMavenPluginManager.java:410)\r\n    at org.apache.maven.plugin.internal.DefaultMavenPluginManager.setupExtensionsRealm (DefaultMavenPluginManager.java:804)\r\n    at org.apache.maven.project.DefaultProjectBuildingHelper.createProjectRealm (DefaultProjectBuildingHelper.java:177)\r\n    at org.apache.maven.project.DefaultModelBuildingListener.buildExtensionsAssembled (DefaultModelBuildingListener.java:92)\r\n    at org.apache.maven.model.building.ModelBuildingEventCatapult$1.fire (ModelBuildingEventCatapult.java:40)\r\n    at org.apache.maven.model.building.DefaultModelBuilder.fireEvent (DefaultModelBuilder.java:1269)\r\n    at org.apache.maven.model.building.DefaultModelBuilder.build (DefaultModelBuilder.java:474)\r\n    at org.apache.maven.model.building.DefaultModelBuilder.build (DefaultModelBuilder.java:455)\r\n    at org.apache.maven.project.DefaultProjectBuilder.build (DefaultProjectBuilder.java:612)\r\n    at org.apache.maven.project.DefaultProjectBuilder.build (DefaultProjectBuilder.java:375)\r\n    at org.apache.maven.graph.DefaultGraphBuilder.collectProjects (DefaultGraphBuilder.java:349)\r\n    at org.apache.maven.graph.DefaultGraphBuilder.getProjectsForMavenReactor (DefaultGraphBuilder.java:340)\r\n    at org.apache.maven.graph.DefaultGraphBuilder.build (DefaultGraphBuilder.java:76)\r\n    at org.apache.maven.DefaultMaven.buildGraph (DefaultMaven.java:448)\r\n    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:197)\r\n    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)\r\n    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)\r\n    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:906)\r\n    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:283)\r\n    at org.apache.maven.cli.MavenCli.main (MavenCli.java:206)\r\n    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)\r\n    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)\r\n    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)\r\n    at java.lang.reflect.Method.invoke (Method.java:566)\r\n    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:283)\r\n    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:226)\r\n    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:407)\r\n    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:348)\r\n[INFO] \r\n[INFO] ----------------------< org.acme:jms-quickstart >-----------------------\r\n[INFO] Building jms-quickstart 1.0.0-SNAPSHOT\r\n[INFO]   from pom.xml\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[INFO] \r\n[INFO] --- clean:3.2.0:clean (default-clean) @ jms-quickstart ---\r\n[INFO] Deleting /home/rgemmell/workspace/quarkus-qpid-jms-quickstart/target\r\n[INFO] \r\n[INFO] --- resources:3.3.1:resources (default-resources) @ jms-quickstart ---\r\n[INFO] Copying 2 resources from src/main/resources to target/classes\r\n[INFO] \r\n[INFO] --- quarkus:3.8.2:generate-code (default) @ jms-quickstart ---\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  0.926 s\r\n[INFO] Finished at: 2024-03-12T11:54:22Z\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:3.8.2:generate-code (default) on project jms-quickstart: Execution default of goal io.quarkus.platform:quarkus-maven-plugin:3.8.2:generate-code failed: Unable to load the mojo 'generate-code' (or one of its required components) from the plugin 'io.quarkus.platform:quarkus-maven-plugin:3.8.2': java.util.NoSuchElementException\r\n[ERROR]       role: org.apache.maven.plugin.Mojo\r\n[ERROR]   roleHint: io.quarkus.platform:quarkus-maven-plugin:3.8.2:generate-code\r\n[ERROR] -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR] \r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/PluginContainerException\r\n```\r\n\r\n\r\n### How to Reproduce?\r\n\r\n1. Have Java 11 as the primary JDK on the path.\r\n2. Run _mvn clean verify_ on e.g a quickstart that uses Quarkus 3.8.x , e.g https://github.com/amqphub/quarkus-qpid-jms-quickstart.git (Note though that I may add an enforcer check to it, to clearly error ' You must use Java 17'....if so, you might need to disable that to reproduce, e.g add -Denforcer.skip to the command )\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39358/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39358/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

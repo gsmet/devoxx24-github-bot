@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41864",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41864/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41864/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41864/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41864",
+  "id": 2406043456,
+  "node_id": "I_kwDOCFbutM6PaU9A",
+  "number": 41864,
+  "title": "OpenTelemetry and event bus with blocking consumer",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-07-12T17:32:12Z",
+  "updated_at": "2024-07-14T05:11:11Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using the Vert.x event bus with `blocking = true` in `@ConsumeEvent`, the OpenTelemetry context does not get propagated. For example this code:\r\n```java\r\n@ApplicationScoped\r\npublic class GreetingService {\r\n    @Inject\r\n    EventBus bus;\r\n\r\n    public String greeting(String name) {\r\n        Log.info(\"Sending greeting: \" + name);\r\n        this.bus.send(\"greeting\", name);\r\n        return \"hey \" + name;\r\n    }\r\n\r\n    @ConsumeEvent(value = \"greeting\", blocking = true)\r\n    void onGreeting(String name) {\r\n        Log.info(\"Received greeting: \" + name);\r\n    }\r\n}\r\n```\r\nresults in:\r\n```\r\n2024-07-11 12:22:29 INFO  traceId=994c1bec62af95447cb7df534ec2e919, parentId=, spanId=c998018b203816e8 [or.ac.GreetingService] (executor-thread-1) Sending greeting: joe\r\n2024-07-11 12:22:29 INFO  traceId=, parentId=, spanId= [or.ac.GreetingService] (vert.x-worker-thread-21) Received greeting: joe\r\n```\r\nHowever, the same code without `blocking=true` yields:\r\n```\r\n2024-07-11 12:23:40 INFO  traceId=006987827ab7a89ff4e1ae783e97c8e0, parentId=, spanId=e743768e1c4f15c1 [or.ac.GreetingService] (executor-thread-1) Sending greeting: joe\r\n2024-07-11 12:23:40 INFO  traceId=006987827ab7a89ff4e1ae783e97c8e0, parentId=bddee4bb79082172, spanId=664bb0b413ba2287 [or.ac.GreetingService] (vert.x-eventloop-thread-14) Received greeting: joe\r\n```\r\nkeeping the same `traceId` as expected. Note that the `parentId` is wrong in this case as it should match the `spanId` of the message sender. \r\n\r\nIf `@WithSpan` is used then a new `traceId` is created:\r\n```\r\n2024-07-11 13:36:20 INFO  traceId=f6ddf7dd419248b49316aeddbc8c3d0a, parentId=, spanId=55857a487db338bc [or.ac.GreetingService] (executor-thread-1) Sending greeting: joe\r\n2024-07-11 13:36:20 INFO  traceId=2e7125b64d0d09b61119e01ef03a0ba2, parentId=, spanId=7bc4db3d048d96e3 [or.ac.GreetingService] (vert.x-worker-thread-39) Received greeting: joe\r\n```\r\nSee also: https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/OpenTelemetry.20and.20event.20bus.20with.20blocking.20consumer\r\n\r\n\r\n### Expected behavior\r\n\r\n- The OpenTelemetry context is propagated correctly across the event bus.\r\n- Same `traceId` expected at the receiving end. \r\n- `parentId` to match the `spanId` of the sender.\r\n- `@WithSpan` not to create a new trace.\r\n\r\n### Actual behavior\r\n\r\n- No propagation whatsoever for blocking consumers. \r\n- `traceId` propagated for non blocking consumers but `parentId` is wrong.\r\n- When using `@WithSpan` a new `traceId` is created.\r\n\r\n### How to Reproduce?\r\n\r\n[opentelemetry-quickstart.zip](https://github.com/user-attachments/files/16197485/opentelemetry-quickstart.zip)\r\nSteps to reproduce:\r\n- Start the `opentelemetry-quickstart` service\r\n- Connect to http://localhost:8080/hello from a browser\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin AC02FW0HAMD6Q 23.5.0 Darwin Kernel Version 23.5.0: Wed May  1 20:09:52 PDT 2024; root:xnu-10063.121.3~5/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21\" 2023-09-19 OpenJDK Runtime Environment Zulu21.28+85-CA (build 21+35) OpenJDK 64-Bit Server VM Zulu21.28+85-CA (build 21+35, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63) Maven home: /Users/.../.m2/wrapper/dists/apache-maven-3.8.6-bin/67568434/apache-maven-3.8.6 Java version: 21, vendor: Azul Systems, Inc., runtime: /Users/.../.sdkman/candidates/java/21-zulu/zulu-21.jdk/Contents/Home Default locale: en_IE, platform encoding: UTF-8 OS name: \"mac os x\", version: \"14.5\", arch: \"x86_64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41864/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41864/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

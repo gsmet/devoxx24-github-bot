@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36340",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36340/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36340/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36340/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36340",
+  "id": 1931907070,
+  "node_id": "I_kwDOCFbutM5zJo_-",
+  "number": 36340,
+  "title": "Sending the error message top kafka topic in custom DeserializationExceptionHandler is not working ",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-10-08T16:43:10Z",
+  "updated_at": "2023-10-09T23:20:57Z",
+  "closed_at": "2023-10-09T15:02:35Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have implemented a custom deserialization exception handler to log the deserialization error and send it to Kafka topic in KafkaStreams application. I have used Emitter, Outgoining annotation, or KafkaProducer but the error was the object in null and not injected. \r\nThis is the code and the class is working well in the error handling that may happen in Kafka streams with and without \"ApplicationScoped\" but I added it to make sure the dependency injection of the emitter.\r\n`\r\n@Slf4j\r\n@ApplicationScoped\r\npublic class StreamsDeserializationExceptionHandler implements DeserializationExceptionHandler {\r\n\r\n    @Inject\r\n    @Channel(INVALID_DESERIALIZED_MESSAGES)\r\n    Emitter<KafkaRecord<byte[], byte[]>> emitter;\r\n\r\n    @Override\r\n    public DeserializationHandlerResponse handle(ProcessorContext context, ConsumerRecord<byte[], byte[]> record, Exception exception) {\r\n        log.error(\"Exception happens during deserialization, taskId: {}, topic: {}, partition: {}, offset: {} and exception: {}\",\r\n                context.taskId(), record.topic(), record.partition(), record.offset(),\r\n                exception);\r\n        emitter.send(KafkaRecord.of(record.key(), record.value()));\r\n        return DeserializationHandlerResponse.CONTINUE;\r\n    }\r\n\r\n    @Override\r\n    public void configure(Map<String, ?> map) {\r\n    }\r\n}`\r\n\r\nThe below error happens once the deserialization error is being caught in the class\r\n\r\n`Caused by: java.lang.NullPointerException: Cannot invoke \"org.eclipse.microprofile.reactive.messaging.Emitter.send(Object)\" because \"this.emitter\" is null`\r\n\r\nI am using 3.2.4.Final quarkus platform version\r\n\r\n\r\n### Expected behavior\r\n\r\nWhen the error happens, it should be sent to the kafka topic \r\n\r\n### Actual behavior\r\n\r\nNull pointer exception happens in the emitter \r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36340/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36340/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

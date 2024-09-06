@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32133",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32133/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32133/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32133/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32133",
+  "id": 1640537262,
+  "node_id": "I_kwDOCFbutM5hyJyu",
+  "number": 32133,
+  "title": "Panache find with projection in mongo",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-03-25T14:25:38Z",
+  "updated_at": "2024-08-09T13:48:40Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nAs of mongodb version 4.4 the client supports the size operator while doing projection during find operation.\r\n\r\nSo, lets say if I have a collection which has array of sub documents and I want the size of those documents, I can write\r\n\r\n`db.collection.find({},{childCollectionSize:{$size:\"$childArray\"}})`\r\n\r\nI have been trying to do different ways to achieve the same via find but unfortunately this does not execute correctly, it ignores the projection part. \r\n```\r\ncollectionRepository.find(\r\n                \"{'status' : 'IN_PROGRESS',userId:?1 },{childCollectionSize:{$size:'$childArray'},userId:1,itemId:1,version:1,itemType:1 }\",\r\n                loggedInUser\r\n            ).project(SomeClass::class.java)\r\n```\r\n\r\nI am using kotlin. What happens is that the projection class specified takes over as projection properties than the one defined in the find query. So, the above execution query is like \r\n`{\"find\": \"collection\", \"filter\": {\"status\": \"IN_PROGRESS\", \"userId\": \"e422f969-1b02-4949-aca9-79a954d6c8e2\"}, \"projection\": {\"itemId\": 1, \"itemName\": 1, \"itemType\": 1, \"id\": 1, \"version\": 1, \"userId\": 1, \"childCollectionSize\": 1}, \"batchSize\": 16, \"$db\": \"some-db\", \"lsid\": {\"id\": {\"$binary\": {\"base64\": \"someid\", \"subType\": \"04\"}}}}  `\r\n\r\n\r\nThis can be achieved via the **aggregations** but when the find operation supports it with mongo client, there should be a way for **find** function too\n\n### Implementation ideas\n\nI think we can create an overloaded **find** function with arg to specify the projection configuration , maybe in json, that overrides the properties/attributes of the projection class but is mapped to the properties specified. \r\n\r\nThe other way is , add support annotation in the projection class so that custom field mapping query can be executed. So, something like:\r\n\r\n```\r\n@ProjectionFor(SomeClass)\r\n\r\nclass MyView{\r\n\r\n@ProjectionProperty(\"{ $childCollectionSize: '$childArray'}\")\r\n\r\nint childCollectionSize;\r\n\r\n}\r\n```\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32133/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32133/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

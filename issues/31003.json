@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31003",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31003/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31003/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31003/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31003",
+  "id": 1576127000,
+  "node_id": "I_kwDOCFbutM5d8coY",
+  "number": 31003,
+  "title": "Reactive Messaging: Tombstone-messages no longer accepted",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2023-02-08T13:28:12Z",
+  "updated_at": "2023-05-11T09:24:52Z",
+  "closed_at": "2023-03-27T07:42:40Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nSince Quarkus 2.14.0.Final, I can no longer send messages with `null`-value over the `Emitter`. I get this exception:\r\n\r\n```\r\n2023-02-08 14:21:13,807 ERROR [io.sma.rea.mes.kafka] (Quarkus Main Thread) SRMSG18207: Unable to dispatch message to Kafka: java.lang.IllegalArgumentException: `payload` must not be `null`\r\n\tat org.eclipse.microprofile.reactive.messaging.Message.of(Message.java:304)\r\n\tat org.eclipse.microprofile.reactive.messaging.Message.addMetadata(Message.java:532)\r\n\tat io.quarkus.opentelemetry.runtime.tracing.intrumentation.reactivemessaging.ReactiveMessagingTracingDecorator.lambda$decorate$1(ReactiveMessagingTracingDecorator.java:75)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n\tat io.smallrye.mutiny.operators.multi.MultiMapOp$MapProcessor.onItem(MultiMapOp.java:42)\r\n\tat io.smallrye.mutiny.operators.multi.MultiOperatorProcessor.onItem(MultiOperatorProcessor.java:100)\r\n\tat io.smallrye.mutiny.operators.multi.builders.BufferItemMultiEmitter.drain(BufferItemMultiEmitter.java:118)\r\n\tat io.smallrye.mutiny.operators.multi.builders.BufferItemMultiEmitter.emit(BufferItemMultiEmitter.java:34)\r\n\tat io.smallrye.mutiny.operators.multi.builders.SerializedMultiEmitter.onItem(SerializedMultiEmitter.java:51)\r\n\tat io.smallrye.mutiny.operators.multi.builders.SerializedMultiEmitter.emit(SerializedMultiEmitter.java:141)\r\n\tat io.smallrye.reactive.messaging.providers.extension.ThrowingEmitter.emit(ThrowingEmitter.java:63)\r\n\tat io.smallrye.reactive.messaging.providers.extension.AbstractEmitter.emit(AbstractEmitter.java:164)\r\n\tat io.smallrye.reactive.messaging.providers.extension.EmitterImpl.send(EmitterImpl.java:47)\r\n\tat org.acme.TestEmitter.emit(TestEmitter.java:46)\r\n\tat org.acme.TestEmitter.atStartup(TestEmitter.java:29)\r\n\tat org.acme.TestEmitter_Observer_atStartup_0f975a6ffd0cd0e4d2a55a386da871634c38d3e9.notify(Unknown Source)\r\n\tat io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:328)\r\n\tat io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:310)\r\n\tat io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:78)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:131)\r\n\tat io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:100)\r\n\tat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(Unknown Source)\r\n```\r\n\r\nAs far as I can see, this happens since `ReactiveMessagingTracingDecorator` was introduced. This class tries to add a header and therefore rebuilds the message.\r\n\r\n### Expected behavior\r\n\r\nIt should be possible to send messages with `null`-value (tombstone-messages).\r\n\r\n### Actual behavior\r\n\r\nIt is not possible to send tombstone-messages.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: \r\n[empty-value-reproducer.zip](https://github.com/quarkusio/quarkus/files/10685973/empty-value-reproducer.zip)\r\n\r\n\r\n1. Execute reproducer\r\n2. Wait a few seconds\r\n3. See exception\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.19044.2006]\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Corretto-17.0.4.9.1 (build 17.0.4.1+9-LTS)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31003/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31003/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38509",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38509/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38509/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38509/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38509",
+  "id": 2111010684,
+  "node_id": "I_kwDOCFbutM5903d8",
+  "number": 38509,
+  "title": "Panache + Hibernate Reactive - Can not use project() alongside list()",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-01-31T21:36:35Z",
+  "updated_at": "2024-03-12T09:09:46Z",
+  "closed_at": "2024-03-09T14:07:11Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen trying to fetch all rows from a table using projection, the response is never bubbled to the caller. \r\nIf project() is removed, or if project(xxx.class).singleResult() is used, the response is returned correctly.\r\n\r\nNote: I´m migrating from an existing codebase (Quarkus 1.9.2) that heavily relies on vertx and verticles. The project handled the queries without panache & hibernate, so we wanna check if using an orm is worth the effort in this case. \r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: https://gitlab.com/gus.gramajo/panache-reactive-reproducer\r\n\r\nSteps:\r\n\r\n1 - Run\r\n./mvnw quarkus:dev\r\n\r\n2 - Import Postman Collection (Go to Postman -> Import -> Select \"Users - Repro.postman_collection.json\" and \"Users Repro - Local.postman_environment.json\". Both files are located at the root of the project).\r\n\r\n3 - Send a \"Save User\" request. This will work fine.\r\n\r\n4 - Send a \"Get Users\" request. You will see this in the console:\r\n```\r\n\r\n2024-01-31 18:12:35,784 [US] [vert.x-eventloop-thread-2] DEBUG - org.hibernate.orm.results.loading - Calling top-level assembler (0 / 1) : org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiationAssemblerConstructorImpl@24f817\r\n2024-01-31 18:12:35,784 [US] [vert.x-eventloop-thread-2] DEBUG - org.hibernate.orm.results - Extracted JDBC value [0] - [123789]\r\n2024-01-31 18:12:35,785 [US] [vert.x-eventloop-thread-2] DEBUG - org.hibernate.orm.results - Extracted JDBC value [1] - [bob]\r\n2024-01-31 18:12:35,785 [US] [vert.x-eventloop-thread-2] DEBUG - org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl - Initiating JDBC connection release from afterTransaction\r\n```\r\n\r\nIndicating that the query worked just fine.  Nonetheless, the request will hang, and eventually you will get this:\r\n\r\nERROR - com.foo.bar.users.API - Cause: (TIMEOUT,-1) Timed out after waiting 30000(ms) for a reply. address: __vertx.reply.2, repliedAddress: getUsers\r\n\r\nThis method uses project(xxx.class).list().\r\n\r\n5 - Send a \"Get User\" request. You will get:\r\n\r\n```\r\n{\r\n    \"user\": {\r\n        \"id\": \"123789\",\r\n        \"name\": \"bob\"\r\n    },\r\n    \"success\": true\r\n}\r\n```\r\n\r\nThis method uses project(xxx.class).singleResult().\r\n\r\n6 - Send a \"Get Users Without Projection\". You will get:\r\n```\r\n\r\n{\r\n    \"users\": [\r\n        [\r\n            \"123789\",\r\n            \"bob\"\r\n        ]\r\n    ],\r\n    \"success\": true\r\n}\r\n```\r\n\r\nThis method uses list()\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin MacBook-Pro.local 23.3.0 Darwin Kernel Version 23.3.0: Wed Dec 20 21:31:00 PST 2023; root:xnu-10002.81.5~7/RELEASE_ARM64_T6020 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.1\" 2023-10-17 OpenJDK Runtime Environment (build 21.0.1+12-29) OpenJDK 64-Bit Server VM (build 21.0.1+12-29, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546) Maven home: /Users/xxx/.m2/wrapper/dists/apache-maven-3.9.5-bin/32db9c34/apache-maven-3.9.5 Java version: 21.0.1, vendor: Oracle Corporation, runtime: /Users/xxx/Library/Java/JavaVirtualMachines/openjdk-21.0.1/Contents/Home Default locale: es_AR, platform encoding: UTF-8 OS name: \"mac os x\", version: \"14.3\", arch: \"aarch64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\nDocker Desktop 4.26.1 (131620)",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38509/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38509/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

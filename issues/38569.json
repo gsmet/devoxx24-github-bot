@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38569",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38569/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38569/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38569/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38569",
+  "id": 2115889361,
+  "node_id": "I_kwDOCFbutM5-HejR",
+  "number": 38569,
+  "title": "Maven wrapper breaks when updating Quarkus",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 20,
+  "created_at": "2024-02-02T22:17:38Z",
+  "updated_at": "2024-03-28T17:02:53Z",
+  "closed_at": "2024-03-28T17:02:53Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nNot sure if it's a Quarkus or a Maven bug\r\n\r\nBy using `./mvnw io.quarkus.platform:quarkus-maven-plugin:3.7.1:update -N` on Windows, it fails with the following log:\r\n\r\n```log\r\n[INFO] Executing:\r\nC:\\Users\\<user>\\Documents\\<path-to-project>\\mvnw.cmd -B clean process-sources\r\n[INFO]\r\n[INFO] Error: Failed to validate Maven wrapper SHA-256, your Maven wrapper might be compromised.\r\n[INFO] Investigate or delete C:\\Users\\<user>\\Documents\\<path-to-project>\\.mvn\\wrapper\\maven-wrapper.jar to attempt a clean download.\r\n[INFO] If you updated your Maven version, you need to update the specified wrapperSha256Sum property.\r\n[ERROR] Get-FileHash : The term 'Get-FileHash' is not recognized as the name of a cmdlet, function, script file, or operable \r\n[ERROR] program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.\r\n[ERROR] At line:1 char:13\r\n[ERROR] + &{ $hash = (Get-FileHash \"C:\\Users\\<user>\\Documents\\<fragment-path-to-project>\\ ...\r\n[ERROR] +             ~~~~~~~~~~~~\r\n[ERROR]     + CategoryInfo          : ObjectNotFound: (Get-FileHash:String) [], CommandNotFoundException\r\n[ERROR]     + FullyQualifiedErrorId : CommandNotFoundException\r\n[ERROR]\r\n```\r\n\r\nthe `maven-wrapper.properties` file get's updated:\r\n\r\nBefore: \r\n```sh\r\ndistributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.9.6/apache-maven-3.9.6-bin.zip\r\nwrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar\r\n```\r\n\r\nAfter:\r\n```sh\r\ndistributionUrl=https\\://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.9.6/apache-maven-3.9.6-bin.zip\r\nwrapperUrl=https\\://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar\r\ndistributionSha256Sum=83aaf914c785c9faed661f223000a92d1de9553f5c82d3b4362e66d9c031625f\r\nwrapperSha256Sum=e63a53cfb9c4d291ebe3c2b0edacb7622bbc480326beaa5a0456e412f52f066a\r\n```\r\n\r\nAfter that, any call to `./mvnw` fails\r\nAs a workaround, by removing the new 2 lines, it start working again (distributionSha256Sum and wrapperSha256Sum).\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nQuarkus update should complete successfully\r\n\r\n### Actual behavior\r\n\r\nQuarkus update fails, and Maven wrapper get's broken\r\n\r\n### How to Reproduce?\r\n\r\n1. Update Quarkus from `3.6.6` to `3.7.1` with `./mvnw io.quarkus.platform:quarkus-maven-plugin:3.7.1:update -N` command\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Temurin-17.0.8.1+1\r\n\r\n### Quarkus version or git rev\r\n\r\n3.7.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nPOM.xml\r\n\r\nBefore:\r\n```xml\r\n<compiler-plugin.version>3.11.0</compiler-plugin.version>\r\n<quarkus.platform.version>3.6.6</quarkus.platform.version>\r\n<surefire-plugin.version>3.1.2</surefire-plugin.version>\r\n```\r\n\r\nAfter:\r\n```xml\r\n<compiler-plugin.version>3.12.1</compiler-plugin.version>\r\n<quarkus.platform.version>3.7.1</quarkus.platform.version>\r\n<surefire-plugin.version>3.2.3</surefire-plugin.version>\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38569/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38569/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

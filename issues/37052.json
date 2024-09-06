@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37052",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37052/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37052/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37052/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37052",
+  "id": 1991142195,
+  "node_id": "I_kwDOCFbutM52rmsz",
+  "number": 37052,
+  "title": "`Provider<MongoClient>` combined with `mongo+srv` schema and gRPC results in mutiny await block error",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-11-13T17:42:05Z",
+  "updated_at": "2023-11-24T10:19:08Z",
+  "closed_at": "2023-11-24T10:19:07Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIf one injects a `Provider<MongoClient>` where the connection string is a `mongodb+srv://` scheme into a grpc service and the `get()` method is called within a grpc service call, it will be called within a `vert.x-eventloop-thread-` thread. During initialization, The `MongoDnsClient` will attempt a `resolveTxtRequest` with the mutiny api. This results in an error.\r\n\r\nSee:\r\n- https://github.com/quarkusio/quarkus/blob/3.5.0/extensions/mongodb-client/runtime/src/main/java/io/quarkus/mongodb/runtime/dns/MongoDnsClient.java#L175\r\n- https://github.com/smallrye/smallrye-mutiny/blob/2.5.1/implementation/src/main/java/io/smallrye/mutiny/operators/uni/UniBlockingAwait.java#L30\r\n\r\n- https://github.com/quarkusio/quarkus/blob/3.5.0/extensions/mutiny/runtime/src/main/java/io/quarkus/mutiny/runtime/MutinyInfrastructure.java#L48\n\n### Expected behavior\n\nNo exception is thrown. DNS is resolved successfully.\n\n### Actual behavior\n\n```\r\njava.lang.IllegalStateException: The current thread cannot be blocked: vert.x-eventloop-thread-1\r\n\tat io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:30)\r\n\tat io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n\tat io.quarkus.mongodb.runtime.dns.MongoDnsClient.resolveTxtRequest(MongoDnsClient.java:175)\r\n```\n\n### How to Reproduce?\n\nReproducer:\r\n\r\n1. Create starter app - `quarkus create app --extensions=grpc,mongodb-client --code`\r\n2. Inject `MongoClient` as per below.\r\n3. Set an appropriate connection string - `quarkus.mongodb.connection-string=mongodb+srv://...`\r\n4. Run the test `HelloGrpcServiceTest`.\r\n\r\n```\r\npackage org.acme;\r\n\r\nimport com.mongodb.client.MongoClient;\r\n\r\nimport io.quarkus.grpc.GrpcService;\r\n\r\nimport io.smallrye.mutiny.Uni;\r\nimport jakarta.inject.Inject;\r\nimport jakarta.inject.Provider;\r\n\r\n@GrpcService\r\npublic class HelloGrpcService implements HelloGrpc {\r\n\r\n    @Inject Provider<MongoClient> client; // (1)\r\n\r\n    @Override\r\n    public Uni<HelloReply> sayHello(HelloRequest request) {\r\n        client.get(); // (2)\r\n        return Uni.createFrom().item(\"Hello \" + request.getName() + \"!\")\r\n                .map(msg -> HelloReply.newBuilder().setMessage(msg).build());\r\n    }\r\n\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin <snip> 22.6.0 Darwin Kernel Version 22.6.0: Fri Sep 15 13:41:28 PDT 2023; root:xnu-8796.141.3.700.8~1/RELEASE_ARM64_T6020 arm64\n\n### Output of `java -version`\n\n17\n\n### Quarkus version or git rev\n\n3.5.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.8\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37052/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37052/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

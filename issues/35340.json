@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35340",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35340/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35340/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35340/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35340",
+  "id": 1849753490,
+  "node_id": "I_kwDOCFbutM5uQP-S",
+  "number": 35340,
+  "title": "Do not print stack-trace in WebSocketLogHandler.recordHistory",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-08-14T13:13:13Z",
+  "updated_at": "2023-08-22T23:41:54Z",
+  "closed_at": "2023-08-22T14:12:42Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nSimilar to #32203:\r\n\r\n```\r\njava.lang.InterruptedException\r\n        at java.base/java.util.concurrent.locks.ReentrantLock$Sync.lockInterruptibly(ReentrantLock.java:159)\r\n        at java.base/java.util.concurrent.locks.ReentrantLock.lockInterruptibly(ReentrantLock.java:372)\r\n        at java.base/java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:432)\r\n        at io.quarkus.vertx.http.runtime.logstream.WebSocketLogHandler.recordHistory(WebSocketLogHandler.java:66)\r\n        at io.quarkus.vertx.http.runtime.logstream.WebSocketLogHandler.doPublish(WebSocketLogHandler.java:39)\r\n        at org.jboss.logmanager.ExtHandler.publish(ExtHandler.java:66)\r\n        at org.jboss.logmanager.ExtHandler.publishToNestedHandlers(ExtHandler.java:97)\r\n        at io.quarkus.bootstrap.logging.QuarkusDelayedHandler.doPublish(QuarkusDelayedHandler.java:81)\r\n        at org.jboss.logmanager.ExtHandler.publish(ExtHandler.java:66)\r\n        at org.jboss.logmanager.LoggerNode.publish(LoggerNode.java:327)\r\n        at org.jboss.logmanager.LoggerNode.publish(LoggerNode.java:334)\r\n        at org.jboss.logmanager.LoggerNode.publish(LoggerNode.java:334)\r\n        at org.jboss.logmanager.LoggerNode.publish(LoggerNode.java:334)\r\n        at org.jboss.logmanager.LoggerNode.publish(LoggerNode.java:334)\r\n        at org.jboss.logmanager.LoggerNode.publish(LoggerNode.java:334)\r\n        at org.jboss.logmanager.LoggerNode.publish(LoggerNode.java:334)\r\n        at org.jboss.logmanager.Logger.logRaw(Logger.java:750)\r\n```\r\n\r\nThe stacktrace should not be printed to the console by default in io.quarkus.vertx.http.runtime.logstream.WebSocketLogHandler.recordHistory:\r\n\r\n```java\r\n    private void recordHistory(final ExtLogRecord record) {\r\n        synchronized (this) {\r\n            try {\r\n                if (history.remainingCapacity() == 0) {\r\n                    history.take();\r\n                }\r\n                history.add(record);\r\n            } catch (InterruptedException ex) {\r\n                ex.printStackTrace(); // <------- REMOVE THIS\r\n                Thread.currentThread().interrupt();\r\n            }\r\n        }\r\n    }\r\n```\r\n \n\n### Expected behavior\n\nNo stacktrace in console logging\n\n### Actual behavior\n\nstacktrace is printed on console\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10) OpenJDK 64-Bit Server VM Temurin-17.0.6+10 (build 17.0.6+10, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.2.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35340/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35340/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

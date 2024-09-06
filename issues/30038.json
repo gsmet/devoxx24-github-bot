@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30038",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30038/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30038/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30038/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30038",
+  "id": 1508091302,
+  "node_id": "I_kwDOCFbutM5Z46Wm",
+  "number": 30038,
+  "title": "Detected 'Duplicate Endpoint' but this not is",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-12-22T15:33:05Z",
+  "updated_at": "2022-12-23T12:25:44Z",
+  "closed_at": "2022-12-23T06:47:57Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMy Controller:\r\n\r\n\t@Path(\"/entity\")\r\n\tpublic class EntityRest {\r\n\r\n\t\t@Inject\r\n\t\tEntityService entityService;\r\n\r\n\t\t@GET\r\n\t\t@Path(\"{id}\")   // ----- Endpoint 1\r\n\t\tpublic Entity getEntityById(@PathVariable(\"id\") Integer id) {\r\n\t\t\treturn efectoService.getEntityById(id);\r\n\t\t}\r\n\r\n\t\t@GET           // ----- Endpoint 2\r\n\t\tpublic List<Entity> getEntityByIds(@QueryParam(\"ids\") List<Integer> ids) {\t\r\n\t\t\treturn efectoService.getEfectoByIds(ids);\r\n\t\t}\r\n\t\r\n\t\t@GET            // ----- Endpoint 3\r\n\t\tpublic List<Entity> getEntity() {\r\n\t\t\treturn efectoService.getAllEntity();\r\n\t\t}\r\n  \t}\r\n\r\n### Expected behavior\r\n\r\nConsumes endpoints:\r\n\r\n// Endpoint 1\r\nhttp://localhost:8080/entity/4\r\n\r\n// Endpoint 2\r\nhttp://localhost:8080/entity/?ids=4,3,5\r\nor\r\nhttp://localhost:8080/entity/?ids=4&ids=3&ids=5\r\n\r\n// Endpoint 3\r\nhttp://localhost:8080/entity\r\n\r\n### Actual behavior\r\n\r\n\tCaused by: io.quarkus.deployment.configuration.ConfigurationError: GET /entity is declared by :\r\n\tcom.ase.EntityRest#getEntityByIds consumes *, produces application/json\r\n\tcom.ase.EntityRest#getEntity consumes *, produces application/json\r\n\r\n\tat io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor.checkForDuplicateEndpoint(ResteasyReactiveProcessor.java:946)\r\n\tat io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor.setupEndpoints(ResteasyReactiveProcessor.java:596)\r\n\tat jdk.internal.reflect.GeneratedMethodAccessor625.invoke(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\n2022-12-22 12:09:39,207 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-0) Live reload total time: 0.315s \r\n\r\n### How to Reproduce?\r\n\r\nGenerate controller with two endpoint equals but one with parameter type java.util.List or primitive array\r\n\r\n\t@GET // Endpoint 2\r\n\tpublic List<Entity> getEntityByIds(@QueryParam(\"ids\") List<Integer> ids) {\r\n\t\treturn entityService.getEntityByIds(ids);\r\n\t}\r\n or\r\n\r\n\t@GET // Endpoint 2\r\n\tpublic List<Entity> getEntityByIds(@QueryParam(\"ids\") Integer[] ids) {\r\n\t\treturn entityService.getEntityByIds(ids);\r\n\t}\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n11\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n3.6.3\r\n\r\n### Additional information\r\n\r\nIm am using Quarkus rigth now, i want to create two methods with diferent parameter but exposing the same resource (/efecto), but i am getting this error: CheckForDuplicateEndponit\r\nSorry, if this not bug and i not speak native inglish :c\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30038/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30038/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

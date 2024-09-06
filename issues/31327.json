@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31327",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31327/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31327/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31327/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31327",
+  "id": 1593790837,
+  "node_id": "I_kwDOCFbutM5e_1F1",
+  "number": 31327,
+  "title": "Using custom config source seems to be not working",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-02-21T16:41:44Z",
+  "updated_at": "2023-02-28T17:23:24Z",
+  "closed_at": "2023-02-28T16:45:38Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a maven multi module project using quarkus (I am currently migrating from wildfly to quarkus, so the problem described here is not present with wildfly). The architecture can be simplified like this:\r\n\r\n**module1**  -> configuration file such as application.properties\r\n---src\r\n ------main \r\n ---------resources\r\n ------------ application.properties\r\n ------------ application-devlocal.properties\r\n\r\n**module2**   -> entities + MyCustomConfigSource\r\n\r\n---src\r\n------main\r\n---------java\r\n------------MyEntity1.java\r\n------------MyCustomConfigSource.java\r\n---------resources\r\n------------META-INF\r\n---------------services\r\n------------------org.eclipse.microprofile.config.spi.ConfigSource\r\n\r\n**module3**  -> first quarkus module\r\n**module4**   -> second quarkus module\r\n\r\nThe goal of my custom config source is to get properties from a database table and if the property is not in the database then take it from application.properties. But when I launch the quarkus module4 in dev mode, it seems that the config source is not registered. As I have the following error:\r\n\r\n`The config property MyPropertyFromDB is required but it could not be found in any config source.\r\n`\r\n\r\nThe application is able to read properties from application.properties.Moreover if I inject my MyCustomConfigSource in another bean, I am able to see all properties stored in by database (by calling the method getProperties of the config source). So it is not a connection issue.\r\n\r\nHere is the content of my custom config source MyCustomConfigSource.\r\n\r\n`\r\n@ApplicationScope\r\n@Transactional\r\npublic class MyCustomConfigSource implements ConfigSource{\r\n\r\n    @Inject\r\n    private EntityManager entityManager;\r\n    private Config config;\r\n\r\n    @Override\r\n    public int getOrdinal()\r\n    { \r\n        return 500;\r\n    }\r\n\r\n    @Override\r\n    public Set<String> getPropertyNames() {\r\n       //...\r\n    }\r\n\r\n    @Override\r\n    public Map<String, String> getProperties() {\r\n        //...\r\n    }\r\n\r\n    @Override\r\n    public String getValue(String key) {\r\n        //...\r\n    }\r\n\r\n    @Override\r\n    public String getName() {\r\n        //...\r\n    }\r\n\r\n}\r\n`\r\nMoreover, during my tests, I see that if I add the annotation @io.quarkus.runtime.Startup then I am able to access the properties store in my database but quarkus is not able to access custom properties from application.properties anymore.\r\n\r\n### Expected behavior\r\n\r\nBe able to load properties from application.properties and from database at the same time as it was the case with wildfly.\r\n\r\n### Actual behavior\r\n\r\nIt seems that the config source is not registered. And thus when I try to inject the property with the following code\r\n\r\n`\r\n@ConfigProperty(name=\"MyPropertyFromDB\")\r\nProvider<String> myVar\r\n`\r\nI got the exception\r\n\r\n`The config property MyPropertyFromDB is required but it could not be found in any config source`\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nUbuntu 22\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.16\"\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.0.Alpha4\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache maven 3.8.5\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31327/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31327/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

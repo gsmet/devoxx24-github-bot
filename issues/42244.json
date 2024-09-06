@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42244",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42244/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42244/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42244/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42244",
+  "id": 2440013097,
+  "node_id": "I_kwDOCFbutM6Rb6Up",
+  "number": 42244,
+  "title": "Consistent naming scheme and semantics for enabled/active configuration properties",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1897325810,
+      "node_id": "MDU6TGFiZWwxODk3MzI1ODEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/flyway",
+      "name": "area/flyway",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1956491735,
+      "node_id": "MDU6TGFiZWwxOTU2NDkxNzM1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/liquibase",
+      "name": "area/liquibase",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236032169,
+      "node_id": "MDU6TGFiZWwyMjM2MDMyMTY5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/health",
+      "name": "area/health",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-07-31T13:04:07Z",
+  "updated_at": "2024-08-26T15:39:34Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nFollowing discussions on the mailing list, we've recently tried to use consistent conventions for `active`/`enabled` configuration properties in the datasource and Hibernate extensions.\r\n\r\nThe target behavior is as follows:\r\n\r\n* `quarkus.hibernate-orm.enabled=false` (extension level) will disable the Hibernate extension at build time: it will be almost as if the extension was not in the class path, it won't do anything except declare its presence so that it can be displayed on app startup.\r\n* `quarkus.hibernate-orm[.\"persistence-unit-name\"].active=false` (persistence unit level) will activate/deactivate a persistence unit at runtime: if inactive, the `SessionFactory` does not started on app startup and `SessionFactory`/`Session`/... beans cannot be accessed at runtime.\r\n* (and similarly for `quarkus.hibernate-envers` and (quarkus.hibernate-search-*`)\r\n* `quarkus.datasource[.\"datasource-name\"].active` (datasource level) will activate/deactivate a datasource at runtime: if inactive, the connection pool does not gets started on app startup and the `Datasource` bean cannot be accessed at runtime.\r\n\r\nWorth noting that we're refining that behavior in #41810/#41929 so that startup will fail (with a detailed, actionable message) if any user bean gets injected with \"inactive\" beans. See https://github.com/quarkusio/quarkus/issues/36666#issuecomment-2162923149 for the motivation; in short it's about failing fast.\r\n\r\nThere are other extensions also exposing root \"enabled\"/\"active\" properties in their configuration, and many are following the same naming scheme and semantics (though they don't all offer the `.active` feature):\r\n\r\n<details>\r\n<summary>List of configuration properties that are following the same naming and semantics as datasource/Hibernate</summary>\r\n\r\n* [`quarkus.management.enabled`](https://quarkus.io/guides/all-config#quarkus-vertx-http_quarkus-management-enabled): Enables / Disables the usage of a separate interface/port to expose the management endpoints. If sets to <code>true</code>, the management endpoints will be exposed to a different HTTP server. This avoids exposing the management endpoints on a publicly available server.\r\n* [`quarkus.oauth2.enabled`](https://quarkus.io/guides/all-config#quarkus-elytron-security-oauth2_quarkus-oauth2-enabled): Determine if the OAuth2 extension is <span class=\"configuration-highlight\">enabled</span>. <span class=\"configuration-highlight\">Enabled</span> by default if you include the <code>elytron-security-oauth2</code> dependency, so this would be used to disable it.\r\n* [`quarkus.flyway.enabled`](https://quarkus.io/guides/all-config#quarkus-flyway_quarkus-flyway-enabled): Whether Flyway is <span class=\"configuration-highlight\">enabled</span> <strong>during the build</strong>.\r\n* [`quarkus.info.enabled`](https://quarkus.io/guides/all-config#quarkus-info_quarkus-info-enabled): Whether the info endpoint will be <span class=\"configuration-highlight\">enabled</span>\r\n* [`quarkus.jacoco.enabled`](https://quarkus.io/guides/all-config#quarkus-jacoco_quarkus-jacoco-enabled): Whether or not the jacoco extension is <span class=\"configuration-highlight\">enabled</span>.\r\n* [`quarkus.micrometer.enabled`](https://quarkus.io/guides/all-config#quarkus-micrometer_quarkus-micrometer-enabled): Micrometer metrics support.\r\n* [`quarkus.oidc.enabled`](https://quarkus.io/guides/all-config#quarkus-oidc_quarkus-oidc-enabled): If the OIDC extension is <span class=\"configuration-highlight\">enabled</span>.\r\n* [`quarkus.oidc-client.enabled`](https://quarkus.io/guides/all-config#quarkus-oidc-client_quarkus-oidc-client-enabled): If the OIDC client extension is <span class=\"configuration-highlight\">enabled</span>.\r\n* [`quarkus.banner.enabled`](https://quarkus.io/guides/all-config#quarkus-core_quarkus-banner-enabled): Whether the banner will be displayed\r\n* [`quarkus.config-tracking.enabled`](https://quarkus.io/guides/all-config#quarkus-core_quarkus-config-tracking-enabled): Whether configuration dumping is <span class=\"configuration-highlight\">enabled</span>\r\n* [`quarkus.console.enabled`](https://quarkus.io/guides/all-config#quarkus-core_quarkus-console-enabled): If test results and status should be displayed in the console.\r\n* [`quarkus.devservices.enabled`](https://quarkus.io/guides/all-config#quarkus-core_quarkus-devservices-enabled): Global flag that can be used to disable all Dev Services. If this is set to false then Dev Services will not be used.\r\n* [`quarkus.observability.enabled`](https://quarkus.io/guides/all-config#quarkus-observability-devservices_quarkus-observability-enabled): If DevServices has been explicitly <span class=\"configuration-highlight\">enabled</span> or disabled. DevServices is generally <span class=\"configuration-highlight\">enabled</span> by default, unless there is an existing configuration present.\r\n* [`quarkus.scheduler.enabled`](https://quarkus.io/guides/all-config#quarkus-scheduler_quarkus-scheduler-enabled): If schedulers are <span class=\"configuration-highlight\">enabled</span>.\r\n* [`quarkus.webauthn.enabled`](https://quarkus.io/guides/all-config#quarkus-security-webauthn_quarkus-webauthn-enabled): If the WebAuthn extension is <span class=\"configuration-highlight\">enabled</span>.\r\n* [`quarkus.smallrye-jwt.enabled`](https://quarkus.io/guides/all-config#quarkus-smallrye-jwt_quarkus-smallrye-jwt-enabled): The MP-JWT configuration object\r\n* [`quarkus.virtual-threads.enabled`](https://quarkus.io/guides/all-config#quarkus-virtual-threads_quarkus-virtual-threads-enabled): A flag to explicitly disabled virtual threads, even if the JVM support them. In this case, methods annotated with <code>@RunOnVirtualThread</code> are executed on the worker thread pool.\r\n\r\n</details>\r\n\r\nHowever, others have taken a different route.\r\n\r\nSome follow a slightly different naming scheme:\r\n\r\n* [`quarkus.health.extensions.enabled`](https://quarkus.io/guides/all-config#quarkus-smallrye-health_quarkus-health-extensions-enabled): Whether extensions published health check should be <span class=\"configuration-highlight\">enabled</span>.\r\n\r\nSome use an `enabled` root configuration property to disable the extension **at runtime**:\r\n\r\n* [`quarkus.cache.enabled`](https://quarkus.io/guides/all-config#quarkus-cache_quarkus-cache-enabled): disables the extension *at runtime* (expected: at build time)\r\n* [`quarkus.liquibase.enabled`](https://quarkus.io/guides/all-config#quarkus-liquibase_quarkus-liquibase-enabled): Flag to enable / disable Liquibase.\r\n* [`quarkus.jfr.enabled`](https://quarkus.io/guides/all-config#quarkus-jfr_quarkus-jfr-enabled): If false, only quarkus-jfr events are not recorded even if JFR is <span class=\"configuration-highlight\">enabled</span>. In this case, Java standard API and virtual machine information will be recorded according to the setting. Default value is <code>true</code>\r\n* [`quarkus.kubernetes-config.enabled`](https://quarkus.io/guides/all-config#quarkus-kubernetes-config_quarkus-kubernetes-config-enabled): If set to true, the application will attempt to look up the configuration from the API server\r\n* [`quarkus.load-shedding.enabled`](https://quarkus.io/guides/all-config#quarkus-load-shedding_quarkus-load-shedding-enabled): Whether load shedding should be <span class=\"configuration-highlight\">enabled</span>. Currently, this only applies to incoming HTTP requests.\r\n\r\nAnd finally some use an `active` root configuration property with a different meaning:\r\n\r\n* [`quarkus.flyway.active`](https://quarkus.io/guides/all-config#quarkus-flyway_quarkus-flyway-active): Flag to activate/deactivate Flyway for a specific datasource at runtime.\r\n  NOTE: The documentation (previous sentence) is unclear, but this actually only disables \"on-startup\" behavior for Flyway. You can still retrieve the Flyway bean and trigger schema changes, so it's not really \"deactivated\".\r\n\r\nWe even have pending PR (#42225) that would add a property `quarkus.liquibase[.\"datasource-name\"].active` which takes effect at build-time... the reason being that `quarkus.liquibase.enabled` is already taken, and has effect on all datasources (but it's a runtime property!).\r\n\r\nLet's discuss how to reconcile all this.\r\n\r\n---\r\n\r\nNote some extensions have an `active`/`enabled` property that is *not* at the root of their config, using it to enable/disable specific features (see below). I am **not suggesting** to change these **in any way**, though someone else might want to open a different issue to improve consistency there too; in particular metrics/tracing seems to be configured sometimes in the metrics/tracing extension, sometimes in the \"integrated\" (JDBC, ...) extension.\r\n\r\nList of configuration properties that are not relevant to this issue: https://gist.github.com/yrodiere/16c8e429d0dd7b38bea3a97d6fdc86f5\r\n\r\n### Implementation ideas\r\n\r\nI would suggest we:\r\n\r\n* agree on naming/semantics once and for all\r\n* create a PR to align existing core extensions\r\n* create a PR to include these rules in a guide or some documentation aimed at extension writers\r\n\r\nI would tentatively suggest the following naming and semantics:\r\n\r\n* `quarkus.myextension[.name-for-datasource-or-persistence-unit-or-client-or-whatever].enabled`: disables a datasource/persistence unit/client (if that makes sense) or whole extension (otherwise) **at build time**. It will be as if the extension didn't exist\r\n* `quarkus.myextension[.name-for-datasource-or-persistence-unit-or-client-or-whatever].active`: deactivates a datasource/persistence unit/client (if that makes sense) or whole extension (otherwise) **at build time**\r\n* And possibly, to avoid ambiguity between disabling an extension and e.g. disabling just the default persistence unit, a built-in feature in Quarkus (no need to implement anything in extensions) to disable extensions that are in the classpath. This could be either `quarkus.myextension.enable-extension`, or more likely some more arcane property like `quarkus.extensions.\"extension-id\".enabled`.\r\n\r\nFor the existing discrepancies, I would suggest the following.\r\n\r\nExtensions using a slightly different naming scheme: align naming?\r\n\r\n* [`quarkus.health.extensions.enabled`](https://quarkus.io/guides/all-config#quarkus-smallrye-health_quarkus-health-extensions-enabled) => rename to `quarkus.health.enabled`?\r\n\r\nExtensions using an `enabled` root configuration property to disable the extension **at runtime**: rename to `quarkus.*.active`, and introduce build-time property `quarkus.*.enabled`?\r\n\r\n* [`quarkus.cache.enabled`](https://quarkus.io/guides/all-config#quarkus-cache_quarkus-cache-enabled) => rename to `quarkus.cache.active`, and introduce `quarkus.cache.enabled` for build-time only?\r\n* [`quarkus.liquibase.enabled`](https://quarkus.io/guides/all-config#quarkus-liquibase_quarkus-liquibase-enabled) => rename to `quarkus.liquibase.active`, and introduce `quarkus.liquibase.enabled` for build-time only?\r\n* [`quarkus.jfr.enabled`](https://quarkus.io/guides/all-config#quarkus-jfr_quarkus-jfr-enabled) => rename to `quarkus.jfr.active`, and introduce `quarkus.jfr.enabled` for build-time only?\r\n* [`quarkus.kubernetes-config.enabled`](https://quarkus.io/guides/all-config#quarkus-kubernetes-config_quarkus-kubernetes-config-enabled) => rename to `quarkus.kubernetes-config.active`, and introduce `quarkus.kubernetes-config.enabled` for build-time only?\r\n* [`quarkus.load-shedding.enabled`](https://quarkus.io/guides/all-config#quarkus-load-shedding_quarkus-load-shedding-enabled) => rename to `quarkus.load-shedding.active`, and introduce `quarkus.load-shedding.enabled` for build-time only?\r\n\r\nExtensions with an `active` root configuration property with a different meaning: change the behavior to align on agreed-upon semantics?\r\n\r\n* [`quarkus.flyway.active`](https://quarkus.io/guides/all-config#quarkus-flyway_quarkus-flyway-active): disable both flyway's on-start behavior *and* access to beans as soon as active is `false`?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42244/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42244/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

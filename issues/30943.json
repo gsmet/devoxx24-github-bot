@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30943",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30943/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30943/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30943/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30943",
+  "id": 1573909608,
+  "node_id": "I_kwDOCFbutM5dz_Ro",
+  "number": 30943,
+  "title": "Reactive Messaging JMS connector support ",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2023-02-07T08:39:23Z",
+  "updated_at": "2023-12-08T08:36:13Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nHi everybody, \r\n\r\nRelated to the zulip topic, https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/Artemis.20jms.20.2B.20smallrye-jms.20connector, we are looking for a smart way to talk with jboss eap6 by jms message (configurable protocol like hornetq core). Initial tests works by the old school way (create factory -> connexion -> session...). With the quarkus-artemis-jms extension, we were able to inject a ConnectionFactory, and produce/consume messages against our hornetq broker. It compile natively. \r\n\r\n```java\r\n@Path(\"/activemqjms2\")\r\n@RegisterForReflection(targets = { HornetQClientProtocolManagerFactory.class, ActiveMQConnectionFactory.class })\r\npublic class ActiveMQJMS2Resource {\r\n\r\n    private static final Logger log = LoggerFactory.getLogger(ActiveMQJMS2Resource.class);     \r\n    \r\n    @Inject ConnectionFactory factory;     \r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String connection() throws JMSException {\r\n        \r\n        Queue queue = ActiveMQDestination.createQueue(PacketImpl.OLD_QUEUE_PREFIX + QUEUE_NAME);\r\n        \r\n        try (Connection connection = factory.createConnection()) {\r\n            int count = 0;\r\n            connection.start();\r\n            try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {\r\n                try (MessageProducer producer = session.createProducer(queue)) {\r\n                    String text = \"coucou at \" + new Date();\r\n                    for (int i = 0; i < 10; i++) {\r\n                        producer.send(session.createTextMessage(text + \" - \" + i));\r\n                    }\r\n                }\r\n                // session.commit();\r\n            }\r\n            log.info(\"sent 10 messages\");\r\n            try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {\r\n                try (MessageConsumer consumer = session.createConsumer(queue)) {\r\n                    Message message = consumer.receive(2000);\r\n                    while (message != null) {\r\n                        if (message instanceof TextMessage textMessage) {\r\n                            log.info(\"received \" + textMessage.getText());\r\n                        } else {\r\n                            log.info(\"received \" + message);\r\n                        }\r\n                        count++;\r\n                        message = consumer.receive(2000);\r\n                    }\r\n                }\r\n                // session.commit();\r\n            }\r\n            return \"received messages: \" + count;\r\n        }\r\n    }\r\n}\r\n```\r\n\r\n```xml\r\n<dependency>\r\n    <groupId>io.quarkiverse.artemis</groupId>\r\n    <artifactId>quarkus-artemis-jms</artifactId>\r\n    <version>2.0.4</version>\r\n</dependency>\r\n<dependency>\r\n    <groupId>org.apache.activemq</groupId>\r\n    <artifactId>artemis-hqclient-protocol</artifactId>\r\n    <version>2.26.0</version>\r\n</dependency>\r\n``` \r\n\r\n```yaml\r\nquarkus:\r\n  artemis:\r\n    url: (tcp://jboss1:5049,tcp://jboss2:5049)?protocolManagerFactoryStr=org.apache.activemq.artemis.core.protocol.hornetq.client.HornetQClientProtocolManagerFactory\r\n    username: user\r\n    password: pass\r\n```\r\n\r\nAlthough this is technically working, we would like an improved jms support, such as what is already provided by the smallrye jms connector.\r\n\r\nhere are the main requirements:\r\n- connection pooling and concurrency configuration (number of messages that can be processed in parallel)\r\n- listener style consumer (as opposed to a timer based approach as in https://quarkus.io/guides/jms#the-price-consumer)\r\n- authentication (that is already working)\r\n- participation in the managed quarkus transaction (single resource manager) - may be it comes for free already\r\n- selectors, with parameterisation if provided through annotation \r\n- distributing consumers on both nodes of the targeted cluster : rebalanceConnections => see https://github.com/apache/activemq-artemis/blob/main/artemis-ra/src/main/java/org/apache/activemq/artemis/ra/inflow/ActiveMQActivationSpec.java#L140 and https://www.wildfly.org/news/2017/10/03/Messaging-features/ \r\n\r\nXA support is not a requirement.\r\n\r\nhere is what has been done on SB:\r\n\r\n```java\r\n@Component\r\npublic class ValidationBrokerListener {     \r\n\r\n    @JmsListener(\r\n        destination = \"com.x.jee.ValidationBroker.jms.Out.Queue\",\r\n        selector = \"event = 'MyEvent' AND participant = 'X'\",\r\n        concurrency = \"1-10\")\r\n    @Transactional\r\n    public void processMessage(Message message) throws JMSException, InterruptedException {\r\n        // ...\r\n    }\r\n}\r\n``` \r\n\r\nor in the old days of EAP (nothing fancy): \r\n\r\n```java\r\n@MessageDriven(name = \"MyMDB\", activationConfig = {\r\n    @ActivationConfigProperty(propertyName = \"destinationType\", propertyValue = \"javax.jms.Queue\"),\r\n    @ActivationConfigProperty(propertyName = \"maxSession\", propertyValue = \"${Messaging.maxSession:3}\"),\r\n    @ActivationConfigProperty(propertyName = \"destination\", propertyValue = \"com/x/Messaging/MyQueue\"),\r\n    @ActivationConfigProperty(propertyName = \"rebalanceConnections\", propertyValue = \"true\") \r\n})\r\n@ResourceAdapter(\"${MyRarName}\")\r\npublic class MyMDB implements MessageListener {  \r\n    public void onMessage(Message msg) {\r\n        ...\r\n    }\r\n}\r\n``` \r\n\r\nMany thanks.\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30943/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30943/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "reopened"
+}

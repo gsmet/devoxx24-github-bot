@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37792",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37792/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37792/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37792/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37792",
+  "id": 2045151774,
+  "node_id": "I_kwDOCFbutM555ooe",
+  "number": 37792,
+  "title": "Quarkus not properly shutting down results in native image trace agent log being truncated",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-12-17T09:54:22Z",
+  "updated_at": "2024-01-11T12:24:20Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen adding the native image trace agent to integration tests to trace reflection usage, the resulting JSON file ends abruptly without the closing part and is therefore corrupt. Everything works fine with version 3.1.3.Final. The problem only occurs with version [3.2.0.CR1](https://github.com/quarkusio/quarkus/compare/3.1.3.Final...3.2.0.CR1) and above. \n\n### Expected behavior\n\nThe integration test should be shutdown in a clean way so that the native image trace agent JSON output file is flushed.\n\n### Actual behavior\n\nAfter running `mvn verify --activate-profiles native-image-agent-trace` locally or in the [pipeline](https://github.com/JohT/showcase-quarkus-eventsourcing/blob/44f1d61d4157e5831f2bda0cc90509f3512afe3d/.github/workflows/native-image.yml#L69) on my repository [showcase-quarkus-eventsourcing](https://github.com/JohT/showcase-quarkus-eventsourcing), the generated JSON is corrupt (not closed correctly) and the very last lines look e.g. like this:\r\n\r\n```json\r\n{\"caller_class\":\"java.lang.invoke.InnerClassLambdaMetafactory$1\", \"args\":[], \"function\":\"getDeclaredConstructors\", \"tracer\":\"reflect\", \"class\":\"io.smallrye.openapi.api.OpenApiConfig$$Lambda$1757/0x00000008014abf70\"},\r\n{\"caller_class\":\"java.lang.invoke.InnerClassLambdaMetafactory\", \"result\":\"true\", \"args\":[[]], \"declaring_class\":\"io.smallrye.openapi.api.OpenApiConfig$$Lambda$1757/0x00000008014abf70\", \"function\":\"invokeConstructor\", \"tracer\":\"reflect\", \"class\":\"io.smallrye.openapi.api.OpenApiConfig$$Lambda$1757/0x00000008014abf70\"},\r\n{\"caller_class\":\"java.lang.invoke.InnerClassLambdaMetafactory$1\", \"args\":[], \"function\":\"getDeclaredConstructors\", \"tracer\":\"reflect\", \"class\":\"io.smallrye.openapi.api.OpenApiConfig$$Lambda$1758/0x00000008014ac190\"},\r\n{\"caller_class\":\"java.lang.invoke.InnerClassLambdaMetafactory\", \"result\":\"true\", \"args\":[[]], \"declaring_class\":\"io.smallrye.openapi.api.OpenApiConfig$$Lambda$1758/0x00000008014ac190\", \"function\":\"invokeConstructor\", \"tracer\":\"reflect\", \"class\":\"io.smallrye.openapi.api.OpenApiConfig$$L\r\n```\r\n\r\nTrying to process the corrupt JSON file locally with `$GRAALVM_HOME/bin/native-image-configure generate --trace-input=target/native-image-agent-trace.json` or in the [pipeline](https://github.com/JohT/showcase-quarkus-eventsourcing/blob/44f1d61d4157e5831f2bda0cc90509f3512afe3d/.github/workflows/native-image.yml#L72) leads to an expected error like this:\r\n\r\n```\r\ncom.oracle.svm.core.util.json.JSONParserException: line 23493 column 286 Missing close quote\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.util.json.JSONParser.error(JSONParser.java:377)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.util.json.JSONParser.parseString(JSONParser.java:221)\r\n```\r\n\r\nI suspect that the JVM for testing is shutdown without waiting for files to be flushed or something like that. But that's just an idea. Don't know if this could be....\r\n\r\nEverything is working fine with quarkus 3.1.3.Final. The change seems to had been introduced with 3.2.0.CR1:\r\nhttps://github.com/quarkusio/quarkus/compare/3.1.3.Final...3.2.0.CR1\n\n### How to Reproduce?\n\nReproducer with detailed description: https://github.com/JohT/showcase-quarkus-eventsourcing/pull/247\n\n### Output of `uname -a` or `ver`\n\nDarwin...RELEASE_ARM64_T8101 arm64\n\n### Output of `java -version`\n\nOpenJDK 64-Bit Server VM Temurin-17.0.7+7 (build 17.0.7+7, mixed mode)\n\n### Quarkus version or git rev\n\n3.2.0.CR1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37792/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37792/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

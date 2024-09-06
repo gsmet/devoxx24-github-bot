@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39935",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39935/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39935/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39935/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39935",
+  "id": 2230040931,
+  "node_id": "I_kwDOCFbutM6E67lj",
+  "number": 39935,
+  "title": "Apache Pulsar NoClassDefFoundError",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-04-08T00:39:09Z",
+  "updated_at": "2024-04-08T11:44:57Z",
+  "closed_at": "2024-04-08T11:44:57Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using the Quarkus plugin for Apache Pulsar I get the following error message:\r\n\r\n```\r\n2024-04-07 20:08:39,489 WARN  [org.apa.pul.cli.imp.ProducerImpl] (vert.x-eventloop-thread-13) [test] [test_outgoing] error while create opSendMsg by batch message container: java.lang.NoClassDefFoundError: com/scurrilous/circe/checksum/Crc32cIntChecksum\r\n        at org.apache.pulsar.common.protocol.Commands.serializeCommandSendWithSize(Commands.java:1650)\r\n        at org.apache.pulsar.common.protocol.Commands.newSend(Commands.java:568)\r\n        at org.apache.pulsar.common.protocol.Commands.newSend(Commands.java:515)\r\n        at org.apache.pulsar.client.impl.ProducerImpl.sendMessage(ProducerImpl.java:854)\r\n        at org.apache.pulsar.client.impl.BatchMessageContainerImpl.createOpSendMsg(BatchMessageContainerImpl.java:255)\r\n        at org.apache.pulsar.client.impl.ProducerImpl.batchMessageAndSend(ProducerImpl.java:2166)\r\n        at org.apache.pulsar.client.impl.ProducerImpl.batchFlushTask(ProducerImpl.java:2149)\r\n        at org.apache.pulsar.common.util.Runnables$CatchingAndLoggingRunnable.run(Runnables.java:54)\r\n        at io.netty.util.concurrent.PromiseTask.runTask(PromiseTask.java:98)\r\n        at io.netty.util.concurrent.ScheduledFutureTask.run(ScheduledFutureTask.java:153)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:1583)\r\nCaused by: java.lang.ClassNotFoundException: com.scurrilous.circe.checksum.Crc32cIntChecksum\r\n        ... 18 more\r\n```\r\n\r\nI have tr\r\n\r\n### Expected behavior\r\n\r\nSuccessfully send the message to the pulsar broker.\r\n\r\n### Actual behavior\r\n\r\nReceive error message above.\r\n\r\n### How to Reproduce?\r\n\r\n1. Create app using Quarkus version 3.8.8\r\n2. Include apache pulsar dependency\r\n3. Send message with the following code\r\n\r\n```\r\n@Path(\"/\")\r\npublic class Resource {\r\n\r\n    @Channel(\"test_outgoing\")\r\n    Emitter<String> emitter;\r\n\r\n    @GET\r\n    public Uni<Void> sendObj() {\r\n        System.out.println(\">> Sending message\");\r\n        return Uni.createFrom().completionStage(emitter.send(\"HELLO WORLD\"));\r\n    }\r\n\r\n}\r\n```\r\n\r\n4. configure connection with \r\n\r\n```\r\nmp:\r\n  messaging:\r\n    outgoing:\r\n      test_outgoing:\r\n        serviceUrl: pulsar://pulsar:6650\r\n        connector: smallrye-pulsar\r\n        topic: test\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\neclipse-temurin:21-jdk\r\n\r\n### Quarkus version or git rev\r\n\r\n3.8.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.6\r\n\r\n### Additional information\r\n\r\nI see that the missing class comes from a .nar file which I assume means it won't work on windows which is why I tried building it with eclipse-temurin:21-jdk docker image and then running with registry.access.redhat.com/ubi8/openjdk-21:1.18. ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39935/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39935/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

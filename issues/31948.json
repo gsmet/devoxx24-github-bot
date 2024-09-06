@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31948",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31948/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31948/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31948/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31948",
+  "id": 1629615024,
+  "node_id": "I_kwDOCFbutM5hIfOw",
+  "number": 31948,
+  "title": "NoStackTraceThrowable exception with quarkus-redis-client",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-03-17T16:39:18Z",
+  "updated_at": "2023-04-10T14:48:14Z",
+  "closed_at": "2023-04-10T14:48:05Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello,\r\n\r\nI'm using `quarkus-redis-client` following [this guide](https://quarkus.io/guides/redis-reference#sentinel-mode), with the properties below :\r\n```properties\r\nquarkus.redis.client-type=sentinel\r\nquarkus.redis.hosts=redis://redis.my-app.svc.cluster.local:26379\r\nquarkus.redis.masterName=redis-master\r\nquarkus.redis.clientName=\r\nquarkus.redis.password=<hidden>\r\n```\r\n\r\nBehind the K8S service, I have 3 redis pods, configured with a sentinel mode.\r\n\r\nWhen my app does a GET command, I get the following error : \r\n> Caused by: io.vertx.core.impl.NoStackTraceThrowable: No more endpoints in chain.\r\n\r\n\r\nHere is the code throwing an exception : \r\n```java\r\n    @Inject\r\n    ReactiveRedisDataSource reactiveRedisDataSource;\r\n\r\n    private ReactiveValueCommands<String, byte[]> reactiveValueCommands = reactiveRedisDataSource.value(byte[].class);\r\n\r\n    public byte[] get(Object key) {\r\n        return reactiveValueCommands.get(key.toString()).await().indefinitely();\r\n    }\r\n```\r\n\r\nFor the record, it works if I configure my app without the sentinel mode (no `quarkus.redis.client-type` property and port `6379` instead of `26379`). But obviously, I need to make it work with the sentinel mode.\r\n\r\n\r\nWhat am I missing ? Is this a bug, or a config issue on my side ?\r\n\r\nThank you for your help.\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nhttps://github.com/gcharondkt/quarkus-redis-sentinel\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux ddfs-consumer-59889f55f7-9s46z 5.10.147+ #1 SMP Thu Nov 10 10:14:30 UTC 2022 x86_64 Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"19.0.2\" 2023-01-17\r\nOpenJDK Runtime Environment Temurin-19.0.2+7 (build 19.0.2+7)\r\nOpenJDK 64-Bit Server VM Temurin-19.0.2+7 (build 19.0.2+7, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven home: /opt/homebrew/Cellar/maven/3.8.7/libexec\r\nJava version: 19.0.1, vendor: Homebrew, runtime: /opt/homebrew/Cellar/openjdk/19.0.1/libexec/openjdk.jdk/Contents/Home\r\nDefault locale: fr_FR, platform encoding: UTF-8\r\nOS name: \"mac os x\", version: \"13.2\", arch: \"aarch64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31948/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31948/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

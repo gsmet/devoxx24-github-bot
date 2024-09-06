@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42249",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42249/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42249/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42249/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42249",
+  "id": 2440405264,
+  "node_id": "I_kwDOCFbutM6RdaEQ",
+  "number": 42249,
+  "title": "Quarkus REST: `UriInfo` fails building URI for path parameters with regexes",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-07-31T16:03:20Z",
+  "updated_at": "2024-07-31T16:19:32Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nGiven this endpoint:\r\n\r\n```java\r\n\t@GET\r\n    @Path(\"test/{token}/{checksum}{extension:(\\\\.png)?}\")\r\n\tpublic String get(UriInfo info, @RestPath UUID token, @RestPath Integer checksum, @RestPath String extension) {\r\n\t\treturn info.getBaseUriBuilder().path(Application.class, \"get\")\r\n\t\t\t\t.resolveTemplate(\"token\", token)\r\n\t\t\t\t.resolveTemplate(\"checksum\", checksum)\r\n\t\t\t\t.resolveTemplate(\"extension\", extension)\r\n\t\t\t\t.build().toASCIIString();\r\n\t}\r\n```\r\n\r\nWhen invoked as `http://localhost:8080/Application/test/453f74a6-d1f1-4cca-9322-142f9f46df09/1234.png`, the result is `http://localhost:8080/test/453f74a6-d1f1-4cca-9322-142f9f46df09/1234%7Bextension:(%5C.png)?%7D` which is incorrect (it should be identical, we're re-creating the original URI).\r\n\r\nThis is due to the first call of `UriBuilderImpl.resolveTemplate` going to resolve the first template parameter, then call:\r\n\r\n```java\r\n            Matcher match = hierarchicalUri.matcher(uriTemplate);\r\n            if (match.matches()) {\r\n                ssp = null;\r\n                return parseHierarchicalUri(uriTemplate, match);\r\n            }\r\n```\r\n\r\nAnd `hierarchicalUri` will look at `http://localhost:8080/Application/test/453f74a6-d1f1-4cca-9322-142f9f46df09/{checksum}{extension:(\\\\.png)?}` and conclude, quite erroneously, that `?}` is the start of the query part. So it will end up in `parseHierarchicalUri` with a `match.group(5)` of `/Application/test/453f74a6-d1f1-4cca-9322-142f9f46df09/{checksum}{extension:(\\\\.png)` (notice how it's missing the `?}` at the end, making this an invalid path parameter, which will end up encoded in all sorts of wrong ways.\r\n\r\nThe problem is that we can't really use a regex for parsing URIs with template parameter that are regexes, because some of the regexes match as path/query separators.\r\n\r\nHonestly, I'm not sure how to fix this.\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42249/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42249/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

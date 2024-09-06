@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33726",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33726/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33726/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33726/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33726",
+  "id": 1734013987,
+  "node_id": "I_kwDOCFbutM5nWvQj",
+  "number": 33726,
+  "title": "Quarkus 3 / Hibernate: HV000254: Missing parameter metadata for %s, which declares implicit or synthetic parameters",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1305687763,
+      "node_id": "MDU6TGFiZWwxMzA1Njg3NzYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-validator",
+      "name": "area/hibernate-validator",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Validator"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2023-05-31T11:40:08Z",
+  "updated_at": "2024-06-05T14:10:50Z",
+  "closed_at": "2024-06-05T14:09:36Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello,\r\nI'm upgrading to Quarkus 3.0.4, and I'm getting the following error with Hibernate entities that use inheritance:\r\n\r\n```txt\r\nHV000254: Missing parameter metadata for %s, which declares implicit or synthetic parameters. \r\nAutomatic resolution of generic type information for method parameters may yield incorrect \r\nresults if multiple parameters have the same erasure. \r\nTo solve this, compile your code with the -parameters flag.\r\n```\r\n\r\nI'm using Kotlin (1.8.21) with Gradle (8.1.1).\r\nI've configured Gradle to compile Kotlin with the `-parameters` flag, but it doesn't seem to work:\r\n\r\n**-- build.gradle.kts --**\r\n```kotlin\r\ntasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {\r\n  kotlinOptions {\r\n    jvmTarget = \"17\"\r\n    javaParameters = true\r\n  }\r\n}\r\n```\r\n\r\nHere are my JPA entities:\r\n\r\n```kotlin\r\n@Entity\r\n@Table(name = \"shape\")\r\n@Inheritance(strategy = JOINED)\r\n@Cacheable\r\nabstract class ShapeJpa(\r\n\r\n  @Id\r\n  @JdbcTypeCode(SqlTypes.VARCHAR)\r\n  @Column(name = \"id\", updatable = false, nullable = false, unique = true)\r\n  open val id: UUID,\r\n\r\n  @Length(max = 100)\r\n  @Column(name = \"name\", nullable = false, length = 100)\r\n  open var name: String,\r\n)\r\n\r\n@Entity\r\n@Table(name = \"rectangle_shape\")\r\n@PrimaryKeyJoinColumn(name = \"shape_id\")\r\ndata class RectangleJpa(\r\n  override val id: UUID,\r\n  override var name: String,\r\n) : ShapeJpa(id, name) {\r\n\r\n  override fun equals(other: Any?): Boolean {\r\n    if (this === other) return true\r\n    if (javaClass != other?.javaClass) return false\r\n    return id == (other as RectangleJpa).id\r\n  }\r\n\r\n  override fun hashCode(): Int = id.hashCode()\r\n}\r\n```\r\n\r\nAny idea of what could be the problem?\r\n\r\nI'll try to set up a minimal reproducible example, but with a very basic Quarkus project, I was not able to reproduce the\r\nissue :-/\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux cthiebault 6.1.30-1-MANJARO #1 SMP PREEMPT_DYNAMIC Wed May 24 22:51:44 UTC 2023 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 OpenJDK Runtime Environment Temurin-17.0.7+7 (build 17.0.7+7) OpenJDK 64-Bit Server VM Temurin-17.0.7+7 (build 17.0.7+7, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.1.1\n\n### Additional information\n\n------------------------------------------------------------\r\nGradle 8.1.1\r\n------------------------------------------------------------\r\n\r\nBuild time:   2023-04-21 12:31:26 UTC\r\nRevision:     1cf537a851c635c364a4214885f8b9798051175b\r\n\r\nKotlin:       1.8.10\r\nGroovy:       3.0.15\r\nAnt:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021\r\nJVM:          17.0.7 (Eclipse Adoptium 17.0.7+7)\r\nOS:           Linux 6.1.30-1-MANJARO amd64\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33726/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33726/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

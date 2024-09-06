@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35678",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35678/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35678/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35678/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35678",
+  "id": 1877062446,
+  "node_id": "I_kwDOCFbutM5v4bMu",
+  "number": 35678,
+  "title": "Kafka incoming forces key serializer ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-09-01T09:18:17Z",
+  "updated_at": "2023-09-04T07:31:36Z",
+  "closed_at": "2023-09-04T07:31:35Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn the recent Quarkus update 3.3.1, I faced with an issue as follows\r\n\r\n```posh\r\n10:35:00 ERROR traceId=, parentId=, spanId=, sampled= [io.sm.re.me.provider] (Quarkus Main Thread) SRMSG00230: Unable to create the publisher or subscriber during initialization: java.lang.IllegalArgumentException: SRMSG18010: Unabl\r\ne to create an instance of `com.postnord.kafkaManager.handler.EventSerializer`\r\n        at io.smallrye.reactive.messaging.kafka.fault.SerializerWrapper.createDelegateSerializer(SerializerWrapper.java:35)\r\n        at io.smallrye.reactive.messaging.kafka.fault.SerializerWrapper.<init>(SerializerWrapper.java:25)\r\n        at io.smallrye.reactive.messaging.kafka.impl.ReactiveKafkaProducer.<init>(ReactiveKafkaProducer.java:103)\r\n        at io.smallrye.reactive.messaging.kafka.fault.KafkaDeadLetterQueue$Factory.create(KafkaDeadLetterQueue.java:95)\r\n        at io.smallrye.reactive.messaging.kafka.fault.KafkaDeadLetterQueue_Factory_ClientProxy.create(Unknown Source)\r\n        at io.smallrye.reactive.messaging.kafka.impl.KafkaSource.createFailureHandler(KafkaSource.java:309)\r\n        at io.smallrye.reactive.messaging.kafka.impl.KafkaSource.<init>(KafkaSource.java:119)\r\n        at io.smallrye.reactive.messaging.kafka.KafkaConnector.getPublisher(KafkaConnector.java:211)\r\n        at io.smallrye.reactive.messaging.kafka.KafkaConnector_Subclass.getPublisher$$superforward(Unknown Source)\r\n        at io.smallrye.reactive.messaging.kafka.KafkaConnector_Subclass$$function$$9.apply(Unknown Source)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:73)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext$NextAroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:97)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.devmode.DevModeSupportConnectorFactoryInterceptor.intercept(DevModeSupportConnectorFactoryInterceptor.java:53)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.devmode.DevModeSupportConnectorFactoryInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:70)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:62)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.DuplicatedContextConnectorFactoryInterceptor.intercept(DuplicatedContextConnectorFactoryInterceptor.java:32)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.DuplicatedContextConnectorFactoryInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n        at io.smallrye.reactive.messaging.kafka.KafkaConnector_Subclass.getPublisher(Unknown Source)\r\n        at io.smallrye.reactive.messaging.kafka.KafkaConnector_ClientProxy.getPublisher(Unknown Source)\r\n        at io.smallrye.reactive.messaging.providers.impl.ConfiguredChannelFactory.createPublisher(ConfiguredChannelFactory.java:172)\r\n        at io.smallrye.reactive.messaging.providers.impl.ConfiguredChannelFactory.register(ConfiguredChannelFactory.java:134)\r\n        at io.smallrye.reactive.messaging.providers.impl.ConfiguredChannelFactory.initialize(ConfiguredChannelFactory.java:106)\r\n        at io.smallrye.reactive.messaging.providers.impl.ConfiguredChannelFactory_ClientProxy.initialize(Unknown Source)\r\n        at java.base/java.util.Iterator.forEachRemaining(Iterator.java:133)\r\n        at java.base/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1845)\r\n        at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)\r\n        at io.smallrye.reactive.messaging.providers.extension.MediatorManager.start(MediatorManager.java:236)\r\n        at io.smallrye.reactive.messaging.providers.extension.MediatorManager_ClientProxy.start(Unknown Source)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingLifecycle.onApplicationStart(SmallRyeReactiveMessagingLifecycle.java:53)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingLifecycle_Observer_onApplicationStart_68e7b57eb97cb75d597c5b816682366e888d0d9b.notify(Unknown Source)\r\n        at io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:346)\r\n        at io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:328)\r\n        at io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:82)\r\n        at io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:155)\r\n        at io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:106)\r\n        at io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy(Unknown Source)\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:104)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.ClassNotFoundException: com.postnord.kafkaManager.handler.EventSerializer\r\n        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)\r\n        at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n        at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:516)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:466)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:516)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:466)\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Class.java:467)\r\n        at org.apache.kafka.common.utils.Utils.loadClass(Utils.java:423)\r\n        at org.apache.kafka.common.utils.Utils.newInstance(Utils.java:412)\r\n        at io.smallrye.reactive.messaging.kafka.fault.SerializerWrapper.createDelegateSerializer(SerializerWrapper.java:33)\r\n        ... 54 more \r\n```\r\n\r\nwhich I got from incoming part whereas in former versions I haven't got such an error and automatically key was configured\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nWithout any issue raised the kafka connector works and autodetect required config\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nalmost everything related to this repo is written in the README \r\n\r\nhttps://gitlab.com/hamedhatami/quarkus-demo\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35678/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35678/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

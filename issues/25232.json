@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25232",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25232/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25232/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25232/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25232",
+  "id": 1218876953,
+  "node_id": "I_kwDOCFbutM5IppYZ",
+  "number": 25232,
+  "title": "Reactive Routes - \"Response head already sent\" when I try to add response headers",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273042002,
+      "node_id": "MDU6TGFiZWwxMjczMDQyMDAy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive",
+      "name": "area/reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-04-28T15:08:37Z",
+  "updated_at": "2022-11-04T19:10:59Z",
+  "closed_at": "2022-06-27T12:22:41Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen I use Reactive Routes, I randomly get an exception when adding header to my response and header are not added.\r\n\r\n```java\r\npackage org;\r\n\r\nimport io.quarkus.vertx.web.Route;\r\nimport io.smallrye.mutiny.Uni;\r\n\r\nimport io.smallrye.mutiny.infrastructure.Infrastructure;\r\nimport io.vertx.core.http.HttpClientOptions;\r\nimport io.vertx.core.http.RequestOptions;\r\nimport io.vertx.ext.web.RoutingContext;\r\nimport io.vertx.mutiny.core.Vertx;\r\nimport io.vertx.mutiny.core.buffer.Buffer;\r\nimport io.vertx.mutiny.core.http.HttpClient;\r\nimport io.vertx.mutiny.core.http.HttpClientRequest;\r\nimport io.vertx.mutiny.core.http.HttpClientResponse;\r\n\r\nimport javax.enterprise.context.ApplicationScoped;\r\nimport javax.inject.Inject;\r\n\r\n@ApplicationScoped\r\npublic class ProxyRoute {\r\n\r\n    private final HttpClient client;\r\n\r\n    @Inject\r\n    public ProxyRoute(Vertx vertx) {\r\n        this.client = vertx.createHttpClient(new HttpClientOptions()\r\n                .setDefaultHost(\"localhost\")\r\n                .setDefaultPort(8181)\r\n                .setTryUseCompression(true));\r\n    }\r\n\r\n    @Route(regex = \"^.*$\")\r\n    Uni<Buffer> all(RoutingContext rc) {\r\n        // Copy method, uri and headers of proxy request to api request\r\n        RequestOptions requestOptions = new RequestOptions();\r\n        requestOptions.setMethod(rc.request().method());\r\n        requestOptions.setURI(rc.request().uri());\r\n        requestOptions.setHeaders(rc.request().headers());\r\n\r\n        // Send api request\r\n        Uni<HttpClientResponse> response = client.request(requestOptions)\r\n            .flatMap(HttpClientRequest::send);\r\n\r\n        // Copy response header of API to proxy response\r\n        response.subscribe().with(resp -> {\r\n            resp.headers().forEach((key, values) -> {\r\n                rc.response().putHeader(key, values);\r\n            });\r\n        });\r\n\r\n        // Get API response\r\n        Uni<Buffer> result = response.flatMap(HttpClientResponse::body);\r\n\r\n        // Process after return result - async\r\n        result.subscribe().with(buffer -> {\r\n            Uni.createFrom()\r\n                    .item(buffer)\r\n                    .emitOn(Infrastructure.getDefaultWorkerPool())\r\n                    .subscribe()\r\n                    .with(System.out::println, Throwable::printStackTrace);\r\n        });\r\n\r\n        // Send response\r\n        return result;\r\n    }\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\nHeaders correctly added\r\n\r\n### Actual behavior\r\n\r\nHeaders are added randomly.\r\n\r\n```\r\n2022-04-28 16:50:10,689 ERROR [io.qua.mut.run.MutinyInfrastructure] (vert.x-eventloop-thread-1) Mutiny had to drop the following exception: java.lang.IllegalStateException: Response head already sent\r\n\tat io.vertx.core.http.impl.Http1xServerResponse.checkHeadWritten(Http1xServerResponse.java:681)\r\n\tat io.vertx.core.http.impl.Http1xServerResponse.putHeader(Http1xServerResponse.java:193)\r\n\tat io.vertx.core.http.impl.Http1xServerResponse.putHeader(Http1xServerResponse.java:68)\r\n\tat org.ProxyRoute.lambda$all$0(ProxyRoute.java:47)\r\n\tat io.vertx.core.MultiMap$1.accept(MultiMap.java:84)\r\n\tat io.vertx.core.MultiMap$1.accept(MultiMap.java:81)\r\n\tat java.base/java.lang.Iterable.forEach(Iterable.java:75)\r\n\tat io.vertx.core.MultiMap.forEach(MultiMap.java:81)\r\n\tat io.vertx.mutiny.core.MultiMap.forEach(MultiMap.java:232)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux xxx 5.4.0-109-generic #123-Ubuntu SMP Fri Apr 8 09:10:54 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK 64-Bit Server VM GraalVM CE 21.3.0 (build 11.0.13+7-jvmci-21.3-b05, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.8.1.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25232/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25232/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

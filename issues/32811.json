@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32811",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32811/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32811/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32811/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32811",
+  "id": 1677513675,
+  "node_id": "I_kwDOCFbutM5j_NPL",
+  "number": 32811,
+  "title": "ClassCastException when sending a object in messaging with SmallRye and RabbitMQ",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-04-20T22:32:36Z",
+  "updated_at": "2023-04-21T07:50:36Z",
+  "closed_at": "2023-04-21T07:38:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen sending a simple object from an `Outgoing` producer to an `Incoming` consumer, a `ClassCastException` occurs:\r\n\r\n```java\r\n2023-04-20 19:11:52,456 WARN  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-0) SRMSG17013: A message sent to channel `consume-in` has been nacked, ignoring the failure and marking the RabbitMQ message as rejected\r\n2023-04-20 19:11:52,456 ERROR [io.sma.rea.mes.provider] (vert.x-eventloop-thread-0) SRMSG00200: The method org.example.Consumer#consume has thrown an exception: java.lang.ClassCastException: class io.vertx.core.json.JsonObject cannot be cast to class org.example.Product (io.vertx.core.json.JsonObject is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @54d9d12d; org.example.Product is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @ea9e141)\r\n\tat org.example.Consumer_SmallRyeMessagingInvoker_consume_cdc25663535141a6c287538499060aea6010d99a.invoke(Unknown Source)\r\n\tat io.smallrye.reactive.messaging.providers.AbstractMediator.invoke(AbstractMediator.java:104)\r\n\tat io.smallrye.reactive.messaging.providers.AbstractMediator.lambda$invokeOnMessageContext$1(AbstractMediator.java:112)\r\n\tat io.smallrye.reactive.messaging.providers.locals.LocalContextMetadata.lambda$invokeOnMessageContext$0(LocalContextMetadata.java:34)\r\n\tat io.smallrye.reactive.messaging.providers.locals.LocalContextMetadata.lambda$invokeOnMessageContext$1(LocalContextMetadata.java:53)\r\n\tat io.smallrye.reactive.messaging.providers.helpers.VertxContext.runOnContext(VertxContext.java:24)\r\n\tat io.smallrye.reactive.messaging.providers.locals.LocalContextMetadata.lambda$invokeOnMessageContext$2(LocalContextMetadata.java:51)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualConsumer.accept(SlowContextualConsumer.java:21)\r\n\tat io.smallrye.mutiny.operators.uni.builders.UniCreateWithEmitter.subscribe(UniCreateWithEmitter.java:22)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.operators.uni.UniOnItemOrFailureFlatMap.subscribe(UniOnItemOrFailureFlatMap.java:27)\r\n\tat io.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\n\tat io.smallrye.mutiny.converters.uni.UniToMultiPublisher$UniToMultiSubscription.request(UniToMultiPublisher.java:74)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapInner.onSubscribe(MultiFlatMapOp.java:601)\r\n\tat io.smallrye.mutiny.converters.uni.UniToMultiPublisher.subscribe(UniToMultiPublisher.java:26)\r\n\tat io.smallrye.mutiny.groups.MultiCreate$1.subscribe(MultiCreate.java:170)\r\n\tat io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapMainSubscriber.onItem(MultiFlatMapOp.java:193)\r\n\tat io.smallrye.mutiny.operators.multi.MultiMapOp$MapProcessor.onItem(MultiMapOp.java:50)\r\n\tat io.smallrye.mutiny.operators.multi.MultiOperatorProcessor.onItem(MultiOperatorProcessor.java:100)\r\n\tat io.smallrye.reactive.messaging.providers.locals.ContextOperator$ContextMulti$ContextProcessor.lambda$onItem$1(ContextOperator.java:71)\r\n\tat io.smallrye.reactive.messaging.providers.helpers.VertxContext.lambda$runOnContext$0(VertxContext.java:26)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\n\n\n### Expected behavior\n\nSerialize the object to JSON properly.\n\n### Actual behavior\n\nA ClassCastException occurs when sending the message.\n\n### How to Reproduce?\n\nhttps://github.com/julianomqs/quarkus-smallrye-rabbitmq-bug\n\n### Output of `uname -a` or `ver`\n\nLinux juliano 5.19.0-40-generic #41~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Mar 31 16:00:14 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.6\" 2023-01-17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.6.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32811/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32811/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

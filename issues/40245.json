@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40245",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40245/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40245/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40245/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40245",
+  "id": 2261137657,
+  "node_id": "I_kwDOCFbutM6Gxjj5",
+  "number": 40245,
+  "title": "Quarkus 3.9 doesn't load RestClient class in Kotlin CoroutineScope",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-04-24T12:06:31Z",
+  "updated_at": "2024-04-25T11:16:32Z",
+  "closed_at": "2024-04-25T11:16:23Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen injecting a RestClient into an @ApplicationScoped or @Singleton class and try to use it inside a Coroutine the class is not found, throwing a ClassNotFoundException in Quarkus 3.9. The code works as expected if you downgrade Quarkus to <= 3.8.4. The code also works if the call is made outside of the Coroutine.\r\n\r\nSimple code to reproduce the exception:\r\n```\r\n  fun onStart(@Observes ev: StartupEvent) {\r\n      CoroutineScope(Dispatchers.IO).launch {\r\n          println(\"RestClient result: ${restClient.getHello()}\")\r\n      }\r\n  }\r\n```\r\n\r\nThe exception:\r\n```\r\nException in thread \"DefaultDispatcher-worker-1\" jakarta.enterprise.inject.CreationException: java.lang.ClassNotFoundException: org.acme.rest.TestRestClient\r\n\tat org.acme.rest.TestRestClient$$CDIWrapper_Bean.create(Unknown Source)\r\n\tat org.acme.rest.TestRestClient$$CDIWrapper_Bean.create(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:119)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:38)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:35)\r\n\tat io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.c6(Unknown Source)\r\n\tat io.quarkus.arc.generator.Default_jakarta_enterprise_context_ApplicationScoped_ContextInstances.computeIfAbsent(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:35)\r\n\tat io.quarkus.arc.impl.ClientProxies.getApplicationScopedDelegate(ClientProxies.java:21)\r\n\tat org.acme.rest.TestRestClient$$CDIWrapper_ClientProxy.arc$delegate(Unknown Source)\r\n\tat org.acme.rest.TestRestClient$$CDIWrapper_ClientProxy.getHello(Unknown Source)\r\n\tat org.acme.app.LoadTest$onStart$1.invokeSuspend(LoadTest.kt:17)\r\n\tat kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)\r\n\tat kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:104)\r\n\tat kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:111)\r\n\tat kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:99)\r\n\tat kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:585)\r\n\tat kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:802)\r\n\tat kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:706)\r\n\tat kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:693)\r\n\tSuppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}@6ebcc246, Dispatchers.IO]\r\nCaused by: java.lang.ClassNotFoundException: org.acme.rest.TestRestClient\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:491)\r\n\tat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:468)\r\n\tat java.base/java.lang.Class.forName0(Native Method)\r\n\tat java.base/java.lang.Class.forName(Class.java:534)\r\n\tat java.base/java.lang.Class.forName(Class.java:513)\r\n\tat org.acme.rest.TestRestClient$$CDIWrapper.<init>(Unknown Source)\r\n\tat org.acme.rest.TestRestClient$$CDIWrapper_Bean.doCreate(Unknown Source)\r\n```\r\n\r\n\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nReproducer: [test-rest-client.zip](https://github.com/quarkusio/quarkus/files/15092506/test-rest-client.zip)\r\nSorry but the reproducer is created with Gradle. Its only three small classes so it should be fine to create a simple Quarkus project in Maven and copy the classes.\r\n\r\nUnzip and run gradlew quarkusDev\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40245/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40245/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

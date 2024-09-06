@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42266",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42266/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42266/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42266/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42266",
+  "id": 2442048007,
+  "node_id": "I_kwDOCFbutM6RjrIH",
+  "number": 42266,
+  "title": "Single quotes in application.properties lead to unrelated error message",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2024-08-01T10:07:29Z",
+  "updated_at": "2024-08-30T12:55:46Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen starting or building the quarkus application, while the `application.properties` contain a value which has only one quote `\"` in it, the build fails with an unrelated error message, stating that a worker couldn't be loaded.\r\n\r\nIn my example I put this into the `application.properties`:\r\n```\r\nquarkus.log.level = INFO\"\r\n```\r\n\r\nThe error occurs only on Windows. On macOS or in the WSL the error message is as expected.\r\n\r\n### Expected behavior\r\n\r\nAn error describing that the application properties are malformed would be raised.\r\n\r\nThis is the expected error message (from WSL with Ubuntu):\r\n\r\n```\r\nStarting a Gradle Daemon, 2 incompatible and 1 stopped Daemons could not be reused, use --status for details\r\n> Task :quarkusAppPartsBuild FAILED\r\n\r\nFAILURE: Build failed with an exception.\r\n\r\n* What went wrong:\r\nExecution failed for task ':quarkusAppPartsBuild'.\r\n> There was a failure while executing work items\r\n   > A failure occurred while executing io.quarkus.gradle.tasks.worker.BuildWorker\r\n      > io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n                [error]: Build step io.quarkus.deployment.logging.LoggingResourceProcessor#setupLoggingRuntimeInit threw an exception: java.lang.RuntimeException: java.lang.IllegalArgumentException: SRCFG00039: The config property quarkus.log.level with the config value \"INFO\"\" threw an Exception whilst being converted Unknown level \"INFO\"\"\r\n                at io.quarkus.runtime.configuration.ConfigInstantiator.handleObject(ConfigInstantiator.java:139)\r\n                at io.quarkus.runtime.configuration.ConfigInstantiator.handleObject(ConfigInstantiator.java:78)\r\n                at io.quarkus.runtime.configuration.ConfigInstantiator.handleObject(ConfigInstantiator.java:57)\r\n                at io.quarkus.deployment.logging.LoggingResourceProcessor.setupLoggingRuntimeInit(LoggingResourceProcessor.java:297)\r\n                at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n                at java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n                at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n                at io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n                at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n                at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n                at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n                at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n                at java.base/java.lang.Thread.run(Thread.java:1583)\r\n                at org.jboss.threads.JBossThread.run(JBossThread.java:483)\r\n        Caused by: java.lang.IllegalArgumentException: SRCFG00039: The config property quarkus.log.level with the config value \"INFO\"\" threw an Exception whilst being converted Unknown level \"INFO\"\"\r\n                at io.smallrye.config.SmallRyeConfig.convertValue(SmallRyeConfig.java:421)\r\n                at io.smallrye.config.SmallRyeConfig.getValue(SmallRyeConfig.java:380)\r\n                at io.smallrye.config.SmallRyeConfig.getOptionalValue(SmallRyeConfig.java:469)\r\n                at io.quarkus.runtime.configuration.ConfigInstantiator.handleObject(ConfigInstantiator.java:126)\r\n                ... 13 more\r\n        Caused by: java.lang.IllegalArgumentException: Unknown level \"INFO\"\"\r\n                at org.jboss.logmanager.LogContext.getLevelForName(LogContext.java:359)\r\n                at io.quarkus.runtime.logging.LevelConverter.convert(LevelConverter.java:26)\r\n                at io.quarkus.runtime.logging.LevelConverter.convert(LevelConverter.java:17)\r\n                at io.smallrye.config.Converters$OptionalConverter.convert(Converters.java:844)\r\n                at io.smallrye.config.Converters$OptionalConverter.convert(Converters.java:825)\r\n                at io.smallrye.config.SmallRyeConfig.convertValue(SmallRyeConfig.java:419)\r\n                ... 16 more\r\n\r\n\r\n* Try:\r\n> Run with --stacktrace option to get the stack trace.\r\n> Run with --info or --debug option to get more log output.\r\n> Run with --scan to get full insights.\r\n> Get more help at https://help.gradle.org.\r\n\r\nBUILD FAILED in 16s\r\n6 actionable tasks: 1 executed, 5 up-to-date\r\n\r\n```\r\n\r\n### Actual behavior\r\n\r\nThis error is thrown. I added translations to the German parts.\r\n\r\n```\r\nStarting a Gradle Daemon, 3 stopped Daemons could not be reused, use --status for details\r\n\r\n> Task :quarkusGenerateCode\r\nFehler: Hauptklasse Worker konnte nicht gefunden oder geladen werden -> Error: Mainclass Worker could not be found or loaded\r\nUrsache: java.lang.ClassNotFoundException: Worker -> Cause: java.lang.ClassNotFoundException: Worker\r\n\r\nCould not write standard input to Gradle Worker Daemon 1.\r\njava.io.IOException: Die Pipe wird gerade geschlossen -> The pipe is being closed\r\n        at java.base/java.io.FileOutputStream.writeBytes(Native Method)\r\n        at java.base/java.io.FileOutputStream.write(FileOutputStream.java:367)\r\n        at java.base/java.io.BufferedOutputStream.flushBuffer(BufferedOutputStream.java:125)\r\n        at java.base/java.io.BufferedOutputStream.implFlush(BufferedOutputStream.java:252)\r\n        at java.base/java.io.BufferedOutputStream.flush(BufferedOutputStream.java:240)\r\n        at org.gradle.process.internal.streams.ExecOutputHandleRunner.writeBuffer(ExecOutputHandleRunner.java:98)\r\n        at org.gradle.process.internal.streams.ExecOutputHandleRunner.forwardContent(ExecOutputHandleRunner.java:85)\r\n        at org.gradle.process.internal.streams.ExecOutputHandleRunner.run(ExecOutputHandleRunner.java:64)\r\n        at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)\r\n        at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)\r\n        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n        at java.base/java.lang.Thread.run(Thread.java:1583)\r\n\r\n> Task :quarkusGenerateCode FAILED\r\n\r\nFAILURE: Build failed with an exception.\r\n\r\n* What went wrong:\r\nExecution failed for task ':quarkusGenerateCode'.\r\n> There was a failure while executing work items\r\n   > A failure occurred while executing io.quarkus.gradle.tasks.worker.CodeGenWorker\r\n      > Failed to run Gradle Worker Daemon\r\n         > Process 'Gradle Worker Daemon 1' finished with non-zero exit value 1\r\n\r\n* Try:\r\n> Run with --stacktrace option to get the stack trace.\r\n> Run with --info or --debug option to get more log output.\r\n> Run with --scan to get full insights.\r\n> Get more help at https://help.gradle.org.\r\n\r\nBUILD FAILED in 1m 32s\r\n2 actionable tasks: 2 executed\r\n\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. Checkout https://github.com/c15yi/quarkus-reproducer/tree/faulty-properties\r\n2. Run `./gradlew assemble`\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.22631.3880]\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.3\" 2024-04-16 LTS OpenJDK Runtime Environment Corretto-21.0.3.9.1 (build 21.0.3+9-LTS) OpenJDK 64-Bit Server VM Corretto-21.0.3.9.1 (build 21.0.3+9-LTS, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.13.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n ------------------------------------------------------------ Gradle 8.8 ------------------------------------------------------------  Build time:   2024-05-31 21:46:56 UTC Revision:     4bd1b3d3fc3f31db5a26eecb416a165b8cc36082  Kotlin:       1.9.22 Groovy:       3.0.21 Ant:          Apache Ant(TM) version 1.10.13 compiled on January 4 2023 JVM:          21.0.3 (Amazon.com Inc. 21.0.3+9-LTS) OS:           Windows 11 10.0 amd64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42266/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42266/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

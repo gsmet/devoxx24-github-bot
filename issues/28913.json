@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28913",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28913/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28913/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28913/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28913",
+  "id": 1427993818,
+  "node_id": "I_kwDOCFbutM5VHXTa",
+  "number": 28913,
+  "title": "MSSQL JDBC driver does not support integration authentication in native image",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 7319823129,
+      "node_id": "LA_kwDOCFbutM8AAAABtEujGQ",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jdbc",
+      "name": "area/jdbc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to the JDBC extensions"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2022-10-29T00:58:32Z",
+  "updated_at": "2024-08-13T16:06:51Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nI have an issue when connecting the service to SQL DB from a native image. Because of security requirement, I need to use integrated security by specifying these additional jdbc properties bellow: \r\n\r\n```\r\nquarkus.datasource.jdbc.additional-jdbc-properties.integratedsecurity=true\r\nquarkus.datasource.jdbc.additional-jdbc-properties.trustservercertificate=true\r\nquarkus.datasource.jdbc.additional-jdbc-properties.encrypt=true\r\n\r\n```\r\nThen I start the application in the quarkus-distroless-image:1.0. The application cannot find the connection to SQL DB and the error message shows as bellow. I have verified the connection setting using SQL credentials which can connect to SQL DB. Could anyone advise the setting or driver that can support integrated authentication to SQL DB. \r\n\r\n```\r\n\r\n2022-10-29 00:46:52,795 INFO  [io.qua.sma.ope.run.OpenApiRecorder] (main) Default CORS properties will be used, please use 'quarkus.http.cors' properties instead\r\n2022-10-29 00:46:57,799 WARN  [org.hib.eng.jdb.env.int.JdbcEnvironmentInitiator] (JPA Startup Thread: <default>) HHH000342: Could not obtain connection to query metadata: java.sql.SQLException: Acquisition timeout while waiting for new connection\r\n        at io.agroal.pool.ConnectionPool.handlerFromSharedCache(ConnectionPool.java:320)\r\n        at io.agroal.pool.ConnectionPool.getConnection(ConnectionPool.java:248)\r\n        at io.agroal.pool.DataSource.getConnection(DataSource.java:86)\r\n        at io.quarkus.hibernate.orm.runtime.customized.QuarkusConnectionProvider.getConnection(QuarkusConnectionProvider.java:23)\r\n        at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:181)\r\n        at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:68)\r\n        at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:35)\r\n        at org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.initiateService(StandardServiceRegistryImpl.java:101)\r\n        at org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:263)\r\n        at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:237)\r\n        at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:214)\r\n        at org.hibernate.engine.jdbc.internal.JdbcServicesImpl.configure(JdbcServicesImpl.java:51)\r\n        at org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.configureService(StandardServiceRegistryImpl.java:107)\r\n        at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:246)\r\n        at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:214)\r\n        at org.hibernate.boot.internal.SessionFactoryOptionsBuilder.<init>(SessionFactoryOptionsBuilder.java:272)\r\n        at io.quarkus.hibernate.orm.runtime.recording.PrevalidatedQuarkusMetadata.buildSessionFactoryOptionsBuilder(PrevalidatedQuarkusMetadata.java:68)\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:72)\r\n        at io.quarkus.hibernate.orm.runtime.FastBootHibernatePersistenceProvider.createEntityManagerFactory(FastBootHibernatePersistenceProvider.java:71)\r\n        at javax.persistence.Persistence.createEntityManagerFactory(Persistence.java:80)\r\n        at javax.persistence.Persistence.createEntityManagerFactory(Persistence.java:55)\r\n        at io.quarkus.hibernate.orm.runtime.JPAConfig$LazyPersistenceUnit.get(JPAConfig.java:138)\r\n        at io.quarkus.hibernate.orm.runtime.JPAConfig$1.run(JPAConfig.java:54)\r\n        at java.lang.Thread.run(Thread.java:833)\r\n        at com.oracle.svm.core.thread.PlatformThreads.threadStartRoutine(PlatformThreads.java:704)\r\n        at com.oracle.svm.core.posix.thread.PosixPlatformThreads.pthreadStartRoutine(PosixPlatformThreads.java:202)\r\nCaused by: java.util.concurrent.TimeoutException\r\n        at java.util.concurrent.FutureTask.get(FutureTask.java:204)\r\n        at io.agroal.pool.ConnectionPool.handlerFromSharedCache(ConnectionPool.java:296)\r\n        ... 25 more\r\n\r\n2022-10-29 00:46:57,859 INFO  [io.quarkus] (main) apaas-unpersist-service 1.0-SNAPSHOT native (powered by Quarkus 2.11.2.Final) started in 5.102s. Listening on: http://0.0.0.0:8080\r\n2022-10-29 00:46:57,859 INFO  [io.quarkus] (main) Profile prod activated. \r\n2022-10-29 00:46:57,859 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, hibernate-orm-panache, hibernate-validator, jdbc-mssql, narayana-jta, opentelemetry, opentelemetry-otlp-exporter, resteasy-reactive, resteasy-reactive-jackson, smallrye-context-propagation, smallrye-health, smallrye-openapi, swagger-ui, vertx]\r\n2022-10-29 00:47:06,808 WARN  [io.agr.pool] (agroal-11) Datasource '<default>': This driver is not configured for integrated authentication. ClientConnectionId:9ccec68f-303f-41ed-854e-db243170bf23\r\n```\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28913/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28913/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

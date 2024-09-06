@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26058",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26058/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26058/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26058/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26058",
+  "id": 1267939067,
+  "node_id": "I_kwDOCFbutM5Lkzb7",
+  "number": 26058,
+  "title": "Native image fails to start due to missing libfreetype.so.6 library and glibc version 2.29",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-06-10T19:47:32Z",
+  "updated_at": "2022-10-13T08:06:35Z",
+  "closed_at": "2022-10-13T08:06:35Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello,\r\n\r\nI'm currently trying to run a Docker container based on native image using `quarkus-container-image-docker`.\r\nI'm also using `quarkus-awt` because I use ImageIO to read and write images.\r\n\r\nWhen I try to run the container I have the follinwg error: \r\n\r\n=> `./application: error while loading shared libraries: libfreetype.so.6: cannot open shared object file: No such file or directory\r\n`\r\nI know the ubi container doesn't have libfreetype by default so I tried to add libfreetype manually in the container using:\r\n\r\n=> `RUN microdnf install freetype fontconfig`\r\n\r\nAfter running this in the container, the error about libfreetype disappears but I have a new error I'm stuck with:\r\n\r\n=> `./application: /lib64/libm.so.6: version GLIBC_2.29 not found (required by ./application)\r\n`\r\n\r\nMy current Dockerfile:\r\n\r\n```\r\nFROM registry.access.redhat.com/ubi8/ubi-minimal:8.5\r\n\r\nRUN microdnf upgrade\r\nRUN microdnf install freetype fontconfig\r\n\r\nWORKDIR /work/\r\n\r\nRUN chown 1001 /work && chmod \"g+rwX\" /work && chown 1001:root /work\r\n\r\nCOPY --chown=1001:root build/*-runner /work/application\r\n\r\nEXPOSE 8080\r\nUSER 1001\r\n\r\nCMD [\"./application\", \"-Dquarkus.http.host=0.0.0.0\"]\r\n```\r\n\r\nThanks for your help.\r\n\r\n### Expected behavior\r\n\r\nThe application should start.\r\n\r\n### Actual behavior\r\n\r\nWithout libfreetype:\r\n\r\n`./application: error while loading shared libraries: libfreetype.so.6: cannot open shared object file: No such file or directory`\r\n\r\nWith libfreetype added:\r\n\r\n`./application: /lib64/libm.so.6: version GLIBC_2.29 not found (required by ./application)`\r\n\r\n### How to Reproduce?\r\n\r\nSteps to reproduce:\r\n\r\n1) Add  `quarkus-container-image-docker` and `quarkus-awt`.\r\n2) Use ImageIO.write or ImageIO.read\r\n3) Build the docker container using native image\r\n4) Try to run the container\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux rpamart-XPS-15-9560 5.11.0-43-generic #47~20.04.2-Ubuntu SMP Mon Dec 13 11:06:56 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.3\" 2022-04-19 OpenJDK Runtime Environment (build 17.0.3+7-Ubuntu-0ubuntu0.20.04.1) OpenJDK 64-Bit Server VM (build 17.0.3+7-Ubuntu-0ubuntu0.20.04.1, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\ngraalvm-ce-java17-22.1.0\r\n\r\n### Quarkus version or git rev\r\n\r\n2.9.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.2  Build time:   2022-03-31 15:25:29 UTC Revision:     540473b8118064efcc264694cbcaa4b677f61041  Kotlin:       1.5.31 Groovy:       3.0.9 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          17.0.3 (Private Build 17.0.3+7-Ubuntu-0ubuntu0.20.04.1) OS:           Linux 5.11.0-43-generic amd64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26058/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26058/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

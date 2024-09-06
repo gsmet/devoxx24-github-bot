@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25825",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25825/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25825/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25825/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25825",
+  "id": 1250438821,
+  "node_id": "I_kwDOCFbutM5KiC6l",
+  "number": 25825,
+  "title": "Using database schemas with QuarkusTest logs warnings",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-05-27T07:30:31Z",
+  "updated_at": "2024-06-21T13:26:13Z",
+  "closed_at": "2022-05-30T08:36:49Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have multiple entities declaring database schemas.\r\n```\r\n@Entity\r\n@Table(name = \"MyEntity\", schema = \"my_schema\")\r\npublic class MyEntity {\r\n    @Id\r\n    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = \"id_generator\")\r\n    @SequenceGenerator(name = \"id_generator\", schema = \"my_schema\", sequenceName = \"seq_id\", allocationSize = 1, initialValue = 1000)\r\n    @Column(name = \"id\", unique = true, nullable = false)\r\n    private Long id;\r\n}\r\n```\r\n\r\nThis works when I run against a database, where the schemas are already present (e.g. created by liquibase).\r\n\r\nI now want to test this code, and wrote a simple test as starting point:\r\n```\r\n@QuarkusTest\r\npublic class MyEntityTest {\r\n\r\n    @Inject\r\n    EntityManager em;\r\n\r\n    @Test\r\n    @Transactional\r\n    void test() {\r\n        em.persist(new MyEntity());\r\n    }\r\n}\r\n\r\n```\r\n\r\n\r\nThe tests run against a postgresql started by devservices.\r\nThis test passes since it is only persisting a simple entity.\r\n\r\nThe schema was not created, according to the logs (see below).\r\n\r\nI have following in my application.properties\r\n```\r\nquarkus.hibernate-orm.database.generation=drop-and-create\r\nquarkus.hibernate-orm.database.generation.create-schemas=true\r\n```\n\n### Expected behavior\n\nTest should should not log warnings.\n\n### Actual behavior\n\n```\r\n[INFO] Running org.acme.MyEntityTest\r\n2022-05-27 09:24:20,739 INFO  [org.jbo.threads] (main) JBoss Threads version 3.4.2.Final\r\n2022-05-27 09:24:21,078 INFO  [org.tes.doc.DockerClientProviderStrategy] (build-12) Loaded org.testcontainers.dockerclient.NpipeSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first\r\n2022-05-27 09:24:21,824 INFO  [org.tes.doc.DockerClientProviderStrategy] (build-12) Found Docker environment with local Npipe socket (npipe:////./pipe/docker_engine)\r\n2022-05-27 09:24:21,826 INFO  [org.tes.DockerClientFactory] (build-12) Docker host IP address is localhost\r\n2022-05-27 09:24:21,856 INFO  [org.tes.DockerClientFactory] (build-12) Connected to docker:\r\n  Server Version: 20.10.11\r\n  API Version: 1.41\r\n  Operating System: Docker Desktop\r\n  Total Memory: 25438 MB\r\n2022-05-27 09:24:21,865 INFO  [org.tes.uti.ImageNameSubstitutor] (build-12) Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')\r\n2022-05-27 09:24:22,867 INFO  [org.tes.uti.RyukResourceReaper] (build-12) Ryuk started - will monitor and terminate Testcontainers containers on JVM exit\r\n2022-05-27 09:24:22,867 INFO  [org.tes.DockerClientFactory] (build-12) Checking the system...\r\n2022-05-27 09:24:22,868 INFO  [org.tes.DockerClientFactory] (build-12) ?? Docker server version should be at least 1.6.0\r\n2022-05-27 09:24:23,804 INFO  [org.tes.DockerClientFactory] (build-12) ?? Docker environment should have more than 2GB free disk space\r\n2022-05-27 09:24:23,825 INFO  [? .io/.2]] (build-12) Creating container for image: docker.io/postgres:14.2\r\n2022-05-27 09:24:24,275 INFO  [org.tes.uti.RegistryAuthLocator] (build-12) Credential helper/store (docker-credential-desktop) does not have credentials for docker.io\r\n2022-05-27 09:24:24,357 INFO  [? .io/.2]] (build-12) Container docker.io/postgres:14.2 is starting: 4ac5d8fc02fe1d8041234ad3b3f04c4772f2eed4dbdb833bf6588a04a5508013\r\n2022-05-27 09:24:26,035 INFO  [? .io/.2]] (build-12) Container docker.io/postgres:14.2 started in PT2.2205839S\r\n2022-05-27 09:24:26,035 INFO  [io.qua.dev.pos.dep.PostgresqlDevServicesProcessor] (build-12) Dev Services for PostgreSQL started.\r\n2022-05-27 09:24:26,036 INFO  [io.qua.dat.dep.dev.DevServicesDatasourceProcessor] (build-12) Dev Services for the default datasource (postgresql) started.\r\n2022-05-27 09:24:26,793 WARN  [org.hib.eng.jdb.spi.SqlExceptionHelper] (JPA Startup Thread: <default>) SQL Warning Code: 0, SQLState: 00000\r\n2022-05-27 09:24:26,793 WARN  [org.hib.eng.jdb.spi.SqlExceptionHelper] (JPA Startup Thread: <default>) schema \"my_schema\" does not exist, skipping\r\n2022-05-27 09:24:26,794 WARN  [org.hib.eng.jdb.spi.SqlExceptionHelper] (JPA Startup Thread: <default>) SQL Warning Code: 0, SQLState: 00000\r\n2022-05-27 09:24:26,794 WARN  [org.hib.eng.jdb.spi.SqlExceptionHelper] (JPA Startup Thread: <default>) schema \"my_schema\" does not exist, skipping\r\n2022-05-27 09:24:26,797 WARN  [org.hib.too.sch.int.ExceptionHandlerLoggedImpl] (JPA Startup Thread: <default>) GenerationTarget encountered exception accepting command : Error executing DDL \"drop schema my_schema\" via JDBC Statement: org.hibernate.tool.schema.spi.CommandAccepta\r\nnceException: Error executing DDL \"drop schema my_schema\" via JDBC Statement\r\n        at org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.accept(GenerationTargetToDatabase.java:67)\r\n        at org.hibernate.tool.schema.internal.SchemaDropperImpl.applySqlString(SchemaDropperImpl.java:387)\r\n        at org.hibernate.tool.schema.internal.SchemaDropperImpl.applySqlStrings(SchemaDropperImpl.java:371)\r\n        at org.hibernate.tool.schema.internal.SchemaDropperImpl.dropFromMetadata(SchemaDropperImpl.java:288)\r\n        at org.hibernate.tool.schema.internal.SchemaDropperImpl.performDrop(SchemaDropperImpl.java:156)\r\n        at org.hibernate.tool.schema.internal.SchemaDropperImpl.doDrop(SchemaDropperImpl.java:128)\r\n        at org.hibernate.tool.schema.internal.SchemaDropperImpl.doDrop(SchemaDropperImpl.java:114)\r\n        at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.performDatabaseAction(SchemaManagementToolCoordinator.java:157)\r\n        at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.process(SchemaManagementToolCoordinator.java:85)\r\n        at org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:335)\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:74)\r\n        at io.quarkus.hibernate.orm.runtime.FastBootHibernatePersistenceProvider.createEntityManagerFactory(FastBootHibernatePersistenceProvider.java:71)\r\n        at javax.persistence.Persistence.createEntityManagerFactory(Persistence.java:80)\r\n        at javax.persistence.Persistence.createEntityManagerFactory(Persistence.java:55)\r\n        at io.quarkus.hibernate.orm.runtime.JPAConfig$LazyPersistenceUnit.get(JPAConfig.java:138)\r\n        at io.quarkus.hibernate.orm.runtime.JPAConfig$1.run(JPAConfig.java:54)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: org.postgresql.util.PSQLException: ERROR: schema \"my_schema\" does not exist\r\n        at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2675)\r\n        at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2365)\r\n        at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:355)\r\n        at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:490)\r\n        at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:408)\r\n        at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:329)\r\n        at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:315)\r\n        at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:291)\r\n        at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:286)\r\n        at io.agroal.pool.wrapper.StatementWrapper.execute(StatementWrapper.java:235)\r\n        at org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.accept(GenerationTargetToDatabase.java:54)\r\n        ... 16 more\r\n\r\n2022-05-27 09:24:26,819 INFO  [io.quarkus] (main) orm-schema-creation 1.0.0-SNAPSHOT on JVM (powered by Quarkus 2.9.2.Final) started in 6.553s.\r\n2022-05-27 09:24:26,820 INFO  [io.quarkus] (main) Profile test activated.\r\n2022-05-27 09:24:26,820 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, jdbc-postgresql, narayana-jta, smallrye-context-propagation]\r\n[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.489 s - in org.acme.MyEntityTest\r\n```\n\n### How to Reproduce?\n\nReproducer: [orm-schema-creation.zip](https://github.com/quarkusio/quarkus/files/8784787/orm-schema-creation.zip)\r\n\r\n\r\n1. mvn clean test\r\n2. warnings from above appear when running the tests\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [Version 10.0.19044.1706]\n\n### Output of `java -version`\n\nopenjdk 18.0.1 2022-04-19 OpenJDK Runtime Environment Temurin-18.0.1+10 (build 18.0.1+10) OpenJDK 64-Bit Server VM Temurin-18.0.1+10 (build 18.0.1+10, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Maven home: C:\\eclipse\\tools\\java\\maven Java version: 18.0.1, vendor: Eclipse Adoptium, runtime: C:\\eclipse\\tools\\java\\18 Default locale: de_DE, platform encoding: UTF-8 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25825/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25825/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

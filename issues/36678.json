@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36678",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36678/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36678/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36678/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36678",
+  "id": 1960795057,
+  "node_id": "I_kwDOCFbutM5031ux",
+  "number": 36678,
+  "title": "quarkus with logback throws IOException when HTTP connection closed",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283428650,
+      "node_id": "MDU6TGFiZWwxMjgzNDI4NjUw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/logging",
+      "name": "area/logging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2023-10-25T08:03:26Z",
+  "updated_at": "2023-10-30T06:51:14Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhile trying to configure the QuarkusRestClientBuilder with setReadIdleTimeout() to timeout HTTP reads from Quarkus client, I noticed a thrown exception that only occured while using quarkus-logging-logback for logging (works fine using the default logger):\r\n\r\n```\r\n|2023-10-25 15:38:15.797|[DEBUG]|[i.vertx.core.net.impl.ConnectionBase] The connection will be closed due to timeout\r\n|2023-10-25 15:38:15.816|[DEBUG]|[o.j.r.r.c.c.AbstractResteasyReactiveContext] Restarting handler chain for exception exception\r\njakarta.ws.rs.ProcessingException: java.io.IOException: Connection was closed\r\n\tat org.jboss.resteasy.reactive.client.handlers.ClientSendRequestHandler$4.handle(ClientSendRequestHandler.java:364)\r\n\tat org.jboss.resteasy.reactive.client.handlers.ClientSendRequestHandler$4.handle(ClientSendRequestHandler.java:355)\r\n\tat io.vertx.core.impl.future.FutureImpl$2.onFailure(FutureImpl.java:117)\r\n\tat io.vertx.core.impl.future.FutureImpl$ListenerArray.onFailure(FutureImpl.java:268)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitFailure$1(FutureBase.java:69)\r\n\tat io.vertx.core.impl.EventLoopContext.execute(EventLoopContext.java:86)\r\n\tat io.vertx.core.impl.DuplicatedContext.execute(DuplicatedContext.java:184)\r\n\tat io.vertx.core.impl.future.FutureBase.emitFailure(FutureBase.java:66)\r\n\tat io.vertx.core.impl.future.FutureImpl.tryFail(FutureImpl.java:230)\r\n\tat io.vertx.core.impl.future.PromiseImpl.tryFail(PromiseImpl.java:23)\r\n\tat io.vertx.core.http.impl.HttpClientRequestBase.fail(HttpClientRequestBase.java:183)\r\n\tat io.vertx.core.http.impl.HttpClientRequestBase.handleException(HttpClientRequestBase.java:178)\r\n\tat io.vertx.core.http.impl.HttpClientRequestImpl.handleException(HttpClientRequestImpl.java:81)\r\n\tat io.vertx.core.http.impl.Http1xClientConnection$StreamImpl.handleException(Http1xClientConnection.java:714)\r\n\tat io.vertx.core.http.impl.Http1xClientConnection$StreamImpl.handleClosed(Http1xClientConnection.java:720)\r\n\tat io.vertx.core.http.impl.Http1xClientConnection.lambda$handleClosed$12(Http1xClientConnection.java:1222)\r\n\tat io.vertx.core.impl.EventLoopContext.execute(EventLoopContext.java:76)\r\n\tat io.vertx.core.impl.DuplicatedContext.execute(DuplicatedContext.java:174)\r\n\tat io.vertx.core.http.impl.Http1xClientConnection.handleClosed(Http1xClientConnection.java:1222)\r\n\tat io.vertx.core.net.impl.VertxHandler.channelInactive(VertxHandler.java:143)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:303)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:281)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelInactive(AbstractChannelHandlerContext.java:274)\r\n\tat io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelInactive(CombinedChannelDuplexHandler.java:418)\r\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelInputClosed(ByteToMessageDecoder.java:411)\r\n\tat io.netty.handler.codec.ByteToMessageDecoder.channelInactive(ByteToMessageDecoder.java:376)\r\n\tat io.netty.handler.codec.http.HttpClientCodec$Decoder.channelInactive(HttpClientCodec.java:328)\r\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelInactive(CombinedChannelDuplexHandler.java:221)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:303)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:281)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelInactive(AbstractChannelHandlerContext.java:274)\r\n\tat io.netty.channel.ChannelInboundHandlerAdapter.channelInactive(ChannelInboundHandlerAdapter.java:81)\r\n\tat io.netty.handler.timeout.IdleStateHandler.channelInactive(IdleStateHandler.java:277)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:303)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:281)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelInactive(AbstractChannelHandlerContext.java:274)\r\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelInactive(DefaultChannelPipeline.java:1405)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:301)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:281)\r\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelInactive(DefaultChannelPipeline.java:901)\r\n\tat io.netty.channel.AbstractChannel$AbstractUnsafe$7.run(AbstractChannel.java:813)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.io.IOException: Connection was closed\r\n\t... 49 common frames omitted\r\n```\r\n\r\nIs this an issue between the REST client and logback? I'm not sure where to catch the IOException\r\n\r\n### Expected behavior\r\n\r\nThe connection timeout should not throw an IOException.\r\n\r\n### Actual behavior\r\n\r\nQuarkus throws an IOException after the connection has been closed.\r\n\r\n### How to Reproduce?\r\n\r\n1. Download and run with `quarkus dev`:\r\n- [testClient_.zip](https://github.com/quarkusio/quarkus/files/13162953/testClient_.zip)\r\n- [testServer_.zip](https://github.com/quarkusio/quarkus/files/13162957/testServer_.zip)\r\n2. GET http://localhost:8080/hello\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin MB 22.1.0 Darwin Kernel Version 22.1.0: Sun Oct  9 20:15:09 PDT 2022; root:xnu-8792.41.9~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.20\" 2023-07-18\r\n\r\n### Quarkus version or git rev\r\n\r\n3.4.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3 (21122926829f1ead511c958d89bd2f672198ae9f)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36678/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36678/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

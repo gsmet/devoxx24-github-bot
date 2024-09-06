@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28474",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28474/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28474/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28474/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28474",
+  "id": 1403105658,
+  "node_id": "I_kwDOCFbutM5TobF6",
+  "number": 28474,
+  "title": "Can't load static resource created by extension",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1520022286,
+      "node_id": "MDU6TGFiZWwxNTIwMDIyMjg2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/bootstrap",
+      "name": "area/bootstrap",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 21,
+  "created_at": "2022-10-10T12:35:33Z",
+  "updated_at": "2024-02-21T14:00:28Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIn my extension, I created a static resource with:\r\n\r\n```java\r\n    @BuildStep\r\n    public void processModel(BuildProducer<GeneratedResourceBuildItem> output,\r\n            BuildProducer<AdditionalStaticResourceBuildItem> staticResources) {\r\n\r\n        String path = \"/routes.js\";\r\n        output.produce(new GeneratedResourceBuildItem(\"META-INF/resources\" + path,\r\n                \"//hello\".getBytes(StandardCharsets.UTF_8)));\r\n        staticResources.produce(new AdditionalStaticResourceBuildItem(path, false));\r\n}\r\n```\r\n\r\nWhen I try to test this:\r\n\r\n```java\r\n@QuarkusTest\r\npublic class MyTest {\r\n    @Test\r\n    public void testJsRouting() {\r\n        given()\r\n                .when().get(\"/routes.js\")\r\n                .then()\r\n                .statusCode(200)\r\n                .body(is(\"//hello\"));\r\n    }\r\n}\r\n```\r\n\r\nI'm getting the following exception:\r\n\r\n```\r\nERROR: HTTP Request to /routes.js failed, error id: 0c1267fb-df47-4c0c-b97f-f7943ca4ef19-1\r\njava.lang.IllegalStateException: Invalid url protocol: quarkus\r\n    at io.vertx.core.file.impl.FileResolverImpl.unpackUrlResource(FileResolverImpl.java:247)\r\n    at io.vertx.core.file.impl.FileResolverImpl.resolveFile(FileResolverImpl.java:174)\r\n    at io.vertx.core.impl.VertxImpl.resolveFile(VertxImpl.java:794)\r\n    at io.vertx.core.file.impl.FileSystemImpl$20.perform(FileSystemImpl.java:1136)\r\n    at io.vertx.core.file.impl.FileSystemImpl$20.perform(FileSystemImpl.java:1134)\r\n    at io.vertx.core.file.impl.FileSystemImpl$BlockingAction.handle(FileSystemImpl.java:1175)\r\n    at io.vertx.core.file.impl.FileSystemImpl$BlockingAction.handle(FileSystemImpl.java:1157)\r\n    at io.vertx.core.impl.ContextBase.lambda$null$0(ContextBase.java:137)\r\n    at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n    at io.vertx.core.impl.ContextBase.lambda$executeBlocking$1(ContextBase.java:135)\r\n    at io.vertx.core.impl.TaskQueue.run(TaskQueue.java:76)\r\n    at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n    at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n    at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1452)\r\n    at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n    at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n    at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n    at java.base/java.lang.Thread.run(Thread.java:834)\r\n```\r\n\r\nThis is because those are served via a Vert.x `StaticHandler`, which accesses them via the file system, and obtains the URL to the resource via the `QuarkusClassLoader`: https://github.com/eclipse-vertx/vert.x/blob/master/src/main/java/io/vertx/core/file/impl/FileResolverImpl.java#L173 and then attempts to open it in https://github.com/eclipse-vertx/vert.x/blob/bbb4ddc417a604697d2ff4f5a8eda2e74113697e/src/main/java/io/vertx/core/file/impl/FileResolverImpl.java#L225\r\n\r\nThe problem is that `QuarkusClassLoader` serves it using a `MemoryClassPathElement` https://github.com/quarkusio/quarkus/blob/main/independent-projects/bootstrap/core/src/main/java/io/quarkus/bootstrap/classloading/MemoryClassPathElement.java#L86 that has a `quarkus:` URL scheme, which is registered via a `UrlStreamHandler` at https://github.com/quarkusio/quarkus/blob/main/independent-projects/bootstrap/core/src/main/java/io/quarkus/bootstrap/classloading/MemoryClassPathElement.java#L131 but Vert.x doesn't know about it and doesn't know how to deal with it.\r\n\r\nI'm not sure what to do to fix this, frankly.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28474/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28474/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

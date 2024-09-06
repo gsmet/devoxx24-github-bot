@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32070",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32070/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32070/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32070/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32070",
+  "id": 1637540213,
+  "node_id": "I_kwDOCFbutM5hmuF1",
+  "number": 32070,
+  "title": "Quarkus native web application returns enum name rather than enum value in json response",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-03-23T13:24:13Z",
+  "updated_at": "2023-03-24T07:28:20Z",
+  "closed_at": "2023-03-23T15:06:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nGiven a quarkus-resteasy-reactive JAX-RS resource, when an endpoint returns a response that includes an entity with a field of type `Enum` which has an attached value, response includes the value of the Enum in jvm mode whereas in native mode response includes the name of the Enum.\n\n### Expected behavior\n\nNative mode of the application should also return the enum variable same as the behaviour in jvm mode.\n\n### Actual behavior\n\nAs opposed to jvm mode, native mode of the application returns the enum name.\n\n### How to Reproduce?\n\nReproducer repo: https://github.com/Mert-Z/quarkus-native-enum-value-serialisation-issue\r\nVerify succeeds in jvm mode (i.e `mvn clean verify -U`)\r\nVerify fails in native mode (i.e `mvn clean verify -U -Pnative`)\r\n\r\nHere is the Enum definition;\r\n```java\r\npublic enum TestEnum {\r\n\r\n    VALUE_1(\"Value 1\");\r\n\r\n    private String value;\r\n\r\n    TestEnum(String value) {\r\n        this.value = value;\r\n    }\r\n\r\n    public static TestEnum fromString(String s) {\r\n        for (TestEnum b : TestEnum.values()) {\r\n            if (Objects.equals(Objects.toString(b.value), s)) {\r\n                return b;\r\n            }\r\n        }\r\n        throw new IllegalArgumentException(\"Unexpected string value '\" + s + \"'\");\r\n    }\r\n\r\n    @Override\r\n    @JsonValue\r\n    public String toString() {\r\n        return String.valueOf(value);\r\n    }\r\n\r\n    @JsonCreator\r\n    public static TestEnum fromValue(String value) {\r\n        for (TestEnum b : TestEnum.values()) {\r\n            if (b.value.equals(value)) {\r\n                return b;\r\n            }\r\n        }\r\n        throw new IllegalArgumentException(\"Unexpected value '\" + value + \"'\");\r\n    }\r\n}\r\n\r\n```\r\nResponse entity;\r\n```java\r\n@RegisterForReflection\r\npublic class GreetingResponse {\r\n\r\n    private TestEnum testEnum;\r\n\r\n    public GreetingResponse(TestEnum testEnum) {\r\n        this.testEnum = testEnum;\r\n    }\r\n\r\n    @JsonProperty(\"testEnum\")\r\n    public TestEnum getTestEnum() {\r\n        return testEnum;\r\n    }\r\n\r\n    @JsonProperty(\"testEnum\")\r\n    public void setTestEnum(TestEnum testEnum) {\r\n        this.testEnum = testEnum;\r\n    }\r\n}\r\n\r\n```\r\nResponse body in jvm mode;\r\n```json\r\n{\"testEnum\":\"Value 1\"}\r\n```\r\nResponse body in native mode;\r\n```json\r\n{\"testEnum\":\"VALUE_1\"}\r\n```\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nJava version: 17.0.5, vendor: GraalVM Community\n\n### GraalVM version (if different from Java)\n\nGraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08)\n\n### Quarkus version or git rev\n\n2.16.5.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32070/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32070/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

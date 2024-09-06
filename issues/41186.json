@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41186",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41186/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41186/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41186/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41186",
+  "id": 2350656181,
+  "node_id": "I_kwDOCFbutM6MHCq1",
+  "number": 41186,
+  "title": "Multipart @FormParam on EntityPart not working according to Jakarta RESTful Web Services 3.1",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-06-13T09:30:26Z",
+  "updated_at": "2024-06-13T13:28:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAccording to the [Jakarta RESTful Web Services 3.1 Specification](https://jakarta.ee/specifications/restful-ws/3.1/jakarta-restful-ws-spec-3.1#consuming_multipart_formdata), `@FormParam` should be supported on `EntityPart` parameters in resources. More specifically stated:\r\n\r\n> For resource methods that consume multipart/form-data media types, the @FormParam annotation may be used on jakarta.ws.rs.core.EntityPart parameters. [link](https://jakarta.ee/specifications/restful-ws/3.1/jakarta-restful-ws-spec-3.1#resource_method_params)\r\n\r\nCurrently, this is not supported in quarkus-rest (resteasy-reactive), and giving the error `Could not create converter for jakarta.ws.rs.core.EntityPart`. It is in-fact not possible to implement your own `ParameterConverter`, as the [`FormParamExtractor`](https://github.com/quarkusio/quarkus/blob/main/independent-projects/resteasy-reactive/server/runtime/src/main/java/org/jboss/resteasy/reactive/server/core/parameters/FormParamExtractor.java) giving the string-value for the converter doesn't include the 'content-disposition' row.\r\n\r\nThe following is the jist of the reproducer (a full project is attached below):\r\n```java\r\n@Path(\"/api\")\r\npublic class GreetingResource {\r\n\r\n    static final Logger LOG = LoggerFactory.getLogger(GreetingResource.class);\r\n\r\n    @POST\r\n    @Path(\"/upload\")\r\n    @Consumes(MediaType.MULTIPART_FORM_DATA)\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public Response upload(@FormParam(\"part1\") EntityPart part) {\r\n        LOG.info(\"part: {}\", part);\r\n        return Response.ok().build();\r\n    }\r\n}\r\n```\r\n\r\nThis should run correctly and respond with 200 using the following curl command\r\n```\r\ncurl -vvv -X POST -F \"part1=hello\" http://localhost:8080/api/upload\r\n```\r\n\r\nThis was previously reported in https://github.com/quarkusio/quarkus/issues/38980, but no reproducer was provided.\r\n\r\n### Expected behavior\r\n\r\nThe program should start up successfully and respond to the following curl with 200:\r\n```\r\ncurl -vvv -X POST -F \"part1=hello\" http://localhost:8080/api/upload\r\n```\r\n\r\nThe logs should print that the part is **not** null. Inspecting the `EntityPart` should give access to all attributes taken from the content-disposition header (e.g. filename), and the content should be \"hello\".\r\n\r\n### Actual behavior\r\n\r\nCurrently quarkus fails to start and logs the following:\r\n```\r\n[error]: Build step io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor#setupEndpoints threw an exception: java.lang.RuntimeException: java.lang.RuntimeException: Failed to process method 'org.acme.GreetingResource#upload'\r\n\tat org.jboss.resteasy.reactive.common.processor.EndpointIndexer.createEndpoints(EndpointIndexer.java:332)\r\n\tat io.quarkus.resteasy.reactive.server.deployment.ResteasyReactiveProcessor.setupEndpoints(ResteasyReactiveProcessor.java:663)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1570)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:483)\r\nCaused by: java.lang.RuntimeException: Failed to process method 'org.acme.GreetingResource#upload'\r\n\tat org.jboss.resteasy.reactive.common.processor.EndpointIndexer.createResourceMethod(EndpointIndexer.java:780)\r\n\tat org.jboss.resteasy.reactive.common.processor.EndpointIndexer.createEndpoints(EndpointIndexer.java:421)\r\n\tat org.jboss.resteasy.reactive.common.processor.EndpointIndexer.createEndpoints(EndpointIndexer.java:299)\r\n\t... 11 more\r\nCaused by: java.lang.RuntimeException: Could not create converter for jakarta.ws.rs.core.EntityPart for method jakarta.ws.rs.core.Response upload(jakarta.ws.rs.core.EntityPart part) on class org.acme.GreetingResource of type FORM\r\n\tat org.jboss.resteasy.reactive.server.processor.ServerEndpointIndexer.handleOtherParam(ServerEndpointIndexer.java:373)\r\n\tat org.jboss.resteasy.reactive.server.processor.ServerEndpointIndexer.handleOtherParam(ServerEndpointIndexer.java:98)\r\n\tat org.jboss.resteasy.reactive.common.processor.EndpointIndexer.extractParameterInfo(EndpointIndexer.java:1449)\r\n\tat org.jboss.resteasy.reactive.common.processor.EndpointIndexer.createResourceMethod(EndpointIndexer.java:598)\r\n\t... 13 more\r\nCaused by: java.lang.RuntimeException: Failed to find converter for jakarta.ws.rs.core.EntityPart\r\n\tat org.jboss.resteasy.reactive.server.processor.generation.converters.GeneratedConverterIndexerExtension.extractConverterImpl(GeneratedConverterIndexerExtension.java:106)\r\n\tat org.jboss.resteasy.reactive.server.processor.ServerEndpointIndexer.extractConverter(ServerEndpointIndexer.java:579)\r\n\tat org.jboss.resteasy.reactive.server.processor.ServerEndpointIndexer.handleOtherParam(ServerEndpointIndexer.java:369)\r\n\t... 16 more\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. extract [reproducer.zip](https://github.com/user-attachments/files/15817050/reproducer.zip).\r\n2. run `./mvnw clean quarkus:dev`\r\n\r\nIf quarkus succeeds in starting up, you need to\r\n3. execute the following command and check the response code\r\n    ```\r\n    curl -vvv -X POST -F \"part1=hello\" http://localhost:8080/api/upload\r\n    ```\r\n4. Check the application logs to see if the part was not null.\r\n\r\n### Output of `uname -a` or `ver`\r\n```\r\nLinux olle 4.18.0-553.5.1.el8_10.x86_64 #1 SMP Tue May 21 03:13:04 EDT 2024 x86_64 x86_64 x86_64 GNU/Linux\r\n```\r\n### Output of `java -version`\r\n```\r\nopenjdk version \"22.0.1\" 2024-04-16\r\n```\r\n### Quarkus version or git rev\r\n\r\n3.11.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41186/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41186/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

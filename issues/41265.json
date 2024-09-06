@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41265",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41265/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41265/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41265/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41265",
+  "id": 2358260929,
+  "node_id": "I_kwDOCFbutM6MkDTB",
+  "number": 41265,
+  "title": "Quarkus OIDC CredenitalsProvider does not follow conventions of allowing a separate \"bean name\" and \"keyring name\"",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-06-17T21:07:23Z",
+  "updated_at": "2024-07-03T17:41:17Z",
+  "closed_at": "2024-06-19T09:12:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nOther `CredentialsProvdider` integrations, such as the ones built by Quarkus Data source, RabbitMQ, and Quarkiverse GitHub app extensions allow for separate configuration of a \"bean name\" of the `CredentialsProvider` implementation to be used by the extension and a \"keyring name\". This is also laid out in `CredentialsProvider` documentation [here](https://quarkus.io/guides/credentials-provider#new-credentials-provider-extension). \r\n\r\nHowever, the Quarkus OIDC extension only allows for the configuration of `quarkus.oidc.credentials.client-secret.provider.name` (which is used [here](https://github.com/quarkusio/quarkus/blob/9e64ec21bb19894e949f4d468b51ad6766974341/extensions/oidc-common/runtime/src/main/java/io/quarkus/oidc/common/runtime/OidcCommonUtils.java#L314) to first lookup the CDI bean and then used [here](https://github.com/quarkusio/quarkus/blob/9e64ec21bb19894e949f4d468b51ad6766974341/extensions/oidc-common/runtime/src/main/java/io/quarkus/oidc/common/runtime/OidcCommonUtils.java#L317) to look up the secret from the keyring \r\n\r\n\r\nI think the only way this could be successfully used today is by always supplying what's supposed to be an optional bean name for the `CredentialsProvider` implementation because otherwise the call to `CredentialsProvider.getCredentials(String)` will always be provided `null`.\r\n\r\nThis mandates that the bean name and the value in the keyring be the same. For my use case, which is a `CredentialsProvider` implementation backed by data in AWS SecretsManager, in means I need a separate `CredentialsProvider` implementation for just this extension where the name of the secret in SecretsManager matches the bean name of the `CredentialsProvider` implementation.\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nWe should adapt the OIDC extension to look more like other usages of `CredentialsProviderFinder.find`, like this\r\n\r\n\r\n```java\r\n\r\n private static Supplier<? extends String> fromCredentialsProvider(Provider provider) {\r\n        return new Supplier<String>() {\r\n\r\n            @Override\r\n            public String get() {\r\n                if (provider.key.isPresent()) {\r\n                    String providerName = provider.name.orElse(null);\r\n                    CredentialsProvider credentialsProvider = CredentialsProviderFinder.find(providerName);\r\n                    if (provider.keyringName.isPresent()) {\r\n                        credentialsProvider.getCredentials(provider.keyringName.get()).get(provider.key.get());\r\n                    }\r\n                    else {\r\n                        return credentialsProvider.getCredentials(providerName).get(provider.key.get());\r\n                    }\r\n                }\r\n                return null;\r\n            }\r\n        };\r\n    }\r\n```\r\n\r\nThis does the following:\r\n1. remove a redundant null check, because `CredentialsProviderFinder.find` throws a `RuntimeException` if the `CredentialsProvider` resolved from the `Arc` container is null, and therefore this method will never return null\r\n2. Adds a new config property for the keyring that is used if it is present.\r\n\r\nIn a future release of Quarkus, the breaking change to require the user to provide a keyring name (like all other extensions that support `CredentialsProvider` should be considered, but this change was structured in this way to be backward compatible. \r\n\r\nI'm definitely open to other suggestions for implementing a change like this! I'm also appy to contribute this change myself if the workaround to conform to conventions is accepted.\r\n\r\nNote, normally `quarkus.oidc.credentials.client-secret.provider.name` would be the name of the keyring, not the name of the CDI bean, but since it's already being used here for both in order to be backward compatible we have to introduce a new property for when users want to configure the keyring name (which is usually non-optional when configuring extensions to use `CredentialsProvider` implementations \r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41265/reactions",
+    "total_count": 3,
+    "+1": 3,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41265/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

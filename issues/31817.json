@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31817",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31817/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31817/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31817/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31817",
+  "id": 1621802809,
+  "node_id": "I_kwDOCFbutM5gqr85",
+  "number": 31817,
+  "title": "Extend Panache sort specification to explicitly support sorting by the size of an association of a JPA entity",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-03-13T16:07:34Z",
+  "updated_at": "2023-03-13T16:08:18Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nThe Panache library provides a utility class `Sort` to build and represent SQL sorting specifications. A `Sort` instance represents a list of columns to sort on, each with a direction to use for sorting, e.g.\r\n\r\n```java\r\nSort sort = Sort.by(\"name\").and(\"age\", Direction.Descending);\r\nSort sort2 = Sort.ascending(\"name\", \"age\");\r\nSort sort3 = Sort.descending(\"name\", \"age\");\r\n```\r\n\r\nIn its current implementation, it is possible use the `Sort` class to not only sort by properties of a JPA entity (columns), but also by size of associations of the entity.\r\n\r\nGiven for example the JPA entities\r\n\r\n```java\r\n@Entity\r\npublic class Person extends PanacheEntity {\r\n    public String name;\r\n    public String homeTown;\r\n    @OneToMany\r\n    public List<Dog> pets;\r\n}\r\n\r\n@Entity\r\npublic class Dog extends PanacheEntity {\r\n    public String name;\r\n    public String race;\r\n    @ManyToOne\r\n    public Person owner;\r\n}\r\n```\r\n\r\nit is possible to \"misuse\" the interface of the `Sort` class to write a query like\r\n\r\n```java\r\nPerson.find(\"FROM Person p WHERE p.homeTown = :homeTown\",\r\n    Sort.by(\"SIZE(p.pets)\", Sort.Direction.Ascending),\r\n    Parameters.with(\"homeTown\", \"Berlin\"));\r\n```\r\n\r\nIt is great that this works, as this comes in especially handy when programmatically constructing the \"sort property\" for the query, but it doesn't feel like we are using the interface in the intended way here.\r\n\r\nTherefore it would be great if the `Sort` class would provide an interface which more explicitly models this use case. For example via a method `Sort.bySize(String association, Sort.Direction direction)`. In this case, the example above could be written like\r\n\r\n```java\r\nPerson.find(\"FROM Person p WHERE p.homeTown = :homeTown\",\r\n    Sort.bySize(\"p.pets\", Sort.Direction.Ascending),\r\n    Parameters.with(\"homeTown\", \"Berlin\"));\r\n```\n\n### Implementation ideas\n\nExtend the `Sort` class with the methods\r\n- `Sort.bySize(String association)`\r\n- `Sort.bySize(String... associations)`\r\n- `Sort.bySize(String association, Sort.Direction direction)`\r\n- `Sort.bySize(String association, Sort.NullPrecedence nullPrecedence)`\r\n- `Sort.bySize(String association, Sort.Direction direction, Sort.NullPrecedence nullPrecedence)`\r\n\r\nExtend the `PanacheJpaUtil.toOrderBy()` method ([source](https://github.com/quarkusio/quarkus/blob/main/extensions/panache/panache-hibernate-common/runtime/src/main/java/io/quarkus/panache/hibernate/common/runtime/PanacheJpaUtil.java#L166)) to construct an `ORDER BY` expression for the size of an association.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31817/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 1,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31817/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

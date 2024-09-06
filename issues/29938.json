@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29938",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29938/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29938/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29938/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29938",
+  "id": 1501750670,
+  "node_id": "I_kwDOCFbutM5ZguWO",
+  "number": 29938,
+  "title": "Liquibase's `clean-at-start` fails to perform its duties",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1956491735,
+      "node_id": "MDU6TGFiZWwxOTU2NDkxNzM1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/liquibase",
+      "name": "area/liquibase",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-12-18T05:11:14Z",
+  "updated_at": "2022-12-20T07:31:27Z",
+  "closed_at": "2022-12-20T07:31:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a simple `Quarkus` application. The (simplified for this issue) configuration file looks like:\r\n\r\n```yaml\r\nquarkus:\r\n  liquibase:\r\n    change-log: classpath:database/changelog.xml\r\n    clean-at-start: false\r\n    migrate-at-start: true\r\n    validate-on-migrate: true\r\n---\r\n\"%dev\":\r\n  quarkus:\r\n    liquibase:\r\n      clean-at-start: true\r\n---\r\n\"%prod\":\r\n---\r\n\"%test\":\r\n```\r\n\r\nWhenever the application is started with the `dev` profile, and exception is thrown. Removing `clean-at-start`, or just turning it to `false` won't fail the application startup.\n\n### Expected behavior\n\nDatabase migrations should run after `Liquibase` wipes out the database when using the `dev` profile.\n\n### Actual behavior\n\nThe application throws an exception:\r\n\r\n```shell\r\n2022-12-18 04:59:08,739 |- ERROR in io.quarkus.runtime.Application:195 [Quarkus Main Thread] - Failed to start application (with profile dev): java.lang.NullPointerException: Cannot invoke \"Object.getClass()\" because \"unexpectedObject\" is null\r\n\tat liquibase.diff.output.changelog.ChangeGeneratorFactory.fixUnexpected(ChangeGeneratorFactory.java:102)\r\n\tat liquibase.lockservice.StandardLockService.destroy(StandardLockService.java:490)\r\n\tat liquibase.command.core.InternalDropAllCommandStep.run(InternalDropAllCommandStep.java:118)\r\n\tat liquibase.command.CommandScope.execute(CommandScope.java:173)\r\n\tat liquibase.Liquibase.dropAll(Liquibase.java:1840)\r\n\tat liquibase.Liquibase.dropAll(Liquibase.java:1819)\r\n\tat io.quarkus.liquibase.runtime.LiquibaseRecorder.doStartActions(LiquibaseRecorder.java:58)\r\n\tat io.quarkus.deployment.steps.LiquibaseProcessor$startLiquibase763757012.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.LiquibaseProcessor$startLiquibase763757012.deploy(Unknown Source)\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:110)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:70)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:43)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:123)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:104)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n: java.lang.NullPointerException: Cannot invoke \"Object.getClass()\" because \"unexpectedObject\" is null\r\n\tat liquibase.diff.output.changelog.ChangeGeneratorFactory.fixUnexpected(ChangeGeneratorFactory.java:102)\r\n\tat liquibase.lockservice.StandardLockService.destroy(StandardLockService.java:490)\r\n\tat liquibase.command.core.InternalDropAllCommandStep.run(InternalDropAllCommandStep.java:118)\r\n\tat liquibase.command.CommandScope.execute(CommandScope.java:173)\r\n\tat liquibase.Liquibase.dropAll(Liquibase.java:1840)\r\n\tat liquibase.Liquibase.dropAll(Liquibase.java:1819)\r\n\tat io.quarkus.liquibase.runtime.LiquibaseRecorder.doStartActions(LiquibaseRecorder.java:58)\r\n\tat io.quarkus.deployment.steps.LiquibaseProcessor$startLiquibase763757012.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.LiquibaseProcessor$startLiquibase763757012.deploy(Unknown Source)\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:110)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:70)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:43)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:123)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:104)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n```\n\n### How to Reproduce?\n\n- Have a `Quarkus` application with `liquibase` support\r\n- Place a (dummy if wanted) `changelog` configuration\r\n- Configure profiles as stated initially in the question\r\n- Start application :smirk:\n\n### Output of `uname -a` or `ver`\n\nLinux uplink 5.15.81-1-lts #1 SMP Fri, 02 Dec 2022 21:05:15 +0000 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk 17.0.5 2022-10-18 OpenJDK Runtime Environment Temurin-17.0.5+8 (build 17.0.5+8) OpenJDK 64-Bit Server VM Temurin-17.0.5+8 (build 17.0.5+8, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.14.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n------------------------------------------------------------ Gradle 7.6 ------------------------------------------------------------  Build time:   2022-11-25 13:35:10 UTC Revision:     daece9dbc5b79370cc8e4fd6fe4b2cd400e150a8  Kotlin:       1.7.10 Groovy:       3.0.13 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          17.0.5 (Eclipse Adoptium 17.0.5+8) OS:           Linux 5.15.81-1-lts amd64\n\n### Additional information\n\nI'm trying to replicate `Flyway`'s `clean-at-start` behavior, so I'm assuming that `Liquibase`'s `clean-at-start` is exactly the same.\r\n\r\nI've searched for that `clean` command in the `Liquibase` documentation but I couldn't find it :thinking:",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29938/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29938/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

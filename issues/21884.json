@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21884",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21884/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21884/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21884/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21884",
+  "id": 1069458391,
+  "node_id": "I_kwDOCFbutM4_vqPX",
+  "number": 21884,
+  "title": "rest-client-reactive has limit for amount of simultaneously outgoing requests",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-12-02T11:51:30Z",
+  "updated_at": "2021-12-02T16:23:42Z",
+  "closed_at": "2021-12-02T14:21:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi, there !\r\nI found out that rest-client-reactive has limit for amount of simultaneously outgoing requests to 20, so next requests accomplish only after some of the first finished.\r\n\r\nThat's feature or bug? Are there any configuration properties to extend this limit?\r\n\r\n### Expected behavior\r\n\r\nNo limit by default\r\n\r\n### Actual behavior\r\n\r\nLimit to 20 requests\r\n\r\n### How to Reproduce?\r\n\r\nApi.java\r\n```\r\n@Path(\"/\")\r\npublic class Api {\r\n    static final Logger LOG = Logger.getLogger(Api.class);\r\n\r\n    final AtomicLong pingCounter;\r\n\r\n    final Service service;\r\n\r\n    public Api(@RestClient Service service) {\r\n        this.service = service;\r\n        pingCounter = new AtomicLong();\r\n    }\r\n\r\n    @POST\r\n    @Path(\"/ping\")\r\n    public Response ping() throws InterruptedException {\r\n        long number = pingCounter.incrementAndGet();\r\n        LOG.debugf(\"Ping request, %d\", number);\r\n        Thread.sleep(5000);\r\n        LOG.debugf(\"Pong response, %d\", number);\r\n        return Response.ok(\"pong \" + number).build();\r\n    }\r\n\r\n    @POST\r\n    @Path(\"/load/{requests}\")\r\n    public Uni<Response> load(int requests) {\r\n        LOG.debugf(\"Load request, requests=%d\", requests);\r\n\r\n        List<Uni<String>> unis = new ArrayList<>();\r\n        for (int i = 0; i < requests; i++) {\r\n            unis.add(service.ping());\r\n        }\r\n\r\n        return Uni.combine().all().unis(unis)\r\n                .combinedWith(listOfResponse -> Response.ok(listOfResponse.toString()).build());\r\n    }\r\n}\r\n```\r\nService.java\r\n```\r\n@RegisterRestClient\r\npublic interface Service {\r\n\r\n    @POST\r\n    @Path(\"/ping\")\r\n    Uni<String> ping();\r\n}\r\n```\r\napplication.yml\r\n```\r\n\"%dev\":\r\n  quarkus:\r\n    rest-client:\r\n      \"com.crionuke.Service\":\r\n        url: \"http://localhost:8080/\"\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n```\r\n<quarkus.platform.version>2.5.1.Final</quarkus.platform.version>\r\n```\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n```\r\ncurl -X POST -v localhost:8080/load/30\r\n```\r\n\r\n```\r\n2021-12-02 14:57:35,921 DEBUG [ru.sbe.gen.aut.Api] (vert.x-eventloop-thread-5) Load request, requests=30\r\n2021-12-02 14:57:36,001 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-0) Ping request, 1\r\n2021-12-02 14:57:36,002 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-1) Ping request, 2\r\n2021-12-02 14:57:36,003 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-2) Ping request, 3\r\n2021-12-02 14:57:36,004 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-3) Ping request, 4\r\n2021-12-02 14:57:36,005 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-4) Ping request, 5\r\n2021-12-02 14:57:36,005 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-5) Ping request, 6\r\n2021-12-02 14:57:36,006 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-6) Ping request, 7\r\n2021-12-02 14:57:36,007 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-7) Ping request, 8\r\n2021-12-02 14:57:36,007 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-8) Ping request, 9\r\n2021-12-02 14:57:36,008 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-9) Ping request, 10\r\n2021-12-02 14:57:36,009 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-10) Ping request, 11\r\n2021-12-02 14:57:36,010 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-11) Ping request, 12\r\n2021-12-02 14:57:36,010 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-12) Ping request, 13\r\n2021-12-02 14:57:36,011 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-13) Ping request, 14\r\n2021-12-02 14:57:36,012 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-14) Ping request, 15\r\n2021-12-02 14:57:36,013 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-15) Ping request, 16\r\n2021-12-02 14:57:36,013 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-16) Ping request, 17\r\n2021-12-02 14:57:36,015 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-17) Ping request, 18\r\n2021-12-02 14:57:36,015 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-18) Ping request, 19\r\n2021-12-02 14:57:36,016 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-19) Ping request, 20\r\n2021-12-02 14:57:41,005 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-2) Pong response, 3\r\n2021-12-02 14:57:41,005 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-4) Pong response, 5\r\n2021-12-02 14:57:41,005 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-3) Pong response, 4\r\n2021-12-02 14:57:41,005 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-1) Pong response, 2\r\n2021-12-02 14:57:41,005 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-0) Pong response, 1\r\n2021-12-02 14:57:41,007 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-6) Pong response, 7\r\n2021-12-02 14:57:41,007 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-7) Pong response, 8\r\n2021-12-02 14:57:41,007 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-5) Pong response, 6\r\n2021-12-02 14:57:41,008 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-8) Pong response, 9\r\n2021-12-02 14:57:41,013 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-12) Pong response, 13\r\n2021-12-02 14:57:41,013 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-9) Pong response, 10\r\n2021-12-02 14:57:41,013 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-11) Pong response, 12\r\n2021-12-02 14:57:41,013 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-10) Pong response, 11\r\n2021-12-02 14:57:41,014 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-13) Pong response, 14\r\n2021-12-02 14:57:41,014 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-14) Pong response, 15\r\n2021-12-02 14:57:41,018 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-16) Pong response, 17\r\n2021-12-02 14:57:41,017 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-15) Pong response, 16\r\n2021-12-02 14:57:41,018 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-17) Pong response, 18\r\n2021-12-02 14:57:41,018 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-18) Pong response, 19\r\n2021-12-02 14:57:41,020 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-19) Pong response, 20\r\n2021-12-02 14:57:41,048 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-19) Ping request, 21\r\n2021-12-02 14:57:41,049 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-18) Ping request, 22\r\n2021-12-02 14:57:41,049 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-17) Ping request, 23\r\n2021-12-02 14:57:41,050 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-15) Ping request, 24\r\n2021-12-02 14:57:41,051 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-16) Ping request, 25\r\n2021-12-02 14:57:41,052 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-14) Ping request, 26\r\n2021-12-02 14:57:41,052 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-13) Ping request, 27\r\n2021-12-02 14:57:41,054 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-11) Ping request, 28\r\n2021-12-02 14:57:41,054 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-10) Ping request, 29\r\n2021-12-02 14:57:41,055 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-9) Ping request, 30\r\n2021-12-02 14:57:46,049 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-19) Pong response, 21\r\n2021-12-02 14:57:46,049 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-18) Pong response, 22\r\n2021-12-02 14:57:46,050 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-17) Pong response, 23\r\n2021-12-02 14:57:46,050 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-15) Pong response, 24\r\n2021-12-02 14:57:46,051 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-16) Pong response, 25\r\n2021-12-02 14:57:46,052 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-14) Pong response, 26\r\n2021-12-02 14:57:46,053 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-13) Pong response, 27\r\n2021-12-02 14:57:46,054 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-11) Pong response, 28\r\n2021-12-02 14:57:46,056 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-10) Pong response, 29\r\n2021-12-02 14:57:46,056 DEBUG [ru.sbe.gen.aut.Api] (executor-thread-9) Pong response, 30\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21884/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21884/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

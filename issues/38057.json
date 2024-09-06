@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38057",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38057/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38057/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38057/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38057",
+  "id": 2067167295,
+  "node_id": "I_kwDOCFbutM57Nng_",
+  "number": 38057,
+  "title": "AppCDS Archive Generation with quarkus-container-image-jib causes a timestamp mismatch",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 16,
+  "created_at": "2024-01-05T11:17:15Z",
+  "updated_at": "2024-04-12T15:04:58Z",
+  "closed_at": "2024-04-12T15:04:57Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen creating an AppCDS Archive with container image generation through the quarkus-container-image-jib extension, the following Docker command gets executed:\r\n\r\n`docker run -v /Users/my-user/repos/my-service/target:/tmp/quarkus:z -w /tmp/quarkus/quarkus-app --rm registry.access.redhat.com/ubi8/openjdk-21-runtime:1.18 java -XX:ArchiveClassesAtExit=app-cds.jsa -Dquarkus.appcds.generate=true -jar quarkus-run.jar`\r\n\r\nThis command mounts the `/target` folder as a volume, which contains the library folders `/quarkus-app/lib/boot` and `/quarkus-app/lib/main`. This means that the AppCDS archive will be generated with the .jar files that are inside these two folders.\r\n\r\nThe issue is that after the AppCDS archive generation process, in the `quarkus-container-image-jib` image generation, the `.jar` files inside the `/quarkus-app/lib/boot` and `/quarkus-app/lib/main` folders are copied into the image in a way that causes their timestamp to change. See `quarkusio/quarkus/extensions/container-image/container-image-jib/deployment/src/main/java/io/quarkus/container/image/jib/deployment/JibProcessor.java` to see how this is done.\r\n\r\nAs an example, when building the AppCDS, these are the files inside the /lib/boot folder:\r\n\r\n![Screenshot 2024-01-05 at 10 55 23](https://github.com/quarkusio/quarkus/assets/15610011/b7d4bf56-ffd5-47ca-9446-6e7080041f29)\r\n\r\nAnd these are the files inside the final container:\r\n\r\n<img width=\"1023\" alt=\"Screenshot 2024-01-05 at 10 55 14\" src=\"https://github.com/quarkusio/quarkus/assets/15610011/a5a2e90f-8a8c-4c1b-8bc2-a868277ec374\">\r\n\r\nAs you can see, the timestamps are different, which causes the error when CDS tries to load up the archive:\r\n\r\n```\r\nPicked up JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dio.netty.leakDetection.level=paranoid -Xlog:class+path=info\r\n\r\n[0.002s][info][class,path] bootstrap loader class path=/usr/lib/jvm/java-21-openjdk-21.0.1.0.12-3.el8.x86_64/lib/modules\r\n[0.008s][info][class,path] Expecting BOOT path=/usr/lib/jvm/java-21-openjdk-21.0.1.0.12-3.el8.x86_64/lib/modules\r\n[0.008s][info][class,path] Expecting -Djava.class.path=\r\n[0.008s][info][class,path] checking shared classpath entry: /usr/lib/jvm/java-21-openjdk-21.0.1.0.12-3.el8.x86_64/lib/modules\r\n[0.008s][info][class,path] ok\r\n[0.022s][info][class,path] Expecting BOOT path=/usr/lib/jvm/java-21-openjdk-21.0.1.0.12-3.el8.x86_64/lib/modules\r\n[0.022s][info][class,path] Expecting -Djava.class.path=quarkus-run.jar:lib/boot/org.jboss.logging.jboss-logging-3.5.3.Final.jar:lib/boot/io.smallrye.common.smallrye-common-os-2.1.2.jar:lib/boot/io.quarkus.quarkus-development-mode-spi-3.6.3.jar:lib/boot/io.quarkus.quarkus-bootstrap-runner-3.6.3.jar:lib/boot/io.smallrye.common.smallrye-common-io-2.1.2.jar:lib/boot/io.quarkus.quarkus-vertx-latebound-mdc-provider-3.6.3.jar:lib/boot/io.github.crac.org-crac-0.1.3.jar:lib/boot/org.jboss.logmanager.jboss-logmanager-3.0.2.Final.jar:lib/boot/io.smallrye.common.smallrye-common-constraint-2.1.2.jar:lib/boot/io.smallrye.common.smallrye-common-cpu-2.1.2.jar:lib/boot/io.smallrye.common.smallrye-common-expression-2.1.2.jar:lib/boot/io.smallrye.common.smallrye-common-function-2.1.2.jar:lib/boot/io.smallrye.common.smallrye-common-net-2.1.2.jar:lib/boot/io.smallrye.common.smallrye-common-ref-2.1.2.jar\r\n[0.022s][info][class,path] checking shared classpath entry: /usr/lib/jvm/java-21-openjdk-21.0.1.0.12-3.el8.x86_64/lib/modules\r\n[0.022s][info][class,path] ok\r\n[0.022s][info][class,path] checking shared classpath entry: quarkus-run.jar\r\n[0.022s][info][class,path] ok\r\n[0.022s][info][class,path] checking shared classpath entry: lib/boot/org.jboss.logging.jboss-logging-3.5.3.Final.jar\r\n[0.022s][warning][cds       ] A jar file is not the one used while building the shared archive file: lib/boot/org.jboss.logging.jboss-logging-3.5.3.Final.jar\r\n[0.023s][warning][cds       ] A jar file is not the one used while building the shared archive file: lib/boot/org.jboss.logging.jboss-logging-3.5.3.Final.jar\r\n[0.023s][warning][cds       ] lib/boot/org.jboss.logging.jboss-logging-3.5.3.Final.jar timestamp has changed.\r\n[0.024s][warning][cds,dynamic] Unable to use shared archive. The top archive failed to load: app-cds.jsa\r\n```\r\n\r\nI would suggest changing the layer creation in the `quarkus-container-image-jib` to ensure that the timestamps are not changed. A common solution for this is to tar the files before moving them to a layer in the image.\r\n\r\n### Expected behavior\r\n\r\nAll the libraries that are used when generating the AppCDS archive must be exactly the same as the ones used when creating the image.\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin <computer_name> 23.2.0 Darwin Kernel Version 23.2.0: Wed Nov 15 21:53:18 PST 2023; root:xnu-10002.61.3~2/RELEASE_ARM64_T6000 arm64 arm Darwin\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.1\" 2023-10-17 OpenJDK Runtime Environment (build 21.0.1+12-29) OpenJDK 64-Bit Server VM (build 21.0.1+12-29, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus 3.6.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38057/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38057/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41781",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41781/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41781/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41781/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41781",
+  "id": 2398073829,
+  "node_id": "I_kwDOCFbutM6O77Pl",
+  "number": 41781,
+  "title": "Problems while creating integration tests with JUnit and RestAssured",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-07-09T12:27:28Z",
+  "updated_at": "2024-07-09T12:41:14Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI was setting up integrations tests on my Quarkus application using JUnit and RestAssured. The way the application is setup, I'm trying to create basic entity, repository, service and resource that are all called by using the necessary methods and return errors as to be used by the front. The problem is during testing. The first entity I've replaced to use this works perfectly, and the tests implemented performed as expected, but when creating the tests for the second entity, the tests are failing to make the GET.\r\n\r\nWhat I did to recreate the entity (Entity, repository, service, resource and test) was to copy/paste everything, changing the name, and if I start the server normally it works, but during the tests it returns a 404. If copying the first entity's test to the second, the test works, if copying the second entity's test to the first, it fails.\n\n### Expected behavior\n\nThe request made in the test of the second entity does not return 404.\n\n### Actual behavior\n\nThe request made in the test of the second entity does is currently returning 404.\n\n### How to Reproduce?\n\nI'm not sure how to recreate it.\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [version 10.0.22631.3737]\n\n### Output of `java -version`\n\nJava not installed, using IntelliJ version (corretto-17 Amazon Corretto 17.0.11)\n\n### Quarkus version or git rev\n\n2.6.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae)\n\n### Additional information\n\nThis is the setup I made:\r\n\r\nBasic entity:\r\n```kotlin\r\n@MappedSuperclass\r\nopen class BaseEntity(\r\n    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long = 0\r\n) {\r\n    protected val hashMultiplier: Int\r\n        get() = 37\r\n\r\n    @Override\r\n    override fun equals(other: Any?): Boolean {\r\n        if (this === other) return true\r\n        if (other == null) return false\r\n        val oEffectiveClass = other.javaClass\r\n        val thisEffectiveClass = this.javaClass\r\n        if (thisEffectiveClass != oEffectiveClass) return false\r\n\r\n        return this.toString() == other.toString()\r\n    }\r\n\r\n    @Override\r\n    override fun toString(): String {\r\n        return Gson().toJson(this) //Does not present as problem currently\r\n    }\r\n\r\n    override fun hashCode(): Int {\r\n        return hashMultiplier * id.hashCode() +\r\n                hashMultiplier * this::class.simpleName.hashCode() //This gets the name of the classes that implements it\r\n    }\r\n}\r\n```\r\n\r\nEntity example:\r\n```kotlin\r\n@Entity(name = \"Foo\")\r\ndata class Foo(\r\n    var name: String,\r\n    var description: String,\r\n) : BaseEntity() {\r\n    override fun hashCode(): Int {\r\n        return this.hashCode() +\r\n                this.hashMultiplier * name.hashCode() +\r\n                this.hashMultiplier * description.hashCode()\r\n    }\r\n\r\n    override fun equals(other: Any?): Boolean {\r\n        if (this === other) return true\r\n        if (javaClass != other?.javaClass) return false\r\n        if (!super.equals(other)) return false\r\n\r\n        other as Foo\r\n\r\n        if (name != other.name ) return false\r\n        if (description!= other.description) return false\r\n\r\n        return true\r\n    }\r\n}\r\n```\r\n\r\nCan't create a single base repository due to panache repositories shenanigans with ```@Default```, so each class would have this code.\r\nBaseRepository:\r\n```kotlin\r\n@Repository\r\n@Transactional\r\n@RequestScoped\r\nclass FooPanacheRepository : PanacheRepository<Foo> {\r\n    @Inject\r\n    private lateinit var userRepository: UserRepository\r\n\r\n    @Inject\r\n    private lateinit var jwt: JsonWebToken\r\n\r\n    @Inject\r\n    private lateinit var logRepository: LogRepository\r\n\r\n    fun searh(query: String, params: Map<String, Any>, sort: Sort? = null) = searchQuery(query, params, sort)\r\n    fun searchUnique(query: String, params: Map<String, Any>, sort: Sort? = null): Foo{\r\n        val data = searchQuery(query, params, sort)\r\n        if (data.isEmpty()) throw InternalProjectException()\r\n        if (data.size > 1) throw InternalProjectException()\r\n        return data.first()\r\n    }\r\n\r\n    fun searchAll(sort: Sort? = null) = searchQuery(\"\", mapOf(), sort)\r\n    fun searchById(id: Long): Foo= searchUnique(\"id = :id\", mapOf(\"id\" to id))\r\n\r\n    fun saveOrUpdate(entity: Foo): Foo=\r\n        if (entity.id == 0L) save(entity) else update(entity)\r\n\r\n    fun deleteThis(entity: Foo) = deleteEntity(entity)\r\n    fun deleteThisById(id: Long) = deleteEntity(searchById(id))\r\n\r\n    private fun searchQuery(query: String, params: Map<String, Any>, sort: Sort? = null): List<Foo> {\r\n        try {\r\n            return if (sort != null) {\r\n                list(query, sort, params)\r\n            } else {\r\n                list(query, params)\r\n            }\r\n        } catch (ex: Exception) {\r\n            throw InternalProjectException()\r\n        }\r\n    }\r\n\r\n    private fun save(entity: Foo): Foo {\r\n        try {\r\n            persist(entity)\r\n            log(entity)\r\n            return entity\r\n        } catch (ex: Exception) {\r\n            throw InternalProjectException()\r\n        }\r\n    }\r\n\r\n    private fun update(entity: Foo): Foo{\r\n        try {\r\n            getEntityManager().merge(entity)\r\n            log(entity)\r\n            return entity\r\n        } catch (ex: Exception) {\r\n            throw InternalProjectException()\r\n        }\r\n    }\r\n\r\n    private fun deleteEntity(entity: Foo): Boolean {\r\n        try {\r\n            log(entity)\r\n            return deleteById(entity.id)\r\n        } catch (ex: Exception) {\r\n            throw InternalProjectException()\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nAnd entity repositories use it like this:\r\n```kotlin\r\n@Repository\r\n@Transactional\r\n@ApplicationScoped\r\nclass FooRepository {\r\n    @Inject\r\n    private lateinit var repository: FooPanacheRepository \r\n\r\n    @CacheResult(cacheName = \"foo_search\")\r\n    fun search(@CacheKey query: String, params: Map<String, Any>, @CacheKey sort: Sort? = null) =\r\n        repository.search(query, params, sort)\r\n\r\n//Other methods created as needed, following this example\r\n}\r\n```\r\n\r\nServices are redirects from the endpoints in the resource, treating the data for the repositories, and resources are created to receive data from the front and send them directly to the service. Both of them have bases created for them implementing the default methods.\r\n\r\nThis is how the test is implemented:\r\n```kotlin\r\n@QuarkusTest\r\nclass FooResourceTest {\r\n    @Inject\r\n    lateinit var repository: FooPanacheRepository\r\n\r\n    val url = \"/foo\"\r\n\r\n    @Test\r\n    fun testSearch() {\r\n        val endpoint = \"/bar=1\" //Will change as needed\r\n        val expectedData= repository.search() //Method using direct database access to get expected result\r\n        val actualData: foo= `when`()\r\n            .request(\"GET\", url + endpoint)\r\n            .then()\r\n            .statusCode(200)\r\n            .extract()\r\n            .body().`as`(Foo::class.java)\r\n\r\n        assertEquals(expectedData, actualData)\r\n    }\r\n}\r\n```\r\n\r\nThis is replicated to the other tests, and can be changed if needed. Will post more details if needed.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41781/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41781/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

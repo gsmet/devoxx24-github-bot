@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29158",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29158/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29158/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29158/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29158",
+  "id": 1442392806,
+  "node_id": "I_kwDOCFbutM5V-Srm",
+  "number": 29158,
+  "title": "New extension template creates integration tests, but they are not run - or referenced in the top-level pom.xml",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1800003265,
+      "node_id": "MDU6TGFiZWwxODAwMDAzMjY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devtools",
+      "name": "area/devtools",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues/PR related to maven, gradle, platform and cli tooling/plugins"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-11-09T16:27:08Z",
+  "updated_at": "2023-11-23T17:18:30Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen I create a new extension project using the mojo, an `integration-tests` project is created, but it's not run in normal builds. In fact, it's not referenced in the top-level project at all. This is the case even if I don't have the `-DwithoutTests` option which the instructions include in the default example.\r\n\r\n```\r\nholly@hcummins-mac tmp % mvn io.quarkus.platform:quarkus-maven-plugin:2.14.0.Final:create-extension -N -DgroupId=org.acme  -DextensionId=greeting-extension\r\n[INFO] Scanning for projects...\r\nDownloading from central: [...]\r\n[INFO] \r\n[INFO] ------------------< org.apache.maven:standalone-pom >-------------------\r\n[INFO] Building Maven Stub Project (No POM) 1\r\n[INFO] --------------------------------[ pom ]---------------------------------\r\n[INFO] \r\n[INFO] --- quarkus-maven-plugin:2.14.0.Final:create-extension (default-cli) @ standalone-pom ---\r\n\r\nDetected layout type is 'standalone' \r\nGenerated runtime artifactId is 'greeting-extension'\r\n\r\napplying codestarts...\r\n📚  java\r\n🔨  maven\r\n📦  quarkus-extension\r\n🚀  devmode-test\r\n🚀  extension-base\r\n🚀  integration-tests\r\n🚀  unit-test\r\n\r\n-----------\r\n 👍  extension has been successfully generated in:\r\n--> /Users/holly/Code/tmp/greeting-extension\r\n```\r\n\r\nIf I run `mvn install` or `mvn verify`, no integration tests are run:\r\n```\r\n[INFO] \r\n[INFO] --- maven-jar-plugin:2.4:jar (default-jar) @ greeting-extension-deployment ---\r\n[INFO] Building jar: /Users/holly/Code/tmp/greeting-extension/deployment/target/greeting-extension-deployment-1.0.0-SNAPSHOT.jar\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Reactor Summary for Greeting Extension - Parent 1.0.0-SNAPSHOT:\r\n[INFO] \r\n[INFO] Greeting Extension - Parent ........................ SUCCESS [  0.001 s]\r\n[INFO] Greeting Extension - Runtime ....................... SUCCESS [  1.868 s]\r\n[INFO] Greeting Extension - Deployment .................... SUCCESS [  3.212 s]\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD SUCCESS\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  5.139 s\r\n[INFO] Finished at: 2022-11-09T16:09:34Z\r\n[INFO] ------------------------------------------------------------------------\r\n```\r\n\r\nI don't think they could be run, because they're not referenced in the `pom.xml`:\r\n\r\n```\r\nholly@hcummins-mac greeting-extension % grep integration pom.xml \r\nholly@hcummins-mac greeting-extension %   \r\n```\r\n\r\n### Expected behavior\r\n\r\nOlder extensions either list `integration-tests` explicitly in the modules, or have this stanza in the pom.xml:\r\n\r\n```\r\n  <profiles>\r\n    <profile>\r\n      <id>it</id>\r\n      <activation>\r\n        <property>\r\n          <name>performRelease</name>\r\n          <value>!true</value>\r\n        </property>\r\n      </activation>\r\n      <modules>\r\n        <module>integration-tests</module>\r\n      </modules>\r\n    </profile>\r\n  </profiles>\r\n```  \r\n\r\n### Actual behavior\r\n\r\nThere is no reference to the integration tests in the top-level pom, and they are not run from the top-level.\r\n\r\n### How to Reproduce?\r\n\r\nSteps to reproduce: \r\n\r\n```\r\nmvn io.quarkus.platform:quarkus-maven-plugin:2.14.0.Final:create-extension -N -DgroupId=org.acme  -DextensionId=greeting-extension\r\ncd greeting-extension\r\ngrep integration pom.xml\r\n```\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\nMaven home: /opt/homebrew/Cellar/maven/3.8.6/libexec\r\nJava version: 17.0.2, vendor: Eclipse Adoptium, runtime: /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home\r\nDefault locale: en_GB, platform encoding: UTF-8\r\nOS name: \"mac os x\", version: \"12.6\", arch: \"aarch64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29158/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29158/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

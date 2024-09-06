@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27186",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27186/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27186/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27186/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27186",
+  "id": 1332138278,
+  "node_id": "I_kwDOCFbutM5PZtEm",
+  "number": 27186,
+  "title": "Postgres DevServices cannot pull image since 2.11.2.Final",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-08-08T16:54:05Z",
+  "updated_at": "2022-08-09T07:54:29Z",
+  "closed_at": "2022-08-09T07:53:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAfter updating quarkus from 2.10.3.Final -> 2.11.2.Final I cannot startup my quarkus application with dev services anymore.\r\nSeems like image pull fails.\r\n\r\nMy Docker daemon is configured to use a socks5 proxy.\r\n\r\nTo continue to work I had to rollback to 2.10.3.Final  and everything worked again\r\n\r\n### Expected behavior\r\n\r\nQuarkus app would start up  and spinup postgres and ryuk via testcontainers\r\n\r\n### Actual behavior\r\n\r\nQuarkus app starts and fails with infinitely trying to pull image\r\n\r\n```\r\n\r\n2022-08-08 17:52:44,755 ERROR [com.git.doc.api.asy.ResultCallbackTemplate] (docker-java-stream--933788147) Error during callback: com.github.dockerjava.api.exception.InternalServerErrorException: Status 500: {\"message\":\"Get \\\"https://registry-1.docker.io/v2/\\\": EOF\"}\r\n\r\n\tat org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder.execute(DefaultInvocationBuilder.java:247)\r\n\tat org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder.lambda$executeAndStream$1(DefaultInvocationBuilder.java:269)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n2022-08-08 17:52:44,757 WARN  [doc.io/postgres:14]] (build-36) Retrying pull for image: docker.io/postgres:14 (119s remaining)\r\n2022-08-08 17:52:44,962 ERROR [com.git.doc.api.asy.ResultCallbackTemplate] (docker-java-stream--933788147) Error during callback: com.github.dockerjava.api.exception.InternalServerErrorException: Status 500: {\"message\":\"Get \\\"https://registry-1.docker.io/v2/\\\": EOF\"}\r\n\r\n\tat org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder.execute(DefaultInvocationBuilder.java:247)\r\n\tat org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder.lambda$executeAndStream$1(DefaultInvocationBuilder.java:269)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n2022-08-08 17:52:44,963 WARN  [doc.io/postgres:14]] (build-36) Retrying pull for image: docker.io/postgres:14 (119s remaining)\r\n2022-08-08 17:52:45,188 ERROR [com.git.doc.api.asy.ResultCallbackTemplate] (docker-java-stream--933788147) Error during callback: com.github.dockerjava.api.exception.InternalServerErrorException: Status 500: {\"message\":\"Get \\\"https://registry-1.docker.io/v2/\\\": EOF\"}\r\n\r\n...\r\n```\r\n\r\n\r\n### How to Reproduce?\r\n\r\nhttps://github.com/syr/quarkus-resteasy-postgres/blob/devservices-fail_2.11.2.Final/src/test/java/org/acme/PersonServiceTest.java\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njdk-17.0.2+8\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.11.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.2\r\n\r\n### Additional information\r\n\r\n```\r\n2022-08-08 17:52:40,945 INFO  [org.tes.DockerClientFactory] (build-36) Connected to docker: \r\n  Server Version: 20.10.8\r\n  API Version: 1.41\r\n  Operating System: Docker Desktop\r\n  Total Memory: 25369 MB\r\n2022-08-08 17:52:41,028 INFO  [org.tes.uti.ImageNameSubstitutor] (build-36) Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')\r\n2022-08-08 17:52:41,341 INFO  [doc.3.3]] (build-36) Creating container for image: testcontainers/ryuk:0.3.3\r\n2022-08-08 17:52:41,736 INFO  [org.tes.uti.RegistryAuthLocator] (build-36) Credential helper/store (docker-credential-desktop) does not have credentials for https://index.docker.io/v1/\r\n2022-08-08 17:52:42,846 INFO  [doc.3.3]] (build-36) Container testcontainers/ryuk:0.3.3 is starting: 589fe2f3f7ef10d8fce1eb45c8683214c494e2f954a1b7219776e8d6eabbb891\r\n2022-08-08 17:52:44,308 INFO  [doc.3.3]] (build-36) Container testcontainers/ryuk:0.3.3 started in PT3.2564332S\r\n2022-08-08 17:52:44,312 INFO  [org.tes.uti.RyukResourceReaper] (build-36) Ryuk started - will monitor and terminate Testcontainers containers on JVM exit\r\n2022-08-08 17:52:44,313 INFO  [org.tes.DockerClientFactory] (build-36) Checking the system...\r\n2022-08-08 17:52:44,313 INFO  [org.tes.DockerClientFactory] (build-36) ?? Docker server version should be at least 1.6.0\r\n2022-08-08 17:52:44,343 INFO  [doc.io/postgres:14]] (build-36) Pulling docker image: docker.io/postgres:14. Please be patient; this may take some time but only needs to be done once.\r\n2022-08-08 17:52:44,545 INFO  [org.tes.uti.RegistryAuthLocator] (build-36) Credential helper/store (docker-credential-desktop) does not have credentials for docker.io\r\n2022-08-08 17:52:44,755 ERROR [com.git.doc.api.asy.ResultCallbackTemplate] (docker-java-stream--933788147) Error during callback: com.github.dockerjava.api.exception.InternalServerErrorException: Status 500: {\"message\":\"Get \\\"https://registry-1.docker.io/v2/\\\": EOF\"}\r\n\r\n\r\n\tat org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder.execute(DefaultInvocationBuilder.java:247)\r\n\tat org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder.lambda$executeAndStream$1(DefaultInvocationBuilder.java:269)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n2022-08-08 17:52:44,757 WARN  [doc.io/postgres:14]] (build-36) Retrying pull for image: docker.io/postgres:14 (119s remaining)\r\n2022-08-08 17:52:44,962 ERROR [com.git.doc.api.asy.ResultCallbackTemplate] (docker-java-stream--933788147) Error during callback: com.github.dockerjava.api.exception.InternalServerErrorException: Status 500: {\"message\":\"Get \\\"https://registry-1.docker.io/v2/\\\": EOF\"}\r\n\r\n\tat org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder.execute(DefaultInvocationBuilder.java:247)\r\n\tat org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder.lambda$executeAndStream$1(DefaultInvocationBuilder.java:269)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n2022-08-08 17:52:44,963 WARN  [doc.io/postgres:14]] (build-36) Retrying pull for image: docker.io/postgres:14 (119s remaining)\r\n2022-08-08 17:52:45,188 ERROR [com.git.doc.api.asy.ResultCallbackTemplate] (docker-java-stream--933788147) Error during callback: com.github.dockerjava.api.exception.InternalServerErrorException: Status 500: {\"message\":\"Get \\\"https://registry-1.docker.io/v2/\\\": EOF\"}\r\n\r\n...",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27186/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27186/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

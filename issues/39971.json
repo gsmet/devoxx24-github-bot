@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39971",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39971/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39971/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39971/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39971",
+  "id": 2233820501,
+  "node_id": "I_kwDOCFbutM6FJWVV",
+  "number": 39971,
+  "title": "Discrepancy between Quarkus REST behavior and Cache @CacheInvalidateAll behavior",
+  "labels": [
+    {
+      "id": 1714005220,
+      "node_id": "MDU6TGFiZWwxNzE0MDA1MjIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/qute",
+      "name": "area/qute",
+      "color": "0366d6",
+      "default": false,
+      "description": "The template engine"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2024-04-09T16:15:33Z",
+  "updated_at": "2024-08-30T12:50:53Z",
+  "closed_at": "2024-08-30T12:50:53Z",
+  "active_lock_reason": null,
+  "body": "I have the following endpoint using Quarkus REST (I was trying to update from RESTEasy Classic):\r\n\r\n```java\r\n    @GET\r\n    @Produces(MediaType.TEXT_HTML)\r\n    @CacheInvalidateAll(cacheName = CacheNames.MILESTONES_CACHE_NAME)\r\n    public TemplateInstance index() throws IOException {\r\n        return Templates.index(gitHub.getOpenMilestones());\r\n    }\r\n```\r\n\r\nNote the `TemplateInstance` return type.\r\n\r\nWhen I load this resource, I get:\r\n```\r\njava.lang.IllegalStateException: The current thread cannot be blocked: vert.x-eventloop-thread-1\r\n\tat io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:30)\r\n\tat io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n\tat io.smallrye.mutiny.groups.UniAwait.indefinitely(UniAwait.java:46)\r\n\tat io.quarkus.cache.runtime.CacheInvalidateAllInterceptor.invalidateAllBlocking(CacheInvalidateAllInterceptor.java:74)\r\n\tat io.quarkus.cache.runtime.CacheInvalidateAllInterceptor.intercept(CacheInvalidateAllInterceptor.java:38)\r\n\tat io.quarkus.cache.runtime.CacheInvalidateAllInterceptor_Bean.intercept(Unknown Source)\r\n```\r\n\r\nWhich seems in line with the code in `CacheInvalidateAllInterceptor`:\r\n\r\n```java\r\n    @AroundInvoke\r\n    public Object intercept(InvocationContext invocationContext) throws Exception {\r\n        CacheInterceptionContext<CacheInvalidateAll> interceptionContext = getInterceptionContext(invocationContext,\r\n                CacheInvalidateAll.class, false);\r\n\r\n        if (interceptionContext.getInterceptorBindings().isEmpty()) {\r\n            // This should never happen.\r\n            LOGGER.warn(INTERCEPTOR_BINDINGS_ERROR_MSG);\r\n            return invocationContext.proceed();\r\n        }\r\n        ReturnType returnType = determineReturnType(invocationContext.getMethod().getReturnType());\r\n        if (returnType == ReturnType.NonAsync) {\r\n            return invalidateAllBlocking(invocationContext, interceptionContext);\r\n\r\n        } else {\r\n            return invalidateAllNonBlocking(invocationContext, interceptionContext, returnType);\r\n        }\r\n    }\r\n\r\n// ...\r\n\r\n    protected static ReturnType determineReturnType(Class<?> returnType) {\r\n        if (Uni.class.isAssignableFrom(returnType)) {\r\n            return ReturnType.Uni;\r\n        }\r\n        if (CompletionStage.class.isAssignableFrom(returnType)) {\r\n            return ReturnType.CompletionStage;\r\n        }\r\n        return ReturnType.NonAsync;\r\n    }\r\n```\r\n\r\nAFAICS, Quarkus REST decides to make the endpoint reactive and `CacheInvalidateAllInterceptor` decides that it's blocking and thus there's a mismatch in behavior.\r\n\r\nI'm a bit unsure how we should fix this. I'm also surprised that we don't consider the `@Blocking`/`@NonBlocking` annotations in this code. And same question for handling `Multi`?\r\n\r\nI worked around it for now by adding a `@Blocking annotation` to the endpoints.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39971/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39971/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

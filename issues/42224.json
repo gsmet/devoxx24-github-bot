@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42224",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42224/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42224/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42224/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42224",
+  "id": 2437940921,
+  "node_id": "I_kwDOCFbutM6RUAa5",
+  "number": 42224,
+  "title": "SSL can double RSS due to Netty off-heap arenas",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 6795585542,
+      "node_id": "LA_kwDOCFbutM8AAAABlQxoBg",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/netty",
+      "name": "area/netty",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-07-30T14:09:59Z",
+  "updated_at": "2024-08-06T16:45:59Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "This is due to https://github.com/eclipse-vertx/vert.x/issues/5168#issuecomment-2258180519\r\nand will be \"fixed\" via https://github.com/eclipse-vertx/vert.x/pull/5262\r\n\r\nTLDR: enabling SSL make Vertx to use a custom off-heap pooled allocator for I/O (e.g. while reading or copying heap to off-heap to send data on the wire), but Jackson (and other quarkus parts) uses the Netty default one, making both to be resident in memory and doubling the required capacity.\r\n\r\nThis is the Jackson one: https://github.com/quarkusio/quarkus/blob/261cc877718ef24dd681cb1f3bb1547208535fca/independent-projects/vertx-utils/src/main/java/io/quarkus/vertx/utils/AppendBuffer.java#L136 \r\n\r\nA complete fix should be able to correctly pass the allocator associated to the vertx connection to the above append buffer, saving to directly reference it.\r\n\r\nA simple(r) and less invasive fix, instead, should change the above code to use the vertx pooled allocator, instead, given that via https://github.com/eclipse-vertx/vert.x/pull/5262 it should be the default used.\r\n\r\n\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42224/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42224/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

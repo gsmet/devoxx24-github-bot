@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25231",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25231/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25231/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25231/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25231",
+  "id": 1218863971,
+  "node_id": "I_kwDOCFbutM5IpmNj",
+  "number": 25231,
+  "title": "quarkus-integration-test-container-image-invoker tests run (and expect containers) even when run with `-D",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-04-28T14:58:51Z",
+  "updated_at": "2022-05-03T11:54:35Z",
+  "closed_at": "2022-05-03T11:54:34Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe `quarkus-integration-test-container-image-invoker` suite should not run unless `-Dstart-containers` is set, because it's heavily dependent on Docker. Although there is a guard in the `pom.xml`, it has a few issues. \r\n\r\n-The pom itself sets `skipTests` to true to try and get a default of 'not running the tests'. This works ok for a vanilla command line but if `skipTests` is set on the command line it will override what's in the pom and break the guard. \r\n- The guard is intended to run the tests if `-Dstart-containers` is set and if the OS is linux. As a general principle, we should try not to guard based on OS; instead, we should use semantic guards. I've confirmed that while there are various difficulties running these tests on mac, the mac-ness isn't the problem ([#25230](https://github.com/quarkusio/quarkus/issues/25230)). With docker, on x86 mac, these tests run clean so they shouldn't be disabled for all mac.\r\n- Combining properties to activate profiles doesn't work the way you'd expect. Depending on the maven version, it could be [an AND or an OR](https://maven.apache.org/pom.html#Activation).  So this guard will behave differently on maven versions below 3.2.2 (and always run the tests on linux, or run when `-Dstart-containers` is true, even on mac)  \r\n\r\n```\r\n        <profile>\r\n            <id>container-image-docker</id>\r\n            <activation>\r\n                <property>\r\n                    <name>start-containers</name>\r\n                </property>\r\n                <os>\r\n                    <family>linux</family>\r\n                </os>\r\n            </activation>\r\n ```\r\nOn maven < 3.2.2 it will activate and run the tests on linux, even if `start-containers` is not set. \r\n\r\n### Expected behavior\r\n\r\nIt should be necessary to add -Dstart-containers=true to invoke the tests, since they require docker. \r\n\r\n\r\n### Actual behavior\r\n\r\nRunning `mvnw -Dquickly  -DskipTests=false` will invoke the tests. Note that just `mvnw` won't invoke the tests, because the `pom.xml` sets `skipTests` to true. This works ok as long as `skipTests` isn't set on the command line. \r\n\r\n\r\n### How to Reproduce?\r\n\r\nRunning `./mvnw -Dquickly  -DskipTests=false -f integration-tests/container-image/maven-invoker-way` will invoke the tests. On mac, or on systems without docker, the tests will fail. \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25231/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25231/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

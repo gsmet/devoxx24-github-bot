@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33561",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33561/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33561/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33561/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33561",
+  "id": 1722263162,
+  "node_id": "I_kwDOCFbutM5mp6Z6",
+  "number": 33561,
+  "title": "Reactive Messaging (RabbitMQ) Unable to process multiple messages in parallel",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-05-23T15:00:34Z",
+  "updated_at": "2023-08-28T07:32:53Z",
+  "closed_at": "2023-08-28T07:32:53Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI try to process multiple message in parallel with quarkus-smallrye-reactive-messaging-rabbitmq librairies. For each message, I call a backend which takes 1s with reactive rest client.\r\n\r\nFor 10 messages present in the queue, it therefore takes 10s to process them.\r\n\r\nI don't need to ensure the order of messages. If I modify the connection-count property, it simulates a sharded queue and therefore processes messages 0, 2, 4, 6, 8, 1, 3, 5, 7, 9 in 10s as well\n\n### Expected behavior\n\nMessages are read in parallel. \r\nMaybe with connection-count configuration ?\n\n### Actual behavior\n\nMessages are read one by one.\n\n### How to Reproduce?\n\n```\r\n@ApplicationScoped\r\n@Slf4j\r\npublic class RabbitMQMessageConsumer {\r\n\r\n    @Inject\r\n    private ObjectMapper mapper;\r\n    \r\n    @RestClient\r\n    private BackendService backendService;\r\n\r\n    @Incoming(\"test_message\")\r\n    public Uni<Void> consume(Message<byte[]> message)  {\r\n        return backendService.get().onItemOrFailure().transformToUni((response, throwable) -> {\r\n            if (null != throwable) {\r\n                log.error(\"Error call backend.\", throwable);\r\n                return Uni.createFrom().voidItem();\r\n            } else {                \r\n                try {\r\n                    log.info(\"message : {}\", mapper.readValue(message.getPayload(), TestMessage.class));\r\n                } catch (IOException e) {\r\n                    throw new RuntimeException(e);\r\n                }\r\n                return Uni.createFrom().completionStage(message.ack()); \r\n            }\r\n        });\r\n    }\r\n}\r\n```\r\n```\r\n@Data\r\npublic class TestMessage {\r\n    @JsonProperty(\"id\")\r\n    private String id;\r\n}\r\n```\r\n```\r\n@Path(\"/backend\")\r\n@RegisterRestClient(configKey=\"backend\")\r\npublic interface BackendService {\r\n\r\n    @GET\r\n    @Path(\"/\")\r\n    Uni<Response> get();\r\n}\r\n```\r\n```\r\nquarkus:\r\n  rest-client:\r\n    backend:\r\n      url: http://localhost:8090/\r\n      scope: jakarta.inject.Singleton\r\n\r\n  \r\nrabbitmq-host: localhost\r\nrabbitmq-port: 5672\r\nrabbitmq-username: user\r\nrabbitmq-password: password\r\n\r\nmp:\r\n  messaging:\r\n    incoming:\r\n      test_message:\r\n        virtual-host: \"/test\"\r\n        connector: smallrye-rabbitmq\r\n        queue:\r\n          name: test_message\r\n        username: user\r\n        password: password\r\n        use-nio: true\r\n        exchange:\r\n          type: fanout\r\n```\r\n\r\n```\r\n2023-05-23 16:20:37,053 INFO  [io.sma.rea.mes.rabbitmq] (Quarkus Main Thread) SRMSG17036: RabbitMQ broker configured to localhost:5672 for channel test_message\r\n2023-05-23 16:20:37,068 INFO  [io.sma.rea.mes.rabbitmq] (Quarkus Main Thread) SRMSG17006: Establishing connection with RabbitMQ broker for channel `test_message`\r\n2023-05-23 16:20:37,071 INFO  [io.sma.rea.mes.rabbitmq] (Quarkus Main Thread) SRMSG17007: Connection with RabbitMQ broker established for channel `test_message`\r\n2023-05-23 16:20:37,072 INFO  [io.ver.rab.imp.RabbitMQClientImpl] (Quarkus Main Thread) Starting rabbitmq client\r\n2023-05-23 16:20:37,152 INFO  [io.quarkus] (Quarkus Main Thread) test-rabbit 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.0.3.Final) started in 2.544s. Listening on: http://localhost:8080\r\n2023-05-23 16:20:37,153 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2023-05-23 16:20:37,154 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, config-yaml, rest-client-reactive, rest-client-reactive-jackson, resteasy-reactive, smallrye-context-propagation, smallrye-reactive-messaging, smallrye-reactive-messaging-rabbitmq, vertx]\r\n2023-05-23 16:20:37,159 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17000: RabbitMQ Receiver listening address test_message\r\n2023-05-23 16:20:44,088 WARN  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17038: No valid content_type set, failing back to byte[]. If that's wanted, set the content type to application/octet-stream with \"content-type-override\"\r\n2023-05-23 16:20:45,351 INFO  [fr.tes.RabbitMQMessageConsumer] (vert.x-eventloop-thread-2) message : TestMessage(id=0)\r\n2023-05-23 16:20:45,352 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `test_message` has been ack'd\r\n2023-05-23 16:20:46,370 INFO  [fr.tes.RabbitMQMessageConsumer] (vert.x-eventloop-thread-2) message : TestMessage(id=1)\r\n2023-05-23 16:20:46,372 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `test_message` has been ack'd\r\n2023-05-23 16:20:47,399 INFO  [fr.tes.RabbitMQMessageConsumer] (vert.x-eventloop-thread-2) message : TestMessage(id=2)\r\n2023-05-23 16:20:47,401 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `test_message` has been ack'd\r\n2023-05-23 16:20:48,418 INFO  [fr.tes.RabbitMQMessageConsumer] (vert.x-eventloop-thread-2) message : TestMessage(id=3)\r\n2023-05-23 16:20:48,420 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `test_message` has been ack'd\r\n2023-05-23 16:20:49,447 INFO  [fr.tes.RabbitMQMessageConsumer] (vert.x-eventloop-thread-2) message : TestMessage(id=4)\r\n2023-05-23 16:20:49,449 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `test_message` has been ack'd\r\n2023-05-23 16:20:50,466 INFO  [fr.tes.RabbitMQMessageConsumer] (vert.x-eventloop-thread-2) message : TestMessage(id=5)\r\n2023-05-23 16:20:50,468 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `test_message` has been ack'd\r\n2023-05-23 16:20:51,493 INFO  [fr.tes.RabbitMQMessageConsumer] (vert.x-eventloop-thread-2) message : TestMessage(id=6)\r\n2023-05-23 16:20:51,495 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `test_message` has been ack'd\r\n2023-05-23 16:20:52,504 INFO  [fr.tes.RabbitMQMessageConsumer] (vert.x-eventloop-thread-2) message : TestMessage(id=7)\r\n2023-05-23 16:20:52,506 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `test_message` has been ack'd\r\n2023-05-23 16:20:53,531 INFO  [fr.tes.RabbitMQMessageConsumer] (vert.x-eventloop-thread-2) message : TestMessage(id=8)\r\n2023-05-23 16:20:53,533 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `test_message` has been ack'd\r\n2023-05-23 16:20:54,551 INFO  [fr.tes.RabbitMQMessageConsumer] (vert.x-eventloop-thread-2) message : TestMessage(id=9)\r\n2023-05-23 16:20:54,553 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `test_message` has been ack'd\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment GraalVM CE 22.3.2 (build 17.0.7+7-jvmci-22.3-b18)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33561/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33561/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

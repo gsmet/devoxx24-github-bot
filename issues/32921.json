@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32921",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32921/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32921/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32921/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32921",
+  "id": 1685350091,
+  "node_id": "I_kwDOCFbutM5kdGbL",
+  "number": 32921,
+  "title": "Two beans resolve JAX-RS @Context",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-04-26T16:27:55Z",
+  "updated_at": "2023-04-27T16:59:30Z",
+  "closed_at": "2023-04-27T16:55:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have a pretty simple JAX-RS resource class:\r\n\r\n```java\r\n@Path(\"/\")\r\npublic class RestService {\r\n\r\n    private static Logger logger = LoggerFactory.getLogger(RestService.class);\r\n\r\n    @Context\r\n    UriInfo uriInfo;\r\n\r\n    @GET\r\n    @Path(\"/hello\")\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello() {\r\n        logger.info(\"hello\");\r\n        return \"hello\";\r\n    }\r\n\r\n    @GET\r\n    @Path(\"/chain\")\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String chain() {\r\n        RestClient restClient = RestClientBuilder.newBuilder()\r\n                .baseUri(uriInfo.getBaseUri())\r\n                .build(RestClient.class);\r\n        return (\"chain -> \" + restClient.hello());\r\n    }\r\n\r\n}\r\n```\r\n\r\nWhen I try to build, arc is complaining:\r\n\r\n```posh\r\n[ERROR]         [error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: jakarta.enterprise.inject.spi.DeploymentException: jakarta.enterprise.inject.AmbiguousResolutionException: Ambiguous dependencies for type jakarta.ws.rs.core.UriInfo and qualifiers [@Default]\r\n[ERROR]         - java member: RestService#uriInfo\r\n[ERROR]         - declared on CLASS bean [types=[RestService, java.lang.Object], qualifiers=[@Default, @Any], target=RestService]\r\n[ERROR]         - available beans:\r\n[ERROR]                 - PRODUCER METHOD bean [types=[jakarta.ws.rs.core.UriInfo, java.lang.Object], qualifiers=[@Default, @Any], target=jakarta.ws.rs.core.UriInfo uriInfo(), declaringBean=org.jboss.resteasy.reactive.server.injection.ContextProducers]\r\n[ERROR]                 - PRODUCER METHOD bean [types=[jakarta.ws.rs.core.UriInfo, java.lang.Object], qualifiers=[@Default, @Any], target=jakarta.ws.rs.core.UriInfo uriInfo(), declaringBean=org.jboss.resteasy.cdi.ContextProducers]\r\n[ERROR]         at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1395)\r\n[ERROR]         at io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:305)\r\n[ERROR]         at io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:156)\r\n...\r\n```\r\n\r\nI will check this up.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32921/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32921/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

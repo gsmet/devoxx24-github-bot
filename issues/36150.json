@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36150",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36150/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36150/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36150/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36150",
+  "id": 1912803281,
+  "node_id": "I_kwDOCFbutM5yAw_R",
+  "number": 36150,
+  "title": "Optional property in ConfigMapping becomes mandatory",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2023-09-26T06:49:29Z",
+  "updated_at": "2024-07-23T12:12:37Z",
+  "closed_at": "2023-09-26T15:00:11Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMigrating to 3.2.6.Final from 2.16.8 we have detected that Optional properties in a ConfigMapping are becoming mandatory\r\n\r\n```posh\r\nERROR [io.qua.run.Application] (Quarkus Main Thread) Failed to start application (with profile [dev]): java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:104)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: io.smallrye.config.ConfigValidationException: Configuration validation failed:\r\n\tjava.util.NoSuchElementException: SRCFG00014: The config property connection.server.host is required but it could not be found in any config source\r\n\tat io.smallrye.config.ConfigMappingProvider.mapConfigurationInternal(ConfigMappingProvider.java:1003)\r\n\tat io.smallrye.config.ConfigMappingProvider.lambda$mapConfiguration$3(ConfigMappingProvider.java:959)\r\n\tat io.smallrye.config.SecretKeys.doUnlocked(SecretKeys.java:28)\r\n\tat io.smallrye.config.ConfigMappingProvider.mapConfiguration(ConfigMappingProvider.java:959)\r\n\tat io.smallrye.config.ConfigMappings.mapConfiguration(ConfigMappings.java:91)\r\n\tat io.smallrye.config.SmallRyeConfigBuilder.build(SmallRyeConfigBuilder.java:630)\r\n\tat io.quarkus.runtime.generated.Config.readConfig(Unknown Source)\r\n\tat io.quarkus.deployment.steps.RuntimeConfigSetup.deploy(Unknown Source)  \r\n```\r\n\r\n### Expected behavior\r\n\r\nOptional property should not be mandatory to start up the quarkus application\r\n\r\n### Actual behavior\r\n\r\nError is raised because the property is not provided\r\n\r\n### How to Reproduce?\r\n\r\nReproduce\r\n\r\n1) Create ConfigMapping like in a quarkus application\r\n\r\n```java\r\n@ConfigMapping(prefix = \"connection\")\r\npublic interface Connection {\r\n    Optional<Server> server();\r\n}\r\n```\r\n\r\n2) Create Server interface to declare some properties\r\n\r\n```java\r\npublic interface Server {\r\n    String host();\r\n\r\n   @WithDefault(\"8080\")\r\n    String port();\r\n}\r\n```\r\n\r\n3) Make use of the Connection in the quarkus app, and try to start up the application which will raise the error\r\n\r\n4) The problem appears when adding `@WithDefault(\"8080\")` , in case of removing this annotation the error disappears but then there is not default.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava version \"17.0.7\" 2023-04-18 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.6.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven home: /tools/apache-maven-3.8.2 Java version: 17.0.7, vendor: Oracle Corporation, runtime: \r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36150/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36150/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

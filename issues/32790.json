@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32790",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32790/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32790/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32790/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32790",
+  "id": 1676398141,
+  "node_id": "I_kwDOCFbutM5j6849",
+  "number": 32790,
+  "title": "Hibernate exception when using Uni.join.all",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2023-04-20T09:55:22Z",
+  "updated_at": "2023-10-03T19:33:48Z",
+  "closed_at": "2023-04-21T12:50:17Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThere appears to be some issue with combining several Hibernate activities using `Uni.join.all`. \r\n\r\nThe following code:\r\n\r\n```\r\n return Uni.join().all(\r\n                        repository.save(entity1),\r\n                        repository.save(entity2),\r\n                        repository.save(entity3),\r\n                        repository.save(entity4))\r\n                .andFailFast()\r\n                .replaceWithVoid();\r\n```\r\n\r\nwhere `save()` is:\r\n\r\n```\r\npublic Uni<Void> save(TestEntity entity) {\r\n        return getSession().flatMap(session ->\r\n                session.merge(entity).replaceWithVoid());\r\n    }\r\n```\r\n\r\ncauses an exception:\r\n\r\n```\r\norg.hibernate.HibernateException: java.util.concurrent.CompletionException: java.lang.IllegalStateException: Illegal pop() with non-matching JdbcValuesSourceProcessingState\r\n\r\n\tat org.hibernate.reactive.session.impl.ReactiveExceptionConverter.convert(ReactiveExceptionConverter.java:28)\r\n\tat org.hibernate.reactive.session.impl.ReactiveSessionImpl.lambda$fireMerge$23(ReactiveSessionImpl.java:1021)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934)\r\n\tat java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:911)\r\n\tat java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)\r\n```\r\n\r\nBut it doesn't throw the exception when I add `.usingConcurrencyOf(1)` to the `Uni.join.all`.\n\n### Expected behavior\n\nNo exception is expected.\n\n### Actual behavior\n\nA `org.hibernate.HibernateException: java.util.concurrent.CompletionException: java.lang.IllegalStateException: Illegal pop() with non-matching JdbcValuesSourceProcessingState` is observed\n\n### How to Reproduce?\n\nHere's a reproducer repository: https://github.com/eamelink/mutiny-join-hibernate-issue\r\n\r\nIt contains a single test that fails.\n\n### Output of `uname -a` or `ver`\n\nDarwin Eriks-MacBook-Pro.local 22.4.0 Darwin Kernel Version 22.4.0: Mon Mar  6 20:59:28 PST 2023; root:xnu-8796.101.5~3/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10) OpenJDK 64-Bit Server VM Temurin-17.0.6+10 (build 17.0.6+10, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.0-CR2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.7\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32790/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32790/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

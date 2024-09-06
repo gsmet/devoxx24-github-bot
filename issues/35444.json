@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35444",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35444/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35444/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35444/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35444",
+  "id": 1859678292,
+  "node_id": "I_kwDOCFbutM5u2HBU",
+  "number": 35444,
+  "title": "quarkus-smallrye-openapi: Generated OpenAPI schema does not respect @JsonFormat(shape = JsonFormat.Shape.ARRAY)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-08-21T15:54:19Z",
+  "updated_at": "2023-08-22T13:31:53Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe OpenAPI schema generated in the directory specified by the `quarkus.smallrye-openapi.store-schema-directory` property does not respect ` @JsonFormat(shape = JsonFormat.Shape.ARRAY)`.\r\nFor instance, given the class below:\r\n\r\n```java\r\npackage org.acme;\r\n\r\nimport com.fasterxml.jackson.annotation.JsonFormat;\r\nimport com.fasterxml.jackson.annotation.JsonProperty;\r\nimport com.fasterxml.jackson.annotation.JsonPropertyOrder;\r\n\r\nimport java.util.Objects;\r\n\r\n@JsonFormat(shape = JsonFormat.Shape.ARRAY)\r\n@JsonPropertyOrder({\"from\", \"to\", \"message\"})\r\npublic class GreetingItem {\r\n    final String from;\r\n    final String to;\r\n    final String message;\r\n\r\n    public GreetingItem(@JsonProperty(\"from\") String from,\r\n                        @JsonProperty(\"to\") String to,\r\n                        @JsonProperty(\"message\") String message) {\r\n        this.from = from;\r\n        this.to = to;\r\n        this.message = message;\r\n    }\r\n\r\n    public String getFrom() {\r\n        return from;\r\n    }\r\n\r\n    public String getTo() {\r\n        return to;\r\n    }\r\n\r\n    public String getMessage() {\r\n        return message;\r\n    }\r\n\r\n    @Override\r\n    public boolean equals(Object o) {\r\n        if (this == o) return true;\r\n        if (o == null || getClass() != o.getClass()) return false;\r\n        GreetingItem that = (GreetingItem) o;\r\n        return Objects.equals(from, that.from) && Objects.equals(to, that.to) && Objects.equals(message, that.message);\r\n    }\r\n\r\n    @Override\r\n    public int hashCode() {\r\n        return Objects.hash(from, to, message);\r\n    }\r\n\r\n    @Override\r\n    public String toString() {\r\n        return \"GreetingItem{\" +\r\n                \"from='\" + from + '\\'' +\r\n                \", to='\" + to + '\\'' +\r\n                \", message='\" + message + '\\'' +\r\n                '}';\r\n    }\r\n}\r\n```\r\n\r\nand the endpoint below:\r\n\r\n```java\r\npackage org.acme;\r\n\r\nimport com.fasterxml.jackson.annotation.JsonFormat;\r\nimport jakarta.ws.rs.GET;\r\nimport jakarta.ws.rs.Path;\r\nimport jakarta.ws.rs.Produces;\r\nimport jakarta.ws.rs.core.MediaType;\r\n\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n    @GET\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    public GreetingItem hello() {\r\n        return new GreetingItem(\"RESTEasy Reactive\",\r\n                \"You\",\r\n                \"Hello!\");\r\n    }\r\n}\r\n```\r\n\r\nThe OpenAPI schema should define GreetingItem as an array of type `string` containing exactly 3 items. Instead, it define it as a JSON object containing properties `from`, `to` and `message`.\n\n### Expected behavior\n\nFor the example above, this YAML is generated in the directory specified by `quarkus.smallrye-openapi.store-schema-directory`:\r\n\r\n```yaml\r\n---\r\nopenapi: 3.0.3\r\ninfo:\r\n  title: getting-started API\r\n  version: 1.0.0-SNAPSHOT\r\nservers:\r\n- url: http://localhost:8080\r\n  description: Auto generated value\r\n- url: http://0.0.0.0:8080\r\n  description: Auto generated value\r\npaths:\r\n  /hello:\r\n    get:\r\n      tags:\r\n      - Greeting Resource\r\n      responses:\r\n        \"200\":\r\n          description: OK\r\n          content:\r\n            application/json:\r\n              schema:\r\n                $ref: '#/components/schemas/GreetingItem'\r\ncomponents:\r\n  schemas:\r\n    GreetingItem:\r\n      type: array\r\n      items:\r\n        type: string\r\n      minItems: 3\r\n      maxItems: 3\r\n  securitySchemes:\r\n    SecurityScheme:\r\n      type: http\r\n      description: Authentication\r\n      scheme: basic\r\n```\n\n### Actual behavior\n\nFor the example above, this YAML is generated in the directory specified by `quarkus.smallrye-openapi.store-schema-directory`:\r\n\r\n```yaml\r\n---\r\nopenapi: 3.0.3\r\ninfo:\r\n  title: getting-started API\r\n  version: 1.0.0-SNAPSHOT\r\nservers:\r\n- url: http://localhost:8080\r\n  description: Auto generated value\r\n- url: http://0.0.0.0:8080\r\n  description: Auto generated value\r\npaths:\r\n  /hello:\r\n    get:\r\n      tags:\r\n      - Greeting Resource\r\n      responses:\r\n        \"200\":\r\n          description: OK\r\n          content:\r\n            application/json:\r\n              schema:\r\n                $ref: '#/components/schemas/GreetingItem'\r\ncomponents:\r\n  schemas:\r\n    GreetingItem:\r\n      type: object\r\n      properties:\r\n        from:\r\n          type: string\r\n        to:\r\n          type: string\r\n        message:\r\n          type: string\r\n  securitySchemes:\r\n    SecurityScheme:\r\n      type: http\r\n      description: Authentication\r\n      scheme: basic\r\n```\n\n### How to Reproduce?\n\nReproducer: https://github.com/Christopher-Chianelli/issue-reproducer/tree/quarkus-openapi-schema-json-array\r\n\r\nSteps to reproduce:\r\n\r\n\r\n1.    `cd getting-started`\r\n\r\n2.    `mvn clean package`\r\n\r\n3.    `cat target/openapi-schema/openapi.yaml`\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux babbage 6.4.11-200.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Aug 16 17:42:12 UTC 2023 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk 17.0.8 2023-07-18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (Red Hat 3.8.6-4)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35444/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35444/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

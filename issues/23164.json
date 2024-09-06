@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23164",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23164/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23164/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23164/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23164",
+  "id": 1113516951,
+  "node_id": "I_kwDOCFbutM5CXuuX",
+  "number": 23164,
+  "title": "Hot reload does not build multi module project in correct order",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-01-25T07:20:20Z",
+  "updated_at": "2023-07-25T07:27:30Z",
+  "closed_at": "2022-03-11T10:30:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a multi module project, where I get exceptions on hot reload.\r\nIf I inly change one module at a time (and hot reload), no exception is thrown.\r\n\r\nIf i change multiple modules at the same time, I get the exception from below.\r\nIn module \"service\", I add a new method which I use in my rest resources in \"web\".\r\nThis new method is not found on hot reload.\r\n\r\nI believe that the web module is compiled before service, otherwise the newly created method would be found.\n\n### Expected behavior\n\nHot reload works flawlessly even when changing multiple modules at once.\n\n### Actual behavior\n\nFollowing exception:\r\n\r\n```\r\n__  ____  __  _____   ___  __ ____  ______\r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2022-01-25 07:09:35,054 WARN  [io.qua.config] (Quarkus Main Thread) Unrecognized configuration key \"quarkus.datasource.db-kind\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n\r\n2022-01-25 07:09:35,054 WARN  [io.qua.config] (Quarkus Main Thread) Unrecognized configuration key \"quarkus.hibernate-orm.log.sql\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n2022-01-25 07:09:35,054 WARN  [io.qua.config] (Quarkus Main Thread) Unrecognized configuration key \"quarkus.hibernate-orm.validate-in-dev-mode\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n2022-01-25 07:09:35,054 WARN  [io.qua.config] (Quarkus Main Thread) Unrecognized configuration key \"quarkus.hibernate-orm.database.generation\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n2022-01-25 07:09:35,055 WARN  [io.qua.config] (Quarkus Main Thread) Unrecognized configuration key \"quarkus.datasource.metrics.enabled\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n2022-01-25 07:09:35,737 INFO  [io.qua.sch.run.SimpleScheduler] (Quarkus Main Thread) No scheduled business methods found - Simple scheduler will not be started\r\n2022-01-25 07:09:35,874 INFO  [io.quarkus] (Quarkus Main Thread) multi-module-hot-reload-web 1.0-SNAPSHOT on JVM (powered by Quarkus 2.6.1.Final) started in 4.437s. Listening on: http://localhost:8080\r\n2022-01-25 07:09:35,874 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2022-01-25 07:09:35,874 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, config-yaml, hibernate-validator, jdbc-postgresql, rest-client, rest-client-jackson, resteasy-jackson, scheduler, smallrye-context-propagation, smallrye-health, smallrye-metrics, smallrye-openapi, swagger-ui, vertx]\r\n2022-01-25 07:09:39,838 INFO  [io.qua.htt.access-log] ([DevConsole]vert.x-eventloop-thread-1) 127.0.0.1 - - 25/Jan/2022:07:09:39 +0000 \"GET /q/dev HTTP/1.1\" 302 -\r\n2022-01-25 07:09:39,910 INFO  [io.qua.htt.access-log] ([DevConsole]vert.x-eventloop-thread-1) 127.0.0.1 - - 25/Jan/2022:07:09:39 +0000 \"GET /q/dev/ HTTP/1.1\" 200 51097\r\n\r\n--\r\nCompilation Failed:\r\nwarning: [options] system modules path not set in conjunction with -source 11\r\nC:\\workspaces\\aviator\\multi-module-hot-reload\\multi-module-hot-reload-web\\src\\main\\java\\com\\acme\\rest\\Resource.java:18: error: cannot find symbol\r\n        return configuration.someSetting2();\r\n                            ^\r\n  symbol:   method someSetting2()\r\n  location: variable configuration of type com.acme.config.ApplicationConfiguration\r\nTests paused\r\nPress [r] to resume testing, [o] Toggle test output, [h] for more options>\r\n\r\n```\n\n### How to Reproduce?\n\n1. Download the reproducer: \r\n[multi-module-hot-reload.zip](https://github.com/quarkusio/quarkus/files/7931394/multi-module-hot-reload.zip)\r\n\r\n2. mvn clean compile quarkus:dev\r\n3. open dev ui - this works\r\n4. In com.acme.config.ApplicationConfiguration, remove the comments from `someSetting2`\r\n5. In com.acme.rest.Resource, change the resource to `return configuration.someSetting()` instead of an empty string.\r\n6. reload the dev ui\r\n7. compilation error from above happens\r\n8. Stop quarkus\r\n9. mvn clean compile quarkus:dev\r\n10. open dev ui - this works. The source itself is compileable by maven, but not by quarkus.\n\n### Output of `uname -a` or `ver`\n\nMSYS_NT-10.0-19043 NANB7NLNVP2 3.1.7-340.x86_64 2021-03-26 22:17 UTC x86_64 Msys\n\n### Output of `java -version`\n\nopenjdk version \"17\" 2021-09-14 OpenJDK Runtime Environment Temurin-17+35 (build 17+35) OpenJDK 64-Bit Server VM Temurin-17+35 (build 17+35, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.6.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.3 (ff8e977a158738155dc465c6a97ffaf31982d739) Maven home: C:\\eclipse\\tools\\apache-maven Java version: 17, vendor: Eclipse Adoptium, runtime: C:\\eclipse\\tools\\java\\17 Default locale: de_DE, platform encoding: Cp1252 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23164/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23164/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

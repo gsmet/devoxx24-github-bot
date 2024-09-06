@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20962",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20962/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20962/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20962/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20962",
+  "id": 1034360137,
+  "node_id": "I_kwDOCFbutM49pxVJ",
+  "number": 20962,
+  "title": "redis client error when using client type sentinel",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2021-10-24T08:46:45Z",
+  "updated_at": "2022-10-03T06:07:16Z",
+  "closed_at": "2022-10-03T06:07:16Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have deployed sentinel Redis on Kubernetes with 3 pods with helm following this:\r\n`https://github.com/bitnami/charts/tree/master/bitnami/redis`\r\n\r\nwith this command:\r\n`helm install redis-sentinel bitnami/redis --create-namespace -n redis -f redis-sentinel-values.yaml`\r\n\r\nwhere `redis-sentinel-values.yaml` is:\r\n```\r\nsentinel:\r\n  enabled: true\r\n\r\nglobal:\r\n  redis:\r\n    password: \"redis@pass\"\r\n\r\npdb:\r\n  create: true\r\n  minAvailable: 2\r\n\r\n\r\nmaster:\r\n  persistence:\r\n    size: 1Gi\r\nreplica:\r\n  persistence:\r\n    size: 1Gi\r\n\r\ncommonConfiguration: |-\r\n  # Enable AOF https://redis.io/topics/persistence#append-only-file\r\n  appendonly yes\r\n  # Disable RDB persistence, AOF persistence already enabled.\r\n  save \"\"\r\n  maxmemory 600mb\r\n  maxmemory-policy allkeys-lru\r\n  maxclients 40000\r\n\r\nsysctl:\r\n  enabled: true\r\n  mountHostSys: true\r\n  command:\r\n    - /bin/sh\r\n    - -c\r\n    - |-\r\n      install_packages procps\r\n      sysctl -w net.core.somaxconn=10000\r\n      echo never > /host-sys/kernel/mm/transparent_hugepage/enabled\r\n\r\n```\r\n\r\nPods working fine and I'm connecting with following configuration using yaml env:\r\n```\r\n            - name: QUARKUS_REDIS_PASSWORD\r\n              value: redis@pass\r\n            - name: QUARKUS_REDIS_HOSTS\r\n              value: redis://redis-sentinel-headless.redis.svc.cluster.local:26379\r\n            - name: QUARKUS_REDIS_CLIENT_TYPE\r\n              value: sentinel\r\n```\r\n\r\nBut I'm getting following crashes in logs:\r\n```\r\n2021-10-24 08:30:19,031 ERROR [io.qua.ver.cor.run.VertxCoreRecorder] (vert.x-eventloop-thread-0) Uncaught exception received by Vert.x: java.lang.IllegalStateException: Attempt to recycle more than permitted\r\n        at io.vertx.core.net.impl.pool.SimpleConnectionPool.recycle(SimpleConnectionPool.java:652)\r\n        at io.vertx.core.net.impl.pool.SimpleConnectionPool.access$2500(SimpleConnectionPool.java:79)\r\n        at io.vertx.core.net.impl.pool.SimpleConnectionPool$LeaseImpl.recycle(SimpleConnectionPool.java:620)\r\n        at io.vertx.redis.client.impl.PooledRedisConnection.close(PooledRedisConnection.java:83)\r\n        at io.vertx.redis.client.impl.RedisSentinelConnection.close(RedisSentinelConnection.java:70)\r\n        at io.vertx.redis.client.impl.BaseRedisClient.lambda$null$0(BaseRedisClient.java:54)\r\n        at io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n        at io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:497)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:834)\r\n\r\n```\r\n\r\nAm I doing something wrong?\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nPlease following above to to reproduce.\n\n### Output of `uname -a` or `ver`\n\nLinux app-5b8c6b9577-4nptz 4.19.0-17-cloud-amd64 #1 SMP Debian 4.19.194-3 (2021-07-18) x86_64 Linux\n\n### Output of `java -version`\n\nPicked up JAVA_TOOL_OPTIONS: -XX:+UnlockExperimentalVMOptions -XX:+UseContainerSupport -XX:MaxRAMPercentage=76 -Duser.timezone=UTC openjdk version \"11.0.5\" 2019-10-15 OpenJDK Runtime Environment (build 11.0.5+10-alpine-r0) OpenJDK 64-Bit Server VM (build 11.0.5+10-alpine-r0, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.3.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n------------------------------------------------------------ Gradle 7.1 ------------------------------------------------------------  Build time:   2021-06-14 14:47:26 UTC Revision:     989ccc9952b140ee6ab88870e8a12f1b2998369e  Kotlin:       1.4.31 Groovy:       3.0.7 Ant:          Apache Ant(TM) version 1.10.9 compiled on September 27 2020 JVM:          11.0.12 (GraalVM Community 11.0.12+6-jvmci-21.2-b08) OS:           Mac OS X 11.5 x86_64\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20962/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20962/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

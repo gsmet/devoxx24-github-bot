@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39633",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39633/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39633/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39633/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39633",
+  "id": 2202111153,
+  "node_id": "I_kwDOCFbutM6DQYyx",
+  "number": 39633,
+  "title": "better missing deployment dependency exception",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1800003265,
+      "node_id": "MDU6TGFiZWwxODAwMDAzMjY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devtools",
+      "name": "area/devtools",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues/PR related to maven, gradle, platform and cli tooling/plugins"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2024-03-22T09:50:57Z",
+  "updated_at": "2024-03-22T10:27:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nwhen you add dependency to runtime in an extension  and forget (or just don't know) to add to deployment extension something like this shows up:\r\n\r\n```\r\n[INFO] --- quarkus-extension:3.8.3:extension-descriptor (default) @ quarkus-homeassistant ---\r\n[ERROR] Quarkus Extension Dependency Verification Error\r\n[ERROR] Deployment artifact io.quarkiverse.homeassistant:quarkus-homeassistant-deployment::jar:999-SNAPSHOT was found to be missing dependencies on the Quarkus extension artifacts marked with '-' below:\r\n[ERROR] +     io.quarkiverse.homeassistant:quarkus-homeassistant::jar\r\n[ERROR] +     io.quarkus:quarkus-arc-deployment::jar\r\n[ERROR] +         io.quarkus:quarkus-core-deployment::jar\r\n[ERROR] -     io.quarkus:quarkus-rest-client-reactive-jackson-deployment::jar\r\n[ERROR] -         io.quarkus:quarkus-resteasy-reactive-jackson-common-deployment::jar\r\n[ERROR] -             io.quarkus:quarkus-resteasy-reactive-common-deployment::jar\r\n[ERROR] -                 io.quarkus:quarkus-mutiny-deployment::jar\r\n[ERROR] -                     io.quarkus:quarkus-smallrye-context-propagation-deployment::jar\r\n[ERROR] -                 io.quarkus:quarkus-vertx-deployment::jar\r\n[ERROR] -                     io.quarkus:quarkus-netty-deployment::jar\r\n[ERROR] -                     io.quarkus:quarkus-virtual-threads-deployment::jar\r\n[ERROR] -             io.quarkus:quarkus-jackson-deployment::jar\r\n[ERROR] -             io.quarkus:quarkus-jsonp-deployment::jar\r\n[ERROR] -         io.quarkus:quarkus-rest-client-reactive-deployment::jar\r\n[ERROR] -             io.quarkus:quarkus-jaxrs-client-reactive-deployment::jar\r\n[ERROR] -             io.quarkus:quarkus-smallrye-stork-deployment::jar\r\n[ERROR] -             io.quarkus:quarkus-rest-client-config-deployment::jar\r\n```\r\n\r\nThis error is not wrong but it is also not very helpful to a beginner and I feel like we could also do better helping more than beginner.\r\n\r\n1)  Could the exception somehow say that these are caused by quarkus-homeassistant-runtime have these dependencies ? i.e. \r\n\r\n\"Deployment artifact io.quarkiverse.homeassistant:quarkus-homeassistant-deployment::jar:999-SNAPSHOT was found to be missing dependencies matching io.quarkiverse.homeassistant:quarkus-homeassistant-runtime::jar:999-SNAPSHOT on the Quarkus extension artifacts marked with '-' below:\"\r\n\r\n2) is there a need to render the full tree of deps below a \"-\" ? would this not be enough:\r\n\r\n```\r\n[ERROR] +     io.quarkiverse.homeassistant:quarkus-homeassistant::jar\r\n[ERROR] +     io.quarkus:quarkus-arc-deployment::jar\r\n[ERROR] +         io.quarkus:quarkus-core-deployment::jar\r\n[ERROR] -     io.quarkus:quarkus-rest-client-reactive-jackson-deployment::jar\r\n```\r\n\r\n?\r\n\r\n3) could we not generate the matching pom or gradle lines to add?\r\n\r\nso if we combine the above we would get:\r\n\r\n```\r\n[INFO] --- quarkus-extension:3.8.3:extension-descriptor (default) @ quarkus-homeassistant ---\r\n[ERROR] Quarkus Extension Dependency Verification Error\r\n[ERROR] Deployment artifact io.quarkiverse.homeassistant:quarkus-homeassistant-deployment::jar:999-SNAPSHOT was found to be missing dependencies matching io.quarkiverse.homeassistant:quarkus-homeassistant-runtime::jar:999-SNAPSHOT on the Quarkus extension artifacts marked with '-' below::\r\n[ERROR] +     io.quarkiverse.homeassistant:quarkus-homeassistant::jar\r\n[ERROR] +     io.quarkus:quarkus-arc-deployment::jar\r\n[ERROR] +         io.quarkus:quarkus-core-deployment::jar\r\n[ERROR] -     io.quarkus:quarkus-rest-client-reactive-jackson-deployment::jar\r\n[ERROR] Possible fix is to add this to deployment pom.xml:\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-rest-client-reactive-jackson-deployment</artifactId>\r\n    </dependency>\r\n```\r\n\r\nThat would/should also work for N number of top-level deps and it greatly reduces the noise to useful info level.\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39633/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39633/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

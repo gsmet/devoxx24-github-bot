@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22130",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22130/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22130/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22130/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22130",
+  "id": 1077826369,
+  "node_id": "I_kwDOCFbutM5APlNB",
+  "number": 22130,
+  "title": "Regression: Quarkus 2.6.0.CR1 build with Flyway without generate-code",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1897325810,
+      "node_id": "MDU6TGFiZWwxODk3MzI1ODEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/flyway",
+      "name": "area/flyway",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2021-12-12T14:54:41Z",
+  "updated_at": "2021-12-12T16:20:26Z",
+  "closed_at": "2021-12-12T16:20:26Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIf I configure the `flyway` extension but the `quarkus-maven-plugin` doesn't have the `generate-code` goal, the build fails.\r\n\r\nWith the `generate-code` goal the output is the following:\r\n```\r\n[INFO] [io.quarkus.flyway.FlywayProcessor] Adding application migrations in path '/home/quarkus/code-with-quarkus/target/classes/db/migration/' using protocol 'file'\r\n```\r\n\r\nWithout the `generate-code` goal the output is the following:\r\n```\r\n[INFO] [io.quarkus.flyway.FlywayProcessor] Adding application migrations in path 'file:/home/quarkus/code-with-quarkus/target/code-with-quarkus-1.0.0-SNAPSHOT.jar!/db/migration/' using protocol 'jar'\r\n```\r\nNote the difference in how it reads the path using the protocol jar.\r\n\r\nAs far I know, the generate-code is used for GRPC and Avro, which I don't currently use, so it should be optional (unless I'm missing something).\r\n\r\nI don't mind having the `generate-code` goal enabled, but this probably should not affect the build of an application that doesn't require it.\n\n### Expected behavior\n\nBuild normally\n\n### Actual behavior\n\n```\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:2.6.0.CR1:build (default) on project code-with-quarkus: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR] \t[error]: Build step io.quarkus.flyway.FlywayProcessor#build threw an exception: java.nio.file.FileSystemNotFoundException\r\n[ERROR] \tat jdk.zipfs/jdk.nio.zipfs.ZipFileSystemProvider.getFileSystem(ZipFileSystemProvider.java:156)\r\n[ERROR] \tat jdk.zipfs/jdk.nio.zipfs.ZipFileSystemProvider.getPath(ZipFileSystemProvider.java:142)\r\n[ERROR] \tat java.base/java.nio.file.Path.of(Path.java:208)\r\n[ERROR] \tat io.quarkus.flyway.FlywayProcessor.initFileSystem(FlywayProcessor.java:284)\r\n[ERROR] \tat io.quarkus.flyway.FlywayProcessor.discoverApplicationMigrations(FlywayProcessor.java:230)\r\n[ERROR] \tat io.quarkus.flyway.FlywayProcessor.build(FlywayProcessor.java:99)\r\n[ERROR] \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n[ERROR] \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n[ERROR] \tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n[ERROR] \tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n[ERROR] \tat io.quarkus.deployment.ExtensionLoader$2.execute(ExtensionLoader.java:887)\r\n[ERROR] \tat io.quarkus.builder.BuildContext.run(BuildContext.java:277)\r\n[ERROR] \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n[ERROR] \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n[ERROR] \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n[ERROR] \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n[ERROR] \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```\n\n### How to Reproduce?\n\n\r\n1. `quarkus create app --platform-bom=io.quarkus.platform:quarkus-bom:2.6.0.CR1 --extension=flyway,jdbc-postgresql`\r\n1. `cd code-with-quarkus`\r\n1. `mkdir -p src/main/resources/db/migration`\r\n1. `touch src/main/resources/db/migration/V1_demo.sql`\r\n1. `sed -i '/<goal>generate-code.*<\\/goal>/d' pom.xml` # Delete the generate-code goals\r\n1. `mvn clean package -DskipTests`\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux quarkus 5.11.0-41-generic #45~20.04.1-Ubuntu SMP Wed Nov 10 10:20:10 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Temurin-17.0.1+12 (build 17.0.1+12)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.6.0.CR1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22130/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22130/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30180",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30180/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30180/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30180/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30180",
+  "id": 1519401691,
+  "node_id": "I_kwDOCFbutM5akDrb",
+  "number": 30180,
+  "title": "GraphQL federation _entities method isn't resolved properly.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 32,
+  "created_at": "2023-01-04T18:26:16Z",
+  "updated_at": "2023-09-06T07:45:43Z",
+  "closed_at": "2023-09-06T07:45:43Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nGraphQL federation `_entities` method isn't resolved properly. Method execution throws exception:\r\n`java.lang.RuntimeException: can't resolve federated entity type io.smallrye.context.Jdk12CompletableFutureWrapper`.\r\n\r\nIt seems that it fails to resolve the `_Entity` type here `io.smallrye.graphql.bootstrap.Bootstrap#fetchEntityType`\n\n### Expected behavior\n\nEntity is successfully resolved\n\n### Actual behavior\n\nException is thrown\n\n### How to Reproduce?\n\nLet's imagine we have two separated services: `products` and `reviews`. The `reviews` service extends the `Product` entity with some new attributes (`rating` and `reviews`). Here is a reproducer for the reviews service\r\n[quarkus-graphql-issue.zip](https://github.com/quarkusio/quarkus/files/10346373/quarkus-graphql-issue.zip)\r\n\r\n- unzip a reproducer\r\n- start service\r\n- go to graphql UI\r\n- execute next query:\r\n```\r\nquery representations($rep: [_Any!]!) {\r\n  _entities(representations: $rep) {\r\n    ... on Product {\r\n      rating\r\n    }\r\n  }\r\n}\r\n```\r\nand query variables are:\r\n```\r\n{\r\n  \"rep\": {\r\n    \"__typename\": \"Product\",\r\n    \"id\": \"bfcd3cc0-dc58-4e20-8c4c-a313de3ad8d9\"\r\n  }\r\n}\r\n```\r\n- exception is thrown\r\n\r\nThis method is used by the Apollo server to fetch additional attribute values for the product entity by it's key (`id`) and `__typename`. More information can be found [here](https://www.apollographql.com/docs/federation/entities/). I added a method at the `ProductResource` class to resolve product entity by id and this method is successfully resolved by the graphql module (by the return type), but then the exception is thrown here `io.smallrye.graphql.bootstrap.Bootstrap#fetchEntityType`\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.15.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.5.1\n\n### Additional information\n\nIt would be great if the highest priority will be assigned to this issue among other graphql issues since there is no workaround found and it not allows to fully use all graphql federation features",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30180/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30180/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

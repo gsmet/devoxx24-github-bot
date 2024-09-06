@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42465",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42465/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42465/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42465/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42465",
+  "id": 2459060038,
+  "node_id": "I_kwDOCFbutM6SkkdG",
+  "number": 42465,
+  "title": "Kafka - redpanda - add host Ip for advertside listener",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-08-10T12:15:20Z",
+  "updated_at": "2024-08-19T09:46:17Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\n**Current behavior**\r\n\r\nRed panda dev service is using this kind of code to define the kafka advertside listener\r\n\r\n```java\r\n        addresses.add(String.format(\"OUTSIDE://%s:%d\", getHost(), getMappedPort(DevServicesKafkaProcessor.KAFKA_PORT)));\r\n```\r\n\r\n**getHost()** return **localhost** and it is problematic when I want to use debezium as a container because debezium will try to connect using localhost + mapped port (from host) and the localhost used inside the debezium container refer to the container localhost (127.0.0.1) and not the host's localhost (which is not 127.0.0.1 and should refer to host ip).\r\n\r\nMultiple listener can be defined. Is it possible to add the one using the docker host ip ? \r\n\r\nMaybe it should be nice to do the same for other kafka containers (Strimzi,...)\r\n\r\n### Implementation ideas\r\n\r\nImplementation could be done this way regarding the RedPandaKafkaContainer\r\n\r\n```java\r\n        addresses.add(String.format(\"OUTSIDE_HOST://%s:%d\", InetAddress.getLocalHost().getHostAddress(), getMappedPort(DevServicesKafkaProcessor.KAFKA_PORT)));\r\n```\r\n\r\nSo we should get something likes this\r\n```java\r\n    private String getKafkaAdvertisedAddresses() {\r\n        List<String> addresses = new ArrayList<>();\r\n        if (useSharedNetwork) {\r\n            addresses.add(String.format(\"PLAINTEXT://%s:29092\", hostName));\r\n        }\r\n        // See https://github.com/quarkusio/quarkus/issues/21819\r\n        // Kafka is always exposed to the Docker host network\r\n        addresses.add(String.format(\"OUTSIDE://%s:%d\", getHost(), getMappedPort(DevServicesKafkaProcessor.KAFKA_PORT)));\r\n        addresses.add(String.format(\"OUTSIDE_HOST://%s:%d\", InetAddress.getLocalHost().getHostAddress(), getMappedPort(DevServicesKafkaProcessor.KAFKA_PORT)));\r\n        return String.join(\",\", addresses);\r\n    }\r\n```\r\n\r\nwarning: I am not sure about the naming.\r\n\r\nThanks.\r\nDamien\r\n\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42465/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42465/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "reopened"
+}

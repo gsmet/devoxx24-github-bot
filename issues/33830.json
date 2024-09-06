@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33830",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33830/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33830/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33830/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33830",
+  "id": 1742070832,
+  "node_id": "I_kwDOCFbutM5n1eQw",
+  "number": 33830,
+  "title": "Not possible to specify service account for kubernetes liquibase init job",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1956491735,
+      "node_id": "MDU6TGFiZWwxOTU2NDkxNzM1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/liquibase",
+      "name": "area/liquibase",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-06-05T15:54:39Z",
+  "updated_at": "2023-07-09T10:40:36Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIf quarkus service is using specifig service account, deploying of service will fail with error\r\n```\r\nError from server (Forbidden): jobs.batch \"my-service-liquibase-mongodb-init\" is forbidden: User \"system:serviceaccount:default:default\" cannot get resource \"jobs\" in API group \"batch\" in the namespace \"default\"\r\n```\r\n\r\nkubernetes.yml:\r\n```\r\n---\r\napiVersion: rbac.authorization.k8s.io/v1\r\nkind: Role\r\nmetadata:\r\n  name: view-jobs\r\nrules:\r\n  - apiGroups:\r\n      - batch\r\n    resources:\r\n      - jobs\r\n    verbs:\r\n      - get\r\n---\r\napiVersion: rbac.authorization.k8s.io/v1\r\nkind: RoleBinding\r\nmetadata:\r\n  name: my-service-view-jobs\r\nroleRef:\r\n  kind: Role\r\n  apiGroup: rbac.authorization.k8s.io\r\n  name: view-jobs\r\nsubjects:\r\n  - kind: ServiceAccount\r\n    apiGroup: \"\"\r\n    name: my-service\r\n---\r\napiVersion: v1\r\nkind: Service\r\nmetadata:\r\n  annotations:\r\n    prometheus.io/scheme: http\r\n    prometheus.io/port: \"8888\"\r\n    prometheus.io/path: /q/metrics\r\n    prometheus.io/scrape: \"true\"\r\n    app.quarkus.io/build-timestamp: 2023-06-05 - 15:40:12 +0000\r\n    app.quarkus.io/commit-id: ****\r\n  labels:\r\n    app.kubernetes.io/name: my-service\r\n    app.kubernetes.io/version: 0.1.0-SNAPSHOT\r\n    app.kubernetes.io/managed-by: quarkus\r\n  name: my-service\r\nspec:\r\n  ports:\r\n    - name: https\r\n      port: 443\r\n      protocol: TCP\r\n      targetPort: 8443\r\n    - name: http\r\n      port: 80\r\n      protocol: TCP\r\n      targetPort: 8888\r\n  selector:\r\n    app.kubernetes.io/name: my-service\r\n    app.kubernetes.io/version: 0.1.0-SNAPSHOT\r\n  type: NodePort\r\n---\r\napiVersion: apps/v1\r\nkind: Deployment\r\nmetadata:\r\n  annotations:\r\n    prometheus.io/scheme: http\r\n    prometheus.io/port: \"8888\"\r\n    prometheus.io/path: /q/metrics\r\n    prometheus.io/scrape: \"true\"\r\n    app.quarkus.io/build-timestamp: 2023-06-05 - 15:40:12 +0000\r\n    app.quarkus.io/commit-id: ***\r\n  labels:\r\n    app.kubernetes.io/name: my-service\r\n    app.kubernetes.io/version: 0.1.0-SNAPSHOT\r\n    app.kubernetes.io/managed-by: quarkus\r\n  name: my-service\r\nspec:\r\n  replicas: 1\r\n  selector:\r\n    matchLabels:\r\n      app.kubernetes.io/name: my-service\r\n      app.kubernetes.io/version: 0.1.0-SNAPSHOT\r\n  template:\r\n    metadata:\r\n      annotations:\r\n        prometheus.io/scheme: http\r\n        prometheus.io/port: \"8888\"\r\n        prometheus.io/path: /q/metrics\r\n        prometheus.io/scrape: \"true\"\r\n        app.quarkus.io/build-timestamp: 2023-06-05 - 15:40:12 +0000\r\n        app.quarkus.io/commit-id: ***\r\n      labels:\r\n        app.kubernetes.io/name: my-service\r\n        app.kubernetes.io/version: 0.1.0-SNAPSHOT\r\n        app.kubernetes.io/managed-by: quarkus\r\n    spec:\r\n      containers:\r\n        - env:\r\n            - name: KUBERNETES_NAMESPACE\r\n              valueFrom:\r\n                fieldRef:\r\n                  fieldPath: metadata.namespace\r\n            - name: QUARKUS_LIQUIBASE_MONGODB_ENABLED\r\n              value: \"false\"\r\n          image: eu.gcr.io/***/my-service:0.1.0-SNAPSHOT\r\n          imagePullPolicy: Always\r\n          livenessProbe:\r\n            failureThreshold: 3\r\n            httpGet:\r\n              path: /q/health/live\r\n              port: 8888\r\n              scheme: HTTP\r\n            initialDelaySeconds: 5\r\n            periodSeconds: 10\r\n            successThreshold: 1\r\n            timeoutSeconds: 10\r\n          name: my-service\r\n          ports:\r\n            - containerPort: 8888\r\n              name: http\r\n              protocol: TCP\r\n            - containerPort: 8443\r\n              name: https\r\n              protocol: TCP\r\n          readinessProbe:\r\n            failureThreshold: 3\r\n            httpGet:\r\n              path: /q/health/ready\r\n              port: 8888\r\n              scheme: HTTP\r\n            initialDelaySeconds: 5\r\n            periodSeconds: 10\r\n            successThreshold: 1\r\n            timeoutSeconds: 10\r\n          startupProbe:\r\n            failureThreshold: 3\r\n            httpGet:\r\n              path: /q/health/started\r\n              port: 8888\r\n              scheme: HTTP\r\n            initialDelaySeconds: 5\r\n            periodSeconds: 10\r\n            successThreshold: 1\r\n            timeoutSeconds: 10\r\n      initContainers:\r\n        - args:\r\n            - job\r\n            - account-service-liquibase-mongodb-init\r\n          image: groundnuty/k8s-wait-for:1.3\r\n          imagePullPolicy: IfNotPresent\r\n          name: init\r\n---\r\napiVersion: batch/v1\r\nkind: Job\r\nmetadata:\r\n  name: my-service-liquibase-mongodb-init\r\nspec:\r\n  completionMode: NonIndexed\r\n  template:\r\n    metadata: {}\r\n    spec:\r\n      containers:\r\n        - env:\r\n            - name: QUARKUS_INIT_AND_EXIT\r\n              value: \"true\"\r\n            - name: QUARKUS_LIQUIBASE_MONGODB_ENABLED\r\n              value: \"true\"\r\n          image: eu.gcr.io/***/my-service:0.1.0-SNAPSHOT\r\n          name: account-service-liquibase-mongodb-init\r\n      restartPolicy: OnFailure\r\n```\n\n### Expected behavior\n\nservice deploy success\n\n### Actual behavior\n\ndeploy failed\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment (build 17.0.6+10-Ubuntu-0ubuntu122.04) OpenJDK 64-Bit Server VM (build 17.0.6+10-Ubuntu-0ubuntu122.04, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.1.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n8.1.1\n\n### Additional information\n\nWil be helpfull if there exist config option to specify service account.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33830/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33830/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

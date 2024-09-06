@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40530",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40530/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40530/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40530/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40530",
+  "id": 2287156736,
+  "node_id": "I_kwDOCFbutM6IUz4A",
+  "number": 40530,
+  "title": "Support chaining Kafka Transactions with Hibernate ORM transactions",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-05-09T08:17:56Z",
+  "updated_at": "2024-08-06T05:12:24Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm using a Quarkus service that requires:\r\n\r\n1. consume one message from a channel\r\n2. perform some database queries\r\n3. emit several messages to another channel as a result of the database queries\r\n\r\nAll the above steps need to be executed in a single transaction, so for example, if the database fails, the message is nack, or if the emission of the messages fails the database queries are rollback.\r\n\r\nIn the Quarkus service, we're using the smallrye messaging kafka and the Hibernate ORM extensions. I'm aware that there is an existing section in the Kafka guide to chain transactions between Kafka and Hibernate Reactive: https://quarkus.io/guides/kafka#chaining-kafka-transactions-with-hibernate-reactive-transactions, but nothing about to do that with Hibernate ORM which seems to me like a very important requirement. \r\n\r\nI've written a reproducer in https://github.com/Sgitario/quarkus-examples/tree/main/kafka-orm-transactions with several approaches I tried (see [NewAuthorConsumer.java](https://github.com/Sgitario/quarkus-examples/blob/main/kafka-orm-transactions/src/main/java/acme/NewAuthorConsumer.java)).\r\n\r\nIn the reproducer, the primary key of author is the name, so we can't have two authors with the same name. As part of the initial \"import.sql\", we have created an author \"Jose\" without books. Then, we have a resource to send a message to a topic:\r\n\r\n```java\r\n@Path(\"/api\")\r\npublic class Resource {\r\n\r\n    @Channel(\"new-author-out\")\r\n    MutinyEmitter<String> newAuthor;\r\n\r\n    @Transactional\r\n    @POST\r\n    @Path(\"/authors/{name}\")\r\n    public void submitAuthor(@RestPath String name) {\r\n        newAuthor.sendAndAwait(name);\r\n    }\r\n}\r\n```\r\n\r\nAnd this message will be consumed by the class NewAuthorConsumer that will insert the author using the given name and send another message to another topic to create the books. What I expected here is that when adding another author with the same name \"Jose\" and a constraint exception is thrown, the messages to the book topic are not sent.\r\n\r\nThe implementations of the NewAuthorConsumer that I tried:\r\n- Using the KafkaTransactions:\r\n```java\r\n/**\r\n * Approach 3: Using KafkaTransactions\r\n */\r\n@ApplicationScoped\r\npublic class NewAuthorConsumer {\r\n\r\n    @Channel(\"new-book-out\") KafkaTransactions<String> kafkaTx;\r\n\r\n    @Incoming(\"new-author-in\")\r\n    Uni<Void> consume(Message<String> message) {\r\n        Log.infof(\"Received new message in authors topic with name `{}`\", message.getPayload());\r\n        return kafkaTx.withTransactionAndAck(message, emitter -> {\r\n            persistAuthor(message.getPayload());\r\n            emitter.send(message.getPayload() + \"-book1\");\r\n            return Uni.createFrom().voidItem();\r\n        }).replaceWithVoid();\r\n    }\r\n\r\n    @Transactional\r\n    public void persistAuthor(String name) {\r\n        Author author = new Author();\r\n        author.name = name;\r\n        author.persist();\r\n    }\r\n}\r\n```\r\n\r\nAs expected, this fails because with:\r\n\r\n```\r\nCaused by: io.quarkus.runtime.BlockingOperationNotAllowedException: Cannot start a JTA transaction from the IO thread.\r\n```\r\n\r\nThe error is expected and correct. \r\n\r\n- Using Emitter:\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class NewAuthorConsumer {\r\n\r\n    @Channel(\"new-book-out\") Emitter<String> newBook;\r\n\r\n    @Transactional\r\n    @Incoming(\"new-author-in\")\r\n    CompletionStage<Void> consume(String authorName) {\r\n        Log.infof(\"Received new message in authors topic with name `{}`\", authorName);\r\n        Author author = new Author();\r\n        author.name = authorName;\r\n        author.persist();\r\n        return newBook.send(authorName + \"-book1\");\r\n    }\r\n}\r\n```\r\n\r\nThis time when adding an existing author, it fails to be inserted but the book message is wrongly sent and hence the book is inserted into the db. \r\n\r\n### Expected behavior\r\n\r\nSpite of the nature of the reactive model of the smallrye messaging extension, it should be a way to chain transactions between kafka and Hibernate ORM. \r\nIf there is a way to do this, it would need to be documented. \r\nIf not, I feel this is a very strong limitation, yet I'm not sure if this should be a bug or a feature request. \r\n\r\nI also raised the same question in https://github.com/smallrye/smallrye-reactive-messaging/discussions/2609. \r\n\r\n### Actual behavior\r\n\r\nThe kafka and the Hiberante ORM transactions are not chained. \r\n\r\n### How to Reproduce?\r\n\r\n1.- git clone https://github.com/Sgitario/quarkus-examples\r\n2.- cd quarkus-examples/kafka-orm-transactions\r\n3.- comment/uncomment/add the approach you would like to use in NewAuthorConsumer\r\n4.- start dev mode: `mvn quarkus:dev`\r\n5.- add the existing author: `curl -X POST http://localhost:8080/api/authors/Jose`\r\n6.- you should see the primary key exception in the service logs:\r\n\r\n```\r\nCaused by: org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: Violación de indice de Unicidad ó Clave primaria: \"PUBLIC.PRIMARY_KEY_7 ON PUBLIC.AUTHOR(NAME) VALUES ( /* 1 */ 'Jose' )\"\r\nUnique index or primary key violation: \"PUBLIC.PRIMARY_KEY_7 ON PUBLIC.AUTHOR(NAME) VALUES ( /* 1 */ 'Jose' )\"; SQL statement:\r\ninsert into Author (name) values (?) [23505-224]\r\n```\r\n7.- check the books: `curl http://localhost:8080/api/books`\r\n\r\nAnd because of the previous exception, the message should have not been sent and there should not be any books. However, the message was wrongly sent and there are books:\r\n```\r\n[{\"id\":1,\"title\":\"Jose-book1\"}]\r\n```\r\n\r\n### Quarkus version or git rev\r\n\r\n999-SNAPSHOT\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40530/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40530/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

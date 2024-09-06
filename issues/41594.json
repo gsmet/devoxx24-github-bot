@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41594",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41594/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41594/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41594/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41594",
+  "id": 2384535953,
+  "node_id": "I_kwDOCFbutM6OISGR",
+  "number": 41594,
+  "title": "Problem with @ConfigProperty in null when using a process in Apache Camel Quarkus",
+  "labels": [
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1953921208,
+      "node_id": "MDU6TGFiZWwxOTUzOTIxMjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/consider-closing",
+      "name": "triage/consider-closing",
+      "color": "f99f63",
+      "default": false,
+      "description": "Bugs that are considered to be closed because too old. Using the label to do a mark and sweep proces"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2024-07-01T18:56:44Z",
+  "updated_at": "2024-08-21T18:30:16Z",
+  "closed_at": "2024-08-21T18:30:16Z",
+  "active_lock_reason": null,
+  "body": "Good morning, I am currently working with Quarkus and Apache Camel and I am using a variable from the application.properties in a processor, I try to bring it in using the @ConfigProperty annotation, but it is giving me a null error, this is how I have it configured:\r\n\r\nThe variable is called **encryptionKey**\r\n\r\n**UserProfileProcessorUserIdParamReq**\r\n\r\n```\r\n\r\n@ApplicationScoped\r\n@Slf4j\r\npublic class UserProfileProcessorUserIdParamReq implements Processor {\r\n\r\n    @ConfigProperty(name=\"aes.encrypt.key\")\r\n    String encryptionKey;\r\n\r\n    private final IValidationFieldsUserID validationFields;\r\n\r\n    public UserProfileProcessorUserIdParamReq() {\r\n        validationFields = new ValidationFieldsUserID();\r\n    }\r\n    \r\n    @Override\r\n    public void process(Exchange exchange) throws Exception {\r\n\r\n        String documentType;\r\n        String documentNumber;\r\n        String userId;\r\n        String correlatorId;\r\n        String tokenInfo;\r\n        String userIdDecodedBase64;\r\n        String userIdDecrypt;\r\n\r\n        try {\r\n            correlatorId= Optional.ofNullable(exchange.getIn().getHeader(\"x-correlator\")).map(Object::toString).orElse(\"\");\r\n            exchange.setProperty(\"correlatorId\",correlatorId);\r\n            userId = exchange.getIn().getHeader(\"user_id\").toString();\r\n            tokenInfo= Optional.ofNullable(exchange.getIn().getHeader(\"x-token-info\")).map(Object::toString).orElse(\"\");\r\n            validationFields.validateUserId(exchange);\r\n            userId=validateUserIdValue(userId, tokenInfo);\r\n            exchange.setProperty(\"userIdEncrypt\", userId);\r\n            userIdDecodedBase64= EncodeBase64.decrypt(userId);\r\n            log.info(\"userIdDecodedBase64\" + userIdDecodedBase64);\r\n            userIdDecrypt= EncryptUtil.decrypt(userIdDecodedBase64,encryptionKey);\r\n            exchange.setProperty(\"userId\", userIdDecrypt);\r\n            validateTokenInfo(exchange,userId, tokenInfo);\r\n            validateUserIdDecrypt(userIdDecrypt);\r\n            documentType = userIdDecrypt.split(\"-\")[0];\r\n            documentNumber = userIdDecrypt.split(\"-\")[1];\r\n            exchange.setProperty(\"documentType\", documentType);\r\n            exchange.setProperty(\"documentNumber\", documentNumber);\r\n            exchange.setProperty(\"isSearchByQueryParam\",\"false\");\r\n\r\n        } catch (RequiredValueException | NullPointerException e) {\r\n            throw new RequiredValueException(e.getMessage());\r\n        }\r\n        catch (NotFoundDataException e) {\r\n            throw new NotFoundDataException(e.getMessage());\r\n        }\r\n        catch (PermissionDeniedException e) {\r\n            throw new PermissionDeniedException(e.getMessage());\r\n        }\r\n        catch (Exception e){\r\n            if( e.getMessage().contains(\"Input byte array\"))\r\n                throw new NotFoundDataException(e.getMessage());\r\n            throw new Exception(e.getMessage());\r\n        }\r\n    }\r\n\r\n    private static void validateTokenInfo(Exchange exchange, String userId, String tokenInfoValidated) {\r\n        if (!tokenInfoValidated.isEmpty()) {\r\n            log.info(\"Valor del x-token-info: {}\", tokenInfoValidated);\r\n            /* Se obtiene el Objeto JSON con el valor del campo x-token-info */\r\n            JSONObject jsonObject = new JSONObject(tokenInfoValidated);\r\n            /*String subValue=jsonObject.get(\"sub\").toString(); */\r\n            /* Mediante el optString obtenemos el valor sub si viene (token 3 patas) o no viene (token 2 patas), para este ultimo caso el valor es vacio */\r\n            String subValue = jsonObject.optString(\"sub\");\r\n            log.info(\"Valor sub que esta llegando en el valor x-token-info: {}\", subValue);\r\n            if (!subValue.isEmpty()) {\r\n                if(!subValue.equals(userId)) {\r\n                    throw new PermissionDeniedException(\"Error validando el campo sub de la autenticacion en el campo x-token-info, no hace match con userId enviado\");\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n    /* Se valida que el UserId sea un valor valido para venezuela, sea enviado cifrado o no*/\r\n    private static void validateUserIdDecrypt (String userId) {\r\n        if(!Pattern.matches(\"^(CI|RIF|P|CD|NIT)(-).*\",userId)){\r\n            throw  new NotFoundDataException(\"UserId enviado esta en formato incorrecto\");\r\n        }\r\n    }\r\n    /*Se valida el valor del campo UserId, si el mismo pudiera contener el valor de me, en este caso se debe extraer el valor de UserId del json token-info, en especifico del campo sub */\r\n    private String validateUserIdValue(String userId,String tokenInfo) {\r\n        if(userId.equals(\"me\")){\r\n            if(!tokenInfo.isEmpty()){\r\n                JSONObject jsonObject = new JSONObject(tokenInfo);\r\n                userId = jsonObject.optString(\"sub\");\r\n            }\r\n            else {\r\n                throw new RequiredValueException(\"Se requiere parametro x-token-info (autenticacion 3 patas) para campo userId=me\");\r\n            }\r\n        }\r\n        return userId;\r\n    }\r\n}\r\n```\r\n\r\nAnd this is the error it gives:\r\n\r\n`14:52:44 INFO  traceId=2a0a8e8cd93ddb947e2ab7206ef4f25d, parentId=, spanId=394c6d08dec8d551, sampled=true [route23] (vert.x-worker-thread-0) [2024-07-01 14:52:44.0] Descripcion de la Exception: Cannot invoke \"String.getBytes()\" because \"key\" is null`\r\n\r\nThis is how it is in my application.properties:\r\n\r\n`aes.encrypt.key=${AES_ENCRYPT_KEY:xxxxxxxxxxxx}`\r\n\r\nLike from ResRoute call to processor without constructor:\r\n\r\n```\r\nfrom(\"direct:usersQueryParam\")\r\n                /*.removeHeaders(\"CamelHttp*\") */\r\n                .doTry()\r\n                .process(new UserProfileProcessorQueryParamReq())\r\n                .choice()\r\n                    .when(simple(\"${exchangeProperty[isSearchByQueryParamIdDocumentValueAndIdDocumentType]} == 'true'\"))\r\n                        .to(DIRECT_PIPELINE)\r\n                    .otherwise()\r\n                        .log(DATE_LOG+\"Identity: ${exchangeProperty[identityQueryParam]}\")\r\n                        .log(DATE_LOG+\"IdentityType: ${exchangeProperty[identityTypeQueryParam]}\")\r\n                        .process(new FindCustomerDocumentBySubscriberIdReq())\r\n                        .log(DATE_LOG+\"Entrada Microservicio FindCustomerDocumentBySubscriberId: ${exchangeProperty[findCustomerDocumentBySubscriberIdRequest]}\")\r\n                        .to(configureSsl.setupSSLContext(getCamelContext(), findCustomerDocumentBySubscriberId))\r\n                        .process(new FindCustomerDocumentBySubscriberIdRes())\r\n                        .log(DATE_LOG+\"Salida FindCustomerDocumentBySubscriberId: ${exchangeProperty[findCustomerDocumentBySubscriberIdResponseStatus]}\")\r\n                        .log(DATE_LOG+\"User ID Mediante QueryParam: ${exchangeProperty[userId]}\")\r\n                        .to(DIRECT_PIPELINE)\r\n                .endDoTry()\r\n```\r\n\r\nHow can I do here so that it takes the value of the @ConfigProperty?\r\n\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41594/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41594/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

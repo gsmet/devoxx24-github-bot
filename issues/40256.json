@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40256",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40256/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40256/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40256/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40256",
+  "id": 2261924029,
+  "node_id": "I_kwDOCFbutM6G0ji9",
+  "number": 40256,
+  "title": "Patch from #30491 \"Generate right-length node name\" seems invalid",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1633508165,
+      "node_id": "MDU6TGFiZWwxNjMzNTA4MTY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/narayana",
+      "name": "area/narayana",
+      "color": "0366d6",
+      "default": false,
+      "description": "Transactions / Narayana"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 40,
+  "created_at": "2024-04-24T18:29:12Z",
+  "updated_at": "2024-05-16T09:11:09Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nA port of #30491 to the narayana-spring-boot project snowdrop/narayana-spring-boot#136 is actually causing enlisting issues with databases like MariaDB (snowdrop/narayana-spring-boot#140).\r\n\r\nIt seems that the SHA-224 hash is indeed 28 bytes long, but the UTF-8 String created from it is quite bigger, somewhere between 40 and 60 bytes. For MariaDB this is causing too large XID Strings created by Narayana while starting XA resource during enlisting. In my opinion this behaviour should also affect Quarkus (not verified!)\r\n\r\nSmall Groovy script to proove length of shortend node name to exceed 28 byte barrier\r\n```\r\ndef nodeIdentifier = UUID.randomUUID().toString()\r\ndef nodeIdentifierAsBytes = nodeIdentifier.getBytes()\r\ndef messageDigest224 = java.security.MessageDigest.getInstance('SHA-224')\r\ndef digest = messageDigest224.digest(nodeIdentifierAsBytes)\r\nprintln digest.length\r\ndef shortenNodeIdentifier = new String(digest, java.nio.charset.StandardCharsets.UTF_8)\r\nprintln shortenNodeIdentifier\r\nprintln shortenNodeIdentifier.getBytes(java.nio.charset.StandardCharsets.UTF_8).length\r\n```\n\n### Expected behavior\n\nCreation of a valid shortend node name\n\n### Actual behavior\n\nBroken node name as described\n\n### How to Reproduce?\n\nEnlist XAResource of MariaDB connection into Narayana JTA transaction.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40256/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40256/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

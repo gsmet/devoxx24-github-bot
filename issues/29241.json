@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29241",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29241/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29241/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29241/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29241",
+  "id": 1447081538,
+  "node_id": "I_kwDOCFbutM5WQLZC",
+  "number": 29241,
+  "title": "Upgrading to 2.14 ignores custom Kubernetes manifests (based on profile)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2022-11-13T20:58:41Z",
+  "updated_at": "2022-11-14T13:43:25Z",
+  "closed_at": "2022-11-14T13:43:25Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nYou used to be able to apply a custom manifest based on the profile when generating the Kubernetes manifests.  Now, it does not and it creates two paths at the root prefix.\r\n\r\nThe `application.yml` that is used in the service when generating the manifest looks like this:\r\n```yaml\r\n\"%cluster\":\r\n  quarkus:\r\n    kubernetes:\r\n      env:\r\n        fields:\r\n          KUBERNETES_NAMESPACE: metadata.namespace\r\n          HOST_IP: status.hostIP\r\n     \r\n\"%kubernetes\":\r\n  quarkus:\r\n    config:\r\n      profile:\r\n        parent: cluster\r\n    container-image:\r\n      build: false\r\n    kubernetes:\r\n      deployment-target: kubernetes\r\n      replicas: 2\r\n      ingress:\r\n        expose: true\r\n        host: \"localhost\"\r\n        annotations:\r\n          alb.ingress.kubernetes.io/scheme: internet-facing\r\n          alb.ingress.kubernetes.io/target-type: ip\r\n          alb.ingress.kubernetes.io/listen-ports: '[{\"HTTP\": 80}, {\"HTTPS\":443}]'\r\n          alb.ingress.kubernetes.io/ssl-redirect: '443'\r\n          alb.ingress.kubernetes.io/healthcheck-path: /q/health/ready\r\n```\r\n\r\nThe service has a `kubernetes.yml` (under `service/src/main/resources`) which was applied based on the profile before.\n\n### Expected behavior\n\nThe overlay for a profile is applied as it was in 2.13.x (using the `kubernetes.yml` under /resources)\r\n\r\n```yaml\r\n  rules:\r\n    - host: localhost\r\n      http:\r\n        paths:\r\n          - backend:\r\n              service:\r\n                name: service\r\n                port:\r\n                  number: 80\r\n            path: /a/aaa\r\n            pathType: Prefix\r\n          - backend:\r\n              service:\r\n                name: service\r\n                port:\r\n                  number: 80\r\n            path: /a/bbb\r\n            pathType: Prefix\r\n          - backend:\r\n              service:\r\n                name: service\r\n                port:\r\n                  number: 80\r\n            path: /b/xxx\r\n            pathType: Prefix\r\n          - backend:\r\n              service:\r\n                name: service\r\n                port:\r\n                  number: 80\r\n            path: /b/yyy\r\n            pathType: Prefix\r\n```\n\n### Actual behavior\n\nThe overlay is not only not applied when the profile is used and what it does generate has two root paths.\r\n\r\n```yaml\r\nrules:\r\n    - host: localhost\r\n      http:\r\n        paths:\r\n          - backend:\r\n              service:\r\n                name: service\r\n                port:\r\n                  name: http\r\n            path: /\r\n            pathType: Prefix\r\n          - backend:\r\n              service:\r\n                name: service\r\n                port:\r\n                  name: http\r\n            path: /\r\n            pathType: Prefix\r\n```\n\n### How to Reproduce?\n\n1. Run `mvn package -DskipTests -Prelease` (this will apply the Quarkus \"kubernetes\" profile)\r\n2. Review `/target/kubernetes/kubernetes.yml` - Ingress overlay is not there when using 2.14 but is when using 2.13\r\n\r\n[2.14-not-working.zip](https://github.com/quarkusio/quarkus/files/9998170/2.14-not-working.zip)\r\n\r\n[2.13-working.zip](https://github.com/quarkusio/quarkus/files/9998180/2.13-working.zip)\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nJDK 17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.14.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.8\n\n### Additional information\n\nIt would also be nice to be able to set the `spec.ingressClassName` in the application.yml too.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29241/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29241/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

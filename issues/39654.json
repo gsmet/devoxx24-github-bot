@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39654",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39654/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39654/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39654/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39654",
+  "id": 2203913158,
+  "node_id": "I_kwDOCFbutM6DXQvG",
+  "number": 39654,
+  "title": "Hibernate: merge detached entities with inheritance ignore null attributes on child classes",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-03-23T14:56:28Z",
+  "updated_at": "2024-05-14T06:45:11Z",
+  "closed_at": "2024-05-14T06:45:11Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nUsing Hibernate entity inheritance ( Quarkus 3 ).\r\n\r\nI have created a repository with a test class to reproduce the bug: https://github.com/antoinechamot/quarkus-bugfind. Launch tests (one must fail )\r\n\r\nMy entities are \r\n\r\n```java\r\n@SuperBuilder\r\n@NoArgsConstructor\r\n@Setter\r\n@Getter\r\n@Inheritance(strategy = InheritanceType.JOINED)\r\n@Entity(name = \"shape\")\r\npublic abstract class Shape {\r\n\r\n    @Id\r\n    @Builder.Default\r\n    private UUID id = UUID.randomUUID();\r\n\r\n    @Column(nullable = false, length = 100)\r\n    private String name;\r\n\r\n    @Column(length = 100)\r\n    private String surname;\r\n}\r\n```\r\n\r\n```java\r\n@Entity(name = \"circle\")\r\n@SuperBuilder\r\n@NoArgsConstructor\r\n@Getter\r\n@Setter\r\npublic class Circle extends Shape{\r\n\r\n    private String color;\r\n}\r\n```\r\n\r\nI have a simple repository with one method\r\n```java\r\n@Override\r\n@Transactional\r\npublic Circle update(Circle circle) {\r\n    return getEntityManager().merge(circle);\r\n}\r\n```\r\n\r\n\r\nFor test i populate the database with some data:\r\n```sql\r\nINSERT INTO shape (id,name,surname) VALUES ('847dae35-7ae0-4041-8257-e23fb7c5b033','My circle','My surname');\r\nINSERT INTO circle (id,color) VALUES ('847dae35-7ae0-4041-8257-e23fb7c5b033','red');\r\n...\r\n```\r\n\r\nAnd then i run a test to update the circle color to null\r\n\r\n```java\r\n    /**\r\n     * Update Circle color to null : KO\r\n     */\r\n    @Test\r\n    void testUpdateCircleColorNullKO(){\r\n        Circle myCircle = Circle.builder()\r\n                .id(UUID.fromString(\"847dae35-7ae0-4041-8257-e23fb7c5b033\"))\r\n                .name(\"My circle\")\r\n                .surname(\"My surname\")\r\n                .color(null)\r\n                .build();\r\n\r\n        repository.update(myCircle);\r\n\r\n        Circle updatedCircle = repository.findById(UUID.fromString(\"847dae35-7ae0-4041-8257-e23fb7c5b033\"));\r\n        assertThat(updatedCircle.getColor()).isNull();\r\n    }\r\n\r\n```\r\n\r\n\r\n\r\n \n\n### Expected behavior\n\n- On merge, I expect hibernate to launch an update request to set the value in the color column of the circle table to null.\r\n- If I put null on surname for example, an update request is launched by hibernate.\r\n- It seems that the problem only occurs on attributes of the child class Circle and not on the parent class Shape \n\n### Actual behavior\n\n- On merge, null attributes of the child class Circle are ignored. Not update request is done on the circle table.\r\n- If I update the color to something not null like 'blue', it is correctly updated\n\n### How to Reproduce?\n\nRepository : https://github.com/antoinechamot/quarkus-bugfind\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39654/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39654/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

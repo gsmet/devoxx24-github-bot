@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36071",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36071/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36071/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36071/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36071",
+  "id": 1907120792,
+  "node_id": "I_kwDOCFbutM5xrFqY",
+  "number": 36071,
+  "title": "Renamed configuration property to enable CORS filter not recognized",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-09-21T14:30:02Z",
+  "updated_at": "2023-09-21T16:20:58Z",
+  "closed_at": "2023-09-21T16:20:57Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe [Quarkus 3.4 migration guide](https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.4) states that the configuration property `quarkus.http.cors` has been renamed to `quarkus.http.cors.enabled`. When renaming this configuration property accordingly after upgrading to Qkuarkus `3.4.1` our application doesn't seem to recognize the configuration property `quarkus.http.cors.enabled`.\r\n\r\n```\r\n> ./gradlew quarkusDev\r\n...\r\n2023-09-21 16:09:01,377 WARN  [io.qua.config] (Quarkus Main Thread) Unrecognized configuration key \"quarkus.http.cors.enabled\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n...\r\n```\r\n\r\nWhen running tests, the error message is slightly different:\r\n```\r\n> ./gradlew check\r\n...\r\nUnrecognized configuration key \"%s\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n...\r\n```\r\n\r\nThe \"old\" configuration property `quarkus.http.cors` works as expected.\r\n\r\nAlso, the [HTTP reference guide](https://quarkus.io/guides/http-reference#cors-filter) doesn't mention the renamed property at all.\n\n### Expected behavior\n\nQuarkus correctly recognizes the renamed configuration property `quarkus.http.cors.enabled`.\n\n### Actual behavior\n\nUsing a CORS configuration like\r\n\r\n```properties\r\nquarkus.http.cors.enabled = true\r\nquarkus.http.cors.origins = /.*/\r\nquarkus.http.cors.methods = GET,PUT,POST,DELETE\r\nquarkus.http.cors.headers = Content-Type,Content-Length,Authorization,X-Requested-With,Accept,Origin\r\nquarkus.http.cors.exposed-headers = Content-Type,Content-Length,Authorization,X-Requested-With,Accept,Origin\r\nquarkus.http.cors.access-control-max-age = 24H\r\nquarkus.http.cors.access-control-allow-credentials = true\r\n```\r\n\r\nresults in the following error message at application startup:\r\n\r\n```\r\nUnrecognized configuration key \"quarkus.http.cors.enabled\" was provided; it will be ignored; verify that the dependency extension for this configuration is set or that you did not make a typo\r\n```\n\n### How to Reproduce?\n\nCreate a fresh Quarkus project and add a corresponding CORS filter configuration to application configuration:\r\n\r\n1. Create a fresh Quarkus project:\r\n    ```sh\r\n    quarkus create app my-groupId:my-artifactId \\\r\n    --extension=resteasy-reactive,resteasy-reactive-jackson \\\r\n    --gradle-kotlin-dsl\r\n    ```\r\n1. Add CORS configuration filter with renamed configuration property to `application.properties`:\r\n    ```properties\r\n    quarkus.http.cors.enabled = true\r\n    quarkus.http.cors.origins = /.*/\r\n    quarkus.http.cors.methods = GET,PUT,POST,DELETE\r\n    quarkus.http.cors.headers = Content-Type,Content-Length,Authorization,X-Requested-With,Accept,Origin\r\n    quarkus.http.cors.exposed-headers = Content-Type,Content-Length,Authorization,X-Requested-With,Accept,Origin\r\n    quarkus.http.cors.access-control-max-age = 24H\r\n    quarkus.http.cors.access-control-allow-credentials = true\r\n    ```\r\n1. Start application in development mode:\r\n    ```sh\r\n    ./gradlew quarkusDev\r\n    ```\r\n1. Run tests:\r\n    ```sh\r\n    ./gradlew check\r\n    ```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 LTS\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.4.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.3\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36071/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36071/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

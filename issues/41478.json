@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41478",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41478/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41478/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41478/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41478",
+  "id": 2375681625,
+  "node_id": "I_kwDOCFbutM6NmgZZ",
+  "number": 41478,
+  "title": "Building native executable fails.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-06-26T15:38:30Z",
+  "updated_at": "2024-06-26T18:10:48Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nNote: Project is building and running fine in JVM mode.\r\nNote2: Building via the docker container has the same result as building locally.\r\n\r\nI created a simple quarkus project that has these extensions/dependencies:\r\n\r\n```kotlin\r\nimplementation(\"io.quarkus:quarkus-rest\")\r\nimplementation(\"io.quarkus:quarkus-reactive-mysql-client\")\r\nimplementation(\"io.quarkus:quarkus-jdbc-mariadb\")\r\nimplementation(\"io.quarkus:quarkus-smallrye-jwt\")\r\nimplementation(\"io.quarkus:quarkus-arc\")\r\n\r\ntestImplementation(\"io.quarkus:quarkus-junit5\")\r\ntestImplementation(\"io.rest-assured:rest-assured\")\r\n```\r\n\r\nThen run this command: `build -x test -Dquarkus.package.jar.enabled=false -Dquarkus.native.enabled=true`\r\n\r\nThe build fails with this log:\r\n```\r\n18:26:53: Executing 'build -x test -Dquarkus.package.jar.enabled=false -Dquarkus.native.enabled=true'...\r\n\r\n> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors\r\n> Task :buildSrc:compileKotlin UP-TO-DATE\r\n> Task :buildSrc:compileJava NO-SOURCE\r\n> Task :buildSrc:compileGroovy NO-SOURCE\r\n> Task :buildSrc:pluginDescriptors UP-TO-DATE\r\n> Task :buildSrc:processResources NO-SOURCE\r\n> Task :buildSrc:classes UP-TO-DATE\r\n> Task :buildSrc:jar UP-TO-DATE\r\n> Task :processResources\r\n> Task :quarkusGenerateCode\r\n> Task :quarkusGenerateCodeDev\r\n> Task :compileJava UP-TO-DATE\r\n> Task :classes\r\n> Task :jar\r\n========================================================================================================================\r\nGraalVM Native Image: Generating '***-1.0.0-SNAPSHOT-runner' (executable)...\r\n========================================================================================================================\r\nFor detailed information and explanations on the build output, visit:\r\nhttps://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/BuildOutput.md\r\n------------------------------------------------------------------------------------------------------------------------\r\n\r\n[1/8] Initializing...                                                                                    (0,0s @ 0,18GB)\r\n------------------------------------------------------------------------------------------------------------------------\r\n                        0,2s (4,1% of total time) in 10 GCs | Peak RSS: 0,55GB | CPU load: 0,76\r\nError: Element in class initialization configuration must end in :run_t?me, :rerun, or :bu?ld_t?me. Found: io.netty:build_time (from 'META-INF\\native-image\\io.netty\\netty-codec-http2\\native-image.properties' in 'file:///C:/Users/***/build/***-1.0.0-SNAPSHOT-native-image-source-jar/lib/io.netty.netty-codec-http2-4.1.108.Final.jar')\r\ncom.oracle.svm.core.util.UserError$UserException: Element in class initialization configuration must end in :run_t?me, :rerun, or :bu?ld_t?me. Found: io.netty:build_time (from 'META-INF\\native-image\\io.netty\\netty-codec-http2\\native-image.properties' in 'file:///C:/Users/***/build/***-1.0.0-SNAPSHOT-native-image-source-jar/lib/io.netty.netty-codec-http2-4.1.108.Final.jar')\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:73)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.classinitialization.ClassInitializationFeature.lambda$processClassInitializationOptions$1(ClassInitializationFeature.java:86)\r\n\tat java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)\r\n\tat java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\r\n\tat java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)\r\n\tat java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\r\n\tat java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\r\n\tat java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)\r\n\tat java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)\r\n\tat java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\r\n\tat java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.classinitialization.ClassInitializationFeature.processClassInitializationOptions(ClassInitializationFeature.java:81)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.setupNativeImage(NativeImageGenerator.java:879)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:590)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:550)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:539)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:721)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.start(NativeImageGeneratorRunner.java:143)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:98)\r\nError: ImageSingletons do not contain key com.oracle.svm.hosted.ProgressReporterFeature\r\n> Task :quarkusAppPartsBuild FAILED\r\n10 actionable tasks: 6 executed, 4 up-to-date\r\n\r\nFAILURE: Build failed with an exception.\r\n\r\n* What went wrong:\r\nExecution failed for task ':quarkusAppPartsBuild'.\r\n> There was a failure while executing work items\r\n   > A failure occurred while executing io.quarkus.gradle.tasks.worker.BuildWorker\r\n      > io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        \t[error]: Build step io.quarkus.deployment.pkg.steps.NativeImageBuildStep#build threw an exception: io.quarkus.deployment.pkg.steps.NativeImageBuildStep$ImageGenerationFailureException: Image generation failed. Exit code: 1\r\n        \tat io.quarkus.deployment.pkg.steps.NativeImageBuildStep.imageGenerationFailed(NativeImageBuildStep.java:471)\r\n        \tat io.quarkus.deployment.pkg.steps.NativeImageBuildStep.build(NativeImageBuildStep.java:261)\r\n        \tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n        \tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n        \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n        \tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n        \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n        \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n        \tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n        \tat org.jboss.threads.JBossThread.run(JBossThread.java:483)\r\n\r\n\r\n* Try:\r\n> Run with --stacktrace option to get the stack trace.\r\n> Run with --info or --debug option to get more log output.\r\n> Run with --scan to get full insights.\r\n> Get more help at https://help.gradle.org.\r\n\r\nBU�LD FAILED in 15s\r\n18:27:09: Execution finished 'build -x test -Dquarkus.package.jar.enabled=false -Dquarkus.native.enabled=true'.\r\n```\r\n\r\nThe said netty native image properties file:\r\n```\r\n# Copyright 2019 The Netty Project\r\n#\r\n# The Netty Project licenses this file to you under the Apache License,\r\n# version 2.0 (the \"License\"); you may not use this file except in compliance\r\n# with the License. You may obtain a copy of the License at:\r\n#\r\n#   https://www.apache.org/licenses/LICENSE-2.0\r\n#\r\n# Unless required by applicable law or agreed to in writing, software\r\n# distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT\r\n# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the\r\n# License for the specific language governing permissions and limitations\r\n# under the License.\r\n\r\nArgs = --initialize-at-build-time=io.netty \\\r\n       --initialize-at-run-time=io.netty.handler.codec.http2.Http2CodecUtil,io.netty.handler.codec.http2.Http2ClientUpgradeCodec,io.netty.handler.codec.http2.Http2ConnectionHandler,io.netty.handler.codec.http2.DefaultHttp2FrameWriter\r\n\r\n```\r\n\r\nI've tried changing the build arg(quarkus.native.additional-build-args) using --initialize-at-run-time with different classes and such but no chance.\n\n### Expected behavior\n\nThe quarkus project should've been built.\n\n### Actual behavior\n\nIt doesn't build, and fails.\n\n### How to Reproduce?\n\n- Create a simple Quarkus Project using the generator.\r\n- Add REST(io.quarkus:quarkus-rest) extension.\r\n- Try to run the build native command: `build -x test -Dquarkus.package.jar.enabled=false -Dquarkus.native.enabled=true`\r\n\n\n### Output of `uname -a` or `ver`\n\nWindows 11\n\n### Output of `java -version`\n\nOpenJDK 64-Bit Server VM GraalVM CE 21.0.2+13.1 (build 21.0.2+13-jvmci-23.1-b30, mixed mode, sharing)\n\n### Mandrel or GraalVM version (if different from Java)\n\nGraalVM CE 21.0.2+13.1\n\n### Quarkus version or git rev\n\n3.12.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.8\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41478/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41478/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

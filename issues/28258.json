@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28258",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28258/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28258/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28258/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28258",
+  "id": 1389401885,
+  "node_id": "I_kwDOCFbutM5S0Jcd",
+  "number": 28258,
+  "title": "Keycloak policy enforcer does not find newly created resource... even if it appears in RTP token",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-09-28T13:50:28Z",
+  "updated_at": "2023-11-18T06:19:08Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm using Keycloak policy enforcer to protect my entities.\r\nFor each entity I have a resource, a user policy for readers and a read permission. \r\n\r\nOn entity creation, all these authorization resources are created in Keycloak but the policy enforcer cannot find the newly created resource.\r\n\r\nWhen I evaluate this with Keycloak UI, access is granted.\r\n\r\nTo show this, I've created a simple app:\r\n[https://github.com/cthiebault/quarkus-keyclaok-authz](https://github.com/cthiebault/quarkus-keyclaok-authz)\r\n\r\nThe application is a simple REST API that allows to manage albums.\r\n\r\n- POST `/api/albums`\r\n- GET `/api/albums/{id}`\r\n- PUT `/api/albums/{id}`\r\n\r\nAny authenticated user with `user` role can create album using `POST` or `PUT`.  \r\nThey can then access their own albums using `GET`.\r\n\r\nUsers with `admin` role can access all albums.\r\n\r\nFor each created album, the application creates in Keycloak:\r\n\r\n- a resource `album:{id}` with uri `/api/albums/{id}` and `GET` scope\r\n- a user policy `album:{id}:readers` with current user as member\r\n- a scope permission `album:{id}:read` for\r\n  - `album:{id}` resource\r\n  - `album:{id}:readers` policy\r\n  - `GET` scope\r\n\r\nDuring `AlbumApiTest`, the album is well created, same for keycloak authz resource, policy & permission.   \r\nBut when I try to access the album using `GET`, I get a 403:\r\n\r\n```text\r\nDEBUG [org.key.ada.aut.AbstractPolicyEnforcer] Checking permissions for path [http://localhost:8081/api/albums/1] with config [PathConfig{name='album:1', type='album', path='/api/albums/1', scopes=[GET], id='1', enforcerMode='ENFORCING'}].\r\nDEBUG [org.key.ada.aut.KeycloakAdapterPolicyEnforcer] Obtaining authorization for authenticated user.\r\nDEBUG [org.key.ada.aut.KeycloakAdapterPolicyEnforcer] Authorization failed: java.lang.RuntimeException: org.keycloak.authorization.client.util.HttpResponseException: Unexpected response from server: 400 / Bad Request / Response from server: {\"error\":\"invalid_resource\",\"error_description\":\"Resource with id [1] does not exist.\"}\r\n\tat org.keycloak.authorization.client.util.Throwables.handleAndWrapHttpResponseException(Throwables.java:99)\r\n\tat org.keycloak.authorization.client.util.Throwables.handleWrapException(Throwables.java:42)\r\n\tat org.keycloak.authorization.client.util.Throwables.retryAndWrapExceptionIfNecessary(Throwables.java:65)\r\n\tat org.keycloak.authorization.client.resource.AuthorizationResource.authorize(AuthorizationResource.java:98)\r\n\tat org.keycloak.adapters.authorization.KeycloakAdapterPolicyEnforcer.requestAuthorizationToken(KeycloakAdapterPolicyEnforcer.java:167)\r\n\tat org.keycloak.adapters.authorization.KeycloakAdapterPolicyEnforcer.isAuthorized(KeycloakAdapterPolicyEnforcer.java:66)\r\n\tat org.keycloak.adapters.authorization.AbstractPolicyEnforcer.authorize(AbstractPolicyEnforcer.java:121)\r\n\tat io.quarkus.keycloak.pep.runtime.KeycloakPolicyEnforcerAuthorizer.apply(KeycloakPolicyEnforcerAuthorizer.java:64)\r\n\tat io.quarkus.keycloak.pep.runtime.KeycloakPolicyEnforcerAuthorizer.apply(KeycloakPolicyEnforcerAuthorizer.java:28)\r\n\tat io.quarkus.vertx.http.runtime.security.HttpAuthorizer$1$1$1.run(HttpAuthorizer.java:74)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:557)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: org.keycloak.authorization.client.util.HttpResponseException: Unexpected response from server: 400 / Bad Request / Response from server: {\"error\":\"invalid_resource\",\"error_description\":\"Resource with id [1] does not exist.\"}\r\n\tat org.keycloak.authorization.client.util.HttpMethod.execute(HttpMethod.java:95)\r\n\tat org.keycloak.authorization.client.util.HttpMethodResponse$2.execute(HttpMethodResponse.java:50)\r\n\tat org.keycloak.authorization.client.resource.AuthorizationResource$1.call(AuthorizationResource.java:92)\r\n\tat org.keycloak.authorization.client.resource.AuthorizationResource$1.call(AuthorizationResource.java:74)\r\n\tat org.keycloak.authorization.client.resource.AuthorizationResource.authorize(AuthorizationResource.java:96)\r\n```\r\n\r\nBut when introspecting the RTP token, I see that `authorization` seems correct:\r\n\r\n```json\r\n{\r\n  \"authorization\": {\r\n    \"permissions\": [\r\n      {\r\n        \"scopes\": [ \"GET\" ],\r\n        \"rsid\": \"1\",\r\n        \"rsname\": \"album:1\"\r\n      },\r\n      {\r\n        \"scopes\": [ \"POST\" ],\r\n        \"rsid\": \"a7603402-05ec-43ab-bc47-e8e7808769fd\",\r\n        \"rsname\": \"Albums resource\"\r\n      },\r\n      {\r\n        \"scopes\": [ \"PUT\" ],\r\n        \"rsid\": \"561a2d9d-8654-40c6-89df-7868599db78f\",\r\n        \"rsname\": \"Create albums resource\"\r\n      }\r\n    ]\r\n  }\r\n}\r\n```\r\n\r\nIt seems the policy enforcer cannot find the newly created resource :-(\r\n\r\nWhen I evaluate this with Keycloak UI, access is granted.\r\n\r\n## Keycloak authorization config\r\n\r\nHere is the default Keycloak authorization config in `quarkus-realm.json`:\r\n\r\n**Resources:**\r\n\r\n ```json\r\n[\r\n  {\r\n    \"name\": \"Albums resource\",\r\n    \"uris\": [ \"/api/albums\" ],\r\n    \"scopes\": [\r\n      { \"name\": \"GET\" },\r\n      { \"name\": \"POST\" }\r\n    ]\r\n  },\r\n  {\r\n    \"name\": \"Create albums resource\",\r\n    \"uris\": [ \"/api/albums/{id}\" ],\r\n    \"scopes\": [\r\n      { \"name\": \"PUT\" }\r\n    ]\r\n  }\r\n]\r\n```\r\n\r\n**Policies & permissions:**\r\n\r\n```json\r\n[\r\n  {\r\n    \"name\": \"Any User Policy\",\r\n    \"description\": \"Any user granted with the user role can access something\",\r\n    \"type\": \"role\",\r\n    \"logic\": \"POSITIVE\",\r\n    \"decisionStrategy\": \"UNANIMOUS\",\r\n    \"config\": {\r\n      \"roles\": \"[{\\\"id\\\":\\\"user\\\",\\\"required\\\":false}]\"\r\n    }\r\n  },\r\n  {\r\n    \"name\": \"Any Admin Policy\",\r\n    \"description\": \"Any user granted with the admin role can access something\",\r\n    \"type\": \"role\",\r\n    \"logic\": \"POSITIVE\",\r\n    \"decisionStrategy\": \"UNANIMOUS\",\r\n    \"config\": {\r\n      \"roles\": \"[{\\\"id\\\":\\\"admin\\\",\\\"required\\\":false}]\"\r\n    }\r\n  },\r\n  {\r\n    \"name\": \"Post new album permission\",\r\n    \"type\": \"scope\",\r\n    \"logic\": \"POSITIVE\",\r\n    \"decisionStrategy\": \"UNANIMOUS\",\r\n    \"config\": {\r\n      \"resources\": \"[\\\"Albums resource\\\"]\",\r\n      \"scopes\": \"[\\\"POST\\\"]\",\r\n      \"applyPolicies\": \"[\\\"Any User Policy\\\"]\"\r\n    }\r\n  },\r\n  {\r\n    \"name\": \"Put new album permission\",\r\n    \"type\": \"scope\",\r\n    \"logic\": \"POSITIVE\",\r\n    \"decisionStrategy\": \"UNANIMOUS\",\r\n    \"config\": {\r\n      \"resources\": \"[\\\"Create albums resource\\\"]\",\r\n      \"scopes\": \"[\\\"PUT\\\"]\",\r\n      \"applyPolicies\": \"[\\\"Any User Policy\\\"]\"\r\n    }\r\n  }\r\n]\r\n```\r\n\r\n\n\n### Expected behavior\n\nPolicy enforcer should find the album resource.\r\n\r\nThe RTP token finds it, but the policy enforcer does not.\n\n### Actual behavior\n\nAs the album resource is not found, we get a 403 error.\n\n### How to Reproduce?\n\nI've created a simple repo to reproduce error:\r\nhttps://github.com/cthiebault/quarkus-keyclaok-authz\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.12.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.5.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28258/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28258/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

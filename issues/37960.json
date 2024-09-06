@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37960",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37960/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37960/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37960/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37960",
+  "id": 2059585555,
+  "node_id": "I_kwDOCFbutM56wsgT",
+  "number": 37960,
+  "title": "RabbitMQ Memory leak due to reconnection",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-12-29T12:24:57Z",
+  "updated_at": "2024-08-21T13:51:10Z",
+  "closed_at": "2024-08-21T13:51:03Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAfter facing a rabbitmq reconnection `RabbitMQ connection shutdown! The client will attempt to reconnect automatically`\r\n```java\r\ncom.rabbitmq.client.ShutdownSignalException: connection error; protocol method: #method<connection.close>(reply-code=320, reply-text=CONNECTION_FORCED - Node was put into maintenance mode, class-id=0, method-id=0)\r\n  at com.rabbitmq.client.impl.AMQConnection.startShutdown:985\r\n  at com.rabbitmq.client.impl.AMQConnection.shutdown:975\r\n  at com.rabbitmq.client.impl.AMQConnection.handleConnectionClose:913\r\n  at com.rabbitmq.client.impl.AMQConnection.processControlCommand:868\r\n  at com.rabbitmq.client.impl.AMQConnection$1.processAsync:265\r\n  at com.rabbitmq.client.impl.AMQChannel.handleCompleteInboundCommand:182\r\n  at com.rabbitmq.client.impl.AMQChannel.handleFrame:114\r\n  at com.rabbitmq.client.impl.AMQConnection.readFrame:719\r\n  at com.rabbitmq.client.impl.AMQConnection.access$300:47\r\n  at com.rabbitmq.client.impl.AMQConnection$MainLoop.run:666\r\n  at java.lang.Thread.run:829\r\n```\r\nRabbitmq has a successful reconnection and then in a short period of time app goes out of memory due to either publishing or consumption problems after reconnection.\r\nI believe this issue is fully or partially related to this one [https://github.com/quarkusio/quarkus/issues/33698](url).\r\nThe symptoms are the same. Messages are stuck in `io.vertx.rabbitmq.impl.RabbitMQPublisherImpl` in `pendingAcks` ArrayDeque\r\n![image](https://github.com/quarkusio/quarkus/assets/26384615/b0f5e9fa-ab85-4d23-8597-3684105896a8)\r\n\r\n\r\n### Expected behavior\r\n\r\nAfter the rabbitmq reconnection app continues to work as usual.\r\n\r\n### Actual behavior\r\n\r\nApplication goes out of memory\r\n\r\n### How to Reproduce?\r\n\r\nShould be the same as here [https://github.com/quarkusio/quarkus/issues/33698](url). However this time I was not able to easily reproduce that in `RabbitMQPublisherImpl`.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kernel Version 21.1.0: Wed Oct 13 17:33:23 PDT 2021; root:xnu-8019.41.5~1/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment Homebrew (build 11.0.12+0) OpenJDK 64-Bit Server VM Homebrew (build 11.0.12+0, mixed mode)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.4.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\ngradle 8.4\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37960/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37960/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37439",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37439/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37439/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37439/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37439",
+  "id": 2019486266,
+  "node_id": "I_kwDOCFbutM54Xuo6",
+  "number": 37439,
+  "title": "Quarkus OIDC Multitenancy won't work in DEV mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-11-30T20:48:18Z",
+  "updated_at": "2023-12-04T14:17:29Z",
+  "closed_at": "2023-12-04T14:17:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe dev mode is not picking the tenant specific OIDC configuration dynamically (request scope).\r\n\r\n### Expected behavior\r\n\r\nIf the request is coming for a default config (determined thru a URL path or a header) then default OIDC config should be used, likewise same should happen for a tenant specific requests. \r\n\r\n### Actual behavior\r\n\r\nWhile the app is booting up, the default OIDC is successfully registered but afterwards it never changes on a client request basis (as should be expected from a given multi-tenancy configurations).\r\n\r\nLogs:\r\n\r\n[INFO] Changes detected - recompiling the module! :dependency\r\nListening for transport dt_socket at address: 8005\r\n2023-11-30 12:49:54,017 INFO  [io.qua.oid.dep.dev.OidcDevUIProcessor] (build-17) **OIDC Dev Console: discovering the provider metadata at https://cognito-idp.us-west-1.amazonaws.com/{user pool id}/.well-known/openid-configuration**\r\n2023-11-30 12:49:54,359 INFO  [io.qua.ama.lam.run.MockEventServer] (build-45) Mock Lambda Event Server Started\r\n__  ____  __  _____   ___  __ ____  ______\r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2023-11-30 12:50:01,134 WARN  [io.qua.oid.run.TenantConfigContext] (vert.x-eventloop-thread-1) Secret key for encrypting tokens in a session cookie is missing, auto-generating it\r\n\r\n2023-11-30 12:50:01,341 WARN  [io.qua.oid.run.TenantConfigContext] (vert.x-eventloop-thread-1) Secret key for encrypting tokens in a session cookie is missing, auto-generating it\r\n2023-11-30 12:50:01,628 INFO  [io.qua.ama.lam.run.AbstractLambdaPollLoop] (Lambda Thread (DEVELOPMENT)) Listening on: http://localhost:9090/_lambda_/2018-06-01/runtime/invocation/next\r\n2023-11-30 12:50:01,628 INFO  [io.quarkus] (Quarkus Main Thread) my-app 1.0 on JVM (powered by Quarkus 3.5.0) started in 13.727s.\r\n2023-11-30 12:50:01,636 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2023-11-30 12:50:01,639 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [amazon-lambda, cache, cdi, hibernate-validator, mongodb-client, mongodb-panache, narayana-jta, oidc, resteasy-reactive, resteasy-reactive-jackson, security, smallrye-context-propagation, smallrye-jwt, smallrye-openapi, swagger-ui, vertx]\r\n**2023-11-30 12:50:40,143 INFO  [com.sli.res.CustomTenantResolver] (vert.x-eventloop-thread-2) User request role: admin**\r\n\r\n### How to Reproduce?\r\n\r\n- Add following to your application.properties,\r\n\r\n```\r\n# Default (regular-user) Tenant Configuration\r\nquarkus.oidc.auth-server-url=<aws cognito user pool url>\r\nquarkus.oidc.client-id=<aws cognito userpool id>\r\nquarkus.oidc.application-type=web-app\r\nquarkus.oidc.token-path=/oauth2/token\r\n\r\n# Tenant-a  Configuration\r\nquarkus.oidc.tenant-a.auth-server-url=<aws cognito user pool url for tenant-a>\r\nquarkus.oidc.tenant-a.client-id=<aws cognito userpool id for tenant-a>\r\nquarkus.oidc.tenant-a.application-type=web-app\r\nquarkus.oidc.tenant-a.token-path=/oauth2/token\r\n```\r\n\r\n- Then create a resolver class for it,\r\n\r\n`public class CustomTenantResolver implements TenantResolver { ... }`\r\n\r\n In other words, follow the steps as mentioned on the below guide,\r\n\r\nhttps://quarkus.io/guides/security-openid-connect-multitenancy\r\n\r\n- Finally make two kinds of HTTP (GET or POST or whatever) requests attached with a valid JWT access token, one intended for to be handled by default OIDC config and the other for 'tenant-a' specific config.\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37439/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37439/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

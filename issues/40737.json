@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40737",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40737/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40737/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40737/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40737",
+  "id": 2307828432,
+  "node_id": "I_kwDOCFbutM6JjqrQ",
+  "number": 40737,
+  "title": "Reentrant locks in CDI contexts can leak Thread instances into image heap",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 18,
+  "created_at": "2024-05-21T09:30:50Z",
+  "updated_at": "2024-06-24T05:14:19Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nNative builds can fail with errors like this:\r\n\r\n```\r\nError: Detected a started Thread in the image heap. Thread name: main. Threads running in the image generator are no longer running at image runtime. If these objects should not be stored in the image heap, you can use\r\n\r\n    '--trace-object-instantiation=java.lang.Thread'\r\n\r\nto find classes that instantiate these objects. Once you found such a class, you can mark it explicitly for run time initialization with\r\n\r\n    '--initialize-at-run-time=<culprit>'\r\n\r\nto prevent the instantiation of the object.\r\nThe object was probably created by a class initializer and is reachable from a static field. You can request class initialization at image runtime by using the option --initialize-at-run-time=<class-name>. Or you can write your own initialization methods and call them explicitly from your main entry point.\r\nDetailed message:\r\nTrace: Object was reached by\r\n  reading field java.util.concurrent.locks.AbstractOwnableSynchronizer.exclusiveOwnerThread of constant\r\n    java.util.concurrent.locks.ReentrantLock$NonfairSync@69557381: java.util.concurrent.locks.ReentrantLock$NonfairSync@69557381[State = 1, empty q...\r\n  reading field java.util.concurrent.locks.ReentrantLock.sync of constant\r\n    java.util.concurrent.locks.ReentrantLock@4c3d230a: java.util.concurrent.locks.ReentrantLock@4c3d230a[Locked by thread main]\r\n  reading field io.quarkus.arc.impl.LazyValue.lock of constant\r\n    io.quarkus.arc.impl.LazyValue@57f1e065: io.quarkus.arc.impl.LazyValue@57f1e065\r\n  reading field java.util.concurrent.ConcurrentHashMap$Node.val of constant\r\n    java.util.concurrent.ConcurrentHashMap$Node@77437480: 9SDuiV8v87J2ZUi6goJuuKNan1k=io.quarkus.arc.impl.LazyValue@57f1e065\r\n  indexing into array java.util.concurrent.ConcurrentHashMap$Node[]@e0ece13: [Ljava.util.concurrent.ConcurrentHashMap$Node;@e0ece13\r\n  reading field java.util.concurrent.ConcurrentHashMap.table of constant\r\n    java.util.concurrent.ConcurrentHashMap@6ea31905: {fRqO007voVblR_BoQkAFpaGPHtI=io.quarkus.arc.impl.LazyValue@7714042a, 9SDuiV8v87J...\r\n  reading field io.quarkus.arc.impl.ComputingCache.map of constant\r\n    io.quarkus.arc.impl.ComputingCache@1b558c4d: io.quarkus.arc.impl.ComputingCache@1b558c4d\r\n  reading field io.quarkus.arc.impl.ComputingCacheContextInstances.instances of constant\r\n    io.quarkus.arc.impl.ComputingCacheContextInstances@18dd2ee4: io.quarkus.arc.impl.ComputingCacheContextInstances@18dd2ee4\r\n  reading field io.quarkus.arc.impl.AbstractSharedContext.instances of constant\r\n    io.quarkus.arc.impl.SingletonContext@68bc232f: io.quarkus.arc.impl.SingletonContext@68bc232f\r\n  reading field java.util.Collections$SingletonList.element of constant\r\n    java.util.Collections$SingletonList@145b22a5: [io.quarkus.arc.impl.SingletonContext@68bc232f]\r\n  reading field io.quarkus.arc.impl.Contexts.singletonContextSingleton of constant\r\n    io.quarkus.arc.impl.Contexts@4cea0bac: io.quarkus.arc.impl.Contexts@4cea0bac\r\n  reading field io.quarkus.arc.impl.ArcContainerImpl.contexts of constant\r\n    io.quarkus.arc.impl.ArcContainerImpl@5283e01d: ArcContainerImpl [id=1, running=true, beans=50, observers=14, scopes=4]\r\n  reading field java.util.concurrent.atomic.AtomicReference.value of constant\r\n    java.util.concurrent.atomic.AtomicReference@2bdff16d: ArcContainerImpl [id=1, running=true, beans=50, observers=14, scopes=4]\r\n  scanning root java.util.concurrent.atomic.AtomicReference@2bdff16d: ArcContainerImpl [id=1, running=true, beans=50, observers=14, scopes=4] embedded in\r\n    io.quarkus.arc.Arc.container(Arc.java:56)\r\n  parsing method io.quarkus.arc.Arc.container(Arc.java:56) reachable via the parsing context\r\n    at io.quarkus.arc.impl.ArcCDIProvider.getCDI(ArcCDIProvider.java:28)\r\n    at jakarta.enterprise.inject.spi.CDI.checkProvider(CDI.java:103)\r\n    at jakarta.enterprise.inject.spi.CDI$$Lambda/0x00000007c1724f20.test(Unknown Source)\r\n    at java.util.concurrent.CopyOnWriteArrayList.bulkRemove(CopyOnWriteArrayList.java:925)\r\n    at java.util.concurrent.CopyOnWriteArrayList$COWSubList.bulkRemove(CopyOnWriteArrayList.java:1642)\r\n    at java.util.concurrent.CopyOnWriteArrayList$COWSubList.removeAll(CopyOnWriteArrayList.java:1626)\r\n    at root method.(Unknown Source)\r\n```\r\n\r\nThe thread here is the `main` thread, which is a thread expected to be part of the native image execution, but the real issue here is that image data contains references to this thread. These references are stored inside `ReentrantLock` instances (`exclusiveOwnerThread` field) inside `io.quarkus.arc.impl.LazyValue`. These are in turn stored within a `ConcurrentHashMap` inside `ComputingCache` as part of `io.quarkus.arc.impl.SingletonContext` for the CDI contexts.\r\n\r\nAssuming the concurrency requirements are needed due to the multi-threaded nature of native image builds, Quarkus needs to make sure the concurrency aspects go away. IOW, the cache in `SingletonContext` should probably become an immutable hashmap of values that have no lock references. An easier fix here might be to make sure that all the locks inside the `LazyValue` instances are released. The tricky aspect is when to do so? As image heap objects are created, checks are made to make sure no forbidden types end up in the image heap. So ideally these values should become immutable as soon as they've been computed and only store immutable values.\r\n\r\nOther solutions might exist, such as: is the concurrent access/update required? Can these `ContextInstance` objects need to be in the image heap?",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40737/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40737/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

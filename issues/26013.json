@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26013",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26013/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26013/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26013/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26013",
+  "id": 1265112712,
+  "node_id": "I_kwDOCFbutM5LaBaI",
+  "number": 26013,
+  "title": "Quarkus Gradle app plugin crashes when an app contains tests and no source",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-06-08T18:06:23Z",
+  "updated_at": "2022-06-10T04:27:34Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe Quarkus app I'm writing is made up entirely of extensions, and requires no source of its own. There are tests to make sure that everything wired up correctly. This means that the application project looks like this:\r\n```\r\n$ find -type f\r\n./build.gradle\r\n./src/test/java/org/acme/ExampleTest.java\r\n```\r\n\r\nIt appears that the Quarkus Gradle app plugin expects a build/classes/java/main to exist. When running a build, I get this:\r\n```\r\n$ gradle build\r\nConfiguration on demand is an incubating feature.\r\n\r\n> Task :app:test FAILED\r\n\r\nExampleTest > test() FAILED\r\n    java.lang.RuntimeException at QuarkusTestExtension.java:632\r\n        Caused by: java.lang.IllegalArgumentException at PathTree.java:28\r\n            Caused by: java.nio.file.NoSuchFileException at UnixException.java:92\r\n\r\n1 test completed, 1 failed\r\n\r\nFAILURE: Build failed with an exception.\r\n```\n\n### Expected behavior\n\nThe Quarkus Gradle app should recognize that the directory doesn't exist because there's no source and simply accept that there will be an empty list of classes.\n\n### Actual behavior\n\nThe Quarkus Gradle app crashes with a file access exception. Checking the contents of the stack, the relevant stack frame says:\r\n```\r\nCaused by: java.nio.file.NoSuchFileException: /home/jskillin/Projects/github/jskillin-idt/quarkusio-quarkus-issues-emptysrc/app/build/classes/java/main\r\n```\r\n\r\nThe workaround that I've used is to drop an empty `public class EmptyClass {}` in src/main/java to bypass this.\n\n### How to Reproduce?\n\nSteps to reproduce:\r\n1. Create deployment and runtime extension projects.\r\n2. Create an app project which depends on the runtime project.\r\n3. Add a QuarkusTest with a \"test\" function to the src/main/test of the app project. The test function can be empty and test nothing; the key is simply that an eligible test is detected by JUnit so the testing suite starts.\r\n4. Run \"gradle build\" in the app project or root project.\n\n### Output of `uname -a` or `ver`\n\nLinux jacob-ubuntu-dev 5.15.0-35-generic #36-Ubuntu SMP Sat May 21 02:24:07 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.15\" 2022-04-19 OpenJDK Runtime Environment (build 11.0.15+10-Ubuntu-0ubuntu0.22.04.1) OpenJDK 64-Bit Server VM (build 11.0.15+10-Ubuntu-0ubuntu0.22.04.1, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.4.2\n\n### Additional information\n\nReproduction git repo will be in the comments once I get the issue number.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26013/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26013/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

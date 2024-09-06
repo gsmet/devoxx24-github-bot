@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32770",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32770/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32770/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32770/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32770",
+  "id": 1675113254,
+  "node_id": "I_kwDOCFbutM5j2DMm",
+  "number": 32770,
+  "title": "Quartz thread discrepancy",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-04-19T15:05:49Z",
+  "updated_at": "2024-01-30T09:36:51Z",
+  "closed_at": "2024-01-30T09:36:51Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter this PR https://github.com/quarkusio/quarkus/pull/28348 . Scheduled method are not running on a quartz thread anymore. I do not understand the full intent, but from what I understands, scheduled methods should work on a vertx worker thread so it can be using a duplicated context.\r\n\r\nThis does work in JVM mode, but in native it runs on a executor thread (not sure about duplicated context here), which led a bit to this in our application; https://github.com/quarkusio/quarkus/discussions/32621, which we is why I could not reproduce locally in dev mode (jvm) as it runs on the vertx worker threads.\n\n### Expected behavior\n\nIn both jvm and native. if `quarkus.quartz.run-blocking-scheduled-method-on-quartz-thread` is true. Quarkus should use quartz threads. OK\r\n\r\nIn both jvm and native if the above property is unset or false, scheduled methods should run on a vertx worker thread. NOK\n\n### Actual behavior\n\nWhen running in jvm mode: \r\n```\r\n2023-04-19 10:42:01,091 INFO  [org.acm.sch.Scheduler] (vert.x-worker-thread-0) Running scheduled task\r\n```\r\n\r\nWhen running in native mode:\r\n```\r\n2023-04-19 10:44:40,638 INFO  [org.acm.sch.Scheduler] (executor-thread-0) Running scheduled task\r\n```\n\n### How to Reproduce?\n\nReproducer: https://github.com/manofthepeace/quarkus-thread-discrepancy\r\n\r\nSteps to reproduce:\r\n1- run the app in dev mode and look at the logs\r\n2- compile native + run and observe the logs\n\n### Output of `uname -a` or `ver`\n\nDarwin Kernel Version 21.6.0\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10\n\n### GraalVM version (if different from Java)\n\n22.3.1\n\n### Quarkus version or git rev\n\n2.16.6\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.7\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32770/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32770/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

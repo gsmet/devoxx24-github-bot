@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30735",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30735/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30735/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30735/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30735",
+  "id": 1563810824,
+  "node_id": "I_kwDOCFbutM5dNdwI",
+  "number": 30735,
+  "title": "quarkus-vertx-http always use trust and key store from file",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-01-31T07:38:37Z",
+  "updated_at": "2023-05-09T12:00:47Z",
+  "closed_at": "2023-05-09T12:00:47Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nin class `io.quarkus.vertx.http.runtime.VertxHttpRecorder` has code:\r\n```java\r\nfinal Optional<Path> trustStoreFile = sslConfig.certificate.trustStoreFile;\r\nfinal Optional<String> trustStorePassword = getCredential(sslConfig.certificate.trustStorePassword, credentials,\r\n                sslConfig.certificate.trustStorePasswordKey);\r\n```\r\npassword load application.properties if present, else Vault. But trust and key store load alway load from project (path specified in properties)\r\n\r\nNow i need have my impl HttpServerOptionsCustomizer for all my service\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class ServerCustomizer implements HttpServerOptionsCustomizer {\r\n\r\n    @Inject\r\n    Logger logger;\r\n\r\n    HttpConfiguration httpConfiguration;\r\n\r\n    public ServerCustomizer(HttpConfiguration httpConfiguration) {\r\n        this.httpConfiguration = httpConfiguration;\r\n    }\r\n\r\n    @Override\r\n    public void customizeHttpsServer(HttpServerOptions options) {\r\n        logger.infof(\"ServerCustomizer, start rewrite ssl options: %s\", options.getHost());\r\n\r\n        ServerSslConfig sslConfig = httpConfiguration.ssl;\r\n        // credentials provider\r\n        Map<String, String> credentials = Map.of();\r\n\r\n        // read credentials provider\r\n        if (sslConfig.certificate.credentialsProvider.isPresent()) {\r\n            String beanName = sslConfig.certificate.credentialsProviderName.orElse(null);\r\n            CredentialsProvider credentialsProvider = CredentialsProviderFinder.find(beanName);\r\n            String name = sslConfig.certificate.credentialsProvider.get();\r\n            credentials = credentialsProvider.getCredentials(name);\r\n        }\r\n\r\n        final Optional<String> keyStorePasswordKey = sslConfig.certificate.keyStorePasswordKey;\r\n        if (keyStorePasswordKey.isPresent()) {\r\n            // Get value from vault\r\n            final Optional<String> keyStore = getCredential(credentials, Optional.of(\"quarkus.http.ssl.certificate.key-store\"));\r\n            final Optional<String> keyStorePassword = getCredential(credentials, Optional.of(\"quarkus.http.ssl.certificate.key-store-password\"));\r\n            // load key store\r\n            try {\r\n                KeyStoreOptions customizeOptions = createKeyStoreOptions(\r\n                        keyStore.get(),\r\n                        keyStorePassword.get(),\r\n                        sslConfig.certificate.keyStoreFileType,\r\n                        sslConfig.certificate.keyStoreProvider,\r\n                        sslConfig.certificate.keyStoreKeyAlias,\r\n                        keyStorePassword);\r\n                options.setKeyCertOptions(customizeOptions);\r\n            } catch (Exception ex) {\r\n                logger.errorf(\"ServerCustomizer, setKeyCertOptions: %s\", ex.getMessage());\r\n            }\r\n        }\r\n        final Optional<String> trustStorePasswordKey = sslConfig.certificate.trustStorePasswordKey;\r\n        if (trustStorePasswordKey.isPresent()) {\r\n            // Get value from vault\r\n            final Optional<String> keyStore = getCredential(credentials, Optional.of(\"quarkus.http.ssl.certificate.trust-store\"));\r\n            final Optional<String> keyStorePassword = getCredential(credentials, Optional.of(\"quarkus.http.ssl.certificate.trust-store-password\"));\r\n            // load trust store\r\n            try {\r\n                KeyStoreOptions customizeOptions = createKeyStoreOptions(\r\n                        keyStore.get(),\r\n                        keyStorePassword.get(),\r\n                        sslConfig.certificate.trustStoreFileType,\r\n                        sslConfig.certificate.trustStoreProvider,\r\n                        sslConfig.certificate.trustStoreCertAlias,\r\n                        keyStorePassword);\r\n                options.setTrustOptions(customizeOptions);\r\n            } catch (Exception ex) {\r\n                logger.errorf(\"ServerCustomizer, setTrustOptions: %s\", ex.getMessage());\r\n            }\r\n        }\r\n        logger.infof(\"ServerCustomizer, finish rewrite ssl options: %s\", options.getHost());\r\n    }\r\n\r\n    private static Optional<String> getCredential(Map<String, String> credentials,\r\n                                                  Optional<String> key) {\r\n        if (key.isPresent()) {\r\n            return Optional.ofNullable(credentials.get(key.get()));\r\n        } else {\r\n            return Optional.empty();\r\n        }\r\n    }\r\n\r\n    private static KeyStoreOptions createKeyStoreOptions(String keyStore, String password, Optional<String> fileType,\r\n                                                         Optional<String> provider, Optional<String> alias, Optional<String> aliasPassword) throws IOException {\r\n        final String type;\r\n        if (fileType.isPresent()) {\r\n            type = fileType.get().toLowerCase();\r\n        } else {\r\n            type = KeyStore.getDefaultType();\r\n        }\r\n\r\n        byte[] data = Base64.getDecoder().decode(keyStore);\r\n\r\n        KeyStoreOptions options = new KeyStoreOptions()\r\n                .setPassword(password)\r\n                .setValue(Buffer.buffer(data))\r\n                .setType(type.toUpperCase())\r\n                .setProvider(provider.orElse(null))\r\n                .setAlias(alias.orElse(null))\r\n                .setAliasPassword(aliasPassword.orElse(null));\r\n        return options;\r\n    }\r\n}\r\n```\r\n\r\nand similar problem in rest-client\r\n\r\n[Issue for read all properties in vault](https://github.com/quarkiverse/quarkus-vault/issues/107)\r\n\r\n### Implementation ideas\r\n\r\nadd code for load trust and key store from Vault, if trust and key store not present in properties file",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30735/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30735/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

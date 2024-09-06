@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37896",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37896/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37896/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37896/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37896",
+  "id": 2052716673,
+  "node_id": "I_kwDOCFbutM56WfiB",
+  "number": 37896,
+  "title": "--initialize-at-run-time flag ignored if -march=compatibility enabled",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-12-21T16:20:09Z",
+  "updated_at": "2023-12-21T19:03:02Z",
+  "closed_at": "2023-12-21T19:03:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMy organization is building some lambda functions with native images hosted on AWS runtime `provided.al2`. One of our lambdas fails at compile-time when we add the following line to application.properties:\r\n\r\n`quarkus.native.additional-build-args=-march=compatibility\r\n`\r\n\r\nThis lambda is the only one we currently have that uses an `--initialize-at-run-time` flag, snippet from pom.xml below.\r\n\r\n`            <properties>\r\n                <quarkus.native.additional-build-args>--initialize-at-run-time=org.apache.http.impl.auth.NTLMEngineImpl</quarkus.native.additional-build-args>\r\n                <quarkus.package.type>native</quarkus.package.type>\r\n            </properties>`\r\n\r\nDuring compilation, the following error occurs despite the flag marking it for later initialization:\r\n\r\n`Caused by: com.oracle.graal.pointsto.constraints.UnsupportedFeatureException: Detected an instance of Random/SplittableRandom class in the image heap. Instances created during image generation have cached seed values and don't behave as expected. Try avoiding to initialize the class that caused initialization of the object.\r\nThe culprit object has been instantiated by the 'org.apache.http.impl.auth.NTLMEngineImpl' class initializer with the following trace:\r\n        at java.security.SecureRandom.<init>(SecureRandom.java:331)\r\n        at java.security.SecureRandom.getInstance(SecureRandom.java:391)\r\n        at org.apache.http.impl.auth.NTLMEngineImpl.<clinit>(NTLMEngineImpl.java:103)\r\nThe object was probably created by a class initializer and is reachable from a static field. You can request class initialization at image runtime by using the option --initialize-at-run-time=<class-name>. Or you can write your own initialization methods and call them explicitly from your main entry point.\r\nDetailed message:\r\nTrace: Object was reached by\r\n  trying to constant fold static field org.apache.http.impl.auth.NTLMEngineImpl.RND_GEN\r\n    at org.apache.http.impl.auth.NTLMEngineImpl.access$000(NTLMEngineImpl.java:51)\r\n  parsing method org.apache.http.impl.auth.NTLMEngineImpl.access$000(NTLMEngineImpl.java:51) reachable via the parsing context\r\n    at static root method.(Unknown Source)`\r\n\r\nOur compile argument is `mvn install -Dnative -DskipTests -Dquarkus.native.container-build=true `\n\n### Expected behavior\n\nThe expected behavior is for the lambda to successfully compile, as NTLMEngineImpl has been flagged for runtime initialization instead of compile-time.\n\n### Actual behavior\n\nWith the `-march=compatibility` flag, the initialize flag is ignored or bypassed, and the native image compilation fails. Removing the flag allows the image to compile successfully.\n\n### How to Reproduce?\n\nUnable to provide a minimum reproducer, and the affected lambda contains proprietary code\n\n### Output of `uname -a` or `ver`\n\nDarwin MacBook-Pro.local 23.1.0 Darwin Kernel Version 23.1.0: Mon Oct  9 21:27:27 PDT 2023; root:xnu-10002.41.9~6/RELEASE_X86_64 x86_64 | additionally occurs in Github Actions with runs-on: ubuntu-latest\n\n### Output of `java -version`\n\njava version \"21.0.1\" 2023-10-17 Java(TM) SE Runtime Environment Oracle GraalVM 21.0.1+12.1 (build 21.0.1+12-jvmci-23.1-b19) Java HotSpot(TM) 64-Bit Server VM Oracle GraalVM 21.0.1+12.1 (build 21.0.1+12-jvmci-23.1-b19, mixed mode, sharing)\n\n### Mandrel or GraalVM version (if different from Java)\n\ngraalvm-jdk-21.0.1+12.1\n\n### Quarkus version or git rev\n\n3.6.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.4 \n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37896/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37896/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

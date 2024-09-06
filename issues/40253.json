@@ -1,0 +1,101 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40253",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40253/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40253/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40253/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40253",
+  "id": 2261497322,
+  "node_id": "I_kwDOCFbutM6Gy7Xq",
+  "number": 40253,
+  "title": "gRPC Server not reachable ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2024-04-24T14:53:02Z",
+  "updated_at": "2024-04-28T11:47:43Z",
+  "closed_at": "2024-04-28T11:47:35Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello I'm testing Quarkus gRPC on Windows 11 64 Bit Version. Latest Quarkus: 3.9.4\r\n\r\nthat's my proto file:\r\n\r\n\r\n```\r\nsyntax = \"proto3\";\r\npackage tutorial;\r\noption java_package = \"com.example.quarkus.grpc\";\r\n\r\nservice ProductsService {\r\n  rpc GetProduct(ProductRequest) returns (ProductResponse) {}\r\n}\r\n\r\n\r\nmessage ProductRequest {\r\n  string productId = 1;\r\n}\r\n\r\nmessage ProductResponse {\r\n  string id = 1;\r\n  string name = 2;\r\n  uint32 priceCents = 3;\r\n  bool orderable = 4;\r\n}\r\n```\r\n\r\nThat's my gRPC Service:\r\n\r\n```\r\npackage grpc\r\n\r\nimport com.example.quarkus.grpc.Products\r\nimport com.example.quarkus.grpc.Products.ProductResponse\r\nimport com.example.quarkus.grpc.ProductsService\r\nimport io.quarkus.grpc.GrpcService\r\nimport io.smallrye.mutiny.Uni\r\n\r\n@GrpcService\r\nclass MutinyProductService : ProductsService {\r\n\r\n    val productsMap = LinkedHashMap<String, Uni<Products>>()\r\n\r\n    override fun getProduct(request: Products.ProductRequest): Uni<ProductResponse> {\r\n        return Uni.createFrom().item {\r\n           ProductResponse.newBuilder()\r\n            .apply {\r\n                id = request.productId\r\n                name = \"Shoe\"\r\n                priceCents = 1234\r\n                orderable = true\r\n            }.build()\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nmy application.properties:\r\n\r\n```\r\nquarkus.grpc.server.use-separate-server=false\r\nquarkus.grpc.server.enable-reflection-service=true\r\n```\r\n\r\nIt doesn't matter if I use Java or Kotlin. I've got with both languages the same error.\r\n\r\nOf course I tried multiple application settings like host, port or \"quarkus.index-dependency.grpc.group-id\" etc..\r\n\r\nNeither Postman recognize the proto definition file nor if I trigger via http://localhost:8080/q/dev-ui/io.quarkus.quarkus-grpc/services\r\n\r\nI get following error:\r\n\r\n```\r\n Previous channel ManagedChannelImpl{logId=1, target=localhost:8080} was garbage collected without being shut down! ~*~*~*\r\n    Make sure to call shutdown()/shutdownNow(): java.lang.RuntimeException: ManagedChannel allocation site\r\n    at io.grpc.internal.ManagedChannelOrphanWrapper$ManagedChannelReference.<init>(ManagedChannelOrphanWrapper.java:102)\r\n    at io.grpc.internal.ManagedChannelOrphanWrapper.<init>(ManagedChannelOrphanWrapper.java:60)\r\n    at io.grpc.internal.ManagedChannelOrphanWrapper.<init>(ManagedChannelOrphanWrapper.java:51)\r\n    at io.grpc.internal.ManagedChannelImplBuilder.build(ManagedChannelImplBuilder.java:672)\r\n    at io.grpc.ForwardingChannelBuilder2.build(ForwardingChannelBuilder2.java:260)\r\n    at io.quarkus.grpc.deployment.devui.GrpcDevUIProcessor.getChannel(GrpcDevUIProcessor.java:338)\r\n    at io.quarkus.grpc.deployment.devui.GrpcDevUIProcessor.createStub(GrpcDevUIProcessor.java:327)\r\n    at io.quarkus.grpc.deployment.devui.GrpcDevUIProcessor.grpcAction(GrpcDevUIProcessor.java:270)\r\n    at io.quarkus.grpc.deployment.devui.GrpcDevUIProcessor.lambda$pages$0(GrpcDevUIProcessor.java:205)\r\n    at io.quarkus.dev.console.DevConsoleManager.invoke(DevConsoleManager.java:135)\r\n    at io.quarkus.grpc.runtime.devui.GrpcJsonRPCService.streamService(GrpcJsonRPCService.java:110)\r\n    at io.quarkus.grpc.runtime.devui.GrpcJsonRPCService.testService(GrpcJsonRPCService.java:99)\r\n    at io.quarkus.grpc.runtime.devui.GrpcJsonRPCService_ClientProxy.testService(Unknown Source)\r\n    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n    at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n    at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n    at io.quarkus.devui.runtime.comms.JsonRpcRouter.invoke(JsonRpcRouter.java:89)\r\n    at io.quarkus.devui.runtime.comms.JsonRpcRouter.route(JsonRpcRouter.java:189)\r\n    at io.quarkus.devui.runtime.comms.JsonRpcRouter.lambda$addSocket$1(JsonRpcRouter.java:112)\r\n    at io.vertx.core.http.impl.WebSocketImplBase$FrameAggregator.handleTextFrame(WebSocketImplBase.java:634)\r\n    at io.vertx.core.http.impl.WebSocketImplBase$FrameAggregator.handle(WebSocketImplBase.java:600)\r\n    at io.vertx.core.http.impl.WebSocketImplBase$FrameAggregator.handle(WebSocketImplBase.java:589)\r\nat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:279)\r\n    at io.vertx.core.http.impl.WebSocketImplBase.receiveFrame(WebSocketImplBase.java:534)\r\nat io.vertx.core.streams.impl.InboundBuffer.handleEvent(InboundBuffer.java:255)\r\n    at io.vertx.core.streams.impl.InboundBuffer.write(InboundBuffer.java:134)\r\n    at io.vertx.core.http.impl.WebSocketImplBase.handleFrame(WebSocketImplBase.java:475)\r\n    at io.vertx.core.impl.ContextImpl.execute(ContextImpl.java:313)\r\n    at io.vertx.core.impl.DuplicatedContext.execute(DuplicatedContext.java:161)\r\n    at io.vertx.core.http.impl.Http1xConnectionBase.handleWsFrame(Http1xConnectionBase.java:66)\r\n    at io.vertx.core.http.impl.Http1xServerConnection.handleOther(Http1xServerConnection.java:191)\r\n    at io.vertx.core.http.impl.Http1xServerConnection.handleMessage(Http1xServerConnection.java:176)\r\n    at io.vertx.core.net.impl.ConnectionBase.read(ConnectionBase.java:159)\r\n    at io.vertx.core.net.impl.VertxHandler.channelRead(VertxHandler.java:153)\r\n    at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442)\r\n    at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\nat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n    at io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:289)\r\n    at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442)\r\n    at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\nat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n    at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:346)\r\n    at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:318)\r\n    at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444)\r\n    at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n    at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)\r\n    at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1410)\r\n    at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440)\r\n    at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)\r\n    at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:919)\r\n    at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)\r\n    at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:788)\r\n    at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)\r\n    at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)\r\n    at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n    at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n    at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n    at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n    at java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\nQuarkus-Server is up and running without problems:\r\n\r\n```\r\n2024-04-24 14:42:49,070 INFO [io.qua.grp.run.GrpcServerRecorder] (Quarkus Main Thread) Registering gRPC reflection service\r\n 2024-04-24 14:42:49,108 INFO [io.qua.grp.run.GrpcServerRecorder] (Quarkus Main Thread) Starting new Quarkus gRPC server (using Vert.x transport)...\r\n 2024-04-24 14:42:49,166 INFO [io.qua.boo.run.Timing] (Quarkus Main Thread) kotlin_grpc 1.0-SNAPSHOT on JVM (powered by Quarkus 3.9.4) started in 1.480s. Listening on: http://localhost:8080/\r\n 2024-04-24 14:42:49,168 INFO [io.qua.boo.run.Timing] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n 2024-04-24 14:42:49,169 INFO [io.qua.boo.run.Timing] (Quarkus Main Thread) Installed features: [cdi, grpc-server, kotlin, rest, rest-jackson, smallrye-context-propagation, vertx]\r\n```\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nReachable gRPC service.\r\n\r\n### Actual behavior\r\n\r\nError message as you can read top.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### Quarkus version or git rev\r\n\r\n3.9.4\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40253/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40253/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

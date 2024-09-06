@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24185",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24185/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24185/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24185/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24185",
+  "id": 1162917989,
+  "node_id": "I_kwDOCFbutM5FULhl",
+  "number": 24185,
+  "title": "Exceptions thrown in Rest client should be more specific",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 24,
+  "created_at": "2022-03-08T17:18:41Z",
+  "updated_at": "2024-07-22T19:49:52Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nCurrently when using the Quarkus rest client (regular & reactive), any response other than a 2xx is thrown as a `javax.ws.rs.WebApplicationException` (or a RESTEasy subclass of it). In Quarkus using RESTEasy Reactive, the exception is a `org.jboss.resteasy.reactive.ClientWebApplicationException`, which is a subclass of `javax.ws.rs.WebApplicationException`. JAX-RS exposes more fine-grained exceptions for lots of http statuses.\r\n\r\nBecause of this, using fault tolerance handling is very difficult, as you aren't able to use the built-in `skipOn` fields in the fault tolerance annotations.\r\n\r\nSay I want to ignore a circuit breaker/fallback/retry on a specific http status? I can't use the fault tolerance exception because everything is always a `javax.ws.rs.WebApplicationException`. \r\n\r\nAs an example, say I want to ignore a circuit breaker if a client call returns a 404. I have to implement some custom logic:\r\n\r\nHeroRestClient.java:\r\n```java\r\n@Path(\"/api/heroes\")\r\n@Produces(MediaType.APPLICATION_JSON)\r\n@RegisterRestClient(configKey = \"hero-client\")\r\ninterface HeroRestClient {\r\n  @GET\r\n  @Path(\"/random\")\r\n  Uni<Hero> findRandomHero();\r\n}\r\n```\r\n\r\nHeroClient.java:\r\n```java\r\n@ApplicationScoped\r\npublic class HeroClient {\r\n  private final HeroRestClient heroClient;\r\n\r\n  public HeroClient(@RestClient HeroRestClient heroClient) {\r\n    this.heroClient = heroClient;\r\n  }\r\n\r\n  @CircuitBreaker(requestVolumeThreshold = 8, failureRatio = 0.5, delay = 2, delayUnit = ChronoUnit.SECONDS)\r\n  @CircuitBreakerName(\"findRandomHero\")\r\n  CompletionStage<Hero> getRandomHero() {\r\n    // Want the 404 handling to be part of the circuit breaker\r\n    // This means that the 404 responses aren't considered errors by the circuit breaker\r\n    return this.heroClient.findRandomHero()\r\n      .onFailure(throwable -> \r\n        Optional.ofNullable(throwable)\r\n          .filter(t -> t instanceof WebApplicationException)\r\n          .map(WebApplicationException.class::cast)\r\n          .map(WebApplicationException::getResponse)\r\n          .filter(response -> response.getStatus() == Status.NOT_FOUND.getStatusCode())\r\n          .isPresent()\r\n      ).recoverWithNull()\r\n      .subscribeAsCompletionStage();\r\n  }\r\n}\r\n```\r\n\r\nWhen the JAX-RS spec already has exceptions that map to most of the known http status codes. If that was the case, then my custom code could be completely replaced with something like\r\n\r\n```java\r\n@Path(\"/api/heroes\")\r\n@Produces(MediaType.APPLICATION_JSON)\r\n@RegisterRestClient(configKey = \"hero-client\")\r\ninterface HeroRestClient {\r\n  @GET\r\n  @Path(\"/random\")\r\n  @CircuitBreaker(\r\n    requestVolumeThreshold = 8, \r\n    failureRatio = 0.5, \r\n    delay = 2, \r\n    delayUnit = ChronoUnit.SECONDS,\r\n    skipOn = NotFoundException.class\r\n  )\r\n  @CircuitBreakerName(\"findRandomHero\")\r\n  Uni<Hero> findRandomHero();\r\n}\r\n```\r\n\r\nSee https://github.com/smallrye/smallrye-fault-tolerance/issues/524#issuecomment-1061891842 for some conversation around this as well.\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24185/reactions",
+    "total_count": 7,
+    "+1": 7,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24185/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

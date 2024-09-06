@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39237",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39237/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39237/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39237/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39237",
+  "id": 2172577398,
+  "node_id": "I_kwDOCFbutM6BfuZ2",
+  "number": 39237,
+  "title": "Jackson: MyMapper does not take settings from ObjectMapperProducer",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2024-03-06T22:48:35Z",
+  "updated_at": "2024-03-08T08:41:53Z",
+  "closed_at": "2024-03-08T08:37:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAccording to https://github.com/quarkusio/quarkus/blob/3f1c0784c4ecf0186bc0f9fefdeed01d0dcd4084/extensions/jackson/runtime/src/main/java/io/quarkus/jackson/runtime/ObjectMapperProducer.java#L36\r\n\r\ndefault values are set. However, when using a custom mapper:\r\n\r\n```java\r\n@Singleton\r\n@JBossLog\r\npublic class MyMapper implements ObjectMapperCustomizer {\r\n\r\n\tpublic void customize(ObjectMapper mapper) {\r\n\t\tlog.info(\"add my mapper..\");\r\n\r\n// returns true but false should be returned:\r\nlog.infov(\"FAIL_ON_EMPTY_BEANS enabled = {0}\", mapper.isEnabled(SerializationFeature.FAIL_ON_EMPTY_BEANS));\r\n\t\tmapper.setVisibility(PropertyAccessor.GETTER, Visibility.NONE);\r\nmapper.setConfig(mapper.getSerializationConfig().with(MapperFeature.PROPAGATE_TRANSIENT_MARKER));\r\n\t}\r\n\r\n}\r\n```\r\n\r\nthen the setting `FAIL_ON_EMPTY_BEANS` is no longer `false`, as this exception shows:\r\n\r\n```posh\r\n2024-03-06 23:29:46,219 ERROR [io.qua.res.rea.jac.run.map.NativeInvalidDefinitionExceptionMapper] (executor-thread-2) \r\ncom.fasterxml.jackson.databind.exc.InvalidDefinitionException: \r\nNo serializer found for class io.model.Task and no properties discovered to create BeanSerializer (to avoid exception, disable SerializationFeature.FAIL_ON_EMPTY_BEANS) (through reference chain: io.bean.User[\"task\"])\r\n```\r\n\r\n### Expected behavior\r\n\r\nThe settings from the `ObjectMapperProducer` should be merged with `MyMapper`, i.e. in this case `FAIL_ON_EMPTY_BEANS` should be still `false`.\r\n\r\n### Actual behavior\r\n\r\n`FAIL_ON_EMPTY_BEANS` will be reset to `true`, but I did not set this value in `MyMapper` (or applications.properties).\r\n\r\n### How to Reproduce?\r\n\r\n1. Use `MyMapper` on two classes `User` with `Task`, where `Task` should be the empty bean.\r\n2. Look at the log, it shows the exception.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.2\" 2024-01-16 OpenJDK Runtime Environment (build 21.0.2+13-58) OpenJDK 64-Bit Server VM (build 21.0.2+13-58, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.8.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\nWhen I add \"mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)\" on \"MyMapper\" no exception is thrown. So I'm assuming that ObjectMapperProducer's configurations are somehow no longer reflected in MyMapper.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39237/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39237/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

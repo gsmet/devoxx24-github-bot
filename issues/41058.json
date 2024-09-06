@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41058",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41058/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41058/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41058/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41058",
+  "id": 2340434986,
+  "node_id": "I_kwDOCFbutM6LgDQq",
+  "number": 41058,
+  "title": "Issue while sending InputStream to Server (POST)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-06-07T13:16:57Z",
+  "updated_at": "2024-06-09T14:18:24Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nFirst, note that I cannot make a reproducer yet (I tries hard, but didn't find how to reproduce), and I cannot publish the code.\r\n\r\nI tried with an example but didn't managed to show the error we've got (https://github.com/fredericBregier/quarkus-build-native-client-test/tree/main)\r\n\r\nThe issue is the following:\r\n- The server has an endpoint getting InputStream from a POST (using \"Uni<Response>\")\r\n- The client is using the QuarkusRestClientBuilder based on a Java interface for the Quarkus Rest client, but without Uni\r\n- If the Java interface is using InputStream too, \r\n  - using a filter extending ClientHeadersFactory (and @RegisterClientHeaders on it), \r\n  - having a response filter (using ResteasyReactiveClientResponseFilter and the associate @RegisterProvider), \r\n  - Then if we goes through QuarkusTest, everything run like a charm\r\n  - But if we start the server, then the client embedded in an app (both on different ports), so no more in test mode\r\n    - The client goes correctly to the query filter, logs, then the client stops without sending anything, until timeout occurs\r\n      - The connexion is done (if we close the client, the server complains about it)\r\n- On the contrary, if we use byte array on client side only (letting server as is), then it works both on QuarkusTest and standalone tests\r\n\r\nWe have no idea on what's happens.\r\nThis was reproducible on our OpenShift environement, setting the correct remote server url, but only byte array works, not InputStream\r\n\r\nAny idea?\r\n\n\n### Expected behavior\n\nThere should not be any difference between client using InputStream or byte array\n\n### Actual behavior\n\nOn QuarkusTest, it works.\r\nBut out of Quarkus test (standalone, openshift), only byte array works.\n\n### How to Reproduce?\n\nNot able until now (except on our code)\n\n### Output of `uname -a` or `ver`\n\nLinux frederic-Creator-M16-B13VE 6.8.0-35-generic #35-Ubuntu SMP PREEMPT_DYNAMIC Mon May 20 15:51:52 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"21.0.3\" 2024-04-16 OpenJDK Runtime Environment (build 21.0.3+9-Ubuntu-1ubuntu1) OpenJDK 64-Bit Server VM (build 21.0.3+9-Ubuntu-1ubuntu1, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.11.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: /home/frederic/.m2/wrapper/dists/apache-maven-3.9.6-bin/3311e1d4/apache-maven-3.9.6 Java version: 21.0.3, vendor: Ubuntu, runtime: /usr/lib/jvm/java-21-openjdk-amd64 Default locale: fr_FR, platform encoding: UTF-8 OS name: \"linux\", version: \"6.8.0-35-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41058/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41058/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27087",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27087/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27087/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27087/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27087",
+  "id": 1325806196,
+  "node_id": "I_kwDOCFbutM5PBjJ0",
+  "number": 27087,
+  "title": "Dependency predicates",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2022-08-02T12:49:04Z",
+  "updated_at": "2022-08-03T08:34:54Z",
+  "closed_at": "2022-08-03T08:34:52Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nIn Quarkus, we have the notion of conditional dependency allowing to activate or not an extension if one or more extensions are present which is good enough for many different use cases but not for more complex uses cases.\r\nIndeed, in Camel Quarkus, we would like to be able to enable the JMX extension only in JVM mode and the Debug extension only in dev mode which is not supported by the conditional dependency feature.\r\n\r\n### Implementation ideas\r\n\r\nThe idea is to propose a new feature called \"Dependency predicates\" allowing to enable an extension based on criteria like the existence of an artifact but also potentially the mode used and/or the value/existence of a property. We could then support use cases like \"enable this extension only in dev or test mode if and only if the extension X is present and the property `B` has been set to `foo`\".\r\n\r\nThe configuration could look like this:\r\n\r\n```\r\n<plugin>\r\n   <groupId>io.quarkus</groupId>\r\n   <artifactId>quarkus-extension-maven-plugin</artifactId>\r\n   <version>${quarkus.version}</version>\r\n   <executions>\r\n     <execution>\r\n       <phase>process-resources</phase>\r\n         <goals>\r\n           <goal>extension-descriptor</goal> <2>\r\n         </goals>\r\n         <configuration>\r\n           <dependencyPredicate> <3>\r\n              <predicate>org.acme:quarkus-extension-c,!dev</predicate> <4>\r\n            </dependencyPredicate>\r\n         </configuration>\r\n      </execution>\r\n   </executions>\r\n</plugin>\r\n```\r\n\r\n<1> runtime Quarkus extension artifact ID, in our example `quarkus-extension-b`;\r\n<2> the goal that generates the extension descriptor which every Quarkus runtime extension project should be configured with;\r\n<3> configuration of the predicates which will have to be satisfied for this extension to be included into a Quarkus application expressed as a list of artifacts that must be present among the application dependencies;\r\n<4> the extension is activated only in `dev` mode if `quarkus-extension-c` is a runtime dependency.\r\n\r\nThe supported types of predicate are the following:\r\n\r\n* `test`, `dev`, `development`, `jvm` and `native` as expected modes\r\n* `property-name?` as test on the presence of the property `property-name`\r\n* `property-name=expected-property-value` as test on the value of the `property-name` that is expected to be `expected-property-value`\r\n* `groupId:artifactId[:<classifier>:<extension>]` as test on the presence of an artifact\r\n\r\nIn case a predicate is prefixed by the character `!`, the negation of the predicate is used.\r\n\r\n**NB:** We cannot simply improve the conditional dependency feature because the conditions are combined with a logical `AND` while in this proposal the predicate entries are combined with a logical `OR` and the predicates inside a predicate entry are combined using a logical `AND` allowing to support any combinations like for example A OR (B AND C).",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27087/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27087/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25650",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25650/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25650/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25650/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25650",
+  "id": 1239718145,
+  "node_id": "I_kwDOCFbutM5J5JkB",
+  "number": 25650,
+  "title": "SmallRye Reactive Messaging - readiness check fails intermittently with Event hubs",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2022-05-18T09:59:31Z",
+  "updated_at": "2024-08-21T13:49:55Z",
+  "closed_at": "2024-08-21T13:49:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn our application, we have 2 methods that write to the same topic. Initially we tried to use the same channel for both these methods, but then realised that the same channel can't be used with @Outgoing and Emitter. To fix the issue, we have created 2 channels, one that is used with @Outgoing, and another one which is used with Emitter. Both of these have same topics configured.\r\n\r\nFirst connector:\r\n`mp.messaging.outgoing.outbound.connector=smallrye-kafka\r\n\r\nmp.messaging.outgoing.outbound.topic=topic\r\n`\r\n\r\nSecond connector:\r\n`\r\nmp.messaging.outgoing.outbound2.connector=smallrye-kafka\r\n\r\nmp.messaging.outgoing.outbound2.topic=topic\r\n`\r\nThis setup has been running fine with when we use it with Kafka. However, when we use the same setup with Azure Event hubs, we keep getting readiness check errors intermittently. The service will start fine, and work for a day or two, and then we will start seeing service down messages. \r\n\r\nError Message:\r\n`Reporting health down status: {\"status\":\"DOWN\",\"checks\":[{\"name\":\"SmallRye Reactive Messaging - readiness check\",\"status\":\"DOWN\",\"data\":{\"inbound\":\"[OK]\",\"outbound\":\"[KO]\",\"outbound2\":\"[OK]\"}}]}`\r\n\r\nSince both the connectors and essentially connecting to same topic, either both outbound and outbound2 should be down, or both should work fine. But as can be seen in the message, only one of the connector fails, and the other one works fine.\r\n\r\n### Expected behavior\r\n\r\nIf Event Hub is down, then all 3 connectors should fail. inbound, outbound and outbound2.\r\n\r\nIf topic for outbound is down, both outbound and outbounds2 connectors should fail.\r\n\r\nIf nothing is down, all 3 connectors should work fine.\r\n\r\n### Actual behavior\r\n\r\nIntermittently, we get error that outbound or outbound2 connector is down, and the remaining connectors are up.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\n\r\nSince it's an intermittent issue, it will require an application to be deployed for couple of days for replication.\r\n\r\n1. Create an Event Hub Namespace in Azure.\r\n2. Create one Event hub in the namespace.\r\n3. Configure quarkus app to use this event hub (topic) in 2 connectors.\r\n4. Use @Outgoing with one connector and emitter with second connector.\r\n5. Keep the application running for a few days.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n1.10.5.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvnw\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25650/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25650/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40589",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40589/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40589/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40589/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40589",
+  "id": 2292249443,
+  "node_id": "I_kwDOCFbutM6IoPNj",
+  "number": 40589,
+  "title": "Kafka Reactive Messaging are not automatically acknowledged when input is payload and output is Message<payload>",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-05-13T09:08:53Z",
+  "updated_at": "2024-05-13T11:55:28Z",
+  "closed_at": "2024-05-13T11:55:28Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nUsing `throttled`commit strategy in Quarkus Kafka Reactive Messaging and using payload as method parameter doesn't automatically acknowledge the message if the return value is a `Message`.\r\n\r\n```\r\n2024-05-13 10:52:54,341 WARN  [io.sma.rea.mes.kafka] (vert.x-eventloop-thread-0) SRMSG18231: The record 0 from topic-partition 'joe-out-topic-0' has waited for 4 seconds to be acknowledged. This waiting time is greater than the configured threshold (3000 ms). At the moment 9 messages from this partition are awaiting acknowledgement. The last committed offset for this partition was -1. This error is due to a potential issue in the application which does not acknowledged the records in a timely fashion. The connector cannot commit as a record processing has not completed.\r\n2024-05-13 10:52:54,342 WARN  [io.sma.rea.mes.kafka] (vert.x-eventloop-thread-0) SRMSG18228: A failure has been reported for Kafka topics '[joe-out-topic]': io.smallrye.reactive.messaging.kafka.commit.KafkaThrottledLatestProcessedCommit$TooManyMessagesWithoutAckException: The record 0 from topic/partition 'joe-out-topic-0' has waited for 4 seconds to be acknowledged. At the moment 9 messages from this partition are awaiting acknowledgement. The last committed offset for this partition was -1.\r\n```\r\n\r\nExample non working code:\r\n```\r\n    @Incoming(\"payload-in\")\r\n    @Outgoing(\"payload-out\")\r\n    public Message<String> processPayload(String in) {\r\n        logger.info(\"Processing message: \" + in);\r\n        return Message.of(in);\r\n    }\r\n```\r\n\r\nWorking code\r\n```\r\n    @Incoming(\"message-in\")\r\n    @Outgoing(\"message-out\")\r\n    public Message<String> processMessage(Message<String> in) {\r\n        logger.info(\"Processing message: \" + in);\r\n        return Message.of(in.getPayload()).withAck(in::ack);\r\n    }\r\n```\n\n### Expected behavior\n\nThis behaviour should be documented (https://quarkus.io/guides/kafka#processing-messages) or a message should be automatically acknowledged.\n\n### Actual behavior\n\nMessage is not acknowledged automatically when processed and offsets are not committed to Kafka broker.\n\n### How to Reproduce?\n\n1. Sample code attached\r\n[kafka-messaging-bug.zip](https://github.com/quarkusio/quarkus/files/15292032/kafka-messaging-bug.zip)\r\n\n\n### Output of `uname -a` or `ver`\n\nDarwin Kernel Version 23.4.0: Fri Mar 15 00:10:42 PDT 2024; root:xnu-10063.101.17~1/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment GraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13) OpenJDK 64-Bit Server VM GraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.10.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven 3.9.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40589/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40589/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

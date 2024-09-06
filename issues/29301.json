@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29301",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29301/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29301/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29301/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29301",
+  "id": 1451478678,
+  "node_id": "I_kwDOCFbutM5Wg86W",
+  "number": 29301,
+  "title": "Rest-client-mutiny issue, exhausting thread pool",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1282147660,
+      "node_id": "MDU6TGFiZWwxMjgyMTQ3NjYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/resteasy-classic",
+      "name": "area/resteasy-classic",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2022-11-16T12:09:51Z",
+  "updated_at": "2022-12-13T15:10:37Z",
+  "closed_at": "2022-12-13T15:10:28Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using rest-client-mutiny, returning a Uni, it starts failing after configured pool size is exhausted, default appeared to be 50.\r\n`quarkus.rest-client.config-key.connection-pool-size=5`\r\n\r\nconnect-timeout,read-timeout,connection-ttl variables don't affect the result.\r\nSometimes, it manages to do \"yet another round\" of requests, so if pool-size is N, it appear to get 2*N working.\r\n\r\nMy workaround for now is set scope=RequestScoped, this issue is reproducible with Singleton, Dependent and ApplicationScoped scopes.\r\n\r\n### Expected behavior\r\n\r\nI was expecting to manage infinite **sequencial** requests with the pool.\r\n\r\n\r\n### Actual behavior\r\n\r\nIt does not manage infinite requests, they are silently hanging. \r\n\r\nWhen stopped the service, this is the error we get on each of the hanging threads\r\n\r\n```\r\n{\r\n  \"class\": \"java.util.concurrent.ThreadPoolExecutor$AbortPolicy\",\r\n  \"method\": \"rejectedExecution\",\r\n  \"line\": 2065\r\n},\r\n{\r\n  \"class\": \"java.util.concurrent.ThreadPoolExecutor\",\r\n  \"method\": \"reject\",\r\n  \"line\": 833\r\n},\r\n{\r\n  \"class\": \"java.util.concurrent.ScheduledThreadPoolExecutor\",\r\n  \"method\": \"delayedExecute\",\r\n  \"line\": 340\r\n},\r\n{\r\n  \"class\": \"java.util.concurrent.ScheduledThreadPoolExecutor\",\r\n  \"method\": \"schedule\",\r\n  \"line\": 562\r\n},\r\n{\r\n  \"class\": \"io.quarkus.mutiny.runtime.MutinyInfrastructure$2\",\r\n  \"method\": \"schedule\",\r\n  \"line\": 54\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.UniDelayOnItem$UniDelayOnItemProcessor\",\r\n  \"method\": \"onItem\",\r\n  \"line\": 54\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription\",\r\n  \"method\": \"forward\",\r\n  \"line\": 38\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem$KnownItemSubscription\",\r\n  \"method\": \"access$100\",\r\n  \"line\": 26\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.builders.UniCreateFromKnownItem\",\r\n  \"method\": \"subscribe\",\r\n  \"line\": 23\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.AbstractUni\",\r\n  \"method\": \"subscribe\",\r\n  \"line\": 36\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.UniDelayOnItem\",\r\n  \"method\": \"subscribe\",\r\n  \"line\": 28\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.AbstractUni\",\r\n  \"method\": \"subscribe\",\r\n  \"line\": 36\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.converters.uni.UniToMultiPublisher$UniToMultiSubscription\",\r\n  \"method\": \"request\",\r\n  \"line\": 74\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapInner\",\r\n  \"method\": \"onSubscribe\",\r\n  \"line\": 601\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.converters.uni.UniToMultiPublisher\",\r\n  \"method\": \"subscribe\",\r\n  \"line\": 26\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.groups.MultiCreate$1\",\r\n  \"method\": \"subscribe\",\r\n  \"line\": 163\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapMainSubscriber\",\r\n  \"method\": \"onItem\",\r\n  \"line\": 193\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.subscription.MultiSubscriber\",\r\n  \"method\": \"onNext\",\r\n  \"line\": 61\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.multi.processors.UnicastProcessor\",\r\n  \"method\": \"drainWithDownstream\",\r\n  \"line\": 103\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.multi.processors.UnicastProcessor\",\r\n  \"method\": \"drain\",\r\n  \"line\": 134\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.multi.processors.UnicastProcessor\",\r\n  \"method\": \"onNext\",\r\n  \"line\": 200\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.multi.processors.SerializedProcessor\",\r\n  \"method\": \"onNext\",\r\n  \"line\": 105\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.subscription.SerializedSubscriber\",\r\n  \"method\": \"onItem\",\r\n  \"line\": 75\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.subscription.MultiSubscriber\",\r\n  \"method\": \"onNext\",\r\n  \"line\": 61\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.multi.MultiRetryWhenOp$RetryWhenOperator\",\r\n  \"method\": \"onFailure\",\r\n  \"line\": 129\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.subscription.MultiSubscriber\",\r\n  \"method\": \"onError\",\r\n  \"line\": 73\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.converters.uni.UniToMultiPublisher$UniToMultiSubscription\",\r\n  \"method\": \"onFailure\",\r\n  \"line\": 103\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.UniOperatorProcessor\",\r\n  \"method\": \"onFailure\",\r\n  \"line\": 54\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.UniOperatorProcessor\",\r\n  \"method\": \"onFailure\",\r\n  \"line\": 54\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.UniOperatorProcessor\",\r\n  \"method\": \"onFailure\",\r\n  \"line\": 54\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.UniOnItemConsume$UniOnItemComsumeProcessor\",\r\n  \"method\": \"onFailure\",\r\n  \"line\": 65\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.UniOperatorProcessor\",\r\n  \"method\": \"onFailure\",\r\n  \"line\": 54\r\n},\r\n{\r\n  \"class\": \"io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage$CompletionStageUniSubscription\",\r\n  \"method\": \"forwardResult\",\r\n  \"line\": 58\r\n},\r\n{\r\n  \"class\": \"java.util.concurrent.CompletableFuture\",\r\n  \"method\": \"uniWhenComplete\",\r\n  \"line\": 863\r\n},\r\n{\r\n  \"class\": \"java.util.concurrent.CompletableFuture$UniWhenComplete\",\r\n  \"method\": \"tryFire\",\r\n  \"line\": 841\r\n},\r\n{\r\n  \"class\": \"java.util.concurrent.CompletableFuture\",\r\n  \"method\": \"postComplete\",\r\n  \"line\": 510\r\n},\r\n{\r\n  \"class\": \"java.util.concurrent.CompletableFuture$AsyncSupply\",\r\n  \"method\": \"run\",\r\n  \"line\": 1773\r\n},\r\n{\r\n  \"class\": \"org.jboss.resteasy.microprofile.client.impl.MpClientInvocation$Decorator\",\r\n  \"method\": \"lambda$decorate$0\",\r\n  \"line\": 93\r\n},\r\n{\r\n  \"class\": \"io.smallrye.context.impl.wrappers.SlowContextualRunnable\",\r\n  \"method\": \"run\",\r\n  \"line\": 19\r\n},\r\n{\r\n  \"class\": \"io.quarkus..core.runtime.VertxCoreRecorder$14\",\r\n  \"method\": \"runWith\",\r\n  \"line\": 555\r\n},\r\n{\r\n  \"class\": \"org.jboss.threads.EnhancedQueueExecutor$Task\",\r\n  \"method\": \"run\",\r\n  \"line\": 2449\r\n},\r\n{\r\n  \"class\": \"org.jboss.threads.EnhancedQueueExecutor$ThreadBody\",\r\n  \"method\": \"run\",\r\n  \"line\": 1478\r\n},\r\n{\r\n  \"class\": \"org.jboss.threads.DelegatingRunnable\",\r\n  \"method\": \"run\",\r\n  \"line\": 29\r\n},\r\n{\r\n  \"class\": \"org.jboss.threads.ThreadLocalResettingRunnable\",\r\n  \"method\": \"run\",\r\n  \"line\": 29\r\n},\r\n{\r\n  \"class\": \"io.netty.util.concurrent.FastThreadLocalRunnable\",\r\n  \"method\": \"run\",\r\n  \"line\": 30\r\n},\r\n{\r\n  \"class\": \"java.lang.Thread\",\r\n  \"method\": \"run\",\r\n  \"line\": 833\r\n},\r\n{\r\n  \"class\": \"com.oracle.svm.core.thread.PlatformThreads\",\r\n  \"method\": \"threadStartRoutine\",\r\n  \"line\": 704\r\n},\r\n{\r\n  \"class\": \"com.oracle.svm.core.posix.thread.PosixPlatformThreads\",\r\n  \"method\": \"pthreadStartRoutine\",\r\n  \"line\": 202\r\n}```\r\n\r\n### How to Reproduce?\r\n\r\nLibrary is deprecated, if you think there is any chance you fix it, I will create a reproducer.\r\nI am not expecting a fix, just reporting it and maybe letting me know if I am doing something wrong...\r\n\r\nMy code is returning Uni<Void>:\r\n```\r\n     @RestClient\r\n    private final SomeClient client; \r\n     .....\r\n    Uni<Void> .... {\r\n    ....\r\n       client.sendResult(getAuthorizationHeader(), parameter,  entity)\r\n                        .replaceWithVoid()\r\n                        .invoke(logWebhookSent(entity));\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17.0.1\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n22.2\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\ngradle 7.5.1\r\n\r\n### Additional information\r\n\r\nWe started using mutiny instead of reactive because we needed this PR merged to use it https://github.com/quarkusio/quarkus/issues/27901",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29301/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29301/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

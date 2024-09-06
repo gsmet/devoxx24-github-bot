@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36177",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36177/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36177/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36177/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36177",
+  "id": 1914747522,
+  "node_id": "I_kwDOCFbutM5yILqC",
+  "number": 36177,
+  "title": "ReactiveMongoClient performance on large result sets",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2023-09-27T05:52:13Z",
+  "updated_at": "2023-09-29T10:42:37Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using ReactiveMongoClient for getting large result sets there's a huge performance penalty (orders of magnitude) compared to using the blocking client. \r\n\r\nThe issue stems from the usage of `io.quarkus.mongodb.impl.Wrappers#toMulti, since it executes each `onItem` on the current Vertx context if possible.\r\n\r\nThe difference for our use case is **2s** vs **28s**. \r\nI understand the need to emit each item on the calling Vertx context, we need to find a different way as the overhead is just too high. \r\nSimple using `AdaptersToFlow.publisher` without the call to vertx results in low latency but the item is not emitted on the calling Vertx context. \r\nThe only way I found to be able to keep the item emitting on the Vertx Context without suffering from the performance penalty is to use `AdaptersToFlow.publisher` and wrap it in a replying Multi with emitOn either a `MutinyHelper.executor(currentContext)` or simply `emitOn(cmd->ctx.runOnContext(cmd))`. \r\nI'm not sure if there are any side effects and there might be better ways of solving this issue, but for now we're stuck on using the underlaying MongoClient (unwrap) with this custom solution. \r\n\r\nAny help would be appreciated\r\n\r\n### Expected behavior\r\n\r\nReactiveMongoClient performance should be up par with the blocking client or with using the Reactive Mongo driver from mongodb.\r\n\r\n### Actual behavior\r\n\r\nThe performance for large result set is worse by orders of magnitude.\r\n\r\n### How to Reproduce?\r\n\r\nQuery a large collection with large result set.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kernel Version 22.6.0: Fri Sep 15 13:41:28 PDT 2023; root:xnu-8796.141.3.700.8~1/RELEASE_ARM64_T6020 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.7\" 2023-04-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.3.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nBuild time:   2023-08-17 07:06:47 UTC Revision:     8afbf24b469158b714b36e84c6f4d4976c86fcd5  Kotlin:       1.9.0 Groovy:       3.0.17 Ant:          Apache Ant(TM) version 1.10.13 compiled on January 4 2023 JVM:          17.0.7 (Eclipse Adoptium 17.0.7+7) OS:           Mac OS X 13.6 aarch64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36177/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36177/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

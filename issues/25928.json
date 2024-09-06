@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25928",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25928/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25928/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25928/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25928",
+  "id": 1258059719,
+  "node_id": "I_kwDOCFbutM5K_HfH",
+  "number": 25928,
+  "title": "Vert.x + listening to a Unix Domain Socket doesn't work in native",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-06-02T11:33:17Z",
+  "updated_at": "2022-06-13T10:48:34Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nVert.x ++ listening to a Unix Domain Socket doesn't work in native\r\n\r\nJVM mode works, but Native mode doesn't.\r\n\r\n```\r\ntarget/code-with-quarkus-1.0.0-SNAPSHOT-runner  \r\n__  ____  __  _____   ___  __ ____  ______\r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/\r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\\r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/\r\n2022-06-02 13:29:27,967 ERROR [io.qua.run.Application] (main) Failed to start application (with profile prod): java.lang.IllegalArgumentException\r\n\tat io.vertx.core.net.impl.transport.Transport.serverChannelFactory(Transport.java:194)\r\n\tat io.vertx.core.net.impl.AsyncResolveConnectHelper.doBind(AsyncResolveConnectHelper.java:37)\r\n\tat io.vertx.core.net.impl.TCPServerBase.listen(TCPServerBase.java:169)\r\n\tat io.vertx.core.net.impl.TCPServerBase.bind(TCPServerBase.java:100)\r\n\tat io.vertx.core.http.impl.HttpServerImpl.listen(HttpServerImpl.java:217)\r\n\tat io.vertx.core.http.impl.HttpServerImpl.listen(HttpServerImpl.java:230)\r\n\tat io.quarkus.vertx.http.runtime.VertxHttpRecorder$WebDeploymentVerticle.setupUnixDomainSocketHttpServer(VertxHttpRecorder.java:1121)\r\n\tat io.quarkus.vertx.http.runtime.VertxHttpRecorder$WebDeploymentVerticle.start(VertxHttpRecorder.java:1108)\r\n\tat io.vertx.core.impl.DeploymentManager.lambda$doDeploy$5(DeploymentManager.java:196)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:38)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.lang.Thread.run(Thread.java:829)\r\n\tat com.oracle.svm.core.thread.JavaThreads.threadStartRoutine(JavaThreads.java:596)\r\n\tat com.oracle.svm.core.posix.thread.PosixJavaThreads.pthreadStartRoutine(PosixJavaThreads.java:192)\r\n```\r\n\r\nAs if the netty-transport artifacts were not included in the native image.\n\n### Expected behavior\n\nVert.x ++ listening to a Unix Domain Socket works OOTB in native\n\n### Actual behavior\n\nVert.x ++ listening to a Unix Domain Socket doesn't work in native\n\n### How to Reproduce?\n\n - get default application from https://code.quarkus.io/\r\n - adjust application.properties to contain\r\n```properties\r\nquarkus.http.host-enabled=false\r\nquarkus.http.domain-socket=/tmp/io.quarkus.app.socket\r\nquarkus.http.domain-socket-enabled=true\r\nquarkus.vertx.prefer-native-transport=true\r\n```\r\n- add native transport dependencies to pom.xml\r\n```xml\r\n<dependency>\r\n  <groupId>io.netty</groupId>\r\n  <artifactId>netty-transport-native-epoll</artifactId>\r\n  <classifier>linux-x86_64</classifier>\r\n</dependency>\r\n <!--  OR  -->\r\n<dependency>\r\n  <groupId>io.netty</groupId>\r\n  <artifactId>netty-transport-native-kqueue</artifactId>\r\n  <classifier>osx-x86_64</classifier>\r\n</dependency>\r\n```\r\n\r\nJVM mode works:\r\n```\r\nmvn clean package -DskipTests\r\njava -jar target/quarkus-app/quarkus-run.jar\r\n```\r\n\r\nNative mode fails\r\n```\r\nmvn clean package -DskipTests -Dnative\r\ntarget/code-with-quarkus-1.0.0-SNAPSHOT-runner\r\n```\n\n### Output of `uname -a` or `ver`\n\nmacOS Monterey\n\n### Output of `java -version`\n\nJava 17\n\n### GraalVM version (if different from Java)\n\nGraalVM 22.0 Java17\n\n### Quarkus version or git rev\n\n2.9.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25928/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25928/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

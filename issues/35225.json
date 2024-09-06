@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35225",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35225/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35225/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35225/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35225",
+  "id": 1838056476,
+  "node_id": "I_kwDOCFbutM5tjoQc",
+  "number": 35225,
+  "title": "Quarkus smallrye-graphql exstension bug with GQL subscriptions",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-08-06T05:23:51Z",
+  "updated_at": "2023-08-08T12:32:33Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nOn Kotlin code with graphql subscription implementation is the bug on error handling when the Multi produce some exception. If the exception produced a some unsubscribe the Multi (BroadcastProducer) but no error broadcasted to Client and Socket connection does not closed.\r\n\r\nI focus on Kotlin, because on clear Java all works fine.\r\n\r\n### Expected behavior\r\n\r\nThe client receive a marshaled exception and the socket connection will close by server.\r\n\r\n### Actual behavior\r\n\r\nThe software subscriber unsubscribe the Multi flow into Quarkus App and nothing more.\r\n\r\n### How to Reproduce?\r\n\r\nFor reproduce:\r\n\r\n1) Download the [simple project reproducing](https://github.com/Ferrociraptus/my-problem-with-quarkus-publication/tree/gql_subscriptions_bug)\r\n2) Run it\r\n3) Sorry, I didn't write the test, so go to the http://localhost:8080/q/dev-ui/io.quarkus.quarkus-smallrye-graphql/graphql-ui page\r\n4) Run the subscription by evaluating the query:\r\n```graphql\r\nsubscription s{\r\n  testSubscription\r\n}\r\n```\r\n5) It should raise error and close the connection immediately\r\n\r\n\r\nIn technical step enoth declare:\r\n```kotlin\r\n\r\n\r\nimport io.smallrye.graphql.api.Subscription\r\nimport io.smallrye.mutiny.Multi\r\nimport org.eclipse.microprofile.graphql.GraphQLApi\r\n\r\nclass TestError(errorMessage: String): RuntimeException(errorMessage)\r\n\r\n@GraphQLApi\r\nclass TestGqlController {\r\n\r\n    @Subscription\r\n    fun testSubscription(): Multi<String> {\r\n\r\n        return Multi.createFrom().failure(TestError(\"Something went wrong.\"))\r\n    }\r\n}\r\n```\r\nand try the query\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux ferri 6.4.6-200.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Jul 24 20:51:12 UTC 2023 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.7\" 2023-04-18 OpenJDK Runtime Environment (Red_Hat-17.0.7.0.7-4.fc38) (build 17.0.7+7) OpenJDK 64-Bit Server VM (Red_Hat-17.0.7.0.7-4.fc38) (build 17.0.7+7, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.3.Final, 3.2.0.Final, 2.16.5.Final (I tried plural)\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n ------------------------------------------------------------ Gradle 8.1.1 ------------------------------------------------------------  Build time:   2023-04-21 12:31:26 UTC Revision:     1cf537a851c635c364a4214885f8b9798051175b  Kotlin:       1.8.10 Groovy:       3.0.15 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          17.0.7 (Red Hat, Inc. 17.0.7+7) OS:           Linux 6.4.6-200.fc38.x86_64 amd64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35225/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35225/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

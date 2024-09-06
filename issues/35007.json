@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35007",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35007/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35007/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35007/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35007",
+  "id": 1820674629,
+  "node_id": "I_kwDOCFbutM5shUpF",
+  "number": 35007,
+  "title": "Resteasy LocaleResolver crashes Hibernate Validator in Quarkus",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1305687763,
+      "node_id": "MDU6TGFiZWwxMzA1Njg3NzYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-validator",
+      "name": "area/hibernate-validator",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Validator"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-07-25T16:11:49Z",
+  "updated_at": "2023-07-31T11:23:05Z",
+  "closed_at": "2023-07-26T11:11:21Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe use the Hibernate validator as implementation of the Validation framework. In our application, two use cases are implemented: \r\n\r\n* The builtin use of the validation framework in a rest controller (works)\r\n* A direct use of the validatorfactory to produce a validator to validate messages received over NATS.io (fails)\r\n\r\n\r\n### Expected behavior\r\n\r\nWe expect to receive a validator result.\r\n\r\n### Actual behavior\r\n\r\n\r\nThe validator used to check JSON received over nats fails with an exception:\r\n\r\n```\r\njavax.validation.ValidationException: HV000149: An exception occurred during message interpolation\r\n\tat org.hibernate.validator.internal.engine.validationcontext.AbstractValidationContext.interpolate(AbstractValidationContext.java:331)\r\n\tat org.hibernate.validator.internal.engine.validationcontext.AbstractValidationContext.addConstraintFailure(AbstractValidationContext.java:231)\r\n\tat org.hibernate.validator.internal.engine.constraintvalidation.ConstraintTree.validateConstraints(ConstraintTree.java:79)\r\n\tat org.hibernate.validator.internal.metadata.core.MetaConstraint.doValidateConstraint(MetaConstraint.java:130)\r\n\tat org.hibernate.validator.internal.metadata.core.MetaConstraint.validateConstraint(MetaConstraint.java:123)\r\n\tat org.hibernate.validator.internal.engine.ValidatorImpl.validateMetaConstraint(ValidatorImpl.java:555)\r\n\tat org.hibernate.validator.internal.engine.ValidatorImpl.validateConstraintsForSingleDefaultGroupElement(ValidatorImpl.java:518)\r\n\tat org.hibernate.validator.internal.engine.ValidatorImpl.validateConstraintsForDefaultGroup(ValidatorImpl.java:488)\r\n\tat org.hibernate.validator.internal.engine.ValidatorImpl.validateConstraintsForCurrentGroup(ValidatorImpl.java:450)\r\n\tat org.hibernate.validator.internal.engine.ValidatorImpl.validateInContext(ValidatorImpl.java:400)\r\n\tat org.hibernate.validator.internal.engine.ValidatorImpl.validate(ValidatorImpl.java:172)\r\n\tat de....AbstractValidationService.validate(AbstractValidationService.java:67)\r\n\tat de.....\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n\tat de.....        \r\n\tat io.nats.client.impl.NatsDispatcher.run(NatsDispatcher.java:97)\r\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\r\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: javax.enterprise.context.ContextNotActiveException: RequestScoped context was not active when trying to obtain a bean instance for a client proxy of CLASS bean [class=io.quarkus.vertx.http.runtime.CurrentVertxRequest, id=9260aa608251c44230eeb9b234f605844a7622bf]\r\n\t- you can activate the request context for a specific method using the @ActivateRequestContext interceptor binding\r\n\tat io.quarkus.arc.impl.ClientProxies.getDelegate(ClientProxies.java:55)\r\n\tat io.quarkus.vertx.http.runtime.CurrentVertxRequest_ClientProxy.arc$delegate(Unknown Source)\r\n\tat io.quarkus.vertx.http.runtime.CurrentVertxRequest_ClientProxy.getCurrent(Unknown Source)\r\n\tat io.quarkus.hibernate.validator.runtime.locale.ResteasyReactiveLocaleResolver.getHeaders(ResteasyReactiveLocaleResolver.java:26)\r\n\tat io.quarkus.hibernate.validator.runtime.locale.AbstractLocaleResolver.getAcceptableLanguages(AbstractLocaleResolver.java:31)\r\n\tat io.quarkus.hibernate.validator.runtime.locale.AbstractLocaleResolver.resolve(AbstractLocaleResolver.java:17)\r\n\tat io.quarkus.hibernate.validator.runtime.locale.ResteasyReactiveLocaleResolver.resolve(ResteasyReactiveLocaleResolver.java:18)\r\n\tat io.quarkus.hibernate.validator.runtime.locale.LocaleResolversWrapper.resolve(LocaleResolversWrapper.java:27)\r\n\tat org.hibernate.validator.messageinterpolation.AbstractMessageInterpolator.interpolate(AbstractMessageInterpolator.java:343)\r\n\tat org.hibernate.validator.internal.engine.validationcontext.AbstractValidationContext.interpolate(AbstractValidationContext.java:322)\r\n\t... 30 more\r\n```\r\n\r\nThe reason is the registered `ResteasyReactiveLocaleResolver`, that will try to use the current request context and fails outside of a try-catch-block and breaks the whole message interpolation. The current request context is only available when the validator is called through the rest endpoint. \r\n\r\n\r\n\r\n### How to Reproduce?\r\n\r\nInject the default ValidatorFactory into some class and create a validator to use. The app must have a REST controller with validation.\r\n\r\nUse the validator outside a REST call.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.7\" 2023-04-18 OpenJDK Runtime Environment Temurin-17.0.7+7 (build 17.0.7+7) OpenJDK 64-Bit Server VM Temurin-17.0.7+7 (build 17.0.7+7, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.8.final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\ngradle\r\n\r\n### Additional information\r\n\r\nThe default validatorfactory cannot be used outside of a http context, this is unexpected and the localeResolverWrapper should be resilient to failing locale resolvers as they cannot be removed after creation and the failing resolver could have been ignored in our case. \r\n\r\nThis would have lead to the DefaultLocaleResolver which would have created the correct result. \r\n\r\nAt least, this behavior should be clearly documented, that a validator created with the default validatorfactory cannot be used outside of a http context, if a rest controller/resteasy is actively used. ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35007/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35007/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

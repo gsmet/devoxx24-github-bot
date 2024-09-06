@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34603",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34603/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34603/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34603/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34603",
+  "id": 1793413010,
+  "node_id": "I_kwDOCFbutM5q5U-S",
+  "number": 34603,
+  "title": "classCastException: CompositeTracker hibernate 6 & mapstruct",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2023-07-07T11:51:22Z",
+  "updated_at": "2023-08-28T17:06:59Z",
+  "closed_at": "2023-07-31T10:34:47Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHi,\r\n\r\nI'm migrating from Quarkus 2.16.7 to Quarkus 3.2.0 and I'm using MapStruct 1.5.5 and from the migration guide of Quarkus I read that I've to change the componentModel from CDI to JAKARTA and this is somehow not working.\r\n\r\nI get the following error:\r\n`java.lang.ClassCastException: Object of type 'class Address' can't be cast to CompositeTracker`.\r\n\r\nAnd here is my mapping:\r\n\r\n```java\r\n\r\nimport org.mapstruct.Mapper;\r\nimport org.mapstruct.MappingTarget;\r\n\r\nimport java.time.OffsetDateTime;\r\n\r\nimport static io.quarkus.runtime.util.StringUtil.isNullOrEmpty;\r\nimport static org.mapstruct.MappingConstants.ComponentModel.JAKARTA;\r\n\r\n@Mapper(componentModel = JAKARTA)\r\npublic interface MyMapper {\r\n\r\n    MyDto toDto(MyEntity entity);\r\n\r\n    MyEntity toEntity(MyDto request);\r\n\r\n    void updateEntity(MyDto dto, @MappingTarget MyEntity entity);\r\n\r\n    default OffsetDateTime toOffsetDateTime(String date) {\r\n        return isNullOrEmpty(date) ? null : OffsetDateTime.parse(date, FORMATTER);\r\n    }\r\n}\r\n\r\n```\r\n\r\nAnd the mapper that gets generated looks fine imho:\r\n\r\n```java\r\n\r\nimport jakarta.inject.Named;\r\nimport jakarta.inject.Singleton;\r\nimport javax.annotation.processing.Generated;  --> shouldn't this also start with jakarta ??\r\n\r\n@Generated(\r\n    value = \"org.mapstruct.ap.MappingProcessor\",\r\n    date = \"2023-07-07T11:43:15+0200\",\r\n    comments = \"version: 1.5.5.Final, compiler: javac, environment: Java 17.0.5 (Eclipse Adoptium)\"\r\n)\r\n@Singleton\r\n@Named\r\npublic class MyMapperImpl implements MyMapper {\r\n ...// nothing fancy here\r\n     public MyEntity toEntity(MyDto dto) { \r\n         var result = new MyEntity();\r\n         ...\r\n         result.legalAddress = dto.legalAddress();  ==> I get the exception here\r\n         return result;\r\n     }\r\n}\r\n```\r\n\r\nAddress object is generated with the openapi Maven plugin and looks something like this:\r\n\r\n```java \r\nimport com.fasterxml.jackson.annotation.JsonProperty;\r\nimport io.swagger.annotations.ApiModelProperty;\r\nimport java.util.Objects;\r\n\r\npublic class Address {\r\n    private String city;\r\n    private String country;\r\n    private String region;\r\n    private String postalCode;\r\n    private String firstAddressLine;\r\n    private String additionalAddressLine1;\r\n    private String additionalAddressLine2;\r\n    private String additionalAddressLine3;\r\n\r\n    public Address() {\r\n    }\r\n\r\n    @ApiModelProperty(\"\")\r\n    @JsonProperty(\"city\")\r\n    public String getCity() {\r\n        return this.city;\r\n    }\r\n\r\n    public void setCity(String city) {\r\n        this.city = city;\r\n    }\r\n   \r\n   // idem dito for the other fields\r\n\r\n    public boolean equals(Object o) {\r\n        if (this == o) {\r\n            return true;\r\n        } else if (o != null && this.getClass() == o.getClass()) {\r\n            Address address = (Address)o;\r\n            return Objects.equals(this.city, address.city) && Objects.equals(this.country, address.country) && Objects.equals(this.region, address.region) && Objects.equals(this.postalCode, address.postalCode) && Objects.equals(this.firstAddressLine, address.firstAddressLine) && Objects.equals(this.additionalAddressLine1, address.additionalAddressLine1) && Objects.equals(this.additionalAddressLine2, address.additionalAddressLine2) && Objects.equals(this.additionalAddressLine3, address.additionalAddressLine3);\r\n        } else {\r\n            return false;\r\n        }\r\n    }\r\n\r\n    public int hashCode() {\r\n        return Objects.hash(new Object[]{this.city, this.country, this.region, this.postalCode, this.firstAddressLine, this.additionalAddressLine1, this.additionalAddressLine2, this.additionalAddressLine3});\r\n    }\r\n}\r\n```\r\n\r\nAnd the `Address` object is an embedded DTO used in `MyEntity` as well as in `MyDto`: \r\n\r\n```java\r\n@Entity\r\npublic  MyEntity extends PanacheEntityBase {\r\n...\r\n    @Embedded\r\n    @AttributeOverrides({\r\n            @AttributeOverride(name = \"city\", column = @Column(name = \"legaladdress_city\")),\r\n            @AttributeOverride(name = \"country\", column = @Column(name = \"legaladdress_country\")),\r\n            @AttributeOverride(name = \"region\", column = @Column(name = \"legaladdress_region\")),\r\n            @AttributeOverride(name = \"postalCode\", column = @Column(name = \"legaladdress_postal_code\")),\r\n            @AttributeOverride(name = \"firstAddressLine\", column = @Column(name = \"legaladdress_first_addressline\")),\r\n            @AttributeOverride(name = \"additionalAddressLine1\", column = @Column(name = \"legaladdress_additional_addressline1\")),\r\n            @AttributeOverride(name = \"additionalAddressLine2\", column = @Column(name = \"legaladdress_additional_addressline2\")),\r\n            @AttributeOverride(name = \"additionalAddressLine3\", column = @Column(name = \"legaladdress_additional_addressline3\")),\r\n    })\r\n    public Address legalAddress;\r\n}\r\n```\r\n\r\n```java\r\npublic record MyDto(\r\n        ...\r\n        Address legalAddress\r\n)\r\n```\r\nAnd this used to work in Quarkus 2.16.7, and `CompositeTracker` seems to be Hibernate 6 related.\r\n\r\nAnd the mapper works fine in the unit test, but when I run my Integration Test (with the application started), then it fails in the mapper on the line where the address is mapped (see above).\r\n\r\nI think it is related to Hibernate 6, that it proxies the entity and its fields.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\njdk 17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven \n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34603/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34603/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

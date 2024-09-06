@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31167",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31167/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31167/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31167/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31167",
+  "id": 1584835574,
+  "node_id": "I_kwDOCFbutM5edqv2",
+  "number": 31167,
+  "title": "@JwtSecurity doesn't support claims other than String",
+  "labels": [
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-02-14T21:08:42Z",
+  "updated_at": "2023-02-15T09:54:22Z",
+  "closed_at": "2023-02-15T09:53:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI would like to use `@JwtSecurity` to provide different types of claims.\r\n\r\nFor example:\r\n\r\n```java\r\n@JwtSecurity(\r\n        claims = {\r\n                @Claim(key = \"upn\", value = \"alice\"),\r\n                @Claim(key = \"exp\", value = \"12234\")\r\n        }\r\n)\r\n```\r\nThe problem is Quarkus expects all claims to be strings but in my case I would like \"exp\" to be `Long` and use it like this:\r\n\r\n```java\r\nLong expirationTime = jwt.getClaim(Claims.exp);\r\n```\r\n\r\n`JwtTestSecurityIdentityAugmentorProducer` tries to cast `String` to `Long` which is failing.\r\n\r\n```\r\n(vert.x-eventloop-thread-3) class java.lang.String cannot be cast to class java.lang.Long\r\n```\r\n\r\nResponsible code in `JwtTestSecurityIdentityAugmentorProducer`  looks like this:\r\n\r\n```java\r\n                @Override\r\n                public <T> T getClaim(String claimName) {\r\n...\r\n                            if (claim.key().equals(claimName)) {\r\n                                return (T) claim.value();\r\n                            }\r\n...\r\n                }\r\n```                \r\n\r\nIt would be really handfull if Quarkus could cast given string to any type.\r\n\r\nMy idea how to fix it is adding class reference to claim:\r\n\r\n```java\r\n@Retention(RetentionPolicy.RUNTIME)\r\n@Target({})\r\npublic @interface Claim {\r\n    String key();\r\n\r\n    String value();\r\n\r\n    Class<?> clazz() default String.class;\r\n}\r\n```\r\n\r\nThen I can use Jackson to cast string to any type\r\n\r\n```java\r\n                public <T> T getClaim(String claimName) {\r\n...\r\n                            if (claim.key().equals(claimName)) {\r\n                                return (T) Json.decodeValue(Json.encodeToBuffer(claim.value()), claim.clazz());\r\n                            }\r\n...\r\n                }\r\n```\r\n\r\nThis solution works well and it's backward compatile.\r\nThe only problem is Jackson. I can't add it as a dependency to `quarkus-test-security-jwt`\r\n\r\nDo we have any viable replacement for it?\r\n\r\nI've tried ```io.vertx.core.json.Json``` but it solves this issue only with Jackson on classpath which I would like to avoid.\r\n\r\n\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31167/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31167/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

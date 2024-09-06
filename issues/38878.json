@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38878",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38878/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38878/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38878/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38878",
+  "id": 2144059362,
+  "node_id": "I_kwDOCFbutM5_y7_i",
+  "number": 38878,
+  "title": "Quarkus - SmallryeHealth - PreDestroy not called on HealthCheck",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236032169,
+      "node_id": "MDU6TGFiZWwyMjM2MDMyMTY5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/health",
+      "name": "area/health",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 18,
+  "created_at": "2024-02-20T10:34:29Z",
+  "updated_at": "2024-03-13T16:17:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI expect that having a class implementing `HealthCheck` that gets injected a `RequestScoped` object will call the `@PreDestroy` method of the injected object at the end of the check.\r\n\r\n### Expected behavior\r\n\r\nOn each call to <http://localhost:8080/q/health/> the PreDestroy is called on the HealtCheck marked as RequestScoped\r\n\r\n### Actual behavior\r\n\r\n**On Quarkus 3.6.7:**\r\nOn call <http://localhost:8080/q/health/> the PreDestroy is called **only the first time**.\r\n\r\n**On Quarkus 3.7.3**\r\nOn call <http://localhost:8080/q/health/> the PreDestroy is **never** called.\r\n\r\n### How to Reproduce?\r\n\r\nClone this repo based on the SmallRyeHealth tutorial\r\n\r\nhttps://github.com/olivierbeltrandocintoo/quarkus-health-noPreDestroy\r\n\r\nNote: I usually work in `Kotlin` but to have the simplest minimal case, I made it in `Java` :)\r\n\r\n```sh\r\nmvn quarkus:dev\r\n```\r\n\r\nCall the health endpoints and see that in the logs that the PreDestroy is either not called (for quarkus 3.7.3) or only called the first time (for quarkus 3.6.7)\r\n```\r\n$ curl localhost:8080\r\nmanual%\r\n$ curl localhost:8080\r\nmanual%\r\n$ curl localhost:8080\r\nmanual%\r\n$ curl localhost:8080\r\nmanual%\r\n$ curl localhost:8080/auto\r\nauto%\r\n$ curl localhost:8080/auto\r\nauto%\r\n$ curl localhost:8080/auto\r\nauto%\r\n$ curl localhost:8080/auto\r\nauto%\r\n$ curl localhost:8080/auto\r\nauto%\r\n$ curl localhost:8080/q/health\r\n{\r\n    \"status\": \"UP\",\r\n    \"checks\": [\r\n        {\r\n            \"name\": \"DbConnection\",\r\n            \"status\": \"UP\"\r\n        }\r\n    ]\r\n}%\r\n$ curl localhost:8080/q/health\r\n{\r\n    \"status\": \"UP\",\r\n    \"checks\": [\r\n        {\r\n            \"name\": \"DbConnection\",\r\n            \"status\": \"UP\"\r\n        }\r\n    ]\r\n}%\r\n$ curl localhost:8080/q/health\r\n^[[A\r\n{\r\n    \"status\": \"DOWN\",\r\n    \"checks\": [\r\n        {\r\n            \"name\": \"DbConnection\",\r\n            \"status\": \"DOWN\",\r\n            \"data\": {\r\n                \"Exception\": \"Could not acquire on time\"\r\n            }\r\n        }\r\n    ]\r\n}%\r\n```\r\n\r\nlogs related\r\n```sh\r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2024-02-20 11:28:50,928 INFO  [io.quarkus] (Quarkus Main Thread) microprofile-health-quickstart 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.7.3) started in 1.681s. Listening on: http://0.0.0.0:8080\r\n\r\n2024-02-20 11:28:50,931 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2024-02-20 11:28:50,931 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, resteasy-reactive, smallrye-context-propagation, smallrye-health, vertx]\r\n2024-02-20 11:28:52,135 INFO  [myp.Endpoint] (executor-thread-1) manual\r\n2024-02-20 11:28:52,138 INFO  [myp.DbSource] (executor-thread-1) Acquire...\r\n2024-02-20 11:28:52,138 INFO  [myp.DbSource] (executor-thread-1) Acquire OK!1\r\n2024-02-20 11:28:52,139 INFO  [myp.DbSource] (executor-thread-1) Release\r\n2024-02-20 11:28:52,142 WARN  [myp.DbSource] (executor-thread-1) endOfRequest called\r\n2024-02-20 11:28:53,911 INFO  [myp.Endpoint] (executor-thread-1) manual\r\n2024-02-20 11:28:53,912 INFO  [myp.DbSource] (executor-thread-1) Acquire...\r\n2024-02-20 11:28:53,913 INFO  [myp.DbSource] (executor-thread-1) Acquire OK!1\r\n2024-02-20 11:28:53,913 INFO  [myp.DbSource] (executor-thread-1) Release\r\n2024-02-20 11:28:53,914 WARN  [myp.DbSource] (executor-thread-1) endOfRequest called\r\n2024-02-20 11:28:54,579 INFO  [myp.Endpoint] (executor-thread-1) manual\r\n2024-02-20 11:28:54,580 INFO  [myp.DbSource] (executor-thread-1) Acquire...\r\n2024-02-20 11:28:54,580 INFO  [myp.DbSource] (executor-thread-1) Acquire OK!1\r\n2024-02-20 11:28:54,580 INFO  [myp.DbSource] (executor-thread-1) Release\r\n2024-02-20 11:28:54,581 WARN  [myp.DbSource] (executor-thread-1) endOfRequest called\r\n2024-02-20 11:28:55,112 INFO  [myp.Endpoint] (executor-thread-1) manual\r\n2024-02-20 11:28:55,112 INFO  [myp.DbSource] (executor-thread-1) Acquire...\r\n2024-02-20 11:28:55,113 INFO  [myp.DbSource] (executor-thread-1) Acquire OK!1\r\n2024-02-20 11:28:55,113 INFO  [myp.DbSource] (executor-thread-1) Release\r\n2024-02-20 11:28:55,114 WARN  [myp.DbSource] (executor-thread-1) endOfRequest called\r\n2024-02-20 11:28:59,089 INFO  [myp.Endpoint] (executor-thread-1) auto\r\n2024-02-20 11:28:59,090 INFO  [myp.DbSource] (executor-thread-1) Acquire...\r\n2024-02-20 11:28:59,090 INFO  [myp.DbSource] (executor-thread-1) Acquire OK!1\r\n2024-02-20 11:28:59,091 WARN  [myp.DbSource] (executor-thread-1) endOfRequest called\r\n2024-02-20 11:28:59,091 INFO  [myp.DbSource] (executor-thread-1) Release\r\n2024-02-20 11:29:00,082 INFO  [myp.Endpoint] (executor-thread-1) auto\r\n2024-02-20 11:29:00,083 INFO  [myp.DbSource] (executor-thread-1) Acquire...\r\n2024-02-20 11:29:00,083 INFO  [myp.DbSource] (executor-thread-1) Acquire OK!1\r\n2024-02-20 11:29:00,084 WARN  [myp.DbSource] (executor-thread-1) endOfRequest called\r\n2024-02-20 11:29:00,084 INFO  [myp.DbSource] (executor-thread-1) Release\r\n2024-02-20 11:29:00,620 INFO  [myp.Endpoint] (executor-thread-1) auto\r\n2024-02-20 11:29:00,620 INFO  [myp.DbSource] (executor-thread-1) Acquire...\r\n2024-02-20 11:29:00,621 INFO  [myp.DbSource] (executor-thread-1) Acquire OK!1\r\n2024-02-20 11:29:00,621 WARN  [myp.DbSource] (executor-thread-1) endOfRequest called\r\n2024-02-20 11:29:00,621 INFO  [myp.DbSource] (executor-thread-1) Release\r\n2024-02-20 11:29:01,068 INFO  [myp.Endpoint] (executor-thread-1) auto\r\n2024-02-20 11:29:01,069 INFO  [myp.DbSource] (executor-thread-1) Acquire...\r\n2024-02-20 11:29:01,069 INFO  [myp.DbSource] (executor-thread-1) Acquire OK!1\r\n2024-02-20 11:29:01,069 WARN  [myp.DbSource] (executor-thread-1) endOfRequest called\r\n2024-02-20 11:29:01,070 INFO  [myp.DbSource] (executor-thread-1) Release\r\n2024-02-20 11:29:01,505 INFO  [myp.Endpoint] (executor-thread-1) auto\r\n2024-02-20 11:29:01,506 INFO  [myp.DbSource] (executor-thread-1) Acquire...\r\n2024-02-20 11:29:01,506 INFO  [myp.DbSource] (executor-thread-1) Acquire OK!1\r\n2024-02-20 11:29:01,507 WARN  [myp.DbSource] (executor-thread-1) endOfRequest called\r\n2024-02-20 11:29:01,507 INFO  [myp.DbSource] (executor-thread-1) Release\r\n2024-02-20 11:29:05,521 INFO  [myp.DbSource] (vert.x-worker-thread-1) Acquire...\r\n2024-02-20 11:29:05,521 INFO  [myp.DbSource] (vert.x-worker-thread-1) Acquire OK!1\r\n2024-02-20 11:29:06,485 INFO  [myp.DbSource] (vert.x-worker-thread-1) Acquire...\r\n2024-02-20 11:29:06,486 INFO  [myp.DbSource] (vert.x-worker-thread-1) Acquire OK!0\r\n2024-02-20 11:29:07,150 INFO  [myp.DbSource] (vert.x-worker-thread-1) Acquire...\r\n2024-02-20 11:29:10,153 INFO  [io.sma.health] (vert.x-eventloop-thread-1) SRHCK01001: Reporting health down status: {\"status\":\"DOWN\",\"checks\":[{\"name\":\"DbConnection\",\"status\":\"DOWN\",\"data\":{\"Exception\":\"Could not acquire on time\"}}]}\r\n2024-02-20 11:29:10,173 INFO  [myp.DbSource] (vert.x-worker-thread-1) Acquire...\r\n2024-02-20 11:29:13,175 INFO  [io.sma.health] (vert.x-eventloop-thread-0) SRHCK01001: Reporting health down status: {\"status\":\"DOWN\",\"checks\":[{\"name\":\"DbConnection\",\"status\":\"DOWN\",\"data\":{\"Exception\":\"Could not acquire on time\"}}]}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n5.10.102.1-microsoft-standard-WSL2 #1 SMP Wed Mar 2 00:30:59 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment (build 17+35-2724)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.7.3 and 3.6.7\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38878/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38878/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "reopened"
+}

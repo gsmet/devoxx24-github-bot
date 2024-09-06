@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36658",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36658/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36658/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36658/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36658",
+  "id": 1958974384,
+  "node_id": "I_kwDOCFbutM50w5Ow",
+  "number": 36658,
+  "title": "@Source method parameter in GraphQLApi class + Java Bean Validation input",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-10-24T10:40:00Z",
+  "updated_at": "2023-12-05T21:40:22Z",
+  "closed_at": "2023-12-05T21:40:22Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nGiven a method in a `GraphQLApi` class that takes two parameters, the first annotated with `@Source` and the second annotated with `@Valid`, eg:\r\n\r\n```\r\npublic List<Foo> page(@Source Foo foo, @Valid Pagination pagination) {\r\n  ...\r\n}\r\n```\r\nany validation errors on the input will lead to a system error:\r\n\r\n```\r\nERROR [io.sma.graphql] (vert.x-eventloop-thread-0) SRGQL012000: Data Fetching Error: java.lang.IndexOutOfBoundsException: index (1) must be less than size (1)\r\n```\r\nThe problem seems to be in the computation of the parameter index, due to the `@Source` parameter not being included in the GraphQL `FieldDefinition`. A similar problem, concerning `Context` parameters, was reported in quarkusio/quarkus/issues/24183 and has already been resolved by smallrye/smallrye-graphql#1314 .\n\n### Expected behavior\n\nThe API response should include the relevant validation errors.\n\n### Actual behavior\n\n```\r\nERROR [io.sma.graphql] (vert.x-eventloop-thread-0) SRGQL012000: Data Fetching Error: java.lang.IndexOutOfBoundsException: index (1) must be less than size (1)\r\n        at graphql.com.google.common.base.Preconditions.checkElementIndex(Preconditions.java:1355)\r\n        at graphql.com.google.common.base.Preconditions.checkElementIndex(Preconditions.java:1337)\r\n        at graphql.com.google.common.collect.SingletonImmutableList.get(SingletonImmutableList.java:44)\r\n        at io.smallrye.graphql.validation.BeanValidationUtil$RequestNodeBuilder.requestedArgument(BeanValidationUtil.java:61)\r\n        at io.smallrye.graphql.validation.BeanValidationUtil$RequestNodeBuilder.build(BeanValidationUtil.java:49)\r\n        at io.smallrye.graphql.validation.BeanValidationUtil.lambda$addConstraintViolationsToDataFetcherResult$0(BeanValidationUtil.java:30)\r\n        at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\r\n        at java.base/java.util.HashMap$KeySpliterator.forEachRemaining(HashMap.java:1707)\r\n        at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\r\n        at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\r\n        at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:150)\r\n        at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:173)\r\n        at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\r\n        at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\r\n        at io.smallrye.graphql.validation.BeanValidationUtil.addConstraintViolationsToDataFetcherResult(BeanValidationUtil.java:31)\r\n        at io.quarkus.smallrye.graphql.runtime.spi.datafetcher.QuarkusDefaultDataFetcher.lambda$invokeAndTransformBlocking$0(QuarkusDefaultDataFetcher.java:98)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualCallable.call(SlowContextualCallable.java:21)\r\n        at io.quarkus.smallrye.graphql.runtime.spi.datafetcher.BlockingHelper.lambda$runBlocking$0(BlockingHelper.java:30)\r\n        at io.vertx.core.impl.ContextBase.lambda$executeBlocking$1(ContextBase.java:180)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:277)\r\n        at io.vertx.core.impl.ContextBase.lambda$internalExecuteBlocking$2(ContextBase.java:199)\r\n        at io.vertx.core.impl.TaskQueue.run(TaskQueue.java:76)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:582)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n```\n\n### How to Reproduce?\n\nA small reproducer can be found at [dpolysiou/smallrye-graphql-reproducer](https://github.com/dpolysiou/smallrye-graphql-reproducer)\r\nThe following query will result in a system error:\r\n```\r\nquery {\r\n  foo {\r\n    page(pagination: {limit: 0, start: -1}) {\r\n      name\r\n    }\r\n  }\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.8\" 2023-07-18\n\n### Quarkus version or git rev\n\n3.4.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.9.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36658/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36658/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

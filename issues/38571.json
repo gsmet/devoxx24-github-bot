@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38571",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38571/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38571/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38571/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38571",
+  "id": 2116395022,
+  "node_id": "I_kwDOCFbutM5-JaAO",
+  "number": 38571,
+  "title": "QuarkusTest runs before Quarkus starts",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-02-03T09:53:24Z",
+  "updated_at": "2024-02-26T16:45:29Z",
+  "closed_at": "2024-02-26T16:45:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nFrom time to time our application's builds on GitHub fail for unknown reason. After investigating and adding quarkus.debug properties I was able confirm, that test starts before all startup tasks are executed:\r\n\r\n```posh\r\n2024-01-31T06:44:19.1042853Z 2024-01-31 06:44:19,023 Build step VertxBinderProcessor.setVertxConfig completed in: 0ms\r\n2024-01-31T06:44:19.1043845Z 2024-01-31 06:44:19,028 Build step SmallRyeHealthProcessor.processSmallRyeHealthRuntimeConfig completed in: 4ms\r\n2024-01-31T06:44:19.1044869Z 2024-01-31 06:44:19,028 Build step NarayanaJtaProcessor.startRecoveryService completed in: 0ms\r\n2024-01-31T06:44:19.1045768Z 2024-01-31 06:44:19,029 Build step ConfigBuildStep.registerConfigClasses completed in: 0ms\r\n2024-01-31T06:44:20.4565746Z [ERROR] Tests run: 4, Failures: 0, Errors: 1, Skipped: 3, Time elapsed: 29.03 s <<< FAILURE! -- in org.acme.XYZTest\r\n2024-01-31T06:44:20.4567511Z [ERROR] org.acme.XYZTest.testMethod -- Time elapsed: 0.013 s <<< ERROR!\r\n2024-01-31T06:44:20.4569988Z java.lang.RuntimeException: java.lang.RuntimeException: Failed to start quarkus\r\n2024-01-31T06:44:20.4571167Z \tat io.quarkus.test.junit.QuarkusTestExtension.throwBootFailureException(QuarkusTestExtension.java:638)\r\n2024-01-31T06:44:20.4572491Z \tat io.quarkus.test.junit.QuarkusTestExtension.interceptTestClassConstructor(QuarkusTestExtension.java:722)\r\n2024-01-31T06:44:20.4573552Z \tat java.base/java.util.Optional.orElseGet(Optional.java:364)\r\n2024-01-31T06:44:20.4574322Z \tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n2024-01-31T06:44:20.4575216Z \tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\r\n2024-01-31T06:44:20.4576342Z Caused by: java.lang.RuntimeException: Failed to start quarkus\r\n```\r\n\r\nand the ApplicationImpl looks like this:\r\n\r\n```java\r\n...\r\n((StartupTask)(newVertxBinderProcessor.setVertxConfig325991315())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newSmallRyeHealthProcessor.processSmallRyeHealthRuntimeConfig1687788508())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newNarayanaJtaProcessor.startRecoveryService1748449850())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newConfigBuildStep.registerConfigClasses1377682816())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newMicrometerProcessor.configureRegistry477897979())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newFlywayProcessor.startActions2099152139())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newInitializationTaskProcessor.startApplicationInitializer180820092())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newConfigBuildStep.validateConfigValues1665125174())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newResteasyStandaloneBuildStep.boot1529468817())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newSmallRyeOpenApiProcessor.handler804903610())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newHibernateOrmProcessor.startPersistenceUnits1868654632())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newWebJarProcessor.processWebJarDevMode1534459532())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newSmallRyeHealthProcessor.registerHealthUiHandler1098457609())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newSwaggerUiProcessor.registerSwaggerUiHandler1166208104())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newVertxHttpProcessor.initializeRouter938601780())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newVertxHttpProcessor.finalizeRouter2040953008())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newLifecycleEventsBuildStep.startupEvent1144526294())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newVertxHttpProcessor.openSocket189362710())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\n((StartupTask)(newShutdownListenerBuildStep.setupShutdown1209845420())).deploy(var2);\r\nStepTiming.printStepTime(var2);\r\nExecutionModeManager.running();\r\n...\r\n```\r\n\r\nThe test fails since hibernate schema validation fails as flyway migration was not run yet.\r\n\r\n### Expected behavior\r\n\r\nStartup tasks are run before unit tests are run.\r\n\r\n### Actual behavior\r\n\r\nUnit tests are run before startup tasks finish and Quarkus app is started.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### Quarkus version or git rev\r\n\r\n3.6.6\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn 3.9.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38571/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38571/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

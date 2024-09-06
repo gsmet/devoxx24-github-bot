@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29411",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29411/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29411/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29411/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29411",
+  "id": 1459953752,
+  "node_id": "I_kwDOCFbutM5XBSBY",
+  "number": 29411,
+  "title": "Kafka Streams topology in Dev UI is empty when source topic uses `Pattern`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1449536431,
+      "node_id": "MDU6TGFiZWwxNDQ5NTM2NDMx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka-streams",
+      "name": "area/kafka-streams",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-11-22T14:13:47Z",
+  "updated_at": "2022-11-28T16:59:54Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe Dev UI for Kafka Streams shows no / an empty topology when the source topic uses a `Pattern` instead of static names.\r\n\r\n```java\r\npackage org.acme.consumer;\r\n\r\nimport org.apache.kafka.common.serialization.Serdes;\r\nimport org.apache.kafka.streams.StreamsBuilder;\r\nimport org.apache.kafka.streams.Topology;\r\nimport org.apache.kafka.streams.kstream.Consumed;\r\nimport org.apache.kafka.streams.kstream.KStream;\r\nimport org.slf4j.Logger;\r\nimport org.slf4j.LoggerFactory;\r\n\r\nimport javax.enterprise.context.ApplicationScoped;\r\nimport javax.enterprise.inject.Produces;\r\nimport java.util.regex.Pattern;\r\n\r\n@ApplicationScoped\r\nclass NotificationTopologyBuilder {\r\n\r\n    private static final Logger LOGGER = LoggerFactory.getLogger(NotificationTopologyBuilder.class);\r\n\r\n    @Produces\r\n    public Topology topology() {\r\n        final var streamsBuilder = new StreamsBuilder();\r\n        streamsBuilder\r\n                .stream(Pattern.compile(\"notification\\\\..+\"),\r\n                        Consumed.with(Serdes.String(), Serdes.String()))\r\n                .foreach((key, notification) -> LOGGER.info(notification));\r\n\r\n        final Topology topology = streamsBuilder.build();\r\n        LOGGER.info(\"Topology: {}\", topology.describe());\r\n        return topology;\r\n    }\r\n\r\n}\r\n```\r\n\r\nUpon startup, this logs:\r\n\r\n```\r\nTopology: Topologies:\r\n   Sub-topology: 0\r\n    Source: KSTREAM-SOURCE-0000000000 (topics: notification\\..+)\r\n      --> KSTREAM-FOREACH-0000000001\r\n    Processor: KSTREAM-FOREACH-0000000001 (stores: [])\r\n      --> none\r\n      <-- KSTREAM-SOURCE-0000000000\r\n```\n\n### Expected behavior\n\nThe Dev UI should show display the topology, even when the input topic uses a pattern.\n\n### Actual behavior\n\nThe Dev UI does not pick up the topology. It is neither available in image, nor in text format.\r\n\r\n![image](https://user-images.githubusercontent.com/5693141/203334266-50340d7d-f687-4e09-b594-f66e14447088.png)\r\n\r\nChanging the source topic to a static name causes the topology to be picked up correctly:\r\n\r\n![image](https://user-images.githubusercontent.com/5693141/203334808-db3951b9-493f-4b18-a65f-0de8e941e0d8.png)\r\n\r\nThe log output in this case is:\r\n\r\n```\r\nTopology: Topologies:\r\n   Sub-topology: 0\r\n    Source: KSTREAM-SOURCE-0000000000 (topics: [notification.repository])\r\n      --> KSTREAM-FOREACH-0000000001\r\n    Processor: KSTREAM-FOREACH-0000000001 (stores: [])\r\n      --> none\r\n      <-- KSTREAM-SOURCE-0000000000\r\n```\n\n### How to Reproduce?\n\n1. Setup a Quarkus project with `kafka-streams` extension\r\n2. Add the topology as described above\r\n3. Run the Quarkus app in dev mode\r\n4. In the Dev UI, navigate to the *Kafka Streams Topology* section\n\n### Output of `uname -a` or `ver`\n\nLinux ctrl 5.15.0-53-generic #59-Ubuntu SMP Mon Oct 17 18:53:30 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.4.1\" 2022-08-12 OpenJDK Runtime Environment Temurin-17.0.4.1+1 (build 17.0.4.1+1) OpenJDK 64-Bit Server VM Temurin-17.0.4.1+1 (build 17.0.4.1+1, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.14.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29411/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29411/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

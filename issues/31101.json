@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31101",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31101/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31101/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31101/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31101",
+  "id": 1581039492,
+  "node_id": "I_kwDOCFbutM5ePL-E",
+  "number": 31101,
+  "title": "Request body not received in injected/observed Router bean",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-02-11T22:38:10Z",
+  "updated_at": "2023-02-12T10:01:42Z",
+  "closed_at": "2023-02-12T10:01:40Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen injecting or observing a Mutiny `Router` bean from `vertx-http`, if you attempt to set up a `POST` route (or any route that needs to read the request body), when trying to read the request body in the route handler via `RoutingContext.request().body().subscribe().with(x -> {})`, the application will become stuck and no body is ever received. I think it might be related to https://github.com/quarkusio/quarkus/issues/5959 but I'm not sure.\r\n\r\nSimple example:\r\n```java\r\npublic class MyBean {\r\n\r\n  void init(@Observes Router router) {\r\n    router.post(\"/foo\").handler(ctx -> {\r\n      ctx.request().body()\r\n        .ifNoItem().after(Duration.ofSeconds(30)).failWith(new IllegalStateException())\r\n        .onFailure(IllegalStateException.class).call(() -> ctx.response().setStatusCode(600).end())\r\n        .subscribe().with(x -> {});\r\n    });\r\n  }\r\n}\r\n```\r\n\r\nSimple endpoint to send the request:\r\n```java\r\n@Path(\"/bar\")\r\npublic class BarEndpoint {\r\n\r\n  @GET\r\n  public int callFoo() throws IOException, InterruptedException {\r\n    HttpClient httpClient = HttpClient.newHttpClient();\r\n    HttpRequest request = HttpRequest.newBuilder()\r\n      .uri(URI.create(\"http://localhost:8080/foo\"))\r\n      .POST(HttpRequest.BodyPublishers.ofString(\"baz\"))\r\n      .build();\r\n\r\n    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());\r\n    return response.statusCode();\r\n  }\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\nRequest body is received as a Uni by the handler\r\n\r\n### Actual behavior\r\n\r\nApplication becomes stuck (the Uni doesn't complete)\r\n\r\n### How to Reproduce?\r\n\r\n1. Observe a `Router` bean\r\n2. Set up a new POST route\r\n3. In the handler of the route, attempt to read the request body\r\n4. Send a POST request to the route, with or without a body\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n11.0.12\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.0.Alpha3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31101/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31101/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

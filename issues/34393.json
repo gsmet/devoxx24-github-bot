@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34393",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34393/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34393/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34393/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34393",
+  "id": 1779390019,
+  "node_id": "I_kwDOCFbutM5qD1ZD",
+  "number": 34393,
+  "title": "Vertx Reactive routes not working with HTTP2 and POST methods",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 22,
+  "created_at": "2023-06-28T17:26:09Z",
+  "updated_at": "2023-07-11T06:05:56Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have implemented a Reactive REST endpoint that exposes POST HTTP method. The implementation includes a Vertx Route that is applied to POST method calls and the endpoint path.\r\n\r\n\r\n```java\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n\t@POST\r\n\t@Produces(MediaType.APPLICATION_JSON)\r\n\tpublic Uni<QueryResponse> query(final HttpHeaders reqHeaders, final Query query) {\r\n\t\tQueryResponse queryRespose = new QueryResponse();\r\n\t\tqueryRespose.message = \"Hello from RESTEasy Reactive \" + query.name;\r\n\t\treturn Uni.createFrom().item(queryRespose);\r\n\t}\r\n}\r\n```\r\n\r\n\r\n\r\n```java\r\n@Singleton\r\npublic class OverloadRoute {\r\n\r\n  private static final Logger LOG = Logger.getLogger(OverloadRoute.class);\r\n\r\n  @Route(methods = HttpMethod.POST, path = \"/hello\")\r\n  public void post(RoutingContext rc) {\r\n\r\n    rc.next();\r\n    LOG.info(\"here\");\r\n  }\r\n}\r\n\r\n```\r\nWhen sending an HTTP 1.1 request it works fine\r\n```\r\ncurl  -d '{\"name\": \"juan\"}'  -H \"Content-Type: application/json\"    -X POST  http://localhost:8080/hello                                                                                                              \r\n```\r\nthe result is\r\n\r\n```json\r\n{\"message\":\"Hello from RESTEasy Reactive juan\"}\r\n```\r\n\r\nWhen sending with HTTP 2 (clear text) it does throw an exception\r\n```\r\ncurl --http2 -d '{\"name\": \"juan\"}'  -H \"Content-Type: application/json\"    -X POST  http://localhost:8080/hello                                                                                                              \r\n```\r\n\r\nthe following exception is thrown:\r\n\r\n```posh\r\n2023-06-29 13:34:14,153 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-0) HTTP Request to /hello failed, error id: 1ff2eb50-7fa0-4a52-8541-b359563a6d0a-1: java.lang.IllegalStateException: Request has already been read\r\n        at io.vertx.core.http.impl.Http2ServerRequest.checkEnded(Http2ServerRequest.java:217)\r\n        at io.vertx.core.http.impl.Http2ServerRequest.pause(Http2ServerRequest.java:269)\r\n        at io.quarkus.vertx.http.runtime.ResumingRequestWrapper.pause(ResumingRequestWrapper.java:30)\r\n        at io.vertx.core.http.impl.HttpServerRequestWrapper.pause(HttpServerRequestWrapper.java:67)\r\n        at io.vertx.core.http.impl.HttpServerRequestWrapper.pause(HttpServerRequestWrapper.java:67)\r\n        at org.jboss.resteasy.reactive.server.vertx.VertxResteasyReactiveRequestContext.<init>(VertxResteasyReactiveRequestContext.java:83)\r\n        at io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.<init>(QuarkusResteasyReactiveRequestContext.java:31)\r\n        at io.quarkus.resteasy.reactive.server.runtime.ResteasyReactiveRecorder$5.createContext(ResteasyReactiveRecorder.java:174)\r\n        at org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:45)\r\n        at org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:23)\r\n        at org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:10)\r\n        at io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n        at io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:177)\r\n        at io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n        at org.acme.OverloadRoute.get(OverloadRoute.java:18)\r\n        at org.acme.OverloadRoute_RouteHandler_get_1a9f4d138a4ed3dbe3b937adf723bc32eb42ec9f.invoke(Unknown Source)\r\n        at io.quarkus.vertx.web.runtime.RouteHandler.handle(RouteHandler.java:97)\r\n        at io.quarkus.vertx.web.runtime.RouteHandler.handle(RouteHandler.java:22)\r\n        at io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n        at io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:140)\r\n        at io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n        at io.vertx.ext.web.handler.impl.BodyHandlerImpl$BHandler.doEnd(BodyHandlerImpl.java:361)\r\n        at io.vertx.ext.web.handler.impl.BodyHandlerImpl$BHandler.end(BodyHandlerImpl.java:338)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n        at io.vertx.core.http.impl.HttpEventHandler.handleEnd(HttpEventHandler.java:76)\r\n        at io.vertx.core.http.impl.Http2ServerRequest.handleEnd(Http2ServerRequest.java:198)\r\n        at io.vertx.core.http.impl.Http2ServerStream.handleEnd(Http2ServerStream.java:198)\r\n        at io.vertx.core.http.impl.VertxHttp2Stream.lambda$new$1(VertxHttp2Stream.java:62)\r\n        at io.vertx.core.streams.impl.InboundBuffer.handleEvent(InboundBuffer.java:255)\r\n        at io.vertx.core.streams.impl.InboundBuffer.drain(InboundBuffer.java:242)\r\n        at io.vertx.core.streams.impl.InboundBuffer.lambda$fetch$0(InboundBuffer.java:295)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n        at io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:566)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:1583)\r\n\r\n```\r\n\r\nThere are no issues when route is not included\r\n\r\n### Expected behavior\r\n\r\nBoth HTTP 1.1 and HTTP2 should work the same and provide the right output (200 OK and the response JSON)\r\n\r\n### Actual behavior\r\n\r\nHTTP 2 does not work (HTTP status code 500)\r\n\r\n### How to Reproduce?\r\n\r\n[code-with-quarkus.zip](https://github.com/quarkusio/quarkus/files/11898360/code-with-quarkus.zip)\r\n\r\nunzip reproducer\r\n\r\nstart in dev mode\r\nmvn quearkus:dev\r\n\r\nQuery with HTTP2\r\ncurl --http2 -d '{\"name\": \"juan\"}'  -H \"Content-Type: application/json\"    -X POST  http://localhost:8080/hello\r\n\r\nQuery with HTTP1/1\r\ncurl -d '{\"name\": \"juan\"}'  -H \"Content-Type: application/json\"    -X POST  http://localhost:8080/hello\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux cheva-virtualmachine 5.15.112-1-MANJARO #1 SMP PREEMPT Wed May 17 11:11:32 UTC 2023 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.7\" 2023-04-18 OpenJDK Runtime Environment (build 17.0.7+7) OpenJDK 64-Bit Server VM (build 17.0.7+7, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.1.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.7 (b89d5959fcde851dcb1c8946a785a163f14e1e29) Maven home: /opt/maven Java version: 17.0.7, vendor: N/A, runtime: /usr/lib/jvm/java-17-openjdk Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.112-1-manjaro\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34393/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34393/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

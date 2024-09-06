@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38869",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38869/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38869/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38869/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38869",
+  "id": 2143229447,
+  "node_id": "I_kwDOCFbutM5_vxYH",
+  "number": 38869,
+  "title": "ConfigMapping interface containing nested Map not being initialized properly if using VaultConfigSource",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1636153378,
+      "node_id": "MDU6TGFiZWwxNjM2MTUzMzc4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vault",
+      "name": "area/vault",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2024-02-19T22:23:27Z",
+  "updated_at": "2024-02-20T11:13:15Z",
+  "closed_at": "2024-02-20T10:37:20Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAssume you have a config interface like this:\r\n```java\r\n@ConfigMapping(prefix = \"mycfg\")\r\npublic interface MyConfig {\r\n\r\n    @WithParentName\r\n    Map<String, InnerConfig> innerConfigs();\r\n\r\n    interface InnerConfig {\r\n        String value();\r\n    }\r\n\r\n}\r\n```\r\n\r\nWhen specifying a config like this:\r\n\r\n```properties\r\nmycfg.x.value=d\r\nmycfg.y.value=e\r\nmycfg.z.value=f\r\n```\r\n\r\nI should get an `innerConfigs` map of size 3 containing the values `d`, `e` and `f`.\r\n\r\nThis works as expected if the config comes from e.g. a local properties file. It **does not work as expected** if the config comes from e.g. Vault provided by a `VaultConfigSource`.\r\n\r\n### Expected behavior\r\n\r\nI assume that it should not matter what the source of the properties is and still get a fully populated `MyConfig` class offering access to all three instances of `InnerConfig`.\r\n\r\n### Actual behavior\r\n\r\nWhen using Vault as config source the `innerConfigs` map is empty although I can still access the properties via\r\n```java\r\n@ConfigProperty(name = \"mycfg.x.value\")\r\nString xValue;\r\n```\r\nSo they can be read successfully from Vault. It's just the mapping to the `Map<String, InnerConfig>` that seems to fail.\r\n\r\n### How to Reproduce?\r\n\r\nI have a reproducer ready at https://github.com/wiebeck/quarkus-configmap-issue with more details.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kernel Version 23.2.0: Wed Nov 15 21:53:18 PST 2023; root:xnu-10002.61.3~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.1\" 2023-10-17 LTS OpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12-LTS) OpenJDK 64-Bit Server VM Temurin-21.0.1+12 (build 21.0.1+12-LTS, mixed mode)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.7.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.5\r\n\r\n### Additional information\r\n\r\nThe environment shouldn't matter since we encoutered the issue in an app running on Kubernetes in a Linux container.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38869/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38869/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

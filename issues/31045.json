@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31045",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31045/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31045/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31045/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31045",
+  "id": 1578140240,
+  "node_id": "I_kwDOCFbutM5eEIJQ",
+  "number": 31045,
+  "title": "Mutiny had to drop the following exception: (TIMEOUT,-1)",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-02-09T15:43:19Z",
+  "updated_at": "2023-02-13T12:38:15Z",
+  "closed_at": "2023-02-13T12:36:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMutiny throws an exception 30 seconds after calling `requestAnfForget` on the EventBus. I was experimenting with creating an asynchronous request response pattern in order to generate results file upon request. To make it simpler I started with an example of asynchronous greeting simulating the heavy lifting of the report generation with Thread.sleep().\r\n\r\nI have a Resource with three Endpoints:\r\n\r\n```kotlin\r\n@Path(\"/greeting\")\r\n@ApplicationScoped\r\nclass GreetingResource(val bus: EventBus) {\r\n\r\n    val statusUrl = \"/greeting/status/{id}\"\r\n\r\n    @POST\r\n    fun requestGreeting(): Response {\r\n        val id = randomUUID()\r\n        println(\"Request greeting\")\r\n        bus.requestAndForget<Message>(\"greeting\", Message(\"Simon\", id))\r\n        println(\"Send 202 response\")\r\n        return Response\r\n            .accepted()\r\n            .header(\"Location\", statusUrl.replace(\"{id}\", id.toString()))\r\n            .build()\r\n    }\r\n\r\n    @GET\r\n    @Path(\"status/{id}\")\r\n    fun greetingStatus(@PathParam(\"id\") id: UUID): Response {\r\n        return if(MemoryDatabase.greetings.containsKey(id)){\r\n            Response.seeOther(URI(\"/greeting/$id\")).build()\r\n        } else {\r\n            Response.ok().entity(\"In progress\").build()\r\n        }\r\n    }\r\n\r\n    @GET\r\n    @Path(\"/{id}\")\r\n    fun greeting(@PathParam(\"id\") id: UUID): Response {\r\n        return if (MemoryDatabase.greetings.containsKey(id)){\r\n            val greeting = MemoryDatabase.greetings[id]\r\n            MemoryDatabase.greetings.remove(id)\r\n            Response.ok().entity(greeting).build()\r\n        } else {\r\n            Response.status(Response.Status.NOT_FOUND).entity(\"Greeting with id = $id was not found\").build()\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nI request the greeting through posting to `requestGreeting()` and return `202`. I am not interested in the result of the consumer therefore using requestAndForget. The consumer of the Message then wait 32 seconds and saves the greeting in an \"InMemoryDatabase\"\r\n\r\n```kotlin\r\ndata class Message(val name: String, val id: UUID)\r\n\r\n@ApplicationScoped\r\nclass GreetingService {\r\n\r\n    @ConsumeEvent(value= \"greeting\", blocking = true)\r\n    fun generateGreeting(message: Message): String{\r\n        println(\"Received Request to generate greeting\")\r\n        Thread.sleep(32000)\r\n        MemoryDatabase.greetings[message.id] = \"Hi ${message.name} I greet you asynchronously!\"\r\n        println(\"Generated greeting\")\r\n    }\r\n}\r\n\r\nobject MemoryDatabase {\r\n    val greetings = mutableMapOf<UUID, String>()\r\n}\r\n```\r\nWhen checking the `greetingStatus` endpoint after 32 seconds I receive the message correctly but also receive an exception: \r\n\r\n```\r\n2023-02-09 11:06:17,139 ERROR [io.qua.mut.run.MutinyInfrastructure] (vert.x-eventloop-thread-1) Mutiny had to drop the following exception: (TIMEOUT,-1) Timed out after waiting 30000(ms) for a reply. address: __vertx.reply.1, repliedAddress: greeting\r\n\tat io.vertx.core.eventbus.impl.ReplyHandler.handle(ReplyHandler.java:76)\r\n\tat io.vertx.core.eventbus.impl.ReplyHandler.handle(ReplyHandler.java:24)\r\n\tat io.vertx.core.impl.VertxImpl$InternalTimerHandler.handle(VertxImpl.java:932)\r\n\tat io.vertx.core.impl.VertxImpl$InternalTimerHandler.handle(VertxImpl.java:903)\r\n\tat io.vertx.core.impl.EventLoopContext.emit(EventLoopContext.java:55)\r\n\tat io.vertx.core.impl.DuplicatedContext.emit(DuplicatedContext.java:158)\r\n\tat io.vertx.core.impl.ContextInternal.emit(ContextInternal.java:194)\r\n\tat io.vertx.core.impl.VertxImpl$InternalTimerHandler.run(VertxImpl.java:921)\r\n\tat io.netty.util.concurrent.PromiseTask.runTask(PromiseTask.java:98)\r\n\tat io.netty.util.concurrent.ScheduledFutureTask.run(ScheduledFutureTask.java:153)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\n\r\n```\r\n\n\n### Expected behavior\n\nException should not be raised as answer from Consumer is not expected. \n\n### Actual behavior\n\nException is thrown.\n\n### How to Reproduce?\n\nA Reproduction Repository can be found [here](https://github.com/Nplu5/Quarkus-async-request-response). The test `reproduceTimeoutException` simulates accessing the endpoint. The test passes but the log shows the exception.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nOpenJDK Runtime Environment Temurin-11.0.17+8 (build 11.0.17+8)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nBuild time:   2022-08-05 21:17:56 UTC Revision:     d1daa0cbf1a0103000b71484e1dbfe096e095918  Kotlin:       1.6.21 Groovy:       3.0.10 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          11.0.15 (GraalVM Community 11.0.15+10-jvmci-22.1-b06) OS:           Windows 11 10.0 amd64\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31045/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31045/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

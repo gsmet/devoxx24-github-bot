@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23046",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23046/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23046/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23046/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23046",
+  "id": 1109022362,
+  "node_id": "I_kwDOCFbutM5CGlaa",
+  "number": 23046,
+  "title": "Expose toBsonDocument function publicly",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-01-20T08:48:07Z",
+  "updated_at": "2022-01-24T09:55:14Z",
+  "closed_at": "2022-01-24T09:55:14Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nI would like to understand how the following requirement is supposed to be handled using mongodb panache repository:\r\n\r\n**Conditional update**:\r\nBased on the value of a certain field (eg. update only when Status=Rejecte), the entity must be updated and its version should be incremented.\r\n\r\nI'm currently using a modified version of this for the above requirement:\r\n\r\n```\r\npublic Uni<T> patch(T t) {\r\n          Instant now = Instant.now();\r\n          t.setLastModifiedAt(now);\r\n  \r\n          FindOneAndUpdateOptions findOneAndUpdateOptions = new FindOneAndUpdateOptions()\r\n                  .returnDocument(ReturnDocument.AFTER)\r\n                  .upsert(false);\r\n  \r\n          BsonDocument update = new BsonDocument().append(\"$set\", this.toBsonDocument(t))\r\n                  .append(\"$inc\", new BsonDocument().append(\"Version\", new BsonInt64(1)));\r\n  \r\n          BsonDocument filter = new BsonDocument().append(\"_id\", new BsonObjectId(t.getId())).append(\"Status\", new BsonString(\"Rejected\"));\r\n  \r\n          return this.mongoCollection().findOneAndUpdate(filter, update, findOneAndUpdateOptions);\r\n      }\r\n  \r\n  \r\nprotected BsonDocument toBsonDocument(T t) {\r\n          BsonDocument document = new BsonDocument();\r\n          ReactiveMongoCollection<T> reactiveMongoCollection = JavaReactiveMongoOperations.INSTANCE.mongoCollection(t.getClass());\r\n          Codec<T> codec = reactiveMongoCollection.getCodecRegistry().get((Class<T>) t.getClass());\r\n          codec.encode(new BsonDocumentWriter(document), t, EncoderContext.builder().build());\r\n          return document;\r\n      }\r\n```\r\n\r\n\r\nSetting every field in the document becomes difficult. So I needed to convert the entire entity into a BsonDocument. The panache repository does not expose this so I had to write one. \n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23046/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23046/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

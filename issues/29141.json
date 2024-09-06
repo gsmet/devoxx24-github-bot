@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29141",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29141/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29141/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29141/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29141",
+  "id": 1441491357,
+  "node_id": "I_kwDOCFbutM5V62md",
+  "number": 29141,
+  "title": "Mailer stuck when sending a message from GraphQL endpoint",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 22,
+  "created_at": "2022-11-09T06:49:51Z",
+  "updated_at": "2023-06-28T18:56:59Z",
+  "closed_at": "2023-06-28T18:56:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nSorry me could you explain some situation with **Mailer** and **GraphQL** that happened in Quarkus version `2.13.4.Final` (since `2.10.4.Final` like i test). Why mail send stuck, when i send e-mail from GraphQL?\r\n\r\nExample: i create project with two endpoints REST (`io.quarkus:quarkus-resteasy-reactive-jsonb`) and GraphQL (`io.quarkus:quarkus-smallrye-graphql`), and i use Mailer for mail send (`io.quarkus:quarkus-mailer`).\r\n\r\nREST:\r\n```\r\npackage io.quarkus.explore.testclient.graphql;\r\n\r\nimport io.quarkus.mailer.Mail;\r\nimport io.quarkus.mailer.Mailer;\r\nimport javax.inject.Inject;\r\nimport javax.ws.rs.GET;\r\nimport javax.ws.rs.Path;\r\n\r\n@Path(\"\")\r\npublic class TestMailRest {\r\n\r\n    @Inject\r\n    Mailer mailer;\r\n\r\n    @GET\r\n    @Path(\"/mail\")\r\n    public void send() {\r\n        mailer.send(Mail.withText(\"to@acme.org\", \"A simple email from quarkus\", \"This is my body\"));\r\n    }\r\n\r\n}\r\n\r\n```\r\n\r\nGraphQL:\r\n```\r\npackage io.quarkus.explore.testclient.graphql;\r\n\r\nimport io.quarkus.mailer.Mail;\r\nimport io.quarkus.mailer.Mailer;\r\nimport javax.inject.Inject;\r\nimport org.eclipse.microprofile.graphql.GraphQLApi;\r\nimport org.eclipse.microprofile.graphql.Query;\r\n\r\n@GraphQLApi\r\npublic class TestMailGraphQL {\r\n\r\n    @Inject\r\n    Mailer mailer;\r\n\r\n    @Query(\"checkMailSend\")\r\n    public String checkMailSend(String targetAddress) {\r\n        mailer.send(Mail.withText(\"to@acme.org\", \"A simple email from quarkus\", \"This is my body\"));\r\n        return \"Mail test!\";\r\n    }\r\n\r\n}\r\n\r\n```\r\n\r\n**Scenario - 1:**\r\nIf i run project, and then execute REST GET to `/mail` all will be fine and message send complete, like in documentation examples.\r\n\r\n**Scenario - 2:**\r\n!**Restart project**!. And then, if i run it again and execute GraphQL operation:\r\n```\r\nquery TestMail {\r\n  checkMailSend(targetAddress: \"NotMatter\")\r\n}\r\n```\r\nthen application stuck and i have error:\r\n```\r\n     2022-11-09 09:23:31,247 WARN  [io.ver.cor.imp.BlockedThreadChecker] (vertx-blocked-thread-checker) Thread Thread[vert.x-worker-thread-0,5,main] has been blocked for 60392 ms, time limit is 60000 ms: io.vertx.core.VertxException: Thread blockedce:quarkusDev\r\n        at java.base@17.0.5/jdk.internal.misc.Unsafe.park(Native Method)\r\n        at java.base@17.0.5/java.util.concurrent.locks.LockSupport.park(LockSupport.java:211)\r\n        at java.base@17.0.5/java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:715)\r\n        at java.base@17.0.5/java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireSharedInterruptibly(AbstractQueuedSynchronizer.java:1047)\r\n        at java.base@17.0.5/java.util.concurrent.CountDownLatch.await(CountDownLatch.java:230)\r\n        at io.smallrye.mutiny.operators.uni.UniBlockingAwait.await(UniBlockingAwait.java:67)\r\n        at io.smallrye.mutiny.groups.UniAwait.atMost(UniAwait.java:65)\r\n        at io.smallrye.mutiny.groups.UniAwait.indefinitely(UniAwait.java:46)\r\n        at io.quarkus.mailer.runtime.BlockingMailerImpl.send(BlockingMailerImpl.java:21)\r\n        at io.quarkus.mailer.runtime.BlockingMailerImpl_Subclass.send$$superforward1(Unknown Source)\r\n        at io.quarkus.mailer.runtime.BlockingMailerImpl_Subclass$$function$$1.apply(Unknown Source)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:53)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:40)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n        at io.quarkus.mailer.runtime.BlockingMailerImpl_Subclass.send(Unknown Source)\r\n        at io.quarkus.mailer.runtime.BlockingMailerImpl_ClientProxy.send(Unknown Source)\r\n        at io.quarkus.explore.testclient.graphql.TestMailGraphQL.checkMailSend(TestMailGraphQL.java:17)\r\n        at io.quarkus.explore.testclient.graphql.TestMailGraphQL_Subclass.checkMailSend$$superforward1(Unknown Source)\r\n        at io.quarkus.explore.testclient.graphql.TestMailGraphQL_Subclass$$function$$1.apply(Unknown Source)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:53)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:40)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n        at io.quarkus.explore.testclient.graphql.TestMailGraphQL_Subclass.checkMailSend(Unknown Source)\r\n        at java.base@17.0.5/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base@17.0.5/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base@17.0.5/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base@17.0.5/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.smallrye.graphql.execution.datafetcher.helper.ReflectionInvoker.invoke(ReflectionInvoker.java:92)\r\n        at io.quarkus.smallrye.graphql.runtime.spi.datafetcher.QuarkusDefaultDataFetcher.lambda$invokeAndTransformBlocking$0(QuarkusDefaultDataFetcher.java:62)\r\n        at io.quarkus.smallrye.graphql.runtime.spi.datafetcher.QuarkusDefaultDataFetcher$$Lambda$1516/0x0000000800e2d308.call(Unknown Source)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualCallable.call(SlowContextualCallable.java:21)\r\n        at io.quarkus.smallrye.graphql.runtime.spi.datafetcher.BlockingHelper.lambda$runBlocking$0(BlockingHelper.java:27)\r\n        at io.quarkus.smallrye.graphql.runtime.spi.datafetcher.BlockingHelper$$Lambda$1517/0x0000000800e2d748.handle(Unknown Source)\r\n        at io.vertx.core.impl.ContextImpl.lambda$null$0(ContextImpl.java:159)\r\n        at io.vertx.core.impl.ContextImpl$$Lambda$1304/0x0000000801313a98.handle(Unknown Source)\r\n        at io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n        at io.vertx.core.impl.ContextImpl.lambda$executeBlocking$1(ContextImpl.java:157)\r\n        at io.vertx.core.impl.ContextImpl$$Lambda$1302/0x0000000801313440.run(Unknown Source)\r\n        at io.vertx.core.impl.TaskQueue.run(TaskQueue.java:76)\r\n        at io.vertx.core.impl.TaskQueue$$Lambda$1266/0x000000080129f6a0.run(Unknown Source)\r\n        at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base@17.0.5/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\n**Scenario - 3:**\r\n!**Restart project**!. And then, if i run REST GET **before GraphQL** and then i execute GraphQL query all will be fine again. GraphQL mail send work if you execute REST before it.\r\n\r\n\r\n**Important: it is work great in 2.7.2.Final without any problem, but in new versions it is broke for me.**\n\n### Expected behavior\n\n**Scenario - 1:** - Work well!\r\n\r\n**Scenario - 2:** - Mailer send my message via GraphQL.\r\n\r\n**Scenario - 2:** - I no need execute REST before GraphQL.\n\n### Actual behavior\n\n**Scenario - 1:** - Work well!\r\n\r\n**Scenario - 2:** - Mailer stuck and thread blocked error happened.\r\n\r\n**Scenario - 2:** - Work strange, because i need execute REST before GraphQL.\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nJDK 17 from Gradle Java toolchain\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.13.4.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n7.5.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29141/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29141/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

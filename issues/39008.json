@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39008",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39008/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39008/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39008/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39008",
+  "id": 2154420710,
+  "node_id": "I_kwDOCFbutM6Aadnm",
+  "number": 39008,
+  "title": "Hibernate Reactive with Panache: automatic `@WithSessionOnDemand` improvement or clarification",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-02-26T15:13:10Z",
+  "updated_at": "2024-08-14T15:10:39Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe docs at https://quarkus.io/guides/hibernate-reactive-panache#transactions say:\r\n\r\n> In some cases, the session is opened automatically on demand. For example, if a Panache entity method is invoked in a Jakarta REST resource method in an application that includes the `quarkus-resteasy-reactive` extension\r\n\r\nThis does mention that the REST resource method has to use a \"Panache entity method\", but it's not entirely clear to me. I interpreted it as \"if you're using Panache entity methods within the context of REST resource methods\" no matter how deep inside the method. But it's actually only if you use entity methods _directly_ in the REST resource class, and not via indirection of other classes. Also, it's also for repository users, but again, direct ones.\r\n\r\nThe exception that happens says:\r\n\r\n```\r\njava.lang.IllegalStateException: No current Mutiny.Session found\r\n\t- no reactive session was found in the Vert.x context and the context was not marked to open a new session lazily\r\n\t- a session is opened automatically for JAX-RS resource methods annotated with an HTTP method (@GET, @POST, etc.); inherited annotations are not taken into account\r\n\t- you may need to annotate the business method with @WithSession or @WithTransaction\r\n```\r\n\r\nAgain, this does not mention that it's only automatic for direct users of Panache entity/repos, which is misleading.\r\n\r\nLast but not least, this does not mention `@WithSessionOnDemand`, which is what we're talking about in the first place. It should.\r\n\r\nWe should improve the docs by listing exactly the circumstances in which `@WithSessionOnDemand` is added:\r\n\r\n```\r\n                    // Add @WithSessionOnDemand to a method that\r\n                    // - is not static\r\n                    // - is not synthetic\r\n                    // - returns Uni\r\n                    // - is declared in a class that uses a panache entity/repository\r\n                    // - is annotated with @GET, @POST, @PUT, @DELETE ,@PATCH ,@HEAD or @OPTIONS\r\n                    // - is not annotated with @ReactiveTransactional, @WithSession, @WithSessionOnDemand, or @WithTransaction\r\n```\r\n\r\nThis is both for the guide, but also the annotation javadoc, because it's relevant there too.\r\n\r\nFinally, we may want to improve this by making a graph of indirect users of Panache entities/repos, but probably this would include too many false positives and end up including everything.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39008/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39008/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

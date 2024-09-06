@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23997",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23997/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23997/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23997/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23997",
+  "id": 1153378284,
+  "node_id": "I_kwDOCFbutM5Evyfs",
+  "number": 23997,
+  "title": "SSE Defects",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 24,
+  "created_at": "2022-02-27T20:01:43Z",
+  "updated_at": "2024-03-01T09:57:00Z",
+  "closed_at": "2024-03-01T09:56:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMultiple issues related to Server Sent Events demonstrated in https://github.com/jimbogithub/sse.  It contains reactive and non-reactive versions of a simple `TimeBroadcaster` broadcasting a timestamp event once per second to each subscribed `TimeConsumer`.\r\n\r\n### SSE Server\r\nSee `sse-server` `TimeBroadcaster`.\r\n\r\n1. Unable to obtain a centralised (e.g. `@ApplicationScoped` or `@Singleton`) `Sse` instance from which to derive the `SseBroadcaster` and `Builder`.  Hence it appears impossible to properly implement the one-sender-many-receivers pattern.\r\n2. `SseBroadcaster.onError` is called twice for a client that has been cleanly closed.  This is undesirable.\r\n\r\n### SSE Client\r\nSee `sse-client` `TimeConsumer`.\r\n\r\n1. Requires the `Dummy` interface in order for the client to bootstrap.  See comments on that class as to what happens if you don't have this.\r\n\r\n### SSE Server Reactive\r\nSee `sse-server-reactive` `TimeBroadcaster`.  Unlike the non-reactive server, it is possible to obtain a singular `Sse` instance  from which to derive the `SseBroadcaster` and `Builder`.\r\n\r\n1. `SseBroadcaster.broadcast` tries to send messages to clients that have already closed.\r\n2. `SseBroadcaster.onClose` is never called. \r\n\r\n### SSE Client Reactive\r\nSee `sse-client-reactive` `TimeConsumer`.\r\n\r\n1. `ClientBuilder.newBuilder()...build()` does not work unless you add `.withConfig(new org.jboss.resteasy.reactive.common.jaxrs.ConfigurationImpl(RuntimeType.CLIENT))`.  This wasn't necessary for the non-reactive client or when doing `ClientBuilder.newClient()` and I suspect is not intended.\r\n2. `ClientRequestContext.getHeaders().toString()` is not useful and does not match the non-reactive.  See further discussion in code.\r\n3. `ClientResponseContext.getStatusInfo().toString()` is not useful and does not match the non-reactive.  See further discussion in code.\r\n4. Client does not send the expected `Accept: text/event-stream` header.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nhttps://github.com/jimbogithub/sse\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nInitial discussion: https://groups.google.com/g/quarkus-dev/c/qbH9RYnrIPg/m/GUlEiwLABAAJ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23997/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23997/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

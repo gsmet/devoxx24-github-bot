@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35166",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35166/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35166/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35166/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35166",
+  "id": 1833082626,
+  "node_id": "I_kwDOCFbutM5tQp8C",
+  "number": 35166,
+  "title": "Blocked thread checker does not monitor the executor-thread-x threads",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-08-02T12:23:38Z",
+  "updated_at": "2024-02-13T17:36:05Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe vertx blocked thread checker, designed to log warnings if a thread is blocked for too long, does not monitor threads in the default executor pool (with name `executor-thread-xxx`). However, a lot of code is executed on these threads (e.g. REST endpoints that do not return a reactive result, tasks given to the default ManagedExecutor, scheduled tasks in prod mode).\n\n### Expected behavior\n\nI'd expect all threads that return true for `io.vertx.mutiny.core.Context.IsOnVertxThread()` to be monitored by the blocked thread checker (with different max times for event loop and worker threads, of course).\n\n### Actual behavior\n\nThreads in the default executor pool are not monitored by the BlockedThreadChecker.\n\n### How to Reproduce?\n\n1. Run the test in the attached project\r\n2. observe the event loop thread warnings\r\n3. observe as no warnings are logged for the executor-thread-0 despite it being blocked for more than the 1 second configured max-worker-time\r\n\r\n[reproducer.zip](https://github.com/quarkusio/quarkus/files/12239947/reproducer.zip)\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux devrd0 6.1.0-10-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.38-2 (2023-07-27) x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.20\" 2023-07-18 LTS OpenJDK Runtime Environment Zulu11.66+15-CA (build 11.0.20+8-LTS) OpenJDK 64-Bit Server VM Zulu11.66+15-CA (build 11.0.20+8-LTS, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle 8.0.2\n\n### Additional information\n\nThis might end up being a Vertx issue, but my guess would be a misconfiguration in Quarkus.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35166/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35166/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "reopened"
+}

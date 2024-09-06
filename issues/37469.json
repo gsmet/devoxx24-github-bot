@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37469",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37469/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37469/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37469/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37469",
+  "id": 2022625551,
+  "node_id": "I_kwDOCFbutM54jtEP",
+  "number": 37469,
+  "title": "Build step io.quarkus.container.image.jib.deployment.JibProcessor#buildFromJar threw an exception: Make sure you have either Docker or Podman installed in your environment.",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-12-03T17:03:11Z",
+  "updated_at": "2024-04-05T10:28:53Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nJIB build fails when maven build of a quarkus application runs in a Tekton's pod. The code is looking about docker binary\r\n```\r\nCharles Moulliard: JIB don't need a docker binary but it complains\r\n\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:3.0.3.Final:deploy (default-cli) on project quarkus-helloworld: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR]     [error]: Build step io.quarkus.container.image.jib.deployment.JibProcessor#buildFromJar threw an exception: java.lang.IllegalStateException: No container runtime was found. Make sure you have either Docker or Podman installed in your environment.\r\n[ERROR]     at io.quarkus.runtime.util.ContainerRuntimeUtil.detectContainerRuntime(ContainerRuntimeUtil.java:52)\r\n[ERROR]     at io.quarkus.runtime.util.ContainerRuntimeUtil.detectContainerRuntime(ContainerRuntimeUtil.java:38)\r\n[ERROR]     at io.quarkus.container.image.jib.deployment.JibProcessor.createContainerizer(JibProcessor.java:290)\r\n[ERROR]     at io.quarkus.container.image.jib.deployment.JibProcessor.containerize(JibProcessor.java:235)\r\n[ERROR]     at io.quarkus.container.image.jib.deployment.JibProcessor.buildFromJar(JibProcessor.java:181)\r\n[ERROR]     at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n[ERROR]     at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\nIoannis Canellos: Jib should not require a binary\r\n```\n\n### Expected behavior\n\nJib build should work without Docker binary included part of the container image\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nSteps to reproduce:\r\n\r\n- Have access to a cluster: ocp or k8s\r\n- Install Tekton\r\n- Deploy a Pipeline and create a PipelineRun able to build a quarkus project using jib extension\r\n```\r\napiVersion: tekton.dev/v1\r\nkind: Pipeline\r\nmetadata:\r\n  name: quarkus-maven-build\r\n  namespace: default\r\nspec:\r\n  params:\r\n  - description: url of the git repository to clone\r\n    name: url\r\n    type: string\r\n  tasks:\r\n  - name: git-clone\r\n    params:\r\n    - name: url\r\n      value: $(params.url)\r\n    taskRef:\r\n      kind: Task\r\n      name: git-clone\r\n    workspaces:\r\n    - name: project-dir\r\n      workspace: project-dir\r\n\r\n  - name: maven-build-image-deploy\r\n    params:\r\n    - name: GOALS\r\n      value:\r\n      - quarkus:deploy\r\n      - -B\r\n      - -Dquarkus.kubernetes.deploy=true\r\n      - -Dquarkus.container-image.build=true\r\n      - -Dquarkus.log.level=DEBUG\r\n    runAfter:\r\n    - git-clone\r\n    taskRef:\r\n      kind: Task\r\n      name: maven\r\n    workspaces:\r\n    - name: maven-settings\r\n      workspace: maven-settings\r\n    - name: project-dir\r\n      workspace: project-dir\r\n  workspaces:\r\n  - name: project-dir\r\n  - name: maven-m2-repo\r\n  - name: maven-settings\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux 5.19.6-300.fc37.x86_64\n\n### Output of `java -version`\n\nN/A\n\n### Quarkus version or git rev\n\n3.0.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37469/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37469/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

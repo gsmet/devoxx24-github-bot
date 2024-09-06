@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39090",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39090/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39090/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39090/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39090",
+  "id": 2161445830,
+  "node_id": "I_kwDOCFbutM6A1QvG",
+  "number": 39090,
+  "title": "ClassNotFoundException (ClassVisitor) with @ConfigMapping in production mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-02-29T14:51:58Z",
+  "updated_at": "2024-06-13T10:39:48Z",
+  "closed_at": "2024-06-13T10:39:48Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using inheritance in `@ConfigMapping` interfaces the resulting jar file throws a `java.lang.NoClassDefFoundError: org/objectweb/asm/ClassVisitor` Exception.\r\n\r\nConfig interfaces:\r\n\r\n```java\r\npackage org.acme;\r\n\r\nimport java.util.Optional;\r\n\r\nimport io.smallrye.config.ConfigMapping;\r\n\r\n@ConfigMapping(prefix = \"my-config\")\r\npublic interface MyConfig {\r\n\tGlobalConfig global();\r\n\r\n\tinterface CommonConfig {\r\n\t\tOptional<String> commonTest();\r\n\r\n\t\tUserConfig user();\r\n\t}\r\n\r\n\tinterface GlobalConfig extends CommonConfig {\r\n\t\tOptional<String> globalTest();\r\n\t}\r\n\r\n\tinterface UserConfig {\r\n\t\tOptional<String> name();\r\n\t}\r\n}\r\n```\r\n\r\n### Expected behavior\r\n\r\nI expect being able to inject `MyConfig`.\r\n\r\n### Actual behavior\r\n\r\nAn exception is thrown:\r\n\r\n`java -jar target/quarkus-app/quarkus-run.jar`\r\n\r\n```posh\r\nFeb 29, 2024 3:00:10 PM io.quarkus.runtime.ApplicationLifecycleManager run\r\nERROR: Failed to start application (with profile [prod])\r\njava.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:62)\r\n        at io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:33)\r\nCaused by: java.lang.NoClassDefFoundError: org/objectweb/asm/ClassVisitor\r\n        at io.smallrye.config.ConfigMappingInterface.getClassBytes(ConfigMappingInterface.java:147)\r\n        at io.smallrye.config.ConfigMappingLoader.loadClass(ConfigMappingLoader.java:123)\r\n        at io.smallrye.config.ConfigMappingLoader.getImplementationClass(ConfigMappingLoader.java:103)\r\n        at io.smallrye.config.ConfigMappingLoader$1.computeValue(ConfigMappingLoader.java:23)\r\n        at io.smallrye.config.ConfigMappingLoader$1.computeValue(ConfigMappingLoader.java:20)\r\n        at java.base/java.lang.ClassValue.getFromHashMap(ClassValue.java:228)\r\n        at java.base/java.lang.ClassValue.getFromBackup(ClassValue.java:210)\r\n        at java.base/java.lang.ClassValue.get(ClassValue.java:116)\r\n        at io.smallrye.config.ConfigMappingLoader.configMappingObject(ConfigMappingLoader.java:64)\r\n        at io.smallrye.config.ConfigMappingContext.constructGroup(ConfigMappingContext.java:81)\r\n        at io.smallrye.config.ConfigMappingContext$ObjectCreator$6.apply(ConfigMappingContext.java:455)\r\n        at io.smallrye.config.ConfigMappingContext$ObjectCreator$6.apply(ConfigMappingContext.java:449)\r\n        at io.smallrye.config.ConfigMappingContext$ObjectCreator$1.accept(ConfigMappingContext.java:259)\r\n        at io.smallrye.config.ConfigMappingContext$ObjectCreator$1.accept(ConfigMappingContext.java:256)\r\n        at io.smallrye.config.ConfigMappingContext$ObjectCreator.group(ConfigMappingContext.java:449)\r\n        at org.acme.MyConfig$GlobalConfig1533326641Impl.<init>(Unknown Source)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n        at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)\r\n        at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:480)\r\n        at io.smallrye.config.ConfigMappingLoader.configMappingObject(ConfigMappingLoader.java:66)\r\n        at io.smallrye.config.ConfigMappingContext.constructGroup(ConfigMappingContext.java:81)\r\n        at io.smallrye.config.ConfigMappingContext$ObjectCreator$6.apply(ConfigMappingContext.java:455)\r\n        at io.smallrye.config.ConfigMappingContext$ObjectCreator$6.apply(ConfigMappingContext.java:449)\r\n        at io.smallrye.config.ConfigMappingContext$ObjectCreator$1.accept(ConfigMappingContext.java:259)\r\n        at io.smallrye.config.ConfigMappingContext$ObjectCreator$1.accept(ConfigMappingContext.java:256)\r\n        at io.smallrye.config.ConfigMappingContext$ObjectCreator.group(ConfigMappingContext.java:449)\r\n        at org.acme.MyConfig-1511189288Impl.<init>(Unknown Source)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n        at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)\r\n        at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:480)\r\n        at io.smallrye.config.ConfigMappingLoader.configMappingObject(ConfigMappingLoader.java:66)\r\n        at io.smallrye.config.ConfigMappingContext.constructGroup(ConfigMappingContext.java:81)\r\n        at io.smallrye.config.ConfigMappingContext.constructRoot(ConfigMappingContext.java:76)\r\n        at io.smallrye.config.ConfigMappingContext$1.apply(ConfigMappingContext.java:70)\r\n        at io.smallrye.config.ConfigMappingContext$1.apply(ConfigMappingContext.java:65)\r\n        at java.base/java.util.HashMap.computeIfAbsent(HashMap.java:1220)\r\n        at io.smallrye.config.ConfigMappingContext.registerRoot(ConfigMappingContext.java:65)\r\n        at io.smallrye.config.ConfigMappingContext.<init>(ConfigMappingContext.java:54)\r\n        at io.smallrye.config.ConfigMappingProvider$1.get(ConfigMappingProvider.java:65)\r\n        at io.smallrye.config.ConfigMappingProvider$1.get(ConfigMappingProvider.java:62)\r\n        at io.smallrye.config.SecretKeys.doUnlocked(SecretKeys.java:28)\r\n        at io.smallrye.config.SmallRyeConfig.<init>(SmallRyeConfig.java:84)\r\n        at io.smallrye.config.SmallRyeConfigBuilder.build(SmallRyeConfigBuilder.java:724)\r\n        at io.quarkus.runtime.generated.Config.readConfig(Unknown Source)\r\n        at io.quarkus.runtime.generated.Config.createRunTimeConfig(Unknown Source)\r\n        at io.quarkus.deployment.steps.RuntimeConfigSetup.deploy(Unknown Source)\r\n        ... 13 more\r\nCaused by: java.lang.ClassNotFoundException: org.objectweb.asm.ClassVisitor\r\n        at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)\r\n        at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)\r\n        at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)\r\n        at io.quarkus.bootstrap.runner.RunnerClassLoader.loadClass(RunnerClassLoader.java:115)\r\n        at io.quarkus.bootstrap.runner.RunnerClassLoader.loadClass(RunnerClassLoader.java:65)\r\n        ... 64 more\r\n```\r\n\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\n\r\n- Create a new Quarkus project\r\n- Add the `MyConfig` interface from above\r\n- Add any Bean that is not removed by Quarkus and injects MyConfig at startup\r\n- Run `mvn clean package`\r\n- Run `java -jar target/quarkus-app/quarkus-run.jar`\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.19045.4046]\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Corretto-17.0.8.7.1 (build 17.0.8+7-LTS)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.8.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3 (21122926829f1ead511c958d89bd2f672198ae9f)\r\n\r\n### Additional information\r\n\r\nNote that this bug does not happen during tests and also does not happen during `mvn quarkus:dev`!\r\n\r\nThis issue is probably related to #18533.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39090/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39090/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

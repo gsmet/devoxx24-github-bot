@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24547",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24547/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24547/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24547/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24547",
+  "id": 1180146264,
+  "node_id": "I_kwDOCFbutM5GV5pY",
+  "number": 24547,
+  "title": "Maven native-image build failure after upgrading to 2.7.5",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2022-03-24T23:09:21Z",
+  "updated_at": "2022-04-07T01:58:27Z",
+  "closed_at": "2022-04-07T01:58:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI made a post on stackoverflow about an native build issue I encountered in Quarkus 2.7.5.Final https://stackoverflow.com/questions/71608733/maven-error-building-quarkus-native-image-java-nio-file-accessdeniedexception?noredirect=1#comment126560141_71608733\r\n\r\nOn my local environment (windows) as well as on github hosted Ubuntu runners I was able to build native images without issue.\r\nHowever, when I switched over to using self hosted github runners I got this exception using GraalVM 22.0.0.2, Java 11.0.14, Maven 3.8.4 and Quarkus 2.7.5\r\n```\r\n[ERROR] Failed to execute goal io.quarkus.platform:quarkus-maven-plugin:2.7.5.Final:build (default) on project prime-platform: Failed to build quarkus application: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n[ERROR]         [error]: Build step io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor#build threw an exception: java.lang.IllegalStateException: java.nio.file.AccessDeniedException: /./target\r\n[ERROR]         at io.quarkus.deployment.ExtensionLoader$2.execute(ExtensionLoader.java:891)\r\n[ERROR]         at io.quarkus.builder.BuildContext.run(BuildContext.java:277)\r\n[ERROR]         at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n[ERROR]         at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n[ERROR]         at java.base/java.lang.Thread.run(Thread.java:829)\r\n[ERROR]         at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n[ERROR] Caused by: java.nio.file.AccessDeniedException: /./target\r\n[ERROR]         at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:90)\r\n[ERROR]         at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)\r\n[ERROR]         at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)\r\n[ERROR]         at java.base/sun.nio.fs.UnixFileSystemProvider.createDirectory(UnixFileSystemProvider.java:389)\r\n[ERROR]         at java.base/java.nio.file.Files.createDirectory(Files.java:690)\r\n[ERROR]         at java.base/java.nio.file.Files.createAndCheckIsDirectory(Files.java:797)\r\n[ERROR]         at java.base/java.nio.file.Files.createDirectories(Files.java:783)\r\n[ERROR]         at io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.storeGeneratedSchema(SmallRyeOpenApiProcessor.java:694)\r\n[ERROR]         at io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.storeDocument(SmallRyeOpenApiProcessor.java:945)\r\n[ERROR]         at io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.build(SmallRyeOpenApiProcessor.java:653)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n[ERROR]         at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n[ERROR]         at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n[ERROR]         at java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n[ERROR]         at io.quarkus.deployment.ExtensionLoader$2.execute(ExtensionLoader.java:882)\r\n[ERROR]         ... 6 more\r\n[ERROR] -> [Help 1]\r\n```\r\nI rolled back to 2.7.4 and was able to build on my self hosted runners without issue.\r\nI also rolled forward to 2.8.0.CR1 and was able to build without isssue.\r\nThis issue seems to only affect 2.7.5.Final\r\n\n\n### Expected behavior\n\nBuilding a native image using `mvn -U clean package -DskipTests -Pnative` run to completion without throwing exceptions on all OS/Platforms\n\n### Actual behavior\n\nSome Linux distributions throw a `java.nio.file.AccessDeniedException: /./target` exception\n\n### How to Reproduce?\n\nI am unsure of which Linux distributions can/can't reproduce this but I was able to reproduce this on a Ubuntu 20 VM by running `mvn -U clean package -DskipTests -Pnative`\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n11.0.14\n\n### GraalVM version (if different from Java)\n\n22.0.0.2\n\n### Quarkus version or git rev\n\n2.7.5.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.8.4\n\n### Additional information\n\nThis issue seems to only affect 2.7.5 and not 2.7.4 or 2.8.0.CR1",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24547/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24547/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

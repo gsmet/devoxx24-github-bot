@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36394",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36394/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36394/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36394/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36394",
+  "id": 1936003871,
+  "node_id": "I_kwDOCFbutM5zZRMf",
+  "number": 36394,
+  "title": "ConfigGenerationBuildStep.runtimeDefaultsConfig crash when there are too many environment variables.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-10-10T18:49:39Z",
+  "updated_at": "2023-10-24T13:40:30Z",
+  "closed_at": "2023-10-24T13:40:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nConfigGenerationBuildStep.runtimeDefaultsConfig crashed with \"MethodTooLargeException\".\r\n\r\nThis appears on a k8s cluster that has a lot of services. \r\n\r\nWe were able to remove / add on other services, and observe that remove / add other services in k8s remove / add a lot of environmental variables. When the number of environmental variable within the container goes > 5100, the crash appears. If it's around ~4500, we will not see any crash. \n\n### Expected behavior\n\nWhen running another application that depends on quarkus, there should not be any error messages, regardless of how many environmental variables are there.\n\n### Actual behavior\n\nWhen running some other application that depends on quarkus, on a k8s cluster that has > 5100 environmental variable, I got the following error message:\r\n\r\n```                                                                                                                       \r\nUpdating the configuration and installing your custom providers, if any. Please wait.                                                                 \r\nERROR: Failed to run 'build' command.                                                                                                                \r\nERROR: io.quarkus.builder.BuildException: Build failure: Build failed due to errors                                                                           \r\n        [error]: Build step io.quarkus.deployment.steps.ConfigGenerationBuildStep#runtimeDefaultsConfig threw an exception: org.objectweb.asm.MethodTooLargeException: Method too large: io/quarkus/runtime/generated/RunTimeDefaultsConfigSource.<clinit> ()V                                                      \r\n        at org.objectweb.asm.MethodWriter.computeMethodInfoSize(MethodWriter.java:2088)                                                                       \r\n        at org.objectweb.asm.ClassWriter.toByteArray(ClassWriter.java:511)                                                                                    \r\n        at io.quarkus.gizmo.ClassCreator.writeTo(ClassCreator.java:238)\r\n        at io.quarkus.gizmo.ClassCreator.close(ClassCreator.java:249)\r\n        at io.quarkus.deployment.steps.ConfigGenerationBuildStep.generateDefaultsConfigSource(ConfigGenerationBuildStep.java:566)\r\n        at io.quarkus.deployment.steps.ConfigGenerationBuildStep.runtimeDefaultsConfig(ConfigGenerationBuildStep.java:175)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:864)\r\n        at io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n        at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n        at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\nERROR: Build failure: Build failed due to errors\r\n        [error]: Build step io.quarkus.deployment.steps.ConfigGenerationBuildStep#runtimeDefaultsConfig threw an exception: org.objectweb.asm.MethodTooLargeException: Method too large: io/quarkus/runtime/generated/RunTimeDefaultsConfigSource.<clinit> ()V\r\n        at org.objectweb.asm.MethodWriter.computeMethodInfoSize(MethodWriter.java:2088)\r\n        at org.objectweb.asm.ClassWriter.toByteArray(ClassWriter.java:511)\r\n        at io.quarkus.gizmo.ClassCreator.writeTo(ClassCreator.java:238)\r\n        at io.quarkus.gizmo.ClassCreator.close(ClassCreator.java:249)\r\n        at io.quarkus.deployment.steps.ConfigGenerationBuildStep.generateDefaultsConfigSource(ConfigGenerationBuildStep.java:566)\r\n        at io.quarkus.deployment.steps.ConfigGenerationBuildStep.runtimeDefaultsConfig(ConfigGenerationBuildStep.java:175)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:864)\r\n        at io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n        at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n        at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\nERROR: Method too large: io/quarkus/runtime/generated/RunTimeDefaultsConfigSource.<clinit> ()V\r\nFor more details run the same command passing the '--verbose' option. Also you can use '--help' to see the details about the usage of the particular command.\r\n```\n\n### How to Reproduce?\n\nI have so far only reproduced it through keycloak, which uses quarkus. The guide for reproducing it via keycloak is shown at:\r\nhttps://github.com/keycloak/keycloak/issues/23647\r\n\r\nI do expect, however, that if calling `ConfigGenerationBuildStep.generateDefaultsConfigSource` - which is used by `ConfigGenerationBuildStep.runtimeDefaultsConfig` - with a `Map<String, String> defaults` with size around ~5100 items, the exception would appear. \r\n\r\nThis is because, apparently, this section of the line:\r\n\r\nhttps://github.com/quarkusio/quarkus/blob/9de5a48d3b5a85d58f8f97b748b90ef088418d53/core/deployment/src/main/java/io/quarkus/deployment/steps/ConfigGenerationBuildStep.java#L549-L558\r\n\r\nis trying to create a method, that has one function call, for each entry in the Map.\r\n\r\nWith ~5100 items here, each items take 13 bytes, it could easy go beyond Java's 64KB method size limit.\n\n### Output of `uname -a` or `ver`\n\nLinux [REDACTED] 5.15.0-1041-azure #48-Ubuntu SMP Tue Jun 20 20:34:08 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk 17.0.8 2023-07-18 LTS\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.5.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nI first raise this issue in keycloak repo, as I have this issue when using keycloak:\r\n\r\nhttps://github.com/keycloak/keycloak/issues/23647\r\n\r\nThe keycloak team member, @shawkins , suggest that this section is related to how  `ConfigGenerationBuildStep.generateDefaultsConfigSource` may attempt to fill in all the environmental variable in `ConfigGenerationBuildStep.runtimeDefaultsConfig`:\r\n\r\nhttps://github.com/quarkusio/quarkus/blob/9de5a48d3b5a85d58f8f97b748b90ef088418d53/core/deployment/src/main/java/io/quarkus/deployment/steps/ConfigGenerationBuildStep.java#L172\r\n\r\n----------------------------------------------------------\r\n\r\nI currently have a bypass to avoid extra useless environmental variable from causing issue to quarkus:\r\n\r\n```\r\necho \"Number of environment variable before deletion: $(env | wc -l)\"\r\nenv_list=($(env | grep \"SOMETHING_FOR_REMOVAL\"))\r\nfor var_value in \"${env_list[@]}\"\r\ndo\r\n    var=${var_value%%=*}\r\n    unset $var\r\ndone\r\necho \"Number of environment variable after deletion: $(env | wc -l)\"\r\n```\r\nbut this may not be the best solution",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36394/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36394/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

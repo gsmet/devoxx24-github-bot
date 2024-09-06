@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35699",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35699/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35699/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35699/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35699",
+  "id": 1879584348,
+  "node_id": "I_kwDOCFbutM5wCC5c",
+  "number": 35699,
+  "title": "QuarkusTest thread testing Amazon SES Client rest endpoint always stuck",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-09-04T06:17:23Z",
+  "updated_at": "2024-08-19T12:49:00Z",
+  "closed_at": "2024-08-19T12:48:59Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have simple rest endpoint which sends email via AWS SES Client. @QuarkusTest for the endpoint never finishes (using continuous testing). There is no error message, the test thread just get stuck in Running state and application needs to be killed from terminal.\r\n\r\n* The problem occurs regardless of using Sync of Async SES client.\r\n* Calling endpoint directly via DevTools + Swagger UI works correctly, however when in stop the application using Dev Console, exception is thrown: `ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-1) HTTP Request to %s failed, error id: %s [Error Occurred After Shutdown]: java.nio.file.ClosedFileSystemException`.\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nOnce QuarkusTest for AWS SES endpoint finishes during continuous testing, application will proceed with execution.\r\n\r\n### Actual behavior\r\n\r\nQuarkus tests thread seems to be blocked and never finishes, which prevents further tests to proceed or re-run tests again.\r\n\r\n### How to Reproduce?\r\n\r\nRest service:\r\n```java\r\n@Path(\"/api/v1/email\")\r\n@Produces(MediaType.TEXT_PLAIN)\r\n@Consumes(MediaType.APPLICATION_JSON)\r\npublic class EmailResource {\r\n\r\n  @Inject\r\n  SesAsyncClient ses;\r\n\r\n  @POST\r\n  @Path(\"send\")\r\n  public Uni<String> sendMailAsync(Email data) {\r\n    return Uni.createFrom()\r\n        .completionStage(\r\n            ses.sendEmail(req -> req\r\n                .source(data.getFrom())\r\n                .destination(d -> d.toAddresses(data.getTo()))\r\n                .message(msg -> msg\r\n                    .subject(sub -> sub.data(data.getSubject()))\r\n                    .body(b -> b.text(txt -> txt.data(data.getBody()))))))\r\n        .onItem().transform(SendEmailResponse::messageId);\r\n  }\r\n}\r\n``` \r\n\r\nQuarkus test:\r\n```java\r\n@QuarkusTest\r\npublic class EmailResourceTest {\r\n\r\n  @Inject\r\n  SesClient ses;\r\n\r\n  @Test\r\n  public void testSendEmail() {\r\n    String to = \"test1@example.com\";\r\n    String from = \"test2@example.com\";\r\n\r\n    ses.verifyEmailAddress(VerifyEmailAddressRequest.builder().emailAddress(to).build());\r\n    ses.verifyEmailAddress(VerifyEmailAddressRequest.builder().emailAddress(from).build());\r\n\r\n    given()\r\n        .when()\r\n        .contentType(ContentType.JSON)\r\n        .accept(ContentType.TEXT)\r\n        .body(Email.builder()\r\n            .body(\"body\")\r\n            .subject(\"test\")\r\n            .to(to)\r\n            .from(from).build())\r\n        .post(\"/api/v1/email/send\")\r\n        .then()\r\n        .statusCode(200);\r\n\r\n  }\r\n}\r\n``` \r\n#### Steps to reproduce:\r\n1. Run app via `quarkus dev` command\r\n2. Run tests by hitting `R` key\r\n3. Not possible to re-run tests again, the test execution is blocked because previous test never finishes\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin MBP 22.5.0 Darwin Kernel Version 22.5.0: Thu Jun  8 22:22:20 PDT 2023; root:xnu-8796.121.3~7/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK 64-Bit Server VM GraalVM CE 20.0.2+9.1 (build 20.0.2+9-jvmci-23.0-b15, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.3.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\ntested with both gradle (8.1.1) and maven (v. 3.9.3)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35699/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35699/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

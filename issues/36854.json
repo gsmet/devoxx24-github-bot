@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36854",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36854/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36854/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36854/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36854",
+  "id": 1975883905,
+  "node_id": "I_kwDOCFbutM51xZiB",
+  "number": 36854,
+  "title": "Native build image failure: oracle.jdbc.driver.BlockSource$ThreadedCachingBlockSource still failing on mandrel image (jdk 21)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-11-03T10:31:09Z",
+  "updated_at": "2023-11-10T08:10:02Z",
+  "closed_at": "2023-11-10T08:10:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhile building an application with jdk 21 that has io.quarkus:quarkus-jdbc-oracle extension the build fails due to the following error: \r\n\r\n```\r\nThe object was probably created by a class initializer and is reachable from a static field. You can request class initialization at image runtime by using the option --initialize-at-run-time=<class-name>. Or you can write your own initialization methods and call th\r\nem explicitly from your main entry point.\r\nDetailed message:\r\nTrace: Object was reached by\r\n  trying to constant fold static field oracle.jdbc.driver.BlockSource$ThreadedCachingBlockSource$BlockReleaser.SOLE_INSTANCE\r\n    at oracle.jdbc.driver.BlockSource$ThreadedCachingBlockSource.stopBlockReleaserThread(BlockSource.java:298)\r\n  parsing method oracle.jdbc.driver.BlockSource$ThreadedCachingBlockSource.stopBlockReleaserThread(BlockSource.java:298) reachable via the parsing context\r\n    at static root method.(Unknown Source)\r\n\r\n\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:85)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.FallbackFeature.reportAsFallback(FallbackFeature.java:248)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.runPointsToAnalysis(NativeImageGenerator.java:814)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:592)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:550)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:538)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:720)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.start(NativeImageGeneratorRunner.java:142)\r\n        at org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:97)\r\nCaused by: com.oracle.graal.pointsto.constraints.UnsupportedFeatureException: Detected a started Thread in the image heap. Thread name: oracle.jdbc.driver.BlockSource.ThreadedCachingBlockSource.BlockReleaser. Threads running in the image generator are no longer runn\r\ning at image runtime. If these objects should not be stored in the image heap, you can use\r\n\r\n    '--trace-object-instantiation=oracle.jdbc.driver.BlockSource$ThreadedCachingBlockSource$BlockReleaser'\r\n\r\nto find classes that instantiate these objects. Once you found such a class, you can mark it explicitly for run time initialization with\r\n\r\n    '--initialize-at-run-time=<culprit>'\r\n\r\nto prevent the instantiation of the object.\r\n```\r\n\r\nThe issue seems very similar to what was described and solved here: https://github.com/quarkusio/quarkus/issues/27246\r\nbut I'm still facing it. \r\n\r\nQuarkus version: 3.2.7.Final\r\n\r\n```\r\n> java -version\r\nopenjdk version \"21.0.1\" 2023-10-17 LTS\r\nOpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12-LTS)\r\nOpenJDK 64-Bit Server VM Temurin-21.0.1+12 (build 21.0.1+12-LTS, mixed mode, sharing)\r\n```\r\n\r\n```\r\n> native-image --version\r\nnative-image 21.0.1 2023-10-17\r\nOpenJDK Runtime Environment Mandrel-23.1.1.0-Final (build 21.0.1+12-LTS)\r\nOpenJDK 64-Bit Server VM Mandrel-23.1.1.0-Final (build 21.0.1+12-LTS, mixed mode)\r\n```\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nI expected the build to complete without explicitly specify (as it's working with jdk 17): \r\n\r\n\r\n`--initialize-at-run-time=oracle.jdbc.driver.BlockSource$ThreadedCachingBlockSource`\r\n\r\n\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n1. Follow the getting started: https://quarkus.io/guides/getting-started\r\n2. add oralce jdbc extension: > ./mvnw quarkus:add-extension -Dextensions=\"io.quarkus:quarkus-jdbc-oracle\"\r\n3. execute native build: > ./mvnw clean verify -Pnative -Dquarkus.container-image.build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.1\" 2023-10-17 LTS OpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12-LTS) OpenJDK 64-Bit Server VM Temurin-21.0.1+12 (build 21.0.1+12-LTS, mixed mode, sharing)\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\nnative-image 21.0.1 2023-10-17 OpenJDK Runtime Environment Mandrel-23.1.1.0-Final (build 21.0.1+12-LTS) OpenJDK 64-Bit Server VM Mandrel-23.1.1.0-Final (build 21.0.1+12-LTS, mixed mode)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.7-Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\napache-maven-3.9.5\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36854/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36854/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

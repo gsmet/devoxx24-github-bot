@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38194",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38194/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38194/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38194/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38194",
+  "id": 2082117131,
+  "node_id": "I_kwDOCFbutM58GpYL",
+  "number": 38194,
+  "title": "Support Kotlin data classes for describing type-safe Qute templates",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 985346623,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjM=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/help%20wanted",
+      "name": "help wanted",
+      "color": "008672",
+      "default": true,
+      "description": "Extra attention is needed"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1714005220,
+      "node_id": "MDU6TGFiZWwxNzE0MDA1MjIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/qute",
+      "name": "area/qute",
+      "color": "0366d6",
+      "default": false,
+      "description": "The template engine"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2024-01-15T14:12:22Z",
+  "updated_at": "2024-01-22T09:10:01Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\n### It would be great if we could use a Kotlin data class to describe a type-safe Qute template.\r\n\r\nOriginally posted as a [question on StackOverflow](https://stackoverflow.com/questions/77816595/type-safe-qute-template-with-kotlin-data-classes), here's the full story.\r\n\r\nI'm feeding paginated data into a Qute template. The data is of type `Paginated<out T>`, where `Paginated` adds information about total page count, current page, etc.\r\n\r\nThe [documentation](https://quarkus.io/guides/qute-reference#typesafe_templates) says you can let your controller return\r\n\r\n> a Java record that implements io.quarkus.qute.TemplateInstance\r\n\r\nAnd I was hoping that I could do the same thing with a Kotlin data class. I prefer that over invoking an `@JvmStatic external fun` method since the latter is a lot harder to write unit tests for.\r\n\r\nI'd like to have my controller methods return instances of that data class:\r\n\r\n```kotlin\r\n@GET @Path(\"/list\") @Produces(MediaType.TEXT_HTML)\r\nfun list(@QueryParam(\"pageIndex\") pageIndex: Int = 0): TemplateInstance {\r\n  // work your magic\r\n  return ExampleListTemplate(\r\n    Paginated(\r\n      currentPage = 0,\r\n      pageCount = 1,\r\n      items = listOf(\"example\")\r\n    )\r\n  )\r\n}\r\n\r\n@CheckedTemplate(basePath = \"example\")\r\ndata class ExampleListTemplate(val data: Paginated<String>): TemplateInstance\r\n```\n\n### Implementation ideas\n\n\r\nCurrent behaviour is that if you request such a page, you'll get a stacktrace:\r\n\r\n```\r\nCaused by: java.lang.UnsupportedOperationException\r\n    at io.quarkus.qute.TemplateInstance.getTemplate(TemplateInstance.java:142)\r\n    at io.quarkus.resteasy.qute.runtime.TemplateResponseFilter.filter(TemplateResponseFilter.java:45)\r\n```\r\n\r\nThis is because the data class doesn't override the `getAttribute` (default) method from the `TemplateInstance` interface.\r\n\r\nThis is where I get a little bit lost. If I followed the Java record approach, my record wouldn't override that default method either, but it would work nevertheless. I guess that by studying how it works for Java records, it might be possible to find a solution direction for Kotlin data classes, but I didn't walk that far (yet).",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38194/reactions",
+    "total_count": 2,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38194/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

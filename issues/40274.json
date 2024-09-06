@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40274",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40274/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40274/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40274/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40274",
+  "id": 2263375644,
+  "node_id": "I_kwDOCFbutM6G6F8c",
+  "number": 40274,
+  "title": "Context is lost when using caching",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1808747697,
+      "node_id": "MDU6TGFiZWwxODA4NzQ3Njk3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/cache",
+      "name": "area/cache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-04-25T11:43:31Z",
+  "updated_at": "2024-04-26T05:55:04Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI recently upgraded a project from Quarkus 2.16.5.Final to 3.9.4.\r\n\r\nWe use contexts in mutiny to pass around data:\r\n```java\r\nvar uni = greetingsService.doSomething();\r\nreturn Uni.createFrom().emitter(em -> uni.subscribe().with(Context.of(\"hello\", \"world\"), em::complete, em::fail));\r\n```\r\n\r\nThe context is then accessed in the service:\r\n```java\r\n@CacheResult(cacheName = \"test\")\r\nUni<String> doSomething() {\r\n    return Uni.createFrom().context(c -> {\r\n        System.out.println(c);\r\n        return Uni.createFrom().item(\"Hello from Quarkus REST\");\r\n    });\r\n}\r\n```\r\n\r\nSomething seems to have changed in the Quarkus when upgrading versions, code that worked before is no longer working. More specifically, if we have the `@CachedResult` annotation the context will be empty. If the annotation is removed, the context will contain the data as expected.\r\n\r\nI've created a project here to reproduce the issue: https://github.com/AntonFagerberg/quarkus-cache-context\r\n\r\n\n\n### Expected behavior\n\nIn `GreetingsService` this code:\r\n\r\n```java\r\nreturn Uni.createFrom().context(c -> {\r\n    System.out.println(c);\r\n    return Uni.createFrom().item(\"Hello from Quarkus REST\");\r\n});\r\n```\r\n\r\nShould print this in the console:\r\n```\r\nContext{entries={hello=world}}\r\n```\n\n### Actual behavior\n\nIn `GreetingsService` this code:\r\n\r\n```java\r\nreturn Uni.createFrom().context(c -> {\r\n    System.out.println(c);\r\n    return Uni.createFrom().item(\"Hello from Quarkus REST\");\r\n});\r\n```\r\n\r\nShould print this in the console:\r\n```\r\nContext{entries=null}\r\n```\r\n\r\nIf the `@CacheResult(cacheName = \"test\")` annotation is removed, the context contains the data.\n\n### How to Reproduce?\n\nProject to reproduce is found here:\r\n\r\nhttps://github.com/AntonFagerberg/quarkus-cache-context\r\n\r\nRun it and visit `http://localhost:8080/hello`\r\n\r\n`Context{entries=null}` will be printed in the console.\r\n\r\nRemove the annotation `@CacheResult(cacheName = \"test\")` in `GreetingsService`. Re-run and access the same end-point and `Context{entries={hello=world}}` will be printed.\n\n### Output of `uname -a` or `ver`\n\nDarwin <redacted>.local 23.4.0 Darwin Kernel Version 23.4.0: Wed Feb 21 21:44:31 PST 2024; root:xnu-10063.101.15~2/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nopenjdk version \"21.0.3\" 2024-04-16 LTS OpenJDK Runtime Environment Corretto-21.0.3.9.1 (build 21.0.3+9-LTS) OpenJDK 64-Bit Server VM Corretto-21.0.3.9.1 (build 21.0.3+9-LTS, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.9.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40274/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40274/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

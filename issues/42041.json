@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42041",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42041/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42041/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42041/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42041",
+  "id": 2423013195,
+  "node_id": "I_kwDOCFbutM6QbD9L",
+  "number": 42041,
+  "title": "Quarkus 3.11: native executable has almost twice less throughput than JVM one",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-07-22T14:23:55Z",
+  "updated_at": "2024-07-26T11:57:14Z",
+  "closed_at": "2024-07-23T09:00:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello,\r\nI'm trying to compare the number of requests per second of a simple application running in JVM mode with the same one running as a Linux native executable. \r\n\r\n### Expected behavior\r\n\r\nI'd expect that the number of requests per second of the application running in native executable mode be much higher than the one running in JVM mode.\r\n\r\n### Actual behavior\r\n\r\nSurprising enough, the application running in JVM mode shows twice more requests per second.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: `https://github.com/nicolasduminil/quarkus-simple`\r\n\r\nTo reproduce:\r\n\r\nRun in JVM mode:\r\n\r\n\r\n    $ git clone https://github.com/nicolasduminil/quarkus-simple\r\n    $ cd quarkus-siple\r\n    $ mvn -DskipTests package\r\n    $ ...\r\n    $ java -jar target/quarkus-app/quarkus-run.jar \r\n\r\nIn another terminal run:\r\n\r\n    $ wrk -t10 -c50 -d40s http://localhost:8080/time\r\n    Running 40s test @ http://localhost:8080/time\r\n      10 threads and 50 connections\r\n      Thread Stats   Avg      Stdev     Max   +/- Stdev\r\n        Latency     1.17ms    9.95ms 243.44ms   99.37%\r\n        Req/Sec    12.42k     3.29k   45.56k    84.13%\r\n      4920561 requests in 40.10s, 469.26MB read\r\n    Requests/sec: 122707.89\r\n    Transfer/sec:     11.70MB\r\n\r\n Now, run in native mode:\r\n\r\n    $ mvn -DskipTests -Dnative -Dquarkus.native.container-build install\r\n    $ ...\r\n    $ target/quarkus-simple-1.0-SNAPSHOT-runner\r\n\r\nNow, in another terminal run:\r\n\r\n    $ wrk -t10 -c50 -d40s http://localhost:8080/time\r\n    Running 40s test @ http://localhost:8080/time\r\n      10 threads and 50 connections\r\n      Thread Stats   Avg      Stdev     Max   +/- Stdev\r\n        Latency     1.07ms    1.65ms  72.33ms   92.48%\r\n        Req/Sec     6.80k   828.46    21.98k    75.39%\r\n      2706499 requests in 40.10s, 258.11MB read\r\n    Requests/sec:  67495.08\r\n    Transfer/sec:      6.44MB\r\n\r\nSo, the number of requests per second is of 122707.09 in JVM mode and of 64975.08 in native mode.\r\n\r\nIs that normal and, if yes, why ?\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux nicolas-XPS-15-9570 5.15.0-116-generic #126-Ubuntu SMP Mon Jul 1 10:14:24 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\njava version \"21.0.3\" 2024-04-16 LTS Java(TM) SE Runtime Environment (build 21.0.3+7-LTS-152) Java HotSpot(TM) 64-Bit Server VM (build 21.0.3+7-LTS-152, mixed mode, sharing)\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\nquay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21\r\n\r\n### Quarkus version or git rev\r\n\r\n3.11\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546) Maven home: /opt/apache-maven-3.9.5 Java version: 21.0.3, vendor: Oracle Corporation, runtime: /usr/lib/jvm/jdk-21-oracle-x64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"5.15.0-116-generic\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\nN/A",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42041/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42041/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

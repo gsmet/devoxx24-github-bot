@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35500",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35500/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35500/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35500/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35500",
+  "id": 1863415722,
+  "node_id": "I_kwDOCFbutM5vEXeq",
+  "number": 35500,
+  "title": "OpenTelemetry / OpenCensus race (since Quarkus 3.3.0)",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-08-23T14:07:56Z",
+  "updated_at": "2023-08-24T07:06:44Z",
+  "closed_at": "2023-08-24T07:06:44Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIn Nessie, we use the dependencies `io.quarkiverse.googlecloudservices:quarkus-google-cloud-bigtable` plus `io.opentelemetry:opentelemetry-opencensus-shim` to get metrics from the Google BigTable client. This worked fine in Quarkus 3.2.\r\n\r\nIt looks like a \"race\" (or change in initialization order) to `GlobalOpenTelemetry.set()`.\r\n\r\nBut with Quarkus 3.3.0, the startup fails with the following stack trace (note that the last cause is the _previous_ call to `GlobalOpenTelemetry.set()`).\r\n\r\n```\r\n2023-08-23 15:43:41,012 ERROR [io.qua.run.Application] (main) Failed to start application (with profile [prod]): java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:61)\r\n\tat io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:32)\r\nCaused by: jakarta.enterprise.inject.CreationException: Error creating synthetic bean [2deeb341bce4a230183bf3a228841625fe2519ae]: io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException: Unexpected configuration error\r\n\tat io.opentelemetry.api.OpenTelemetry_2deeb341bce4a230183bf3a228841625fe2519ae_Synthetic_Bean.doCreate(Unknown Source)\r\n\tat io.opentelemetry.api.OpenTelemetry_2deeb341bce4a230183bf3a228841625fe2519ae_Synthetic_Bean.create(Unknown Source)\r\n\tat io.opentelemetry.api.OpenTelemetry_2deeb341bce4a230183bf3a228841625fe2519ae_Synthetic_Bean.create(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:113)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:37)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:34)\r\n\tat io.quarkus.arc.impl.LazyValue.get(LazyValue.java:32)\r\n\tat io.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:69)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:34)\r\n\tat io.opentelemetry.api.OpenTelemetry_2deeb341bce4a230183bf3a228841625fe2519ae_Synthetic_Bean.get(Unknown Source)\r\n\tat io.opentelemetry.api.OpenTelemetry_2deeb341bce4a230183bf3a228841625fe2519ae_Synthetic_Bean.get(Unknown Source)\r\n\tat io.quarkus.arc.impl.ArcContainerImpl.beanInstanceHandle(ArcContainerImpl.java:557)\r\n\tat io.quarkus.arc.impl.ArcContainerImpl.beanInstanceHandle(ArcContainerImpl.java:537)\r\n\tat io.quarkus.arc.impl.ArcContainerImpl.beanInstanceHandle(ArcContainerImpl.java:570)\r\n\tat io.quarkus.arc.impl.ArcContainerImpl$3.get(ArcContainerImpl.java:334)\r\n\tat io.quarkus.arc.impl.ArcContainerImpl$3.get(ArcContainerImpl.java:331)\r\n\tat io.quarkus.arc.runtime.BeanContainerImpl$1.create(BeanContainerImpl.java:46)\r\n\tat io.quarkus.arc.runtime.BeanContainer.beanInstance(BeanContainer.java:25)\r\n\tat io.quarkus.opentelemetry.runtime.tracing.intrumentation.InstrumentationRecorder.setupVertxTracer(InstrumentationRecorder.java:33)\r\n\tat io.quarkus.deployment.steps.OpenTelemetryProcessor$setupVertx280172193.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.OpenTelemetryProcessor$setupVertx280172193.deploy(Unknown Source)\r\n\t... 13 more\r\nCaused by: io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException: Unexpected configuration error\r\n\tat io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder.build(AutoConfiguredOpenTelemetrySdkBuilder.java:424)\r\n\tat io.quarkus.opentelemetry.runtime.OpenTelemetryRecorder$1.apply(OpenTelemetryRecorder.java:79)\r\n\tat io.quarkus.opentelemetry.runtime.OpenTelemetryRecorder$1.apply(OpenTelemetryRecorder.java:52)\r\n\tat io.opentelemetry.api.OpenTelemetry_2deeb341bce4a230183bf3a228841625fe2519ae_Synthetic_Bean.createSynthetic(Unknown Source)\r\n\t... 34 more\r\nCaused by: java.lang.IllegalStateException: GlobalOpenTelemetry.set has already been called. GlobalOpenTelemetry.set must be called only once before any calls to GlobalOpenTelemetry.get. If you are using the OpenTelemetrySdk, use OpenTelemetrySdkBuilder.buildAndRegisterGlobal instead. Previous invocation set to cause of this exception.\r\n\tat io.opentelemetry.api.GlobalOpenTelemetry.set(GlobalOpenTelemetry.java:104)\r\n\tat io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder.build(AutoConfiguredOpenTelemetrySdkBuilder.java:401)\r\n\t... 37 more\r\nCaused by: java.lang.Throwable\r\n\tat io.opentelemetry.api.GlobalOpenTelemetry.set(GlobalOpenTelemetry.java:112)\r\n\tat io.opentelemetry.api.GlobalOpenTelemetry.get(GlobalOpenTelemetry.java:82)\r\n\tat io.opentelemetry.api.GlobalOpenTelemetry.getTracer(GlobalOpenTelemetry.java:148)\r\n\tat io.opentelemetry.opencensusshim.OpenTelemetrySpanBuilderImpl.<clinit>(OpenTelemetrySpanBuilderImpl.java:55)\r\n\tat io.opentelemetry.opencensusshim.OpenTelemetryTracerImpl.spanBuilderWithExplicitParent(OpenTelemetryTracerImpl.java:42)\r\n\tat io.opencensus.trace.Tracer.spanBuilder(Tracer.java:308)\r\n\tat com.google.api.client.http.HttpRequest.execute(HttpRequest.java:865)\r\n\tat com.google.cloud.ServiceOptions.getAppEngineProjectIdFromMetadataServer(ServiceOptions.java:507)\r\n\tat com.google.cloud.ServiceOptions.getAppEngineProjectId(ServiceOptions.java:476)\r\n\tat com.google.cloud.ServiceOptions.getDefaultProjectId(ServiceOptions.java:383)\r\n\tat io.quarkiverse.googlecloudservices.common.GcpDefaultsConfigSourceFactory.getConfigSources(GcpDefaultsConfigSourceFactory.java:24)\r\n\tat io.smallrye.config.ConfigurableConfigSource.getConfigSources(ConfigurableConfigSource.java:50)\r\n\tat io.smallrye.config.SmallRyeConfig$ConfigSources.mapLateSources(SmallRyeConfig.java:670)\r\n\tat io.smallrye.config.SmallRyeConfig$ConfigSources.<init>(SmallRyeConfig.java:554)\r\n\tat io.smallrye.config.SmallRyeConfig.<init>(SmallRyeConfig.java:70)\r\n\tat io.smallrye.config.SmallRyeConfigBuilder.build(SmallRyeConfigBuilder.java:646)\r\n\tat io.quarkus.runtime.generated.Config.readConfig(Unknown Source)\r\n\tat io.quarkus.runtime.generated.Config.createRunTimeConfig(Unknown Source)\r\n\tat io.quarkus.deployment.steps.RuntimeConfigSetup.deploy(Unknown Source)\r\n```\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n1. `git clone https://github.com/projectnessie/nessie.git`\r\n2. `git checkout renovate/quarkus` (that's the branch to bump Quarkus to 3.3.0 including a workaround for #35499)\r\n3. `./gradlew :nessie-quarkus:quarkusBuild`\r\n4. `java -jar servers/quarkus-server/build/quarkus-app/quarkus-run.jar`\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35500/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35500/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

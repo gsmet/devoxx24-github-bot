@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28965",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28965/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28965/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28965/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28965",
+  "id": 1430460908,
+  "node_id": "I_kwDOCFbutM5VQxns",
+  "number": 28965,
+  "title": "Keycloak Policy enforcer supposed to work with Client Roles / Resource_access.{client-id}.roles?",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-10-31T20:35:10Z",
+  "updated_at": "2022-11-01T18:30:27Z",
+  "closed_at": "2022-11-01T12:31:32Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nBased on some testing, (unless I have a config incorrect, but is difficult to tell give the complexities), the Policy Enforcement for Keycloak quarkus-keycloak-authorization works with Realm Roles, but is it also supposed to work with Client Roles that appear under the `resource_access.{client-id}.roles` path in the JWT?\r\n\r\nI just get 403 responses when trying to use Resource access.  I update the roles path as well to: `quarkus.oidc.roles.role-claim-path=resource_access/backend-service/roles` but this did not seem to work.\r\n\r\nIs there any example of this usage?\r\n\r\nWhat i have found is required to make PEP work with regular roles is something like:\r\n\r\n```properties\r\nquarkus.oidc.client-id=backend-service\r\nquarkus.oidc.credentials.secret=secret\r\nquarkus.oidc.tls.verification=none\r\nquarkus.oidc.token.issuer=any\r\n\r\nquarkus.keycloak.policy-enforcer.enable=true\r\nquarkus.keycloak.policy-enforcer.lazy-load-paths=false\r\nquarkus.keycloak.policy-enforcer.paths.1.path=/account\r\nquarkus.keycloak.policy-enforcer.http-method-as-scope=true\r\n```\r\n\r\nand authorization config:\r\n\r\n```json\r\n{\r\n    \"allowRemoteResourceManagement\": true,\r\n    \"policyEnforcementMode\": \"ENFORCING\",\r\n    \"resources\": [\r\n      {\r\n        \"name\": \"Account\",\r\n        \"ownerManagedAccess\": false,\r\n        \"attributes\": {},\r\n        \"_id\": \"4f2bde8d-41a6-4e46-8cbf-2840ed1923fd\",\r\n        \"uris\": [\r\n          \"/account\"\r\n        ],\r\n        \"scopes\": [\r\n          {\r\n            \"name\": \"GET\"\r\n          }\r\n        ],\r\n        \"icon_uri\": \"\"\r\n      }\r\n    ],\r\n    \"policies\": [\r\n      {\r\n        \"id\": \"0af1f193-0d4a-4352-b248-b149b6266324\",\r\n        \"name\": \"has Account Manager\",\r\n        \"description\": \"\",\r\n        \"type\": \"role\",\r\n        \"logic\": \"POSITIVE\",\r\n        \"decisionStrategy\": \"UNANIMOUS\",\r\n        \"config\": {\r\n            \"roles\": \"[{\\\"id\\\":\\\"AccountManager\\\",\\\"required\\\":true},{\\\"id\\\":\\\"AccountManager\\\",\\\"required\\\":false}]\"\r\n        }\r\n      },\r\n      {\r\n        \"id\": \"1a53d29d-00c7-46f8-9384-c50b3eff60ed\",\r\n        \"name\": \"Account Permission\",\r\n        \"description\": \"\",\r\n        \"type\": \"resource\",\r\n        \"logic\": \"POSITIVE\",\r\n        \"decisionStrategy\": \"UNANIMOUS\",\r\n        \"config\": {\r\n          \"resources\": \"[\\\"Account\\\"]\",\r\n          \"applyPolicies\": \"[\\\"has Account Manager\\\"]\"\r\n        }\r\n      }\r\n    ],\r\n    \"scopes\": [\r\n      {\r\n        \"id\": \"6759f487-be0e-4e2f-8560-38b5b3b4ae32\",\r\n        \"name\": \"GET\",\r\n        \"iconUri\": \"\",\r\n        \"displayName\": \"\"\r\n      }\r\n    ],\r\n    \"decisionStrategy\": \"UNANIMOUS\"\r\n  }\r\n```\r\n\r\nI am using `quarkus-hibernate-reactive-rest-data-panache` to generate the endpoints\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28965/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28965/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37277",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37277/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37277/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37277/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37277",
+  "id": 2007488921,
+  "node_id": "I_kwDOCFbutM53p9mZ",
+  "number": 37277,
+  "title": " `quarkus-security-jpa:3.5.2`  when config multi datasources",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-11-23T04:58:56Z",
+  "updated_at": "2023-11-27T17:12:02Z",
+  "closed_at": "2023-11-27T17:12:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n `quarkus-security-jpa:3.5.2` can't determine which datasource to use when config multi datasources\n\n### Expected behavior\n\nways resolve: \r\n1. Indicate which datasource in  `@UserDefinition`  ,  like  `@UserDefinition(ds = \"his\")`, \r\nthen `JpaTrustedIdentityProvider.java` and `JpaIdentityProvider.java`   in `quarkus-security-jpa` use the `@UserDefinition`  attribute indicates\r\n2.  `quarkus.hibernate-orm.his.packages = com.acme.application.module.his`\r\n     `com.acme.application.module.his.entity.User.java` under package `com.acme.application.module.his` use current datasource\n\n### Actual behavior\n\nWhen i run my application , then error shows: \r\n```\r\n[error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 2 deployment problems: \r\n[1] Unsatisfied dependency for type jakarta.persistence.EntityManagerFactory and qualifiers [@Default]\r\n\t- java member: io.quarkus.security.jpa.runtime.JpaIdentityProvider#entityManagerFactory\r\n\t- declared on CLASS bean [types=[com.acme.application.module.his.entity.User__JpaIdentityProviderImpl, io.quarkus.security.jpa.runtime.JpaIdentityProvider, io.quarkus.security.identity.IdentityProvider<io.quarkus.security.identity.request.UsernamePasswordAuthenticationRequest>, java.lang.Object], qualifiers=[@Default, @Any], target=com.acme.application.module.his.entity.User__JpaIdentityProviderImpl]\r\n\tThe following beans match by type, but none have matching qualifiers:\r\n\t\t- Bean [class=org.hibernate.SessionFactory, qualifiers=[@Any, @io.quarkus.hibernate.orm.PersistenceUnit(\"his\"), @Named(\"his\")]]\r\n\t\t- Bean [class=org.hibernate.SessionFactory, qualifiers=[@io.quarkus.hibernate.orm.PersistenceUnit(\"lis\"), @Any, @Named(\"lis\")]]\r\n[2] Unsatisfied dependency for type jakarta.persistence.EntityManagerFactory and qualifiers [@Default]\r\n\t- java member: io.quarkus.security.jpa.runtime.JpaTrustedIdentityProvider#entityManagerFactory\r\n\t- declared on CLASS bean [types=[io.quarkus.security.jpa.runtime.JpaTrustedIdentityProvider, io.quarkus.security.identity.IdentityProvider<io.quarkus.security.identity.request.TrustedAuthenticationRequest>, java.lang.Object, com.acme.application.module.his.entity.User__JpaTrustedIdentityProviderImpl], qualifiers=[@Default, @Any], target=com.acme.application.module.his.entity.User__JpaTrustedIdentityProviderImpl]\r\n\tThe following beans match by type, but none have matching qualifiers:\r\n\t\t- Bean [class=org.hibernate.SessionFactory, qualifiers=[@Any, @io.quarkus.hibernate.orm.PersistenceUnit(\"his\"), @Named(\"his\")]]\r\n\t\t- Bean [class=org.hibernate.SessionFactory, qualifiers=[@io.quarkus.hibernate.orm.PersistenceUnit(\"lis\"), @Any, @Named(\"lis\")]]\r\n\tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1455)\r\n\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:311)\r\n\tat io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:158)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:471)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:282)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\tSuppressed: jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type jakarta.persistence.EntityManagerFactory and qualifiers [@Default]\r\n\t- java member: io.quarkus.security.jpa.runtime.JpaIdentityProvider#entityManagerFactory\r\n\t- declared on CLASS bean [types=[com.acme.application.module.his.entity.User__JpaIdentityProviderImpl, io.quarkus.security.jpa.runtime.JpaIdentityProvider, io.quarkus.security.identity.IdentityProvider<io.quarkus.security.identity.request.UsernamePasswordAuthenticationRequest>, java.lang.Object], qualifiers=[@Default, @Any], target=com.acme.application.module.his.entity.User__JpaIdentityProviderImpl]\r\n\tThe following beans match by type, but none have matching qualifiers:\r\n\t\t- Bean [class=org.hibernate.SessionFactory, qualifiers=[@Any, @io.quarkus.hibernate.orm.PersistenceUnit(\"his\"), @Named(\"his\")]]\r\n\t\t- Bean [class=org.hibernate.SessionFactory, qualifiers=[@io.quarkus.hibernate.orm.PersistenceUnit(\"lis\"), @Any, @Named(\"lis\")]]\r\n\t\tat io.quarkus.arc.processor.Beans.resolveInjectionPoint(Beans.java:478)\r\n\t\tat io.quarkus.arc.processor.BeanInfo.init(BeanInfo.java:624)\r\n\t\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:299)\r\n\t\t... 13 more\r\n```\n\n### How to Reproduce?\n\n1. When i config two datasources in application.properties :\r\n```\r\nquarkus.datasource.his.db-kind = postgresql\r\nquarkus.datasource.his.jdbc.url = jdbc:postgresql://localhost:5432/test1\r\nquarkus.datasource.his.username = postgres\r\nquarkus.datasource.his.password = postgres\r\nquarkus.hibernate-orm.his.datasource = his\r\nquarkus.hibernate-orm.his.packages = com.acme.application.module.his\r\nquarkus.hibernate-orm.his.database.generation = drop-and-create\r\nquarkus.hibernate-orm.his.log.sql = true\r\nquarkus.hibernate-orm.his.log.format-sql = true\r\n\r\nquarkus.datasource.lis.db-kind = postgresql\r\nquarkus.datasource.lis.jdbc.url = jdbc:postgresql://localhost:5432/test2\r\nquarkus.datasource.lis.username = postgres\r\nquarkus.datasource.lis.password = postgres\r\nquarkus.hibernate-orm.lis.datasource = lis\r\nquarkus.hibernate-orm.lis.packages = com.acme.application.module.lis\r\nquarkus.hibernate-orm.lis.database.generation = drop-and-create\r\nquarkus.hibernate-orm.lis.log.sql = true\r\nquarkus.hibernate-orm.lis.log.format-sql = true\r\n```\r\n2. Use `quarkus-security-jpa`,  the User.java\r\n```\r\n@Entity\r\n@Table(name = \"test_user\")\r\n@UserDefinition\r\n@SQLDelete(sql = \"update test_user set deleted = 1, version = version + 1 where id = ? and version = ?\")\r\n@Where(clause = \"deleted = 0\")\r\npublic class User extends PanacheEntity {\r\n    @Username\r\n    public String username;\r\n    @Password\r\n    public String password;\r\n    public Integer deleted = 0;\r\n    @Version\r\n    public Integer version = 0;\r\n\r\n    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})\r\n    @JoinTable(name = \"test_user_role\", joinColumns = {@JoinColumn(name = \"u_id\", referencedColumnName = \"id\")}, inverseJoinColumns = {@JoinColumn(name = \"r_id\", referencedColumnName = \"id\")})\r\n    @Roles\r\n    public List<Role> roles = new ArrayList<>();\r\n\r\n    /**\r\n     * Adds a new user to the database\r\n     *\r\n     * @param username the username\r\n     * @param password the unencrypted password (it will be encrypted with bcrypt)\r\n     * @param roles    the comma-separated roles\r\n     */\r\n    public static void add(String username, String password, List<Role> roles) {\r\n        User user = new User();\r\n        user.username = username;\r\n        user.password = password;\r\n        user.roles = roles;\r\n        user.persist();\r\n    }\r\n}\r\n```\r\n3. `JpaTrustedIdentityProvider.java` and `JpaIdentityProvider.java` in `quarkus-security-jpa:3.5.2` just inject:\r\n    ```\r\n    @Inject\r\n    EntityManagerFactory entityManagerFactory;\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### Quarkus version or git rev\n\n3.5.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\napache-maven-3.9.5\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37277/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37277/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38884",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38884/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38884/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38884/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38884",
+  "id": 2144378276,
+  "node_id": "I_kwDOCFbutM5_0J2k",
+  "number": 38884,
+  "title": "Keycloack Dev Service not working with @QuarkusIntegrationTest",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-02-20T13:24:55Z",
+  "updated_at": "2024-04-17T06:03:56Z",
+  "closed_at": "2024-04-17T06:03:56Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen running a `@QuarkusTest` using the Keycloack Dev Service, everything works as expected. However running the exact same test as a `@QuarkusIntegrationTest` results in an error. Those lines are visible in the logs:\r\n\r\n> 2024-02-20 11:18:20,658 ERROR [io.qua.oid.dep.dev.key.KeycloakDevServicesProcessor] (build-5)  Admin token can not be acquired: null\r\n> 2024-02-20 11:18:20,806 ERROR [io.qua.oid.dep.dev.key.KeycloakDevServicesProcessor] (build-5)  Realm quarkus can not be created 401 - Unauthorized \r\n> 2024-02-20 11:18:28,835 ERROR [io.qua.oid.dep.dev.key.KeycloakDevServicesProcessor] (build-5)  Realm quarkus can not be created: Keycloak server is not available: Retries exhausted : 5 attempts against 1708424310834/1708424310807 expiration\r\n> \r\n\r\nWhen running the test in debug mode, setting a breakpoint in class `KeycloakDevServicesProcessor` where the admin token is retrieved, and running those commands from inside the Keycloack container:\r\n\r\n> bash-5.1$ cd /opt/keycloak/bin/\r\n> bash-5.1$ ./kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin\r\n> Logging into http://localhost:8080 as user admin of realm master\r\n> Enter password: *****\r\n> bash-5.1$ ./kcadm.sh update realms/master -s sslRequired=NONE\r\n\r\nthen the errors in the logs disappear.\r\n\r\nAdding a breakpoint in my test before I try to get a token with `keycloakClient.getClientAccessToken()`, if I do this in the container:\r\n\r\n> ./kcadm.sh update realms/quarkus -s sslRequired=NONE\r\n\r\n\r\nThen the test passes as in the case of a simple `@QuarkusTest`\n\n### Expected behavior\n\nThe Keycloack Dev Service should work when running integration tests.\n\n### Actual behavior\n\nThe Keycloack Dev Service is not usable for integration tests as it seems there is some missing configuration about allowing access without SSL.\n\n### How to Reproduce?\n\nCreate a simple test in a project using Quarkus OIDC. In the test retrieve a client token:\r\n\r\n> String token = keycloakClient.getClientAccessToken()\r\n> assertNotNull(token);\r\n\r\nRun the test with annotation `@QuarkusTest` and observe the test passes.\r\n\r\nRun the test with annotation `@QuarkusIntegrationTest` and observe the test fails.\n\n### Output of `uname -a` or `ver`\n\nLinux 5.15.0-94-generic #104~20.04.1-Ubuntu SMP Tue Jan 16 13:34:09 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\njava version \"21\" 2023-09-19 LTS Java(TM) SE Runtime Environment (build 21+35-LTS-2513) Java HotSpot(TM) 64-Bit Server VM (build 21+35-LTS-2513, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.2.6.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546)\n\n### Additional information\n\nThis link was helpful to understand what may be wrong: https://stackoverflow.com/questions/30622599/https-required-while-logging-in-to-keycloak-as-admin",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38884/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38884/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

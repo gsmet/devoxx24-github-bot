@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35559",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35559/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35559/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35559/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35559",
+  "id": 1866821036,
+  "node_id": "I_kwDOCFbutM5vRW2s",
+  "number": 35559,
+  "title": "Integration testing gRPC clients forces port 9001",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2023-08-25T10:50:29Z",
+  "updated_at": "2023-09-21T09:47:41Z",
+  "closed_at": "2023-09-21T09:47:41Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe currently have a series of integration tests where our gRPC clients are tested using a Test Resource which provides the gRPC server. The resource returns a configuration map including the host and port configuration that the client should use.\r\n\r\nI.e.\r\n\r\n`    @Override\r\n    public Map<String, String> start() {\r\n        ....\r\n        return Map.of(\r\n                \"quarkus.grpc.clients.the-grpc-service.host\", \"localhost\",\r\n                \"quarkus.grpc.clients.the-grpc-service.port\", \"4444\");\r\n    }`\r\n\r\nAs of 3.3.0, we find our tests now fail as the gRPC client is attempting to connect to port 9001 instead of the port provided in the configuration returned by the test resource. Changes to host continue to work as before.\r\nThis appears to be due to the change in Channels.java: https://github.com/quarkusio/quarkus/pull/34135/files#diff-b0b8786ccab680283d88d8779d53044d5ea3e610284890ac7350e194be3629ca\r\n\r\nAt first glance this change appears to assume that the only time a gRPC client would be under integration test within a Quarkus application is when the application itself is providing the gRPC server/service and that it is thus safe to assume the port is that of the local gRPC server.\r\n\r\nAs of now, it appears our only option is to not integration test our grpc clients and introduce unit test mocks instead.\n\n### Expected behavior\n\nTesting of gRPC clients within a Quarkus application should not assume the port of a local server is the correct port for the client.\n\n### Actual behavior\n\nIntegration tests of gRPC clients where the endpoint is not provided by the Quarkus application fail as the port is incorrectly forced to that of the local server.\n\n### How to Reproduce?\n\nCreate a QuarkusTest with a suitably implemented QuarkusTestResource that returns grpc client configuration containing a port.\r\nObserve that the port is not used when the channel is created.\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.3.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35559/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35559/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

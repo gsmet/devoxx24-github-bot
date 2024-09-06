@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26104",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26104/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26104/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26104/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26104",
+  "id": 1270344722,
+  "node_id": "I_kwDOCFbutM5Lt-wS",
+  "number": 26104,
+  "title": "[RR][Micrometer] Path templates not resolved when request is rejected for auth reason",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2236031886,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxODg2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/metrics",
+      "name": "area/metrics",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-06-14T06:58:22Z",
+  "updated_at": "2022-06-28T12:20:39Z",
+  "closed_at": "2022-06-28T12:20:38Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen a HTTP request is rejected due to authentication/authorization reasons, the path templates for the micrometer metrics are not resolved correctly, e. g. path params are not replaced with their placeholder, but show the actual value in the metrics instead. \r\n\r\nFind a small reproducer project in the \"How to Reproduce\" section.\r\n\r\nSome debugging showed that in the error case the [ObservabilityHandler](https://github.com/quarkusio/quarkus/blob/main/extensions/resteasy-reactive/quarkus-resteasy-reactive/runtime/src/main/java/io/quarkus/resteasy/reactive/server/runtime/observability/ObservabilityHandler.java) is not called and thus the `UrlPathTemplate` is not set in the request context. \r\n\r\nThis is probably due to security filters rejecting the request before the handler chain reaches the ObservabilityHandler.\r\n\r\nNote that I'm using resteasy-reactive here. \r\n\r\n\r\n\r\n\n\n### Expected behavior\n\nAll requests are resolved correctly, no matter what the response status is.\n\n### Actual behavior\n\n401 and 403 status responses do not resolve correctly (there might be more). \n\n### How to Reproduce?\n\nReproducer project: https://github.com/pravussum/code-with-quarkus-unauth-metering\r\n\r\n1. Clone and build, run in dev mode\r\n2. open browser and request http://localhost:8080/hello/123 →response with status 200 and correct content is received\r\n3. request http://localhost:8080/hello/authenticated/123 →response with status 403 is received (as expected)\r\n4. request micrometer metrics under http://localhost:8080/q/metrics\r\n\r\nThe metrics will show something like this:\r\n\r\n    http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/hello/{id}\",} 1.0\r\n    http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/hello/{id}\",} 0.008156988\r\n    http_server_requests_seconds_count{method=\"GET\",outcome=\"CLIENT_ERROR\",status=\"403\",uri=\"/hello/authenticated/123\",} 3.0\r\n    http_server_requests_seconds_sum{method=\"GET\",outcome=\"CLIENT_ERROR\",status=\"403\",uri=\"/hello/authenticated/123\",} 0.013112636\r\n\r\nThe request to the unauthenticated endpoint `/hello/{id}` has been resolved correctly to its placeholder version.\r\nThe request to the denyAll endpoint `/hello/authenticated/{id}` has not been resolved and shows up with the actual id `123` instead of the placeholder `{id}`\n\n### Output of `uname -a` or `ver`\n\nLinux robert-ThinkPad-T480 5.15.0-37-generic #39-Ubuntu SMP Wed Jun 1 19:16:45 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.3\" 2022-04-19 OpenJDK Runtime Environment (build 17.0.3+7-Ubuntu-0ubuntu0.22.04.1) OpenJDK 64-Bit Server VM (build 17.0.3+7-Ubuntu-0ubuntu0.22.04.1, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.8.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26104/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26104/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

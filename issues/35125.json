@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35125",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35125/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35125/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35125/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35125",
+  "id": 1830044508,
+  "node_id": "I_kwDOCFbutM5tFENc",
+  "number": 35125,
+  "title": "Protobuf serialization produces invalid values in native mode when built with Oracle GraalVM",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2023-07-31T21:21:32Z",
+  "updated_at": "2023-08-01T12:41:47Z",
+  "closed_at": "2023-08-01T12:41:39Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen serializing Protobuf messages in a Quarkus applications built in native mode, the produced output is invalid.\r\n\r\nThe problem manifests itself mostly through the following exception, when attempting to deserialize such values in other applications:\r\n\r\n```\r\ncom.google.protobuf.InvalidProtocolBufferException: Protocol message contained an invalid tag (zero).\r\n```\r\n\r\nEverything works fine when the producing application is not native.\r\n\r\nDeserialization of values produced by non-native applications also works, from what I can tell so far. It appears like it is entirely a serialization issue.\n\n### Expected behavior\n\nSerializing Protobuf messages in native applications should yield valid output.\n\n### Actual behavior\n\nSerializing Protobuf messages in native applications yields invalid output.\n\n### How to Reproduce?\n\nThe issue can be reproduced using the example code generated for the [gRPC extension](https://quarkus.io/guides/grpc-getting-started), with [slight modifications](https://github.com/quarkusio/quarkus/discussions/33599#discussioncomment-6000070) to make it work with `@QuarkusIntegrationTest`:\r\n\r\n1. Clone https://github.com/nscuro/quarkus-native-protobuf\r\n2. Build native image and execute integration test:\r\n```shell\r\nexport GRAALVM_HOME=\"$(sdk home java 17.0.7-graal)\"\r\nmvn clean package failsafe:integration-test failsafe:verify -Pnative\r\n```\r\n3. Observe the test failing due to the exception mentioned above\r\n4. Build JVM application and execute integration test:\r\n```shell\r\nmvn clean package failsafe:integration-test failsafe:verify -DskipITs=false\r\n```\r\n5. Observe the test succeeding\n\n### Output of `uname -a` or `ver`\n\nDarwin devastation 22.6.0 Darwin Kernel Version 22.6.0: Wed Jul  5 22:22:05 PDT 2023; root:xnu-8796.141.3~6/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 OpenJDK Runtime Environment Temurin-17.0.7+7 (build 17.0.7+7) OpenJDK 64-Bit Server VM Temurin-17.0.7+7 (build 17.0.7+7, mixed mode)\n\n### GraalVM version (if different from Java)\n\njava version \"17.0.7\" 2023-04-18 LTS Java(TM) SE Runtime Environment Oracle GraalVM 17.0.7+8.1 (build 17.0.7+8-LTS-jvmci-23.0-b12) Java HotSpot(TM) 64-Bit Server VM Oracle GraalVM 17.0.7+8.1 (build 17.0.7+8-LTS-jvmci-23.0-b12, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.2.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39)\n\n### Additional information\n\nI spent quite a bit of time debugging this a few weeks ago, but ultimately failed to find a solution. It does not appear to be related to missing reflection configuration. I remember observing that Protobuf messages produced by native applications were prefixed with multiple NULL bytes. Perhaps the way Protobuf calculates message sizes does not play well native mode, but I lack low-level Protobuf experience to debug it further.\r\n\r\nWe originally ran into the issue because we use Protobuf for Kafka messages, and integration tests for native images were failing, but ran fine in JVM mode.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35125/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35125/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

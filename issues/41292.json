@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41292",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41292/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41292/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41292/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41292",
+  "id": 2360152785,
+  "node_id": "I_kwDOCFbutM6MrRLR",
+  "number": 41292,
+  "title": "Spring-data throw JsonMappingException when using PageImpl ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1552233747,
+      "node_id": "MDU6TGFiZWwxNTUyMjMzNzQ3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/spring",
+      "name": "area/spring",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues relating to the Spring integration"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-06-18T15:32:55Z",
+  "updated_at": "2024-06-19T14:00:07Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nReturnning `PageImpl` to the endpoint causing throw  ` com.fasterxml.jackson.databind.JsonMappingException: (was java.lang.UnsupportedOperationException) (through reference chain: org.springframework.data.domain.PageImpl[\"pageable\"]->org.springframework.data.domain.Unpaged[\"pageSize\"])`\r\n\r\nThis is probably caused by bump of spring in https://github.com/quarkusio/quarkus/pull/40344.\r\n\r\nThe attached reproduces working with `3.11.2` and failing with `999-SNAPSHOT`\r\n\r\nAlso using `quarkus-rest-jackson` the endpoint return 500 and using `quarkus-resteasy-jackson` return 400 but that's probably difference in implamentation of these extensions.\r\n\r\nUsing `quarkus-resteasy-jackson` returning `Not able to deserialize data provided.` and error is shown only in log.\n\n### Expected behavior\n\nExpecting to get result from endpoint based on passed parameters.\r\n\r\nFor example on http://localhost:8080/book/paged?size=1&page=0 return should be like this \r\n```\r\n{\"content\":[{\"bid\":1,\"name\":\"Sapiens\",\"publicationYear\":2011,\"isbn\":9789295055025}],\"pageable\":\"INSTANCE\",\"last\":true,\"totalPages\":1,\"totalElements\":1,\"first\":true,\"numberOfElements\":1,\"size\":0,\"number\":0,\"sort\":{\"sorted\":false,\"unsorted\":true,\"empty\":true},\"empty\":false}\r\n```\n\n### Actual behavior\n\nError: \r\n```\r\njava.lang.UnsupportedOperationException\r\n\tat org.springframework.data.domain.Unpaged.getPageSize(Unpaged.java:65)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat com.fasterxml.jackson.databind.ser.BeanPropertyWriter.serializeAsField(BeanPropertyWriter.java:688)\r\n\tat com.fasterxml.jackson.databind.ser.std.BeanSerializerBase.serializeFields(BeanSerializerBase.java:770)\r\n\tat com.fasterxml.jackson.databind.ser.BeanSerializer.serialize(BeanSerializer.java:183)\r\n\tat com.fasterxml.jackson.databind.ser.BeanPropertyWriter.serializeAsField(BeanPropertyWriter.java:732)\r\n\tat com.fasterxml.jackson.databind.ser.std.BeanSerializerBase.serializeFields(BeanSerializerBase.java:770)\r\n\tat com.fasterxml.jackson.databind.ser.BeanSerializer.serialize(BeanSerializer.java:183)\r\n\tat com.fasterxml.jackson.databind.ser.DefaultSerializerProvider._serialize(DefaultSerializerProvider.java:502)\r\n\tat com.fasterxml.jackson.databind.ser.DefaultSerializerProvider.serializeValue(DefaultSerializerProvider.java:341)\r\n\tat com.fasterxml.jackson.databind.ObjectWriter$Prefetch.serialize(ObjectWriter.java:1574)\r\n\tat com.fasterxml.jackson.databind.ObjectWriter._writeValueAndClose(ObjectWriter.java:1275)\r\n\tat com.fasterxml.jackson.databind.ObjectWriter.writeValue(ObjectWriter.java:1098)\r\n\tat io.quarkus.resteasy.reactive.jackson.runtime.serialisers.BasicServerJacksonMessageBodyWriter.writeResponse(BasicServerJacksonMessageBodyWriter.java:39)\r\n\tat org.jboss.resteasy.reactive.server.core.ServerSerialisers.invokeWriter(ServerSerialisers.java:217)\r\n\tat org.jboss.resteasy.reactive.server.core.serialization.DynamicEntityWriter.write(DynamicEntityWriter.java:113)\r\n\tat org.jboss.resteasy.reactive.server.handlers.ResponseWriterHandler.handle(ResponseWriterHandler.java:32)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:147)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:599)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:11)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:11)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\nResulted in: com.fasterxml.jackson.databind.JsonMappingException: (was java.lang.UnsupportedOperationException) (through reference chain: org.springframework.data.domain.PageImpl[\"pageable\"]->org.springframework.data.domain.Unpaged[\"pageSize\"])\r\n\tat com.fasterxml.jackson.databind.JsonMappingException.wrapWithPath(JsonMappingException.java:402)\r\n\tat com.fasterxml.jackson.databind.JsonMappingException.wrapWithPath(JsonMappingException.java:361)\r\n\tat com.fasterxml.jackson.databind.ser.std.StdSerializer.wrapAndThrow(StdSerializer.java:323)\r\n\tat com.fasterxml.jackson.databind.ser.std.BeanSerializerBase.serializeFields(BeanSerializerBase.java:778)\r\n\t... 23 more\r\n```\n\n### How to Reproduce?\n\n1. `git clone -b spring-paged-rest git@github.com:jedla97/quarkus-reproducers.git`\r\n2. `cd quarkus-reproducers`\r\n3. `mvn clean verify`\r\n4. To pass test use `mvn clean verify -Dquarkus.platform.version=3.11.2`\r\n\r\nIn addition you can run it in dev mode and access it on http://localhost:8080/book/paged?size=1&page=0 \r\n\r\nAlso you can try resteasy by change branche to `spring-paged-resteasy`\n\n### Output of `uname -a` or `ver`\n\nFedora 40, Ubuntu 22 (Github runner)\n\n### Output of `java -version`\n\nOpenJDK 21\n\n### Quarkus version or git rev\n\nmain\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.3\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41292/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41292/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

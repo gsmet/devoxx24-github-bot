@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40420",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40420/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40420/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40420/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40420",
+  "id": 2276468287,
+  "node_id": "I_kwDOCFbutM6HsCY_",
+  "number": 40420,
+  "title": "FrameworkRouter not initialized when access-log is enabled with custom non-application-root-path",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-05-02T20:57:35Z",
+  "updated_at": "2024-05-17T11:17:37Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen using a custom `http.root-path` together with custom `http.non-application-root-path` and `http.access-log.enabled=true` starting a quarkus app fails with a `java.lang.NullPointerException`.\r\n\r\nExample configuration which triggers the problem:\r\n```\r\nquarkus.http.root-path=/auth\r\nquarkus.http.non-application-root-path=/q\r\n# Setting the following to true triggers the problem\r\nquarkus.http.access-log.enabled=true\r\n```\r\n\r\nNote that this also happens with ealier quarkus versions. So if this is fixed it would be great to backport this :) (Quarkus 3.8.x maybe? :))\r\n\r\n### Expected behavior\r\n\r\nThe app should not fail to start\r\n\r\n### Actual behavior\r\n\r\nThe following exception is thrown:\r\n```\r\n$ java -jar target/quarkus-app/quarkus-run.jar \r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2024-05-02 22:42:12,818 ERROR [io.qua.run.Application] (main) Failed to start application (with profile [prod]): java.lang.RuntimeException: Failed to start quarkus\r\n\tat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n\tat io.quarkus.runtime.Application.start(Application.java:101)\r\n\tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n\tat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:62)\r\n\tat io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:33)\r\nCaused by: java.lang.NullPointerException: Cannot invoke \"io.quarkus.runtime.RuntimeValue.getValue()\" because \"frameworkRouter\" is null\r\n\tat io.quarkus.vertx.http.runtime.VertxHttpRecorder.finalizeRouter(VertxHttpRecorder.java:499)\r\n\tat io.quarkus.deployment.steps.VertxHttpProcessor$finalizeRouter2040953008.deploy_0(Unknown Source)\r\n\tat io.quarkus.deployment.steps.VertxHttpProcessor$finalizeRouter2040953008.deploy(Unknown Source)\r\n\t... 11 more\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nSee example in this gist: https://gist.github.com/thomasdarimont/458dd8ce85dd347ddf3c690d61944559\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux neumann 6.8.7-100.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Apr 17 19:34:28 UTC 2024 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"22.0.1\" 2024-04-16 OpenJDK Runtime Environment Temurin-22.0.1+8 (build 22.0.1+8) OpenJDK 64-Bit Server VM Temurin-22.0.1+8 (build 22.0.1+8, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.10.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6\r\n\r\n### Additional information\r\n\r\nThis is also reproducible with Quarkus 3.8.3 currently used by Keycloak (24.0.3).\r\n\r\nThe problem is triggered here:\r\nhttps://github.com/quarkusio/quarkus/blob/3.8.3/extensions/vertx-http/runtime/src/main/java/io/quarkus/vertx/http/runtime/VertxHttpRecorder.java#L471\r\n\r\nbut I think the cause for this is here:\r\nhttps://github.com/quarkusio/quarkus/blob/3.8.3/extensions/vertx-http/deployment/src/main/java/io/quarkus/vertx/http/deployment/VertxHttpProcessor.java#L272.\r\n\r\nThe problem is that the `frameworkRouter` is not initialized, since the check `&& route.isRouterFramework()` returns `false` for the `non-application-root-path` (the router type errornously set to `APPLICATION` instead of `FRAMEWORK`).\r\n\r\nIf I set the proper Router type with a debugger in `io.quarkus.vertx.http.deployment.RouteBuildItem#isRouterFramework` during augmentation then the application can start fine.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40420/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40420/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

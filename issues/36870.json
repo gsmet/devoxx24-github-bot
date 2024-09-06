@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36870",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36870/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36870/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36870/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36870",
+  "id": 1977378269,
+  "node_id": "I_kwDOCFbutM513GXd",
+  "number": 36870,
+  "title": " Runtime exception and returns \"500\" for malformed charset in \"x-www-form-urlencoded\" Content-Type",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-11-04T14:48:58Z",
+  "updated_at": "2023-11-06T14:44:49Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe were working on [Keycloak throws runtime exception and returns 500 for malformed charset in x-www-form-urlencoded Content-Type #17513](https://github.com/keycloak/keycloak/issues/17513). However due to the fix [Update the server to use RESTEasy Reactive #10713](https://github.com/keycloak/keycloak/issues/10713)  We start to see the following exception in the quarkus internals:\r\n\r\n```{bash}\r\n2023-09-19 11:26:56,353 ERROR [org.keycloak.services.error.KeycloakErrorHandler] (executor-thread-1) Uncaught server error: java.nio.charset.IllegalCharsetNameException: 'utf-8'\r\n\tat java.base/java.nio.charset.Charset.checkName(Charset.java:305)\r\n\tat java.base/java.nio.charset.Charset.lookup2(Charset.java:481)\r\n\tat java.base/java.nio.charset.Charset.lookup(Charset.java:461)\r\n\tat java.base/java.nio.charset.Charset.forName(Charset.java:525)\r\n\tat org.jboss.resteasy.reactive.server.core.multipart.FormEncodedDataDefinition$FormEncodedDataParser.decodeParameterValue(FormEncodedDataDefinition.java:208)\r\n\tat org.jboss.resteasy.reactive.server.core.multipart.FormEncodedDataDefinition$FormEncodedDataParser.inputDone(FormEncodedDataDefinition.java:264)\r\n\tat org.jboss.resteasy.reactive.server.core.multipart.FormEncodedDataDefinition$FormEncodedDataParser.parseBlocking(FormEncodedDataDefinition.java:239)\r\n\tat org.jboss.resteasy.reactive.server.handlers.FormBodyHandler.handle(FormBodyHandler.java:94)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:150)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\nIt looks like there is no space for a check because the parameters are not decoded yet on . So perhaps we should to fix it on Quarkus side (`QuarkusHttpRequest`), since the same [fix](https://github.com/keycloak/keycloak/pull/23221) works for  undertow.\n\n### Expected behavior\n\nReturn the 400 status code and don't throw an exception.\n\n### Actual behavior\n\nCurrently we see the:\r\n\r\n~~~\r\ncurl -vX POST -H \"Content-Type: application/x-www-form-urlencoded;charset='utf-8'\" --data-raw 'lala=ññññ' \"http://localhost:8080/realms/master/protocol/openid-connect/token\"\r\n...\r\n< HTTP/1.1 500 Internal Server Error\r\n...\r\n{\"error\":\"unknown_error\"}\r\n~~~\n\n### How to Reproduce?\n\nSend a request with `\"Content-Type: application/x-www-form-urlencoded;charset='utf-8'` as content type\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36870/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36870/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36398",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36398/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36398/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36398/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36398",
+  "id": 1936866618,
+  "node_id": "I_kwDOCFbutM5zcj06",
+  "number": 36398,
+  "title": "Toggle health checks per (RabbitMQ) message channel",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236032169,
+      "node_id": "MDU6TGFiZWwyMjM2MDMyMTY5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/health",
+      "name": "area/health",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-10-11T05:39:01Z",
+  "updated_at": "2024-01-29T08:44:43Z",
+  "closed_at": "2024-01-29T08:44:43Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nCurrently (as far as I know), health checks for reactive messaging can only be turned on and off entirely via `quarkus.reactive-messaging.health.enabled`\r\n\r\nAs a result, kubernetes would consider the entire application not-ready if a single message channel does not work, which may not always be desirable (e.g. the app still works when incoming channels are down). Also, it is not possible to have wellness checks right now.\r\n\r\nI would like to toggle the 4 check types per channel\r\n\n\n### Implementation ideas\n\nI came up with this solution for rabbitmq. I would be willing to contribute a proper implementation to the project if this is wanted.\r\n\r\n```\r\n@Wellness\r\npublic class RabbitMqChannelWellnessCheck implements HealthCheck {\r\n\r\n    @Inject\r\n    @Any\r\n    RabbitMQConnector connector;\r\n\r\n    @Override\r\n    public HealthCheckResponse call() {\r\n        var report = connector.getHealth(false);\r\n        var result = HealthCheckResponse.named(\"RabbitMq Connection Wellness\").up();\r\n        report.getChannels().forEach(ci -> {\r\n            if (ci.getChannel().matches(\"in-.*\")) {\r\n                if (!ci.isOk()) result.down();\r\n                var status = ci.isOk() ? \"[OK]\" : \"[KO]\";\r\n                var label = ci.getMessage() != null ? ci.getMessage() + \" \" : \"\";\r\n                result.withData(ci.getChannel(), label + status);\r\n            }\r\n        });\r\n        return result.build();\r\n    }\r\n}\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36398/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36398/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

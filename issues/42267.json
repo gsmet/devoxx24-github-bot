@@ -1,0 +1,110 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42267",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42267/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42267/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42267/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42267",
+  "id": 2442187996,
+  "node_id": "I_kwDOCFbutM6RkNTc",
+  "number": 42267,
+  "title": "[Hibernate Reactive Panache & Mutiny] Concurrent request + Mutiny Retry lead to Sessions error and io.vertx.core.impl.NoStackTraceThrowable: Timeout",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2024-08-01T11:17:03Z",
+  "updated_at": "2024-08-01T14:01:03Z",
+  "closed_at": "2024-08-01T13:19:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello !\r\n\r\nI'm opening a new report due to production issues.\r\n\r\nFor the story, we have a project that retries some functions via Mutiny in case of exception.\r\n\r\nSince Quarkus migration to 3.x, when we try to retry and when Hibernate is in the loop, an error is raised: \"HR000069: Detected use of the reactive Session from a different Thread than the one which was used to open the reactive Session - this suggests an invalid integration\".\r\n\r\nThis is my first big problem.\r\n\r\nThe second is that when one exception follows another, over and over again, the module is no longer able to respond to requests and returns errors like this: \r\n\r\n> 2024-08-01 13:10:30,216 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert. x-eventloop-thread-0) HTTP Request to /patients/094A2A91-6A37-4612-93BA-C36FD133CA9D failed, error id: 89c6c811-5224-420f-a160-9d465a7266bb-100: io.vertx.core.impl.NoStackTraceThrowable: Timeout\r\n\r\n\r\nThis is the second rather blocking problem.\r\n\r\nI created a reproducer with my colleague here : \r\n\r\nhttps://github.com/haddadzineddine/quarkus-reactive-session-with-retry-error\r\n\r\nTo reproduce the problem, you can simply run the .sh file locally, which will send a number of requests. At first there will be 503 via the Exception Mapper : \r\n\r\n> \" Error io.smallrye.mutiny.CompositeException: Multiple exceptions caught:\r\n>         [Exception 0] java.lang.IllegalStateException: HR000069: Detected use of the reactive Session from a different Thread than the one which was used to open the reactive Session - this suggests an invalid integration; original thread [155]: 'vert.x-eventloop-thread-0' current Thread [167]: 'executor-thread-2'\r\n>         [Exception 1] java.lang.IllegalStateException: HR000069: Detected use of the reactive Session from a different Thread than the one which was used to open the reactive Session - this suggests an invalid integration; original thread [155]: 'vert.x-eventloop-thread-0' current Thread [167]: 'executor-thread-2' Multiple exceptions caught:\r\n>         [Exception 0] java.lang.IllegalStateException: HR000069: Detected use of the reactive Session from a different Thread than the one which was used to open the reactive Session - this suggests an invalid integration; original thread [155]: 'vert.x-eventloop-thread-0' current Thread [167]: 'executor-thread-2'\r\n>         [Exception 1] java.lang.IllegalStateException: HR000069: Detected use of the reactive Session from a different Thread than the one which was used to open the reactive Session - this suggests an invalid integration; original thread [155]: 'vert.x-eventloop-thread-0' current Thread [167]: 'executor-thread-2'\"\r\n> \r\n\r\nAnd after, you will notice the 500 error : \r\n\r\n> (vert.x-eventloop-thread-1) HTTP Request to /patients/55254C71-4ED3-4C2D-BB70-6964D1BA5F01 failed, error id: 89c6c811-5224-420f-a160-9d465a7266bb-4: io.vertx.core.impl.NoStackTraceThrowable: Timeout\r\n\r\n\r\nCan you help me ? Thank in advance to the team, you rock !\r\n\r\n### Expected behavior\r\n\r\nRetry and keep the session\r\n\r\n### Actual behavior\r\n\r\nError from Hibernate first and second the module is completely unable to respond \r\n\r\n### How to Reproduce?\r\n\r\n1. Pull : https://github.com/haddadzineddine/quarkus-reactive-session-with-retry-error\r\n2. Launch the module : quarkus:dev\r\n3. Launch the script_simulation_requests.sh in local\r\n4. Wait for the 503 and after the 500 \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42267/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42267/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

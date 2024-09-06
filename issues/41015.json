@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41015",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41015/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41015/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41015/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41015",
+  "id": 2337758308,
+  "node_id": "I_kwDOCFbutM6LV1xk",
+  "number": 41015,
+  "title": "OidcRedirectFilter behavior when the session cookie has expired and was removed",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-06-06T09:11:03Z",
+  "updated_at": "2024-06-11T18:22:52Z",
+  "closed_at": "2024-06-11T18:04:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThis issue is related with the new feature introduce in 3.11 https://github.com/quarkusio/quarkus/issues/40562 to allow session redirect paths when the session has expired.\r\n\r\nLet's start with the happy path that I was able to reproduce constantly. \r\n\r\n1. The session expire date is about to expire and there is a in-flight request which by the time is evaluated [here](https://github.com/quarkusio/quarkus/blob/20d3c9d576d596ef3cdb90be7ce692afab63a7cb/extensions/oidc/runtime/src/main/java/io/quarkus/oidc/runtime/CodeAuthenticationMechanism.java#L319) will throw `TokenAutoRefreshException` and if there is a session expire path the redirect happens. The take away is, an in-flight request while the session is about to expire, which might happen in real live, but I don't think this should be the main use case. Again, I can reproduce this all the time by having a breakpoint that allows me to control the timings of this. **This is not a bug, this works as expected**\r\n\r\n2. However, when the session was expired and there are no in-flight requests the request doesn't contain the cookie anymore, and therefore the code path is not the expected one, there is no tenant information. I could debug to [here](https://github.com/quarkusio/quarkus/blob/20d3c9d576d596ef3cdb90be7ce692afab63a7cb/extensions/oidc/runtime/src/main/java/io/quarkus/oidc/runtime/OidcAuthenticationMechanism.java#L53) where the `OidcTenantConfig` defaults to the default tenant and in the end returns a `401` unauthorized request, which is no different from the previous behaviour, especially for XHR requests, is hard to understand what's happening.\r\n\r\n\r\n\r\n\r\n \n\n### Expected behavior\n\nThe expected behavior from my PoV should cover more than just in-flight requests but also when cookies have been deleted. I understand the challenge since there is no connection between the incoming request (no cookie) and the session.\n\n### Actual behavior\n\nThe request completely bypasses the session redirect filter.\n\n### How to Reproduce?\n\n1. Configure IdP (e.g Keycloak) with access token lifespan and session idle timeout to 60secs. \r\n2. Login and check the cookie is valid for 1min.\r\n3. Let the cookie expire and make a request (fetch API or whatever)\r\n4. It will return a 401, instead of a redirect 302 response.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n3.11\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41015/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41015/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

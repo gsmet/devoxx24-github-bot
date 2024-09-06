@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33117",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33117/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33117/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33117/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33117",
+  "id": 1695336990,
+  "node_id": "I_kwDOCFbutM5lDMoe",
+  "number": 33117,
+  "title": "Suspect memory leak in Quarkus Maven plugin",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-05-04T06:26:34Z",
+  "updated_at": "2024-03-06T16:44:34Z",
+  "closed_at": "2024-03-06T16:38:50Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe've been having OOM errors in the nightly Infinispan `main` build. Maven is being run with `-Xmx1g`.\r\nWhile the OOM is not entirely attributable to the Quarkus Maven plugin, the heap dump we get contains two `QuarkusClassLoader` instances lingering even in later modules.\r\nIn particular, referring to https://ci.infinispan.org/job/Infinispan/job/main/939/ and the heap dump in https://ci.infinispan.org/job/Infinispan/job/main/939/artifact/java_pid4140227.hprof.xz we have:\r\n\r\n* one with a retained heap of ~37MiB\r\n* one with a retained heap of ~25MiB\r\n\r\nWe use the plugin in the `quarkus/cli` and `quarkus/server` modules and the error happens during the execution of the `assembly` plugin in the `distribution` module. \r\n\r\nPlease use the following commit: https://github.com/infinispan/infinispan/commit/30f423efc9da23ca351a5a9c3b7983a90487ef33\r\nas we have made some changes (increasing the heap to `-Xmx1200m`) in later commits and we're about to rearrange some modules.\r\n\r\nNote: we are building with early-access builds of JDK 21 obtained from https://jdk.java.net/21/\r\n\r\n\n\n### Expected behavior\n\nWe expect to not see instances of `QuarkusClassLoader` retained until the end of the build. While the OOM error is certainly not attributable exclusively to the Quarkus Maven plugin, it is a contributor to the issue.\n\n### Actual behavior\n\nThe heap dump generated on OOME contains references to two `QuarkusClassLoader` instances.\n\n### How to Reproduce?\n\nThe build is launched with the following command-line:\r\n\r\n`MAVEN_OPTS=\"-Xmx1g -XX:+HeapDumpOnOutOfMemoryError\" mvn clean install surefire-report:report pmd:cpd pmd:pmd spotbugs:spotbugs dependency-check:check -B -V -e -DskipTests -Pnative -Pdistribution`\r\n\r\nLowering the `Xmx` will make this fail with more certainty.\n\n### Output of `uname -a` or `ver`\n\nLinux rhos-infinispan-ci-3 4.18.0-425.3.1.el8.x86_64 #1 SMP Fri Sep 30 11:45:06 EDT 2022 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"21-ea\" 2023-09-19 OpenJDK Runtime Environment (build 21-ea+20-1677) OpenJDK 64-Bit Server VM (build 21-ea+20-1677, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment GraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13) OpenJDK 64-Bit Server VM GraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.0.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.0 (9b58d2bad23a66be161c4664ef21ce219c2c8584) Maven home: /opt/maven Java version: 21-ea, vendor: Oracle Corporation, runtime: /usr/lib/jvm/jdk-21 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"4.18.0-425.3.1.el8.x86_64\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\nhttps://quarkusio.zulipchat.com/#narrow/stream/187038-dev/topic/quarkus.20maven.20.20plugin.20classloader.20leak",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33117/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33117/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

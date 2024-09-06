@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40713",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40713/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40713/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40713/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40713",
+  "id": 2303934428,
+  "node_id": "I_kwDOCFbutM6JUz_c",
+  "number": 40713,
+  "title": "How should I handle classes that shouldn't be loaded in native",
+  "labels": [
+    {
+      "id": 1553869078,
+      "node_id": "MDU6TGFiZWwxNTUzODY5MDc4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/extension-proposal",
+      "name": "kind/extension-proposal",
+      "color": "abfcbb",
+      "default": false,
+      "description": "Discuss and Propose new extensions"
+    },
+    {
+      "id": 2388070055,
+      "node_id": "MDU6TGFiZWwyMzg4MDcwMDU1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/quarkiverse",
+      "name": "area/quarkiverse",
+      "color": "a01441",
+      "default": false,
+      "description": "This issue/PR is part of the Quarkiverse organization"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-05-18T08:42:31Z",
+  "updated_at": "2024-05-23T10:33:51Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nI'm developing a Quarkus extension for an ORM framework. However, I'm encountering some issues when testing with native mode.\r\n\r\nThe error message I'm receiving is:\r\n\r\n```\r\nError: Discovered unresolved type during parsing: org.postgresql.util.PGobject. This error is reported at image build time because class xxx.xxx.xxx.sql.dialect.PostgresDialect is registered for linking at image build time by command line and command line.\r\nError encountered while parsing xxx.xxx.xxx.sql.dialect.PostgresDialect.lambda$unknownReader$0(PostgresDialect.java:136) \r\nParsing context:\r\n   at static root method.(Unknown Source)\r\n\r\nDetailed message:\r\n\r\ncom.oracle.svm.core.util.UserError$UserException: Discovered unresolved type during parsing: org.postgresql.util.PGobject. This error is reported at image build time because class xxx.xxx.xxx.sql.dialect.PostgresDialect is registered for linking at image build time by command line and command line.\r\nError encountered while parsing xxx.xxx.xxx.sql.dialect.PostgresDialect.lambda$unknownReader$0(PostgresDialect.java:136) \r\nParsing context:\r\n   at static root method.(Unknown Source)\r\n\r\nDetailed message:\r\n\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.core.util.UserError.abort(UserError.java:85)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.FallbackFeature.reportAsFallback(FallbackFeature.java:248)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.runPointsToAnalysis(NativeImageGenerator.java:814)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:592)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:550)\r\n------------------------------------------------------------------------------------------------------------------------\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:539)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:721)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.start(NativeImageGeneratorRunner.java:143)\r\n\tat org.graalvm.nativeimage.builder/com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:98)\r\n```\r\n\r\nThis seems to be related to the parsing process during the GraalVM build, particularly with the usage of PGobject in my codebase. However, I'm not sure how to resolve this issue.\r\n\r\nHere's a brief overview of my setup:\r\n\r\nI'm using Quarkus framework for my application. I have a class PostgresDialect which includes a method unknownReader that uses PGobject. I've tried various approaches such as replacing lambda expressions with anonymous classes and registering substitutions with GraalVM's Feature interface, but the issue persists.\r\n\r\nCould anyone provide insights into why GraalVM is encountering this \"Unresolved Type\" issue and how to resolve it? Any help or suggestions would be greatly appreciated.\r\n\r\nThe following is the orm framework code\r\n```\r\npublic class PostgresDialect extends DefaultDialect {\r\n\r\n    @Override\r\n    public Reader<?> unknownReader(Class<?> sqlType) {\r\n        if (sqlType == PGobject.class) {\r\n            return (rs, col) -> rs.getObject(col.col(), PGobject.class);\r\n        }\r\n        return null;\r\n    }\r\n\r\n}\r\n```\r\n\r\nHere's what I did with the quarkus extension\r\n```\r\npublic class Substitutions {\r\n\r\n    @TargetClass(className = \"xxx.xxx.sql.dialect.PostgresDialect\")\r\n    public static final class PostgresDialectSubstitutions {\r\n\r\n        // This code is the cause of the error\r\n        @Substitute(polymorphicSignature = true)\r\n        public Reader<?> unknownReader(Class<?> sqlType) {\r\n            return null;\r\n        }\r\n    }\r\n}\r\n```\r\n\r\nEven when my dialect is not Postgres, I still need to include the Postgres dependency.\r\n\r\nAlthough I can include the Postgres dependency when not using Postgres to ensure the native package builds successfully, this doesn't seem like the correct approach\r\n\r\nSo, I referred to Quarkus's code, but it didn't work.\r\n\r\nIt seems that no matter how I replace the unknownReader method, GraalVM still tries to find PGobject.\r\n\r\nThank you in advance!\n\n### Repository name\n\nquarkus-jimmer-extension\n\n### Short description\n\njimmer-extension\n\n### Repository Homepage URL\n\nhttps://github.com/flynndi/quarkus-jimmer-extension\n\n### Repository Topics\n\n- quarkus-extension\r\n- \r\n...\r\n\n\n### Team Members\n\n- \r\n\n\n### Additional context\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40713/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40713/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

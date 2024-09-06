@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22337",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22337/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22337/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22337/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22337",
+  "id": 1083798213,
+  "node_id": "I_kwDOCFbutM5AmXLF",
+  "number": 22337,
+  "title": "The connection exception handler of redis vertx is not called if I manually kill the redis connection",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-12-18T10:09:14Z",
+  "updated_at": "2022-08-29T06:43:14Z",
+  "closed_at": "2022-08-29T06:42:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI am establishing a standard redis connection with the vertx extension, and then I kill manually the connection through the redis-cli - \"client kill id XXXX\", or simply restarting the docker container of redis can be used. I don't see the **conn.exceptionHandler** being called. Is that normal/expected? If yes, then how can I detect that my redis connection dropped? Do I need to write a timer which polls/pings redis every second or so? That exceptionHandler callback is called only if a command execution fails - e.g. if I execute a ping command while the connection is dead. But if I add a manual ping, I would know Redis is down anyway, so I don't see the point of exceptionHandler callback.\r\n\r\nP.S. I am using latest Quarkus version - 2.5.3.Final.\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nI should have a way to detect through a callback that the redis connection dropped\r\n\r\n### Actual behavior\r\n\r\nNo error is getting thrown, callback is not called.\r\n\r\n### How to Reproduce?\r\n\r\n```\r\nRedis redisClient = Redis.createClient(vertx, connectionString);\r\n\t\t\tRedisObjects result = new RedisObjects(redisClient);\r\n\t\t\tredisClient.connect()\r\n\t\t\t    .onSuccess(conn -> {\t\t\t    \t\r\n\t\t\t    \tLOG.infof(\"Successfully connected to redis instance for publishing at = %s\", connectionString);\t\t\t    \t\r\n\t\t\t    \tresult.setRedisConnection(conn);\r\n\t\t\t    \t\r\n\t\t\t    \tconn.exceptionHandler(e -> {\r\n\t\t\t    \t        //This callback is not called on killing the connection manually!!!\r\n\t\t\t    \t\tLOG.errorf(e, \"Exception occurred in an existing publishing redis connection to %s\", connectionString);\r\n\t\t\t    \t});\t\r\n\t\t\t    })\r\n\t\t\t    .onFailure(e -> {\r\n\t\t\t    \tLOG.errorf(e, \"Could not connect to redis instance for publishing at = %s\", connectionString);\r\n\t\t\t    });\r\n\t\t\treturn result;\r\n\t\t});\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.5.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22337/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22337/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

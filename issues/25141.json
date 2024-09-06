@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25141",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25141/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25141/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25141/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25141",
+  "id": 1214675288,
+  "node_id": "I_kwDOCFbutM5IZnlY",
+  "number": 25141,
+  "title": "Tests use test containers even if `-Dtest-containers` is not set",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2323889171,
+      "node_id": "MDU6TGFiZWwyMzIzODg5MTcx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jbang",
+      "name": "area/jbang",
+      "color": "0052cc",
+      "default": false,
+      "description": "Issues related to when using jbang.dev with Quarkus"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-04-25T15:21:46Z",
+  "updated_at": "2022-04-26T09:07:45Z",
+  "closed_at": "2022-04-26T09:07:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI think I've spotted a missing guard in extensions/elasticsearch-rest-client/deployment. It looks like docker is a prereq for the tests to run clean, even when `-Dtest-containers` is not set.  This isn't consistent with [CONTRIBUTING.md](https://github.com/quarkusio/quarkus/blob/main/CONTRIBUTING.md):\r\n\r\n>    Docker is not strictly necessary: it is used to run the MariaDB and PostgreSQL tests which are not enabled by default.\r\n\r\n\r\n\r\n\n\n### Expected behavior\n\nDocker shouldn't be necessary for a normal build with the default set of tests to run cleanly (according to the current docs). \n\n### Actual behavior\n\nThe build fails:\r\n\r\n```\r\n[ERROR] Failures: \r\n[ERROR]   DevServicesElasticsearchDevModeTestCase.testDatasource:30 1 expectation failed.\r\nExpected status code <204> but was <500>.\r\n\r\n[INFO] \r\n[ERROR] Tests run: 2, Failures: 1, Errors: 0, Skipped: 0\r\n[INFO] \r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  9.811 s\r\n[INFO] Finished at: 2022-04-25T15:51:11+01:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.0.0-M5:test (default-test) on project quarkus-elasticsearch-rest-client-deployment: There are test failures.\r\n[ERROR] \r\n[ERROR] Please refer to /Users/holly/Code/quarkus/main/quarkus/extensions/elasticsearch-rest-client/deployment/target/surefire-reports for the individual test results.\r\n```\r\n\r\nThe detailed failure is \r\n\r\n```\r\n[INFO] -------------------------------------------------------\r\n[INFO]  T E S T S\r\n[INFO] -------------------------------------------------------\r\n[INFO] Running io.quarkus.elasticsearch.restclient.lowlevel.runtime.DevServicesElasticsearchDevModeTestCase\r\nTests paused\r\n2022-04-25 15:51:07,846 WARN  [org.tes.uti.TestcontainersConfiguration] (build-18) Attempted to read Testcontainers configuration file at file:/Users/holly/.testcontainers.properties but the file was not found. Exception message: FileNotFoundException: /Users/holly/.testcontainers.properties (No such file or directory)\r\n2022-04-25 15:51:07,855 INFO  [org.tes.doc.DockerMachineClientProviderStrategy] (build-18) docker-machine executable was not found on PATH ([/Users/holly/.jbang/bin, /Users/holly/.jbang/bin, /Users/holly/.nvm/versions/node/v12.22.11/bin, /opt/homebrew/bin, /opt/homebrew/sbin, /usr/local/bin, /usr/bin, /bin, /usr/sbin, /sbin, /usr/local/munki])\r\n2022-04-25 15:51:07,855 ERROR [org.tes.doc.DockerClientProviderStrategy] (build-18) Could not find a valid Docker environment. Please check configuration. Attempted configurations were:\r\n2022-04-25 15:51:07,855 ERROR [org.tes.doc.DockerClientProviderStrategy] (build-18)     UnixSocketClientProviderStrategy: failed with exception InvalidConfigurationException (Could not find unix domain socket). Root cause NoSuchFileException (/var/run/docker.sock)\r\n2022-04-25 15:51:07,855 ERROR [org.tes.doc.DockerClientProviderStrategy] (build-18) As no valid configuration was found, execution cannot continue\r\n2022-04-25 15:51:07,861 WARN  [io.qua.dep.IsDockerWorking] (build-18) No docker binary found or general error: java.lang.RuntimeException: Input/Output error while executing command.\r\n2022-04-25 15:51:07,862 WARN  [io.qua.ela.res.com.dep.DevServicesElasticsearchProcessor] (build-18) Docker isn't working, please configure the Elasticsearch hosts property (quarkus.elasticsearch.hosts).\r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n            Powered by Quarkus 999-SNAPSHOT\r\n2022-04-25 15:51:08,524 INFO  [io.quarkus] (Quarkus Main Thread) quarkus-elasticsearch-rest-client-deployment 999-SNAPSHOT on JVM (powered by Quarkus 999-SNAPSHOT) started in 1.118s. Listening on: http://localhost:8080\r\n2022-04-25 15:51:08,525 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2022-04-25 15:51:08,525 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, elasticsearch-rest-client, resteasy, resteasy-jackson, smallrye-context-propagation, vertx]\r\n2022-04-25 15:51:09,277 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-0) HTTP Request to /fruits failed, error id: ace14b5e-cf26-467d-814f-7e7a99a3d16c-1: org.jboss.resteasy.spi.UnhandledException: java.net.ConnectException: Connection refused\r\n\tat org.jboss.resteasy.core.ExceptionHandler.handleApplicationException(ExceptionHandler.java:105)\r\n\tat org.jboss.resteasy.core.ExceptionHandler.handleException(ExceptionHandler.java:359)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.writeException(SynchronousDispatcher.java:218)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:519)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:261)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:161)\r\n\tat org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:364)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:164)\r\n\tat org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:247)\r\n\tat io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:73)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:151)\r\n\tat io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:91)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:548)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.net.ConnectException: Connection refused\r\n\tat org.elasticsearch.client.RestClient.extractAndWrapCause(RestClient.java:918)\r\n```\n\n### How to Reproduce?\n\n1. Uninstall docker and podman (or start on a fresh machine image)\r\n1. Run `./mvnw -Dquickly -DskipTests=false -f extensions/elasticsearch-rest-client/deployment`\n\n### Output of `uname -a` or `ver`\n\nDarwin hcummins-mac 21.4.0 Darwin Kernel Version 21.4.0: Fri Mar 18 00:46:32 PDT 2022; root:xnu-8020.101.4~15/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.2\" 2022-01-18 OpenJDK Runtime Environment Temurin-17.0.2+8 (build 17.0.2+8) OpenJDK 64-Bit Server VM Temurin-17.0.2+8 (build 17.0.2+8, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\ncommit 3ec92db (HEAD -> main, origin/main, origin/HEAD)\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Maven home: /Users/holly/.m2/wrapper/dists/apache-maven-3.8.4-bin/52ccbt68d252mdldqsfsn03jlf/apache-maven-3.8.4 Java version: 18, vendor: Eclipse Adoptium, runtime: /Library/Java/JavaVirtualMachines/temurin-18.jdk/Contents/Home Default locale: en_GB, platform encoding: UTF-8 OS name: \"mac os x\", version: \"12.3.1\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25141/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25141/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

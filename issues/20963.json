@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20963",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20963/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20963/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20963/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20963",
+  "id": 1034362057,
+  "node_id": "I_kwDOCFbutM49pxzJ",
+  "number": 20963,
+  "title": "Redis cluster client give error if any pod down",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-10-24T08:56:59Z",
+  "updated_at": "2022-10-03T06:05:14Z",
+  "closed_at": "2022-10-03T06:05:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have deployed redis-cluster from here:\r\n`https://github.com/bitnami/charts/tree/master/bitnami/redis-cluster`\r\n\r\nUsing following command:\r\n`helm install redis-cluster bitnami/redis-cluster --create-namespace -n redis -f redis-values.yaml`\r\n\r\nand `redis-values-yaml` is:\r\n```\r\ncluster:\r\n  init: true\r\n  nodes: 6\r\n  replicas: 1\r\n\r\npassword: \"redis@pass\"\r\n\r\nredis:\r\n  configmap: |-\r\n    maxmemory 600mb\r\n    maxmemory-policy allkeys-lru\r\n    maxclients 40000\r\n\r\nsysctlImage:\r\n  enabled: true\r\n  mountHostSys: true\r\n  command:\r\n    - /bin/sh\r\n    - -c\r\n    - |-\r\n      install_packages procps\r\n      sysctl -w net.core.somaxconn=10000\r\n      echo never > /host-sys/kernel/mm/transparent_hugepage/enabled\r\n```\r\n\r\nCluster working fine and I'm connecting it with following yaml env:\r\n```\r\n            - name: QUARKUS_REDIS_HOSTS\r\n              value: redis://redis-cluster-0.redis-cluster-headless.redis.svc.cluster.local:6379,redis://redis-cluster-1.redis-cluster-headless.redis.svc.cluster.local:6379,redis://redis-cluster-2.redis-cluster-headless.redis.svc.cluster.local:6379,redis://redis-cluster-3.redis-cluster-headless.redis.svc.cluster.local:6379,redis://redis-cluster-4.redis-cluster-headless.redis.svc.cluster.local:6379\r\n            - name: QUARKUS_REDIS_PASSWORD\r\n              value: redis@pass\r\n            - name: QUARKUS_REDIS_CLIENT_TYPE\r\n              value: cluster\r\n\r\n```\r\nWhere redis-cluster-0, redis-cluster-1 and redis-cluster-2 is master and other are slave.\r\n\r\nIt is working fine but if any pod of redis-cluster down then i start getting following error:\r\n\r\n`java.util.concurrent.CompletionException: io.vertx.core.impl.NoStackTraceThrowable: Failed to connect to all nodes of the cluster`\n\n### Expected behavior\n\nIt should work fine without any error if any single master up. But if any master or slave down then it is not working..\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nLinux app-5b8c6b9577-4nptz 4.19.0-17-cloud-amd64 #1 SMP Debian 4.19.194-3 (2021-07-18) x86_64 Linux\n\n### Output of `java -version`\n\nPicked up JAVA_TOOL_OPTIONS: -XX:+UnlockExperimentalVMOptions -XX:+UseContainerSupport -XX:MaxRAMPercentage=76 -Duser.timezone=UTC openjdk version \"11.0.5\" 2019-10-15 OpenJDK Runtime Environment (build 11.0.5+10-alpine-r0) OpenJDK 64-Bit Server VM (build 11.0.5+10-alpine-r0, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.3.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n------------------------------------------------------------ Gradle 7.1 ------------------------------------------------------------ Build time: 2021-06-14 14:47:26 UTC Revision: 989ccc9952b140ee6ab88870e8a12f1b2998369e Kotlin: 1.4.31 Groovy: 3.0.7 Ant: Apache Ant(TM) version 1.10.9 compiled on September 27 2020 JVM: 11.0.12 (GraalVM Community 11.0.12+6-jvmci-21.2-b08) OS: Mac OS X 11.5 x86_64\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20963/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20963/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26739",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26739/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26739/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26739/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26739",
+  "id": 1305053726,
+  "node_id": "I_kwDOCFbutM5NyYoe",
+  "number": 26739,
+  "title": "GraphQL server fails to build the schema when a query/mutation contains a Kotlin List<Enum> parameter",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-07-14T16:59:10Z",
+  "updated_at": "2023-02-07T07:15:33Z",
+  "closed_at": "2023-02-07T07:15:33Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nA Query/Mutation containing a Kotlin `List` of `enum` causes the GraphQL schema builder to fail.\r\nThe other scenario described below works fine.\r\n\r\nEg.\r\n```kotlin\r\nimport org.eclipse.microprofile.graphql.GraphQLApi\r\nimport org.eclipse.microprofile.graphql.Query\r\nimport javax.json.bind.annotation.JsonbCreator\r\n\r\nenum class MyEnum {\r\n    FOO,\r\n    BAR\r\n}\r\n\r\ndata class Foo @JsonbCreator constructor(\r\n    val enums: List<MyEnum>,\r\n)\r\n\r\n@GraphQLApi\r\nclass Example {\r\n\r\n    @Query\r\n    fun failsToStartWithList(myEnums: List<MyEnum>): Foo {\r\n        return Foo(myEnums)\r\n    }\r\n\r\n    @Query\r\n    fun deserializeWithArray(myEnums: Array<MyEnum>): Foo {\r\n        return Foo(myEnums.toList())\r\n    }\r\n\r\n    @Query\r\n    fun deserializeInnerList(foo: Foo): Foo {\r\n        return foo\r\n    }\r\n\r\n    @Query\r\n    fun deserializeNonEnumList(values: List<String>): List<String> {\r\n        return values\r\n    }\r\n}\r\n```\r\n\r\n### Side issue\r\nWhen downgrading to Quarkus 2.9.2.Final, the query `deserializeInnerList` deserializes the inner filed `values: List<MyEnum>` as an empty List.\r\n\r\n<img width=\"1104\" alt=\"Screen Shot 2022-07-14 at 12 52 38 PM\" src=\"https://user-images.githubusercontent.com/29870258/179037557-9bdf6cf6-4290-4a8d-9e82-261789a320a8.png\">\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nExpect the server to start and the `failsToStartWithList` query to bind the List<Enum> accordingly.\r\n\r\n### Actual behavior\r\n\r\n### Error\r\n```\r\nFailed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.smallrye.graphql.deployment.SmallRyeGraphQLProcessor#buildExecutionService threw an exception: io.smallrye.graphql.schema.SchemaBuilderException: Don't know what to do with [? extends com.example.MyEnum] of kind [WILDCARD_TYPE]\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n### Reproducer:\r\n[graphql-schema-builder-error.zip](https://github.com/quarkusio/quarkus/files/9113696/graphql-schema-builder-error.zip)\r\n\r\n### Steps to reproduce\r\n- run the attached application\r\n- Observe the error\r\n- Comment out the query `failsToStartWithList` \r\n- Observe no error through GraphiQL(cf. screenshot below)\r\n<img width=\"909\" alt=\"Screen Shot 2022-07-14 at 12 44 27 PM\" src=\"https://user-images.githubusercontent.com/29870258/179034847-3cb63de7-669b-4352-9e29-7a15a3d8f8d7.png\">\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kernel Version 21.4.0: Fri Mar 18 00:46:32 PDT 2022; root:xnu-8020.101.4~15/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.1\" 2021-10-19 LTS OpenJDK Runtime Environment Corretto-17.0.1.12.1 (build 17.0.1+12-LTS) OpenJDK 64-Bit Server VM Corretto-17.0.1.12.1 (build 17.0.1+12-LTS, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.10.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n------------------------------------------------------------ Gradle 7.4.2 ------------------------------------------------------------  Build time:   2022-03-31 15:25:29 UTC Revision:     540473b8118064efcc264694cbcaa4b677f61041  Kotlin:       1.5.31 Groovy:       3.0.9 Ant:          Apache Ant(TM) version 1.10.11 compiled on July 10 2021 JVM:          17.0.1 (Amazon.com Inc. 17.0.1+12-LTS) OS:           Mac OS X 12.3.1 x86_64\r\n\r\n### Additional information\r\n\r\nKotlin version: 1.6.21",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26739/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26739/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

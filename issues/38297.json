@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38297",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38297/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38297/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38297/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38297",
+  "id": 2090052829,
+  "node_id": "I_kwDOCFbutM58k6zd",
+  "number": 38297,
+  "title": "@RegisterForReflection(ignoreNested = false) does not compile with GraalVM 21.0.1+12 with flag --enable-preview and Gradle v8.5",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-01-19T09:20:43Z",
+  "updated_at": "2024-08-26T08:10:56Z",
+  "closed_at": "2024-08-26T08:10:56Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen I compile my Quarkus `3.6.6` based project with compile flag `--enable-preview` I get the following error, as I'm using **JEP 430: String Templates** in a class which is annotated with `@RegisterForReflection(ignoreNested = false)` (I use inner classes here).\r\n```java\r\n[error]: Build step io.quarkus.deployment.steps.RegisterForReflectionBuildStep#build threw an exception: java.lang.UnsupportedClassVersionError: Preview features are not enabled for com/example/myproject/domain/cube/CubeManifest (class file version 65.65535). Try running with '--enable-preview'\r\nat java.base/java.lang.ClassLoader.defineClass1(Native Method)\r\nat java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1027)\r\nat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:508)\r\nat io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:468)\r\nat io.quarkus.deployment.steps.RegisterForReflectionBuildStep.registerClass(RegisterForReflectionBuildStep.java:134)\r\nat io.quarkus.deployment.steps.RegisterForReflectionBuildStep.build(RegisterForReflectionBuildStep.java:77)\r\nat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\nat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\nat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\nat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\nat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\nat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\nat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\nat java.base/java.lang.Thread.run(Thread.java:1583)\r\nat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```\r\nThe public methods that cause this error as they use `STR.\"...\\{myVariable}...\"` are in the top-level class and not in the nested public class.\r\nWhen I replace `STR.\"...\\{myVariable}...\"` with normal string concatenation `\"...\" + myVariable + \"...\"` the project compiles fine.\r\n\r\nI also use the **JEP 430: String Templates** preview feature in other classes which are not annotated with `@RegisterForReflection` and there is no issue.\r\n\r\n_The build only fails if **JEP 430: String Templates** and `@RegisterForReflection` are combined in at least one class, does not matter which one._\r\n\r\nGradle is configured to use Java 21 and `--enable-preview`:\r\n```groovy\r\njava {\r\n    sourceCompatibility = JavaVersion.VERSION_21\r\n    targetCompatibility = JavaVersion.VERSION_21\r\n}\r\n// Enable JEP 430: String Templates (Preview in Java 21)\r\ntasks.withType(JavaCompile).configureEach {\r\n    options.compilerArgs << '--enable-preview'\r\n}\r\ntasks.withType(Test).configureEach {\r\n    jvmArgs += '--enable-preview'\r\n}\r\ntasks.withType(JavaExec).configureEach {\r\n    jvmArgs += '--enable-preview'\r\n}\r\n``` \r\n\r\n### Expected behavior\r\n\r\nA class that uses the **JEP 430: String Templates** preview feature and is annotated with `@RegisterForReflection` should compile.\r\n\r\n### Actual behavior\r\n\r\nThe project does NOT compile if a class uses the **JEP 430: String Templates** preview feature and is annotated with `@RegisterForReflection`.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.22631.3007]\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK 64-Bit Server VM GraalVM CE 21.0.2+13.1 (build 21.0.2+13-jvmci-23.1-b30, mixed mode, sharing)\r\n\r\n### Mandrel or GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.6.6\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.5\r\n\r\n### Additional information\r\n\r\nThe build.gradle file:\r\n```groovy\r\nbuildscript {\r\n    ext {\r\n        /**\r\n         * https://projectlombok.org/\r\n         * https://github.com/rzwitserloot/lombok\r\n         * https://mvnrepository.com/artifact/org.projectlombok/lombok\r\n         */\r\n        lombokVersion = '1.18.30'\r\n\r\n        /**\r\n         * https://www.jooq.org/\r\n         * https://www.jooq.org/download/versions\r\n         * https://repo.jooq.org/\r\n         * https://github.com/jOOQ/jOOQ\r\n         * https://mvnrepository.com/artifact/org.jooq/jooq\r\n         */\r\n        jooqVersion = '3.19.2'\r\n\r\n        /**\r\n         * https://www.oracle.com/database/technologies/appdev/jdbc-downloads.html\r\n         * https://mvnrepository.com/artifact/com.oracle.database.jdbc/ojdbc11\r\n         */\r\n        oracleJDBCVersion = '23.3.0.23.09'\r\n\r\n        /**\r\n         * https://www.enterprisedb.com/software-downloads-postgres#edb-connectors\r\n         */\r\n        edbJDBCVersion = '42.5.4.1'\r\n\r\n        /**\r\n         * https://jdbc.postgresql.org/\r\n         * https://github.com/pgjdbc/pgjdbc\r\n         * https://mvnrepository.com/artifact/org.postgresql/postgresql\r\n         */\r\n        postgresJDBCVersion = '42.7.1'\r\n\r\n        /**\r\n         * https://github.com/trinodb/trino/tree/master/client/trino-jdbc\r\n         * https://mvnrepository.com/artifact/io.trino/trino-jdbc\r\n         */\r\n        trinoJDBCVersion = '436'\r\n\r\n        /**\r\n         * https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/\r\n         * https://github.com/quarkiverse/quarkus-quinoa\r\n         * https://mvnrepository.com/artifact/io.quarkiverse.quinoa/quarkus-quinoa\r\n         */\r\n        quinoaVersion = '2.3.2'\r\n\r\n        /**\r\n         * https://docs.sonarqube.org/latest/analysis/scan/sonarscanner-for-gradle/\r\n         * https://plugins.gradle.org/plugin/org.sonarqube\r\n         */\r\n        sonarQubePluginVersion = '4.4.1.3373'\r\n    }\r\n}\r\n\r\nplugins {\r\n    id 'idea'\r\n    id 'java'\r\n    id 'io.quarkus'\r\n    id 'org.sonarqube' version \"$sonarQubePluginVersion\"\r\n}\r\n\r\nrepositories {\r\n    mavenCentral()\r\n    mavenLocal()\r\n}\r\n\r\ndescription 'My Project'\r\ngroup 'com.example'\r\nversion '0.0.0-SNAPSHOT'\r\n\r\ndependencies {\r\n    /**\r\n     * Quarkus\r\n     */\r\n    implementation enforcedPlatform(\"${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}\")\r\n    implementation 'io.quarkus:quarkus-agroal'\r\n    implementation 'io.quarkus:quarkus-arc'\r\n    implementation 'io.quarkus:quarkus-cache'\r\n    implementation 'io.quarkus:quarkus-config-yaml'\r\n    implementation 'io.quarkus:quarkus-core-deployment' // Needed for the WatchServiceFileSystemWatcher\r\n    implementation 'io.quarkus:quarkus-jdbc-oracle'\r\n    implementation 'io.quarkus:quarkus-jdbc-postgresql'\r\n    implementation 'io.quarkus:quarkus-kubernetes'\r\n    implementation 'io.quarkus:quarkus-micrometer'\r\n    implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'\r\n    implementation 'io.quarkus:quarkus-oidc'\r\n    implementation 'io.quarkus:quarkus-resteasy-reactive'\r\n    implementation 'io.quarkus:quarkus-resteasy-reactive-jackson'\r\n    implementation 'io.quarkus:quarkus-smallrye-health'\r\n    implementation 'io.quarkus:quarkus-smallrye-openapi'\r\n\r\n    testImplementation 'io.quarkus:quarkus-junit5'\r\n    testImplementation 'io.rest-assured:rest-assured'\r\n\r\n    /**\r\n     * Lombok\r\n     */\r\n    compileOnly \"org.projectlombok:lombok:$lombokVersion\"\r\n    annotationProcessor \"org.projectlombok:lombok:$lombokVersion\"\r\n\r\n    /**\r\n     * jOOQ\r\n     */\r\n    implementation \"org.jooq.pro:jooq:$jooqVersion\"\r\n    compileOnly \"org.jooq.pro:jooq-meta:$jooqVersion\"\r\n    // Oracle JDBC SQL XML interface (needed when Oracle SQL version < 18c)\r\n    implementation \"com.oracle.database.xml:xdb:$oracleJDBCVersion\"\r\n    implementation \"com.oracle.database.xml:xmlparserv2:$oracleJDBCVersion\"\r\n    // Oracle JDBC Driver for jOOQ generation\r\n    jooqCodegen \"com.oracle.database.jdbc:ojdbc11:$oracleJDBCVersion\"\r\n    // Runtime JDBC drivers required by My Project for making queries with jOOQ\r\n    implementation \"com.oracle.database.jdbc:ojdbc11:$oracleJDBCVersion\"\r\n    //implementation \"com.edb:postgres-edb-jdbc:$edbJDBCVersion\"\r\n    implementation \"org.postgresql:postgresql:$postgresJDBCVersion\"\r\n    implementation \"io.trino:trino-jdbc:$trinoJDBCVersion\"\r\n\r\n    /**\r\n     * Quinoa - Quarkus UI with NO hAssle\r\n     */\r\n    implementation \"io.quarkiverse.quinoa:quarkus-quinoa:$quinoaVersion\"\r\n\r\n    /**\r\n     * Jackson dataformat library for YAML (uses SnakeYAML behind the scenes)\r\n     */\r\n    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'\r\n\r\n    /**\r\n     * GraalVM SubstrateVM image builder components\r\n     */\r\n    compileOnly 'org.graalvm.sdk:graal-sdk'\r\n}\r\n\r\nwrapper {\r\n    distributionType = Wrapper.DistributionType.ALL\r\n    gradleVersion = '8.5'\r\n}\r\n\r\njava {\r\n    sourceCompatibility = JavaVersion.VERSION_21\r\n    targetCompatibility = JavaVersion.VERSION_21\r\n}\r\n// Enable JEP 430: String Templates (Preview in Java 21)\r\ntasks.withType(JavaCompile).configureEach {\r\n    options.compilerArgs << '--enable-preview'\r\n}\r\ntasks.withType(Test).configureEach {\r\n    jvmArgs += '--enable-preview'\r\n}\r\ntasks.withType(JavaExec).configureEach {\r\n    jvmArgs += '--enable-preview'\r\n}\r\n\r\ncompileJava {\r\n    options.encoding = 'UTF-8'\r\n    options.compilerArgs << '-parameters'\r\n}\r\n\r\ncompileTestJava {\r\n    options.encoding = 'UTF-8'\r\n}\r\n\r\ntest {\r\n    systemProperty 'java.util.logging.manager', 'org.jboss.logmanager.LogManager'\r\n}\r\n\r\nquarkusAppPartsBuild {\r\n    doNotTrackState('''\r\n    Always execute Gradle task quarkusAppPartsBuild to run the Quinoa build, should only the frontend code change,\r\n    and to always generate the K8s deploy manifest kubernetes.yml\r\n    ''')\r\n}\r\n\r\ntasks.register('printProjectName') {\r\n    doLast {\r\n        println project.name\r\n    }\r\n}\r\n\r\ntasks.register('printProjectDescription') {\r\n    doLast {\r\n        println project.description\r\n    }\r\n}\r\n\r\ntasks.register('printProjectVersion') {\r\n    doLast {\r\n        println project.version\r\n    }\r\n}\r\n\r\nsonar {\r\n    properties {\r\n        property 'sonar.projectKey', 'example_company_myproject_AdsfsASAS12ed1e'\r\n        property 'sonar.projectName', 'Example Company'\r\n    }\r\n}\r\n\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38297/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38297/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

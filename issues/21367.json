@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21367",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21367/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21367/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21367/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21367",
+  "id": 1050970481,
+  "node_id": "I_kwDOCFbutM4-pIlx",
+  "number": 21367,
+  "title": "When receiving Kafka record request context gets incorrectly active",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 26,
+  "created_at": "2021-11-11T13:17:01Z",
+  "updated_at": "2024-01-17T10:57:03Z",
+  "closed_at": "2022-09-12T09:48:39Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen Kafka processor receives record the request context gets automatically activated. The problem is the data of RequestScope objects are not cleared.\n\n### Expected behavior\n\nEvery record received via Kafka starts with no/new request context.\n\n### Actual behavior\n\nEvery record received via Kafka uses same request context. When increasing the counter variable at the request context object the counter increases with every record. Expected behaviour would be the counter increases from zero to one for each record.\n\n### How to Reproduce?\n\nuse kafka-quickstart project\r\n\r\n1. create class Counter with annotation @RequestScoped\r\n2. create in class Counter a variable counter = 0\r\n3. create in class Counter method increase() which inceases and prints the counter by 1\r\n4. create class Worker with annotation @ApplicationScoped\r\n5. inject into Worker class the Counter class\r\n5. create in class Worker method process() with @ActivateRequestContext\r\n6. this process() method triggers the increase() method of the Counter class\r\n7. inject into QuotesProcessor class the Worker class\r\n8. in class QuotesProcessor in method process(String quoteRequest) trigger the method process() of class Worker\r\n\r\nWhen creating new quotes via the UI and processing them in class QuotesProcessor in method process(String quoteRequest) using following comand: \r\n`Arc.container().requestContext().isActive()`\r\nyou can see the request context is active, but thats wrong, he should not be active. Thats why you can see the increase of the counter in class Counter when receiving multiple quotes.\r\n\r\nManually deactivating and activating the context in class QuotesProcessor  in method process(String quoteRequest) works:\r\n`Arc.container().requestContext().deactivate();`\r\n`Arc.container().requestContext().activate();`\r\nAnyway it should work also without adding these rows.\r\n\r\n[kafka-quickstart.zip](https://github.com/quarkusio/quarkus/files/7520190/kafka-quickstart.zip)\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nJava(TM) SE Runtime Environment 18.9 (build 11.0.5+10-LTS)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.4.1.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven 3.6.3\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21367/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21367/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

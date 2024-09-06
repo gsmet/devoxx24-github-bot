@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23311",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23311/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23311/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23311/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23311",
+  "id": 1119501605,
+  "node_id": "I_kwDOCFbutM5Cuj0l",
+  "number": 23311,
+  "title": "Dev Mode Continuous Testing: Arc fails in Maven Multi-Module project with \"TestHelper\" module.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955098535,
+      "node_id": "MDU6TGFiZWwyOTU1MDk4NTM1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/continuous-testing",
+      "name": "area/continuous-testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-01-31T14:28:53Z",
+  "updated_at": "2022-01-31T14:48:34Z",
+  "closed_at": "2022-01-31T14:43:37Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe use Quarkus in a multi-module Maven project setup.\r\nWhen we introduced a module thats only used in the test Scope (as a Util/Helper module), we noticed that our Continuous Testing broke.\r\nI simplified the setup in an example-project to recreate the error (see attached .zip or [Repo](https://github.com/serahl/quarkus-cont-testing-arc-error-example))\r\n\r\nWe have the following modules:\r\n\r\n- dbservice\r\n- testhelper\r\n  - depends on dbservice, implements a decorator for a service interface from dbservice\r\n- restservice\r\n  - depends on dbservice\r\n  - depends on testhelper only for the test scope.\r\n\r\nWhen running `mvn clean test`, everything works fine the tests are green.\r\nHowever, when starting the restservice module in dev mode via `mvn clean package -am -pl restservice -P devmode-restservice` or the standalone quarkus:test mode via `mvn clean package -am -pl restservice -P testmode-restservice` and enabling continuous testing, we run into an error.\r\n \r\n\r\n\r\n### Expected behavior\r\n\r\nThe @QuarkusTest testcases should be run successfully.\r\n\r\n### Actual behavior\r\n\r\nQuarkus Arc throws an exception. It looks like the ClassLoader of the Continuous Testing does not pick up the dependencies of the TestHelper module correctly.\r\n\r\n2022-01-31 15:21:19,440 ERROR [io.qua.test] (Test runner thread) Test GreetingResourceTest#testHelloEndpoint() failed\r\n: java.lang.RuntimeException: java.lang.ExceptionInInitializerError\r\n        at io.quarkus.test.junit.QuarkusTestExtension.throwBootFailureException(QuarkusTestExtension.java:587)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.interceptTestClassConstructor(QuarkusTestExtension.java:660)\r\n        at org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)\r\n        ...\r\n        at org.junit.platform.launcher.core.SessionPerRequestLauncher.execute(SessionPerRequestLauncher.java:60)\r\n        at io.quarkus.deployment.dev.testing.JunitTestRunner$3.run(JunitTestRunner.java:228)\r\n        at io.quarkus.deployment.dev.testing.ModuleTestRunner$2.run(ModuleTestRunner.java:90)\r\n        at io.quarkus.deployment.dev.testing.TestSupport.runInternal(TestSupport.java:387)\r\n        at io.quarkus.deployment.dev.testing.TestSupport$2.run(TestSupport.java:296)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.ExceptionInInitializerError\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Class.java:467)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl.run(StartupActionImpl.java:221)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.doJavaStart(QuarkusTestExtension.java:245)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.ensureStarted(QuarkusTestExtension.java:564)\r\n        at io.quarkus.test.junit.QuarkusTestExtension.beforeAll(QuarkusTestExtension.java:602)\r\n        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeBeforeAllCallbacks$10(ClassBasedTestDescriptor.java:381)\r\n        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\r\n        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeBeforeAlcks(ClassBasedTestDescriptor.java:381)\r\n        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:205)\r\n        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:80)\r\n        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:148)\r\n        ... 34 more\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n        ... 46 more\r\nCaused by: java.lang.RuntimeException: Failed to initialize Arc\r\n        at io.quarkus.arc.Arc.initialize(Arc.java:26)\r\n        at io.quarkus.arc.runtime.ArcRecorder.getContainer(ArcRecorder.java:40)\r\n        at io.quarkus.deployment.steps.ArcProcessor$generateResources1025303321.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.ArcProcessor$generateResources1025303321.deploy(Unknown Source)\r\n        ... 47 more\r\nCaused by: java.lang.NoClassDefFoundError: de/serahl/quarkustest/dbservice/DbService\r\n        at java.base/java.lang.ClassLoader.defineClass1(Native Method)\r\n        at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1012)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:445)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:405)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:455)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:405)\r\n        at java.base/java.lang.Class.forName0(Native Method)\r\n        at java.base/java.lang.Class.forName(Class.java:467)\r\n        at de.serahl.quarkustest.testhelper.DbServiceDecorator_Bean.<init>(Unknown Source)\r\n        at io.quarkus.arc.setup.Default_ComponentsProvider.addBeans1(Unknown Source)\r\n        at io.quarkus.arc.setup.Default_ComponentsProvider.getComponents(Unknown Source)\r\n        at io.quarkus.arc.impl.ArcContainerImpl.<init>(ArcContainerImpl.java:118)\r\n        at io.quarkus.arc.Arc.initialize(Arc.java:20)\r\n        ... 50 more\r\nCaused by: java.lang.ClassNotFoundException: de.serahl.quarkustest.dbservice.DbService\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:429)\r\n        at io.quarkus.bootstrap.classloading.QuarkusClassLoader.loadClass(QuarkusClassLoader.java:405)\r\n        ... 63 more\r\n\r\n### How to Reproduce?\r\n\r\nSeee linked repository or attached file.\r\n[quarkus-cont-testing-arc-error-example.zip](https://github.com/quarkusio/quarkus/files/7971479/quarkus-cont-testing-arc-error-example.zip)\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.1\" 2021-10-19 LTS OpenJDK Runtime Environment Microsoft-28056 (build 17.0.1+12-LTS) OpenJDK 64-Bit Server VM Microsoft-28056 (build 17.0.1+12-LTS, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.6.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.3 (ff8e977a158738155dc465c6a97ffaf31982d739)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23311/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23311/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27996",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27996/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27996/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27996/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27996",
+  "id": 1375670872,
+  "node_id": "I_kwDOCFbutM5R_xJY",
+  "number": 27996,
+  "title": "Test profile config properties can bleed into other test profiles",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-09-16T09:18:00Z",
+  "updated_at": "2024-08-29T19:11:05Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have run into the problem (I've seen this in dev-mode, but don't know if it is specific to that), that config properties which are provided by test profiles (using `QuarkusTestProfile#getConfigOverrides()`) can bleed into later tests which don't use that profile.\r\n\r\nI did some debugging and AFAICT the problem is in `io.quarkus.test.junit.QuarkusTestExtension#doJavaStart()`. In the called `createAugmentor()` method the `RestorableSystemProperties.setProperties()` method is called which sets the profile's config overrides as system properties and also returns a shutdown handler to restore the previous values. But `doJavaStart()` doesn't register these shutdown handlers until the very end and when executing the tests it is possible that these throw an exception (in my case I got an `ExceptionInInitializerError` which as its cause had an `RuntimeException` with the message `Failed to start quarkus`. As a consequence the shutdown handlers never get registered and the profile's config properties remain available as system properties.\n\n### Expected behavior\n\nIf profile config property overrides get set as system properties it must be ensured that these get properly reset / cleared, even if the test failed or throws exceptions.\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nIf requested I could look into provide a reproducer, but this may take some time.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.12.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27996/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27996/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "reopened"
+}

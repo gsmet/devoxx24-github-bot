@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42167",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42167/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42167/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42167/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42167",
+  "id": 2432477922,
+  "node_id": "I_kwDOCFbutM6Q_Kri",
+  "number": 42167,
+  "title": "Using value higher than Integer.MAX_VALUE as REST method arg cause 404 Not Found instead of 400 Bad Request",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-07-26T15:29:43Z",
+  "updated_at": "2024-07-31T07:34:35Z",
+  "closed_at": "2024-07-31T07:34:24Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nDear Quarkus Team :)\r\n\r\nI found a small problem in how out-of-range numbers are treated in REST endpoints when used as params. When the API caller provides invalid input (and out-of-range value is an example of such), a 404 Not Found is being returned instead of 400 Bad Request. Even if we assume that out-of-range value is treated as `null`, this case does not work as expected because when I have a `@NotNull` validator, it's not being used and I still end up with error code 404 instead of 400.\r\n\r\nFrom my analysis, it looks like only parameters annotated with the following annotations are affected by the problem - in all these cases supplying out-of-range numbers results in 404 Not Found (not expected):\r\n* `@RestQuery`\r\n* `@RestPath`\r\n* `@RestMatrix`\r\n\r\nParameters annotated with the following annotations, on the other hand, work well - in all these cases out-of-range numbers results in 400 Bad Request (as expected):\r\n* `@RestForm`\r\n* `@RestHeader`\r\n\r\nI haven't tested `@RestCookie` since in runtime it is bound to `null`.\r\n\r\nExample of expected behaviour:\r\n\r\n![image](https://github.com/user-attachments/assets/26651cb1-e37b-4ac3-a36c-f148e1030045)\r\n![image](https://github.com/user-attachments/assets/84a89216-6420-406c-8f39-e8151ab9c738)\r\n\r\nExample of unexpected behaviour:\r\n\r\n![image](https://github.com/user-attachments/assets/3e2ead0b-92b0-4250-9795-52434115ea02)\r\n![image](https://github.com/user-attachments/assets/eb76044e-88a1-4c14-8b76-8ba9fdb4d982)\r\n\r\nI can observe the same behaviour in Firefox Network console:\r\n\r\n![image](https://github.com/user-attachments/assets/4024f553-4ac6-4ea8-b7fc-0d7e187cd0f8)\r\n\r\n### Expected behavior\r\n\r\n**400 Bad Request** with a response detailing what is wrong.\r\n\r\n### Actual behavior\r\n\r\n**404 Not Found** with empty response payload.\r\n\r\n### How to Reproduce?\r\n\r\nHave the following class:\r\n\r\n```java\r\nimport org.jboss.resteasy.reactive.RestCookie;\r\nimport org.jboss.resteasy.reactive.RestForm;\r\nimport org.jboss.resteasy.reactive.RestHeader;\r\nimport org.jboss.resteasy.reactive.RestMatrix;\r\nimport org.jboss.resteasy.reactive.RestPath;\r\nimport org.jboss.resteasy.reactive.RestQuery;\r\n\r\nimport jakarta.ws.rs.POST;\r\nimport jakarta.ws.rs.Path;\r\n\r\n@Path(\"test\")\r\npublic class TestResource {\r\n\r\n\t@POST\r\n\t@Path(\"{pathvalue}\")\r\n\tpublic String getTest(\r\n\t\tfinal @RestHeader(\"headervalue\") Integer header,\r\n\t\tfinal @RestQuery(\"queryvalue\") Integer query,\r\n\t\tfinal @RestPath(\"pathvalue\") Integer path,\r\n\t\tfinal @RestForm(\"formvalue\") Integer form,\r\n\t\tfinal @RestCookie(\"cookievalue\") Integer cookie,\r\n\t\tfinal @RestMatrix(\"matrixvalue\") Integer matrix) {\r\n\t\treturn \"\"\r\n\t\t\t+ \"header: \" + header + \", \"\r\n\t\t\t+ \"query: \" + query + \", \"\r\n\t\t\t+ \"path: \" + path + \", \"\r\n\t\t\t+ \"form: \" + form + \", \"\r\n\t\t\t+ \"cookie: \" + cookie + \", \"\r\n\t\t\t+ \"matrix: \" + matrix;\r\n\t}\r\n}\r\n```\r\n\r\nOpen dev-ui, and go to Swagger:\r\n\r\n![image](https://github.com/user-attachments/assets/66fd0ee7-75a3-4f13-8070-dc141388b080)\r\n\r\nTry to supply specific parameter with `2147483648` (out-of-range) while having all others set to `2147483647` (max valid int).\r\n\r\nObserve:\r\n\r\n| Annotation | Response Status | Is correct? |\r\n| --- | --- | --- |\r\n| `@RestQuery` | 404 Not Found | No |\r\n| `@RestPath` | 404 Not Found | No |\r\n| `@RestMatrix` | 404 Not Found | No |\r\n| `@RestForm` | 400 Bad Request | Yes |\r\n| `@RestHeader` | 400 Bad Request  | Yes |\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux WAW-HCD79K3 5.15.0-116-generic #126~20.04.1-Ubuntu SMP Mon Jul 1 15:40:07 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21\" 2023-09-19 OpenJDK Runtime Environment (build 21+35-2513) OpenJDK 64-Bit Server VM (build 21+35-2513, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.13.0.CR1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nN/A\r\n\r\n### Additional information\r\n\r\nTested on Quarkus 3.9.3, 3.12.3, and 3.13.0.CR1. Reproduced on all these versions.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42167/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42167/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

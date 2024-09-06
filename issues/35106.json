@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35106",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35106/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35106/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35106/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35106",
+  "id": 1828454581,
+  "node_id": "I_kwDOCFbutM5s_AC1",
+  "number": 35106,
+  "title": "\"Hibernate Reactive Panache requires a safe (isolated) Vert.x sub-context, but the current context hasn't been flagged as such.\" when using Smallrye Messaging",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-07-31T05:50:14Z",
+  "updated_at": "2024-08-14T15:10:32Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nScenario: EntityA get's persisted, notification with entity is sent through message channel, receiver creates EntityB and links it to EntityA\r\n\r\nThis leads to the following error:\r\n\r\n```\r\nerResourceTest > testCreateUser() STANDARD_ERROR\r\n    Jul 31, 2023 7:37:55 AM io.smallrye.reactive.messaging.providers.AbstractMediator invoke\r\n    ERROR: SRMSG00200: The method com.example.EntityAService#onUserRegistrationConfirmed has thrown an exception\r\n    java.lang.IllegalStateException: Hibernate Reactive Panache requires a safe (isolated) Vert.x sub-context, but the current context hasn't been flagged as such.\r\n        at io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.checkIsSafe(VertxContextSafetyToggle.java:89)\r\n        at io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.validateContextIfExists(VertxContextSafetyToggle.java:72)\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations.vertxContext(SessionOperations.java:183)\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations.withSession(SessionOperations.java:112)\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.WithSessionInterceptor.intercept(WithSessionInterceptor.java:20)\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.WithSessionInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n        at com.example.EntityAService_Subclass.onUserRegistrationConfirmed(Unknown Source)\r\n        at com.example.EntityAService_ClientProxy.onUserRegistrationConfirmed(Unknown Source)\r\n        at com.example.EntityAService_SmallRyeMessagingInvoker_onUserRegistrationConfirmed_3712669874522feb4afaa8774dd5fa51e4e2f384.invoke(Unknown Source)\r\n        at io.smallrye.reactive.messaging.providers.AbstractMediator.invoke(AbstractMediator.java:136)\r\n        at io.smallrye.reactive.messaging.providers.AbstractMediator.lambda$invokeOnMessageContext$8(AbstractMediator.java:144)\r\n        at io.smallrye.reactive.messaging.providers.locals.LocalContextMetadata.lambda$invokeOnMessageContext$0(LocalContextMetadata.java:34)\r\n        at io.smallrye.reactive.messaging.providers.locals.LocalContextMetadata.lambda$invokeOnMessageContext$1(LocalContextMetadata.java:53)\r\n        at io.smallrye.reactive.messaging.providers.helpers.VertxContext.lambda$runOnContext$0(VertxContext.java:26)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n        at io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:1589)\r\n```\r\n\r\n\r\nI'm not sure if it is a Quarkus / Vert.X bug or if I'm missing something in my implementation.\r\n\r\nThe message is sent from within a transaction, and as I'm not using the `@Broadcast` annotation, I guess the transaction might still be open on the receiver-side or at least the same session is getting used. Is this true?\r\n\r\nAre there any best / bad practices for using transactions / sessions accross a message bus?\r\n\r\n\r\nIs also related to https://github.com/quarkusio/quarkus/issues/34291 but decided to open a new issue with the reproducer that is not kafka-related\r\n\r\n### Expected behavior\r\n\r\nTo save the second entity without issues.\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nhttps://github.com/mklueh/quarkus-reactive-reproducer-context-not-flagged\r\n\r\nRun the test inside the test package\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35106/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35106/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

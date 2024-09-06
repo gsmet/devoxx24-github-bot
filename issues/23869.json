@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23869",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23869/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23869/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23869/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23869",
+  "id": 1146751156,
+  "node_id": "I_kwDOCFbutM5EWgi0",
+  "number": 23869,
+  "title": "Quarkus.io 2.7.1 user remains authenticated, even if keycloak user session has disappeared",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-02-22T10:50:21Z",
+  "updated_at": "2022-02-23T11:55:28Z",
+  "closed_at": "2022-02-22T11:38:06Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWithin quarkus, the user will remain authenticated, even the keycloak user session has disappeared.\r\n\r\nSteps to reproduce\r\n\r\nPart I - keycloak configuration\r\n----------------------------------------\r\n\r\nStart keycloak on port 8180\r\nsh standalone.sh -Djboss.socket.binding.port-offset=100\r\n\r\n1. Create a quarkus realm.\r\n\r\n2. Create a client_id application being confidential\r\n\r\nClient_id: hello\r\nRoot URL localhost:8080/hello\r\n\r\nMake this client confidential\r\n\r\n3. Create a user (user1 /password)\r\n\r\nPart II - quarkus configuration\r\n----------------------------------------\r\n\r\n4. Get simple hello example from getting started\r\n\r\nmvn io.quarkus.platform:quarkus-maven-plugin:2.7.1.Final:create \\\r\n    -DprojectGroupId=org.acme \\\r\n    -DprojectArtifactId=getting-started \\\r\n    -Dextensions=\"resteasy\"\r\n\r\n\r\n\r\n4.  Make the /hello URL an application requiring to authenticate against keycloak\r\n\r\nadd The following to quarkus.properties\r\n\r\nquarkus.oidc.auth-server-url=http://localhost:8180/auth/realms/quarkus\r\nquarkus.oidc.client-id=hello\r\nquarkus.oidc.credentials.secret=6ed5c221-e388-4f55-8a41-fa50ce238e94\r\nquarkus.oidc.application-type=web-app\r\nquarkus.http.auth.permission.authenticated.paths=/*\r\nquarkus.http.auth.permission.authenticated.policy=authenticated \r\n\r\n5.  add oidc dependency to your project\r\n\r\n./mvnw quarkus:add-extension -Dextensions=\"oidc\"\r\n\r\n\r\n6. start quarkus in debugging mode\r\n\r\nmvn quarkus:dev\r\n\r\n7. Invoke local:8080/hello URL\r\n\r\n---> This will redirect you to keycloak\r\nyou have to log with user1/password\r\n\r\nAfter authentication, you are redirected to the  local:8080/hello landing page\r\n\r\n\r\n8. Destroy from keycloak admin console the current user session\r\n\r\n9. Try again the hello URL  local:8080/hello\r\n\r\n--->  local:8080/hello landing page is still displayed, whereas you should have been redirected to Keycloak for authentication\r\n\r\nConclusion:\r\nAlthough the corresponding keycloak  user session has been destroyed, the corresponding quarkus hello landing page remains active, as if the user session was still valid.\r\n\r\n \r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n \r\n\r\n\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nIt shall not be possible to authenticate to keycloak from hello URL\r\n\r\n\r\n\r\n### Actual behavior\r\n\r\nAlthough the corresponding keycloak  user session has been destroyed, the corresponding quarkus hello URL remains active, as if the user session was still valid.\r\n\r\n\r\n### How to Reproduce?\r\n\r\nalready provide\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23869/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23869/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

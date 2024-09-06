@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22654",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22654/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22654/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22654/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22654",
+  "id": 1094410066,
+  "node_id": "I_kwDOCFbutM5BO19S",
+  "number": 22654,
+  "title": "GraalVM issue with JsonNode serialization ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-01-05T14:28:26Z",
+  "updated_at": "2022-11-29T12:50:32Z",
+  "closed_at": "2022-11-29T12:50:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen trying to serialize a JsonNode in native, we get the following error::\r\n\r\n ```\r\n15:03:51,390 INFO  [app] 15:03:50,362 HTTP Request to /hello/big-serialize-list?expSize=99961 failed, error id: 23a57a4c-cb9d-4db1-b8a4-a0d362bdbb2f-1: org.jboss.resteasy.spi.UnhandledException: com.oracle.svm.core.jdk.UnsupportedFeatureError: SerializationConstructorAccessor class not found for declaringClass: com.fasterxml.jackson.databind.node.BaseJsonNode (targetConstructorClass: com.fasterxml.jackson.databind.JsonNode). Usually adding com.fasterxml.jackson.databind.node.BaseJsonNode to serialization-config.json fixes the problem.\r\n15:03:51,392 INFO  [app]        at org.jboss.resteasy.core.ExceptionHandler.handleApplicationException(ExceptionHandler.java:105)\r\n15:03:51,393 INFO  [app]        at org.jboss.resteasy.core.ExceptionHandler.handleException(ExceptionHandler.java:359)\r\n15:03:51,394 INFO  [app]        at org.jboss.resteasy.core.SynchronousDispatcher.writeException(SynchronousDispatcher.java:218)\r\n15:03:51,395 INFO  [app]        at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:519)\r\n15:03:51,396 INFO  [app]        at org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:261)\r\n15:03:51,396 INFO  [app]        at org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:161)\r\n15:03:51,397 INFO  [app]        at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:364)\r\n15:03:51,398 INFO  [app]        at org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:164)\r\n15:03:51,399 INFO  [app]        at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:247)\r\n15:03:51,399 INFO  [app]        at io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:73)\r\n15:03:51,400 INFO  [app]        at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:151)\r\n15:03:51,400 INFO  [app]        at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:91)\r\n15:03:51,401 INFO  [app]        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$13.runWith(VertxCoreRecorder.java:543)\r\n15:03:51,401 INFO  [app]        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n```\r\n\r\nQuarkus Upstream: `999-SNAPSHOT`\r\nJava: `11`\r\nMandrel:  `21.2.0.2-Final Mandrel Distribution (Java Version 11.0.13+8)`\r\n\r\nReproducer: \r\nProject: https://github.com/pjgg/quarkus-test-suite/tree/feat/QUARKUS-1554\r\ncmd: `mvn clean verify -Pnative -Dit.test=SerializationIT#serializeBigList`\r\nNote: `serializeBigList` is disabled, so remove this tag first. \r\n\r\nSerialization config: https://github.com/pjgg/quarkus-test-suite/blob/feat/QUARKUS-1554/http/jaxrs/src/main/java/io/quarkus/ts/security/core/SerializationConfig.java\r\n\r\nThe test is pointing to this endpoint: https://github.com/pjgg/quarkus-test-suite/blob/feat/QUARKUS-1554/http/jaxrs/src/main/java/io/quarkus/ts/security/core/GreetingResource.java#L85 \n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22654/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22654/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

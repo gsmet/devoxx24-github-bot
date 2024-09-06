@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37618",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37618/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37618/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37618/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37618",
+  "id": 2032693547,
+  "node_id": "I_kwDOCFbutM55KHEr",
+  "number": 37618,
+  "title": "No server chosen by com.mongodb.reactivestreams: Failed looking up SRV record ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2023-12-08T13:51:40Z",
+  "updated_at": "2024-06-26T13:00:06Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n**Issue using Quarkus 2.15.0 version** \r\n\r\nWhen trying a connection attempt in a mongo shard through a Quarkus application version >= 2.15.0 below error is propagated:\r\n\r\n\"\r\n_2023-11-24 10:07:53,815 INFO  [com.vod.dxl.gr.sys.uti.SRVQuery] (vert.x-eventloop-thread-0) 0 0 27017 dxl-gr-preprod-shard-00-02-nuler.mongodb.net.\r\n2023-11-24 10:07:53,907 INFO  [com.vod.dxl.gr.sys.uti.SRVQuery] (vert.x-eventloop-thread-0) 0 0 27017 dxl-gr-preprod-shard-00-00-nuler.mongodb.net.\r\n2023-11-24 10:07:53,908 INFO  [com.vod.dxl.gr.sys.uti.SRVQuery] (vert.x-eventloop-thread-0) 0 0 27017 dxl-gr-preprod-shard-00-01-nuler.mongodb.net.\r\n2023-11-24 10:07:56,108 INFO  [org.mon.dri.cluster] (executor-thread-1) No server chosen by com.mongodb.reactivestreams.client.internal.ClientSessionHelper$$Lambda$441/0x0000000050de1ef0@11222f0c from cluster description ClusterDescription{type=REPLICA_SET, srvResolutionException=com.mongodb.MongoConfigurationException: Failed looking up SRV record for '_mongodb._tcp.dxl-gr-preprod-nuler.mongodb.net'., connectionMode=MULTIPLE, serverDescriptions=[]}. Waiting for 30000 ms before timing out\r\n2023-11-24 10:07:59,508 INFO  [org.mon.dri.cluster] (cluster-656075d114c7f278b4f504d7) No server chosen by WritableServerSelector from cluster description ClusterDescription{type=REPLICA_SET, srvResolutionException=com.mongodb.MongoConfigurationException: Failed looking up SRV record for '_mongodb._tcp.dxl-gr-preprod-nuler.mongodb.net'., connectionMode=MULTIPLE, serverDescriptions=[]}. Waiting for 30000 ms before timing out_\r\n\"\r\n\r\n**Issue using Quarkus 3.1.0 version** \r\n\r\nAs described on [#32991](https://github.com/quarkusio/quarkus/issues/32991) this issue is resolved in \"Quarkus 3.0.2.Final\" version \r\n \r\nBased on the aforementioned proposal, upon upgrading on Quarkus \"3.1.0.Final\" a new error (resulting to same mongo connection inability) takes place. \r\n\r\nBelow you may find exact logs:\r\n\"\r\n_07:24:02 INFO  traceId=afd520fa41b8e64ab71320ef860625cb, parentId=, spanId=914390a5279baf32, sampled=true [or.mo.dr.cluster] (vert.x-eventloop-thread-0) No server chosen by com.mongodb.reactivestreams.client.internal.ClientSessionHelper$$Lambda$771/0x0000000064382208@64e7bf16 from cluster description ClusterDescription{type=UNKNOWN, connectionMode=SINGLE, serverDescriptions=[ServerDescription{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]}. Waiting for 30000 ms before timing out\r\n\"_\r\n\r\n**Dedicated Script for further logs:**\r\nIn attempt to have further view on Mongo SRV attributes we have created a dedicated script - triggered each time mongo data retrieval- is attempted that provides below logs:\r\n\"\r\n_07:03:36 INFO  traceId=3cd5ded71f5024a926d7b084400c8967, parentId=, spanId=616220dab51c5f28, sampled=false [gr.vo.dx.su.se.SRVQuery] (executor-thread-1) Providing SRV attributes logs....\r\n07:03:36 INFO  traceId=3cd5ded71f5024a926d7b084400c8967, parentId=, spanId=616220dab51c5f28, sampled=false [gr.vo.dx.su.se.SRVQuery] (executor-thread-1) 0 0 27017 dxl-gr-preprod-shard-00-01-nuler.mongodb.net.\r\n07:03:36 INFO  traceId=3cd5ded71f5024a926d7b084400c8967, parentId=, spanId=616220dab51c5f28, sampled=false [gr.vo.dx.su.se.SRVQuery] (executor-thread-1) 0 0 27017 dxl-gr-preprod-shard-00-02-nuler.mongodb.net.\r\n07:03:36 INFO  traceId=3cd5ded71f5024a926d7b084400c8967, parentId=, spanId=616220dab51c5f28, sampled=false [gr.vo.dx.su.se.SRVQuery] (executor-thread-1) 0 0 27017 dxl-gr-preprod-shard-00-00-nuler.mongodb.net.\r\n\r\n07:24:08 INFO  traceId=3cd5ded71f5024a926d7b084400c8967, parentId=, spanId=616220dab51c5f28, sampled=false [or.mo.dr.cluster] (executor-thread-3) No server chosen by com.mongodb.reactivestreams.client.internal.ClientSessionHelper$$Lambda$771/0x0000000064382208@53b297d6 from cluster description ClusterDescription{type=REPLICA_SET, connectionMode=MULTIPLE, serverDescriptions=[ServerDescription{address=dxl-gr-preprod-shard-00-02-nuler.mongodb.net:27017, type=UNKNOWN, state=CONNECTING}, ServerDescription{address=dxl-gr-preprod-shard-00-01-nuler.mongodb.net:27017, type=UNKNOWN, state=CONNECTING}, ServerDescription{address=dxl-gr-preprod-shard-00-00.nuler.mongodb.net:27017, type=UNKNOWN, state=CONNECTING}]}. Waiting for 30000 ms before timing out_\r\n\"\r\n\n\n### Expected behavior\n\nQuarkus should connect to Mongo Atlas without this SRV lookup or MongoSocketOpenException error\n\n### Actual behavior\n\nConnection failure takes place when reaching the established time thresshold\r\n\"Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]}. Waiting for 30000 ms before timing out\"\n\n### How to Reproduce?\n\nUsing the free tier mongo atlas account, \r\n\r\n- use the above mentioned quarkus versions (2.15.0 and 3.1.0 ) \r\n- specify the mongo atlas cluster url in application.properties. \r\n- Then, write a simple rest service that when invoked connects to mongo to retrieve records.\n\n### Output of `uname -a` or `ver`\n\nMINGW64_NT-10.0-22621 E0624331 3.3.3-341.x86_64 2022-01-17 11:45 UTC x86_64 Msys\n\n### Output of `java -version`\n\njava version \"17.0.7\" 2023-04-18 LTS\n\n### Quarkus version or git rev\n\n2.15.0 and 3.1.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n**Dedicated script getMongoDebugLogs() :**\r\n\r\npublic class SRVQuery {\r\n\r\n    private static final Logger log = LoggerFactory.getLogger(SRVQuery.class);\r\n    public static void getMongoDebugLogs() {\r\n        try {\r\n            // Set up the environment for creating the initial context\r\n            Hashtable<String, String> env = new Hashtable<>();\r\n            env.put(Context.INITIAL_CONTEXT_FACTORY, \"com.sun.jndi.dns.DnsContextFactory\");\r\n            env.put(Context.PROVIDER_URL, \"dns:\");\r\n            DirContext ctx = new InitialDirContext(env);\r\n            // Specify the name of the domain to query\r\n            String domainName = \"_mongodb._tcp.dxl-gr-preprod-nuler.mongodb.net\";\r\n            // Perform the SRV lookup\r\n            Attributes attrs = ctx.getAttributes(domainName, new String[]{\"SRV\"});\r\n            Attribute attr = attrs.get(\"SRV\");\r\n            log.info(\"Providing SRV attributes logs....\");\r\n            if (attr != null) {\r\n                for (int i = 0; i < attr.size(); i++) {\r\n                    log.info((String) attr.get(i));\r\n                }\r\n            } else {\r\n                log.info(\"No SRV records found for \" + domainName);\r\n            }\r\n            ctx.close();\r\n        } catch (NamingException e) {\r\n            log.info(\"Handing mongo debugging exception..\");\r\n            e.printStackTrace();\r\n            log.info(e.getMessage());\r\n        }\r\n    }\r\n\r\n}",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37618/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37618/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40469",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40469/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40469/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40469/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40469",
+  "id": 2280296650,
+  "node_id": "I_kwDOCFbutM6H6pDK",
+  "number": 40469,
+  "title": "quarkus-oidc ignores jvm proxy configuration and clashes with oidc-client when both proxies are set",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-05-06T08:07:15Z",
+  "updated_at": "2024-05-07T09:14:22Z",
+  "closed_at": "2024-05-07T09:14:22Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThis is going to be tough to create a reliable reproducer, but I will provide as much context as I can right now. Let’s start by describing the application and the environment it runs on:\r\n\r\n1) this application is built with quarkus 3.10 and Java 21\r\n2) it is packaged in a Docker image built with jvm mode, with jvm http(s) proxy properties and custom ca certificates installed on container level. Base image is ubi8/openjdk-21\r\n3) it is deployed to a kubernetes cluster of a global enterprise, which I don’t have access to (can’t access pods, can’t run debug mode)\r\n4) it uses Microsoft entra as OIDC provider\r\n5) it uses quarkus-rest-client for interaction with other APIs \r\n6) when deployed on the kubernetes cluster, all outgoing requests fail unless they go through a proxy server\r\n\r\nThe first few times the application was deployed, it was failing to startup, with the error message being that the OIDC server was not available at the auth-server-url location. Deploying it with the exact same configuration on any other environment that had no proxy constraint was successful, so it was clear the proxy was the issue. \r\n\r\nAfter deep reading of the documentation and debugging of OIDC classes, it became clear that quarkus-oidc does not honor jvm proxy properties, unlike quarkus-rest-client. When considering consistency of platform extensions, this seemed weird, but since it was not mentioned that should honor jvm configs on documentation, it is not really a bug. Once I figured that out, I’ve added both env vars QUARKUS_OIDC_PROXY_ADDRESS and QUARKUS_OIDC_PROXY_PORT which fixed the OIDC issues. Application started fine, and all test clients were working fine with the proxy just with JVM configs. \r\n\r\nNow comes the really weird part. A new requirements came in to use Microsoft Graph API to query some user data. Since all configuration was in place for the Microsoft Entra tenant, I’ve simply added the necessary quarkus-oidc-client and quarkus-rest-client-oidc-filter, and created a simple rest client for Graph with a single method for the call. Client was annotated with @RegisterRestClient(configKey=“graph”) and @OidcClientFilter(“graph”). The “graph” OIDC client configuration properties were mapped from the OIDC  tenant directly on application.yml with ${quarkus.oidc.auth-server-url} and such. \r\n\r\nOnce the changes were ready, I’ve built it on CI and deployed to the cluster. To my surprise, I was getting again the same error that OIDC server was not available at the tenants location, even though none of the OIDC tenant’s configs were changed. I realized I had not added the oidc-client proxy properties, so i went back to the helm template and added both proxy address and port to the env vars for the graph client. Deployed again, same issue. Tried again with oidc-client global properties this time, no luck. Removed all graph client code and properties (not rolling back, just commenting out) rebuilt and deployed, everything works again.\r\n\r\nI’ve typed all of this from phone, so it won’t be that easy to follow, and even harder for me to create a reproducer, as it would require an actual proxy setup for fidelity. But hopefully, with these details, someone can maybe point to a possible solution or something else that I could do to debug and provide more info.\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nOIDC and OIDC-CLIENT extensions should not interfere  on each other’s proxy configuration, if they share the same auth-server-url. \r\n\r\nFor platform consistency, it would be good if OIDC used global level jvm proxy configuration, just like quarkus-rest-client\r\n\r\n### Actual behavior\r\n\r\nSetting just oidc proxy properties works, setting both oidc and oidc-client proxy properties for the same auth-server-url breaks things\r\n\r\n### How to Reproduce?\r\n\r\nCreate an environment where all http calls must be proxied or else fail\r\nAdd quarkus-oidc and quarkus-oidc-client\r\nConfigure them with same auth-server-url and client details\r\nStart the application without proxy properties: fail\r\nStart the application with proxy properties: fail\r\nStart the application with only oidc (remove client) and proxy properties: works\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version “21.0.2” 2024-01-16 LTS\r\nOpenJDK Runtime Environment (Red_Hat-21.0.2+13-LTS)\r\nOpenJDK 64-Bit Server VM (Red_Hat-21.0.2.0.13-1) (build 21.0.2+13-LTS, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.10.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.5 (Red Hat 3.8.5-4)\r\nMaven home: /usr/share/maven\r\nJava version: 21.0.2, vendor: Red Hat, Inc., runtime: /usr/lib/jvm/java-21-openjdk-21.0.2.0.13-1.el8.x86_64\r\nDefault locale: en, platform encoding: UTF-8\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40469/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40469/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

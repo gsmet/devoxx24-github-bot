@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25606",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25606/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25606/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25606/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25606",
+  "id": 1237303321,
+  "node_id": "I_kwDOCFbutM5Jv8AZ",
+  "number": 25606,
+  "title": "Mongo health check connection auto close",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236032169,
+      "node_id": "MDU6TGFiZWwyMjM2MDMyMTY5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/health",
+      "name": "area/health",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-05-16T15:07:30Z",
+  "updated_at": "2022-08-24T10:48:02Z",
+  "closed_at": "2022-08-24T10:47:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen the connection pool is setup for MongoDb, and there is `max-connection-idle-time` also present, the connection pool itself working as expected, but the `MaintenanceTimer-thread` which is called to clear the idle connection,  closing the connections that are used for health check by itself, so it creates a problem that even if the connection pool is setup a lot of connections are opened and closed because of the maintenance.\r\n\r\n### Expected behavior\r\n\r\nIf the `quarkus.mongodb.min-pool-size` is setup the connections should be reused, not closed and opened frequently.\r\nOr health check connection should have it own pool.\r\n\r\n### Actual behavior\r\n\r\nConnections are closed and opened frequently.\r\n```\r\n2022-05-16 20:47:33,115 DEBUG [org.mon.dri.connection] (MaintenanceTimer-1-thread-1) Pruning pooled connections to localhost:27017\r\n2022-05-16 20:47:33,115 DEBUG [org.mon.dri.connection] (MaintenanceTimer-1-thread-1) Closed connection [connectionId{localValue:36, serverValue:322}] to localhost:27017 because it is past its maximum allowed idle time.\r\n2022-05-16 20:47:33,115 DEBUG [org.mon.dri.connection] (MaintenanceTimer-1-thread-1) Closing connection connectionId{localValue:36, serverValue:322}\r\n2022-05-16 20:47:33,115 DEBUG [org.mon.dri.connection] (MaintenanceTimer-1-thread-1) Ensuring minimum pooled connections to localhost:27017\r\n2022-05-16 20:47:33,179 INFO  [org.mon.dri.connection] (MaintenanceTimer-1-thread-1) Opened connection [connectionId{localValue:37, serverValue:323}] to localhost:27017\r\n2022-05-16 20:47:35,510 DEBUG [org.mon.dri.pro.command] (cluster-rtt-ClusterId{value='6282557c9965e50b69eaf771', description='null'}-localhost:27017) Sending command '{\"hello\": 1, \"$db\": \"admin\"}' with request id 470 to database admin on connection [connectionId{localValue:3, serverValue:289}] to server localhost:27017\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nCreate quarkus app with mongo dependency. Mongo  - image: \"mongo:5.0.6\"\r\n\r\nGradle\r\n\r\n```kotlin\r\n    api(\"io.quarkus:quarkus-rest-client-reactive-jackson\")\r\n    api(\"io.quarkus:quarkus-micrometer-registry-prometheus\")\r\n    api(\"io.quarkus:quarkus-kotlin\")\r\n    api(\"io.quarkus:quarkus-smallrye-health\")\r\n    api(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")\r\n    api(\"io.quarkus:quarkus-mongodb-panache-kotlin\")\r\n```\r\n\r\nMongoDb props:\r\n\r\n```yaml\r\nquarkus:\r\n  mongodb:\r\n    min-pool-size: ${MONGO_POOL_MIN_SIZE:2}\r\n    max-pool-size: ${MONGO_POOL_MAX_SIZE:20}\r\n    max-connection-idle-time: ${MONGO_CONNECTION_IDLE_TIME:60s}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n21.1.0 Darwin Kernel Version 21.1.0: Wed Oct 13 17:33:23 PDT 2021\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment Homebrew (build 11.0.12+0) OpenJDK 64-Bit Server VM Homebrew (build 11.0.12+0, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.8.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n7.4.1\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25606/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25606/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

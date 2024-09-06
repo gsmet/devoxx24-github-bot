@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29133",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29133/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29133/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29133/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29133",
+  "id": 1440551851,
+  "node_id": "I_kwDOCFbutM5V3ROr",
+  "number": 29133,
+  "title": "[Hibernate Reactive] Multiple inserts of identical entities during a transaction",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2022-11-08T16:48:34Z",
+  "updated_at": "2022-11-11T09:21:54Z",
+  "closed_at": "2022-11-11T09:14:08Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n**Dependencies**\r\nquarkus-hibernate-reactive-panache\r\nquarkus-hibernate-reactive\r\nquarkus-reactive-pg-client\r\nPostgreSQL: 15.0 (also reproduced on 14.5)\r\n\r\n**My app does the following:**\r\n1) request to an external system via REST Client to receive items\r\n2) saving items in the database\r\n\r\n**Model**\r\n```\r\n@MappedSuperclass\r\n@Data\r\npublic class BaseEntity extends PanacheEntityBase implements Serializable {\r\n\r\n    @Id\r\n    // FIX: For some reason, the automatically generated id by hibernate leads to id duplication\r\n    // Using sequence identifier types, such as Long, leads to an incorrect amount of inserted data and duplication too\r\n    // Temporary fixed by uuid and session.setBatchSize(entitiesMap.values().size());\r\n    @GeneratedValue(generator = \"custom-uuid\")\r\n    @GenericGenerator(\r\n            name = \"custom-uuid\",\r\n            strategy = \"ru.jfeoks.shoppingassistant.model.entity.generator.CustomUUIDGenerator\"\r\n    )\r\n    private UUID id;\r\n}\r\n\r\n@Slf4j\r\npublic class CustomUUIDGenerator extends UUIDGenerator {\r\n\r\n    @Override\r\n    public Serializable generate(\r\n            SharedSessionContractImplementor session,\r\n            Object object\r\n    ) throws HibernateException {\r\n        Serializable result = super.generate(session, object);\r\n        log.info(\"Generated ID: {}\", result);\r\n        return result;\r\n    }\r\n}\r\n\r\n@Entity\r\n@Cacheable\r\n@Data\r\npublic class Item extends BaseEntity {\r\n\r\n    @NotNull\r\n    @Column(updatable = false, unique = true)\r\n    private Long productId;\r\n\r\n    @Column(length = 4000)\r\n    private String name;\r\n}\r\n```\r\n\r\n**Insertion code**\r\n```\r\n    @ReactiveTransactional\r\n    @Override\r\n    public Uni<Collection<Item>> createAll(Collection<Item> entities) {\r\n        return Uni.createFrom().item(\r\n                        entities\r\n                                .stream()\r\n                                .collect(\r\n                                        Collectors.toMap(\r\n                                                Item::getProductId,\r\n                                                value -> value,\r\n                                                (left, right) -> right)\r\n                                )\r\n                )\r\n                .chain(\r\n                        entitiesMap ->\r\n                                getRepository()\r\n                                        .findByProductIds(entitiesMap.keySet())\r\n                                        .map(values -> values.stream().map(Item::getProductId).toList())\r\n                                        .onItem().transformToUni(\r\n                                                values -> {\r\n                                                    values.forEach(entitiesMap.keySet()::remove);\r\n                                                    return getRepository().persistAll(entitiesMap.values());\r\n                                                }\r\n                                        )\r\n                                        .invoke(values -> log.info(\"Loaded: {}\", values.size()))\r\n\r\n                );\r\n    }\r\n```\r\n\r\n**Invocation code**\r\n```\r\n    private Multi<Item> createAll(List<Item> items) {\r\n        return Uni.createFrom().item(items)\r\n                .onItem().transformToMulti(value -> Multi.createFrom().iterable(value))\r\n                .call(\r\n                        item ->\r\n                                wbClient\r\n                                        .queryAdditionalParameters(item.getProductId())\r\n                                        .onItem().ifNotNull()\r\n                                        .invoke(prices -> updateMinPrice(item, prices))\r\n                )\r\n                .group().intoLists().of(500)\r\n                .onItem().transformToUniAndMerge(getService()::createAll)\r\n                .onItem().disjoint();\r\n    }\r\n```\r\nAfter a little research, I found out that ID generation works correctly, the problem is somewhere after calling org.hibernate.reactive.engine.ReactiveActionQueue\r\n```\r\nprivate <E extends ReactiveExecutable> CompletionStage<Void> executeActions(\r\n\t\t\tExecutableList<E> list) throws HibernateException \r\n```\r\nIn this method, the correct number of entries comes to the list without duplicate ids (perhaps you need to double-check), I couldn't catch it with the debugger. Next in org.hibernate.reactive.pool.BatchingConnection already gets duplicates (with batch size = 1, the problem also reproduces).\r\n\r\n**Logs of a single transaction**\r\n```\r\n2022-11-08 14:26:56,032 INFO  [ru.jfe.sho.mod.ent.gen.CustomUUIDGenerator] (vert.x-eventloop-thread-2) Generated ID: 3be253e8-45f6-4cc0-ba6b-b0864d0edcd3\r\n...\r\n2022-11-08 14:26:56,089 TRACE [org.hib.typ.des.sql.BasicBinder] (vert.x-eventloop-thread-2) binding parameter [17] as [OTHER] - [3be253e8-45f6-4cc0-ba6b-b0864d0edcd3]\r\n...\r\nHibernate: \r\n    insert \r\n    into\r\n        Item\r\n        (..., id) \r\n    values\r\n        (... $17)\r\n...\r\n2022-11-08 14:26:56,483 TRACE [org.hib.typ.des.sql.BasicBinder] (vert.x-eventloop-thread-2) binding parameter [17] as [OTHER] - [3be253e8-45f6-4cc0-ba6b-b0864d0edcd3]\r\n...\r\nHibernate: \r\n    insert \r\n    into\r\n        Item\r\n        (..., id) \r\n    values\r\n        (... $17)\r\n```\r\n\r\n### Expected behavior\r\n\r\nSuccessful insertion\r\n\r\n### Actual behavior\r\n\r\n```\r\n2022-11-08 18:52:13,363 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-2) HTTP Request to /bundles/enable failed, error id: 89a29588-9305-4819-9560-3fba69db8c60-1: io.vertx.pgclient.PgException: ERROR: duplicate key value violates unique constraint \"item_pkey\" (23505)\r\n\tat io.vertx.pgclient.impl.codec.ErrorResponse.toException(ErrorResponse.java:31)\r\n\tat io.vertx.pgclient.impl.codec.QueryCommandBaseCodec.handleErrorResponse(QueryCommandBaseCodec.java:57)\r\n\tat io.vertx.pgclient.impl.codec.ExtendedQueryCommandCodec.handleErrorResponse(ExtendedQueryCommandCodec.java:90)\r\n\tat io.vertx.pgclient.impl.codec.PgDecoder.decodeError(PgDecoder.java:246)\r\n\tat io.vertx.pgclient.impl.codec.PgDecoder.decodeMessage(PgDecoder.java:132)\r\n\tat io.vertx.pgclient.impl.codec.PgDecoder.channelRead(PgDecoder.java:112)\r\n\tat io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:251)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)\r\n\tat io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1410)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)\r\n\tat io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:365)\r\n\tat io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:919)\r\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:788)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1589)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1) The problem is periodically reproduced when trying to save 7000 records, where 500 records are in each transaction.\r\n2) When saving one record at a time, the problem is not reproduced.\r\n3) **WA**: the problem is not reproducible if batch size = collection size\r\n```\r\n    default Uni<Collection<T>> persistAll(Collection<T> entities) {\r\n        return Uni.createFrom().item(entities)\r\n                .call(\r\n                        values -> getSession().call(\r\n                                session -> {\r\n                                    session.setBatchSize(values.size());\r\n                                    return session.persistAll(values.toArray());\r\n                                }\r\n                        )\r\n                );\r\n    }\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows 10 Pro 22H2\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29133/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29133/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

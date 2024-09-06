@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32831",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32831/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32831/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32831/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32831",
+  "id": 1679011697,
+  "node_id": "I_kwDOCFbutM5kE69x",
+  "number": 32831,
+  "title": "Hibernate Validator Failure When TZ Set to Non-UTC",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1305687763,
+      "node_id": "MDU6TGFiZWwxMzA1Njg3NzYz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-validator",
+      "name": "area/hibernate-validator",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Validator"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2023-04-21T19:52:26Z",
+  "updated_at": "2024-08-29T15:34:35Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAnnotation-based validation via the Hibernate Validator module can fail in native mode if the time zone is set to anything but UTC. This only applies to running a native build inside a container. The container's OS time zone is set to local time, but in order to make the Quarkus application run in local time, too, setting the `TZ` environment variable is necessary. However, if this variable is set to anything but `UTC`, validation on time-based types can fail.\r\n\r\nSpecifically, I am using `@PastOrPresent`  on a `LocalDateTime` field that is part of an entity class. The `LocalDateTime` is set to `LocalDateTime.now()`, so this should not fail when validation is being run. However, under the aforementioned circumstances of having set `TZ` to anything that has a positive offset to UTC, an exception is thrown, stating that the time must be in the past or present. \r\n\r\nSeemingly, the explanation for this is that validation is internally still using UTC while the rest of the Quarkus application is running with the TZ that has been set. I have tried setting `quarkus.hibernate-orm.jdbc.timezone` to the same TZ, but this has no effect.\r\n\r\nThe issue only occurs for native builds, and does not occur for JVM-based images.\r\n\r\nI am using the `quarkus-micro-image:2.0` as the base.\r\n\r\nThe issue occurs when building for Java 17 with the Mandel builder image (v22.3) as well as when using Java 19 with GraalVM CE (v22.3).\r\n\n\n### Expected behavior\n\nValidation should pass, because the field is valid.\n\n### Actual behavior\n\nValidation throws an exception.\n\n### How to Reproduce?\n\nhttps://github.com/this-user/quarkus-hibernate-validation-issue-tz\r\n\r\nSteps to reproduces:\r\n\r\n 1. Comment out `quarkus.test.arg-line` that sets the TZ in `application.properties`\r\n 2. Run `./gradlew testNative --info`\r\n 3. Integration tests pass\r\n 4. Remove comment from 1. and run tests again, now with non-UTC TZ\r\n 5. Tests will fail because validation of `TestEntity` fails\n\n### Output of `uname -a` or `ver`\n\nLinux 6.2.11-arch1-1 #1 SMP PREEMPT_DYNAMIC Thu, 13 Apr 2023 16:59:24 +0000 x86_64 GNU/Linux\n\n### Output of `java -version`\n\n17.0.6\n\n### GraalVM version (if different from Java)\n\n22.3.1.0\n\n### Quarkus version or git rev\n\n2.16.6 Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.0.2\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32831/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32831/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

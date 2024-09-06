@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29366",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29366/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29366/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29366/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29366",
+  "id": 1456663856,
+  "node_id": "I_kwDOCFbutM5W0u0w",
+  "number": 29366,
+  "title": "Native image contains over 2 thousand BouncyCastle classes by default",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3866841773,
+      "node_id": "LA_kwDOCFbutM7me1Kt",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/securepipeline",
+      "name": "area/securepipeline",
+      "color": "0366d6",
+      "default": false,
+      "description": "issues related to ensure Quarkus can be used in a secure pipeline setups like FIPS or similar"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-11-19T21:16:12Z",
+  "updated_at": "2022-11-20T19:21:51Z",
+  "closed_at": "2022-11-20T19:21:51Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nMy native image contains BouncyCastle classes, but I don't think I need all of them. Quarkus Security registers BouncyCastle classes for reflection here https://github.com/quarkusio/quarkus/blob/main/extensions/security/deployment/src/main/java/io/quarkus/security/deployment/SecurityProcessor.java#L164, here https://github.com/quarkusio/quarkus/blob/main/extensions/security/deployment/src/main/java/io/quarkus/security/deployment/SecurityProcessor.java#L142 and here https://github.com/quarkusio/quarkus/blob/main/extensions/security/deployment/src/main/java/io/quarkus/security/deployment/SecurityProcessor.java#L128, however all relevant integration test modules (`bouncycastle`, `bouncycastle-fips`, `bouncycastle-fips-jsse`, `bouncycastle-jsse`) are passing in native mode even when you completely remove these registrations as native image contains all of these classes anyway (and abundance of others).\r\n\r\n### Expected behavior\r\n\r\nNative image only contains classes I really need.\r\n\r\n### Actual behavior\r\n\r\n2586 classes, f.e. `ecgost` package classes, `elgamal` package classes that I don't really need.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\n\r\nSteps to reproduce the behavior:\r\n1. `git clone https://github.com/quarkusio/quarkus.git`\r\n2. `cd quarkus/integration-tests/bouncycastle`\r\n3. `mvn clean verify -Dnative -Dquarkus.native.additional-build-args=-H:IncludeResources=.*\\\\.pem,-H:+PrintClassInitialization -Dquarkus.native.enable-reports`\r\n4. checkout:\r\n- `target/quarkus-integration-test-bouncycastle-999-SNAPSHOT-native-image-source-jar/reports/class_initialization_report_20221119_205609.csv` and look for `org.bouncycastle` and see 2586 results\r\n- `target/quarkus-integration-test-bouncycastle-999-SNAPSHOT-native-image-source-jar/reports/used_classes_quarkus-integration-test-bouncycastle-999-SNAPSHOT-runner_20221119_205621.txt` says 2096 `org.bouncycastle` classes are used\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux fedora 5.19.16-200.fc36.x86_64 #1 SMP PREEMPT_DYNAMIC Sun Oct 16 22:50:04 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.5 2022-10-18\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nOpenJDK Runtime Environment GraalVM CE 22.3.0 (build 17.0.5+8-jvmci-22.3-b08)\r\n\r\n### Quarkus version or git rev\r\n\r\n999-SNAPSHOT\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29366/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29366/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,92 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24148",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24148/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24148/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24148/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24148",
+  "id": 1161665142,
+  "node_id": "I_kwDOCFbutM5FPZp2",
+  "number": 24148,
+  "title": "Avro deserialization fails since 2.5 with Confluent serdes in smallrye-kafka reactive messaging",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-03-07T16:47:15Z",
+  "updated_at": "2022-05-01T15:12:00Z",
+  "closed_at": "2022-05-01T15:12:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI've a Kafka Streams service, successfully running with Quarkus 2.4. It connects to Confluent Schema Registry and uses Confluent Avro serializers / deserializers. There is a Maven `parent` module, an `avro` module containing and compiling Avro schemas and a `core` module, where the application resides. Tests additonally use smallrye-kafka Reactive messaging for sending test data and also for reading from topics written by Kafka streams (to e.g. compare with expected data).\r\n\r\nI couldn't upgrade it to a newer version (2.5 IIRC, and 2.7.3 yesterday), because there's a problem in tests, when a smallrye-kafka channel tries to deserialize the specific messages for key / value.\r\n\r\nThe configuration for reading of records in test application.yaml looks like this:\r\n```yaml\r\nmp:\r\n  messaging:\r\n    incoming:\r\n      my-test-data:\r\n        connector: smallrye-kafka\r\n        topic: ${my.outbound-topic}\r\n        key:\r\n          deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer\r\n        value:\r\n          deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer\r\n        schema:\r\n          registry:\r\n            url: ${quarkus.kafka-streams.schema-registry-url}\r\n        specific:\r\n          avro:\r\n            reader: true\r\n```\r\n\r\nand the exception that I get looks like this:\r\n```java\r\nmar 05, 2022 1:41:10 PM io.smallrye.reactive.messaging.kafka.impl.KafkaSource reportFailure\r\nWARN: SRMSG18228: A failure has been reported for Kafka topics '[my.topic]'\r\njava.lang.ClassCastException: class com.my.package.avro.schema.v1.MyKey cannot be cast to class org.apache.avro.specific.SpecificRecord (my.package.avro.schema.v1.MyKey is in unnamed module of loader 'app'; org.apache.avro.specific.SpecificRecord is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @77102b91)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.getSpecificReaderSchema(AbstractKafkaAvroDeserializer.java:286)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.getReaderSchema(AbstractKafkaAvroDeserializer.java:252)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.getDatumReader(AbstractKafkaAvroDeserializer.java:196)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer$DeserializationContext.read(AbstractKafkaAvroDeserializer.java:391)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.deserialize(AbstractKafkaAvroDeserializer.java:114)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.deserialize(AbstractKafkaAvroDeserializer.java:88)\r\n\tat io.confluent.kafka.serializers.KafkaAvroDeserializer.deserialize(KafkaAvroDeserializer.java:55)\r\n\tat org.apache.kafka.common.serialization.Deserializer.deserialize(Deserializer.java:60)\r\n\tat io.smallrye.reactive.messaging.kafka.fault.DeserializerWrapper.lambda$deserialize$1(DeserializerWrapper.java:74)\r\n\tat io.smallrye.reactive.messaging.kafka.fault.DeserializerWrapper.wrapDeserialize(DeserializerWrapper.java:106)\r\n\tat io.smallrye.reactive.messaging.kafka.fault.DeserializerWrapper.deserialize(DeserializerWrapper.java:74)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher.parseRecord(Fetcher.java:1436)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher.access$3400(Fetcher.java:135)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher$CompletedFetch.fetchRecords(Fetcher.java:1671)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher$CompletedFetch.access$1900(Fetcher.java:1507)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher.fetchRecords(Fetcher.java:733)\r\n\tat org.apache.kafka.clients.consumer.internals.Fetcher.fetchedRecords(Fetcher.java:684)\r\n\tat org.apache.kafka.clients.consumer.KafkaConsumer.pollForFetches(KafkaConsumer.java:1304)\r\n\tat org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:1238)\r\n\tat org.apache.kafka.clients.consumer.KafkaConsumer.poll(KafkaConsumer.java:1211)\r\n\tat io.smallrye.reactive.messaging.kafka.impl.ReactiveKafkaConsumer.lambda$poll$4(ReactiveKafkaConsumer.java:141)\r\n...\r\n```\r\n\r\nThe error happens in this line of `AbstractKafkaAvroDeserializer` (version 7.0.1):\r\n```java\r\nprivate Schema getSpecificReaderSchema(Schema writerSchema) {\r\n...\r\n    try {\r\n      return readerClass.newInstance().getSchema();\r\n    } catch (InstantiationException e) {\r\n...\r\n```\r\n\r\nWhat's interesting, evaluating it in IntelliJ works without errors.\r\n\r\nI guess this must be related to some changes in Quarkus class loading after 2.4, because if I move the .avsc files to the same Maven module, where the Quarkus application resides, then my tests start working again (that is, the records can be cast to SpecificRecord). The generated Java classes look the same in both cases (coming from the `avro` module and being generated in `core`). I'm using / Quarkus is using: Avro 1.11.0.\n\n### Expected behavior\n\nUsing Java classes compiled by Avro, coming from a dependency module, still works.\n\n### Actual behavior\n\nThe deserialization to Avro-generated Java classes in the following code still works:\r\n\r\n```java\r\n@Incoming(\"my-test-data\")\r\npublic void receive(Record<MyKey, MyValue> record) {\r\n    doSomething(record);\r\n}\r\n```\n\n### How to Reproduce?\n\n1. Service is using smallrye-kafka to ingest Avro-serialized messages form some Kafka topic\r\n2. The Java classes generated from Avro schemas come from another maven module / jar\r\n3. The code uses Avro deserializers from io.confluent:kafka-streams-avro-serde (e.g. 7.0.1)\r\n4. When receiving a message, the reactive messaging code tries to deserialize it and fails \n\n### Output of `uname -a` or `ver`\n\nWindows 10\n\n### Output of `java -version`\n\n17 (zulu)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.8.4\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24148/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24148/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39176",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39176/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39176/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39176/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39176",
+  "id": 2168274986,
+  "node_id": "I_kwDOCFbutM6BPUAq",
+  "number": 39176,
+  "title": "@MessageBundle with custom keys does not work properly",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1714005220,
+      "node_id": "MDU6TGFiZWwxNzE0MDA1MjIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/qute",
+      "name": "area/qute",
+      "color": "0366d6",
+      "default": false,
+      "description": "The template engine"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-03-05T04:29:11Z",
+  "updated_at": "2024-03-05T09:16:11Z",
+  "closed_at": "2024-03-05T09:16:11Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAccording to the [documentation](https://quarkus.io/guides/qute-reference#bundle-name-and-message-keys):\r\n\r\n> Message keys are used directly in templates. The bundle name is used as a namespace in template expressions. The @MessageBundle can be used to define the default strategy used to generate message keys from method names. **However, the @Message can override this strategy and even define a custom key**.\r\n\r\nThe following should work:\r\n\r\nAuthEmailTemplates.java:\r\n```java\r\nimport io.quarkus.qute.i18n.Message;\r\nimport io.quarkus.qute.i18n.MessageBundle;\r\n\r\n@MessageBundle(value = \"auth_emails\")\r\npublic interface AuthEmailTemplates {\r\n    \r\n    @Message(key = \"email.login-otp\")\r\n    String loginByEmailOtp(String otp);\r\n}\r\n```\r\n\r\n./resources/messages/auth_emails.properties:\r\n```\r\nemail.login-otp=Login OTP is {otp}\r\n```\r\n\r\nHowever, I got the following error:\r\n\r\n\r\n```\r\nio.quarkus.qute.deployment.MessageBundleException: Message bundle method email.login-otp() not found on: io.fouad.backend.auth.templates.AuthEmailTemplates\r\n\t- file: C:\\Users\\fouad\\IdeaProjects\\fouad-backend\\build\\resources\\main\\messages\\auth_emails.properties\r\n\t- line 0\r\n\tat io.quarkus.qute.deployment.MessageBundleProcessor.parseKeyToTemplateFromLocalizedFile(MessageBundleProcessor.java:781)\r\n\tat io.quarkus.qute.deployment.MessageBundleProcessor.getLocalizedFileKeyToTemplate(MessageBundleProcessor.java:730)\r\n\tat io.quarkus.qute.deployment.MessageBundleProcessor.generateImplementations(MessageBundleProcessor.java:679)\r\n\tat io.quarkus.qute.deployment.MessageBundleProcessor.processBundles(MessageBundleProcessor.java:268)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```\r\n\r\nIf I delete `email.login-otp=Login OTP is {otp}` from `auth_emails.properties`, I get this error:\r\n\r\n```\r\nCaused by: io.quarkus.qute.deployment.MessageBundleException: Message template for key [email.login-otp] is missing for default locale [en-US]\r\n\tat io.quarkus.qute.deployment.MessageBundleProcessor.generateImplementation(MessageBundleProcessor.java:916)\r\n\tat io.quarkus.qute.deployment.MessageBundleProcessor.generateImplementations(MessageBundleProcessor.java:683)\r\n\tat io.quarkus.qute.deployment.MessageBundleProcessor.processBundles(MessageBundleProcessor.java:268)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```\r\n\r\nThe workaround here is to replace `email.login-otp=Login OTP is {otp}` with `loginByEmailOtp=Login OTP is {otp}`.\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n21\n\n### Quarkus version or git rev\n\n3.8.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle 8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39176/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39176/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

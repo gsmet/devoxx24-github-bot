@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31172",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31172/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31172/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31172/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31172",
+  "id": 1585021335,
+  "node_id": "I_kwDOCFbutM5eeYGX",
+  "number": 31172,
+  "title": "Can not use a PKCS#11 keystore when configuring the HTTPS listener",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2023-02-15T00:24:49Z",
+  "updated_at": "2023-10-09T18:11:12Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nLooks like Quarkus is forcing either PEM files or a key store in order to start the HTTPS listener.\r\n\r\nThis seems to be a blocker if you want to use a PKCS#11 keystore where key material is loaded from the underlying PKCS#11 module (e.g.: some HSM device or soft-based PKCS#11 impl like `SoftHSM`). When using PKCS#11 there is no file to read from but rely on the `SunPKCS11` security provider configuration to integrate with the underlying cryptographic device.\r\n\r\nAfter some investigation, I noticed that even though `ssl` is enabled [here](https://github.com/quarkusio/quarkus/blob/main/extensions/vertx-http/runtime/src/main/java/io/quarkus/vertx/http/runtime/VertxHttpRecorder.java#L908), right after the server options are set to `null` as per https://github.com/quarkusio/quarkus/blob/main/extensions/vertx-http/runtime/src/main/java/io/quarkus/vertx/http/runtime/VertxHttpRecorder.java#L694.\r\n\r\nTo workaround the issue, I had to create `HttpServerOptionsCustomizer` in order to create a PKCS#11 based `JksOptions` :\r\n\r\n```\r\nprivate static final String PKCS11_KEY_STORE_TYPE = \"PKCS11\";\r\n\r\n    @ConfigProperty(name = \"kc.https-key-store-type\", defaultValue = \"none\")\r\n    String httpsKeyStoreType;\r\n\r\n    @ConfigProperty(name = \"kc.https-key-store-password\")\r\n    String httpsKeyStorePassword;\r\n\r\n    private KeyStoreHelper keyStoreHelper;\r\n\r\n    @Override\r\n    public void customizeHttpsServer(HttpServerOptions options) {\r\n        if (PKCS11_KEY_STORE_TYPE.equalsIgnoreCase(httpsKeyStoreType)) {\r\n            try {\r\n                keyStoreHelper = new KeyStoreHelper(loadPkcs11KeyStore(), httpsKeyStorePassword, null);\r\n                options.setKeyStoreOptions(createPkcs11KeyStoreOptions(keyStoreHelper));\r\n            } catch (Exception e) {\r\n                throw new RuntimeException(e);\r\n            }\r\n        }\r\n    }\r\n\r\n    private KeyStore loadPkcs11KeyStore() {\r\n        try {\r\n            KeyStore ks = KeyStore.getInstance(httpsKeyStoreType);\r\n\r\n            ks.load(null, Optional.ofNullable(httpsKeyStorePassword).map(String::toCharArray).orElse(null));\r\n\r\n            return ks;\r\n        } catch (Exception e) {\r\n            throw new RuntimeException(e);\r\n        }\r\n    }\r\n\r\n    private JksOptions createPkcs11KeyStoreOptions(KeyStoreHelper keyStoreHelper) {\r\n        return new JksOptions() {\r\n            @Override\r\n            public JksOptions copy() {\r\n                return this;\r\n            }\r\n\r\n            @Override\r\n            public KeyManagerFactory getKeyManagerFactory(Vertx vertx) throws Exception {\r\n                return keyStoreHelper.getKeyMgrFactory();\r\n            }\r\n\r\n            @Override\r\n            public Function<String, X509KeyManager> keyManagerMapper(Vertx vertx) throws Exception {\r\n                return keyStoreHelper::getKeyMgr;\r\n            }\r\n        };\r\n    }\r\n```\r\n\r\nBy doing that, Quarkus/Vert.x starts the HTTPS listener using my PKCS#11 keystore.\r\n\r\nIf the issue makes sense, I can try to come up with a PR.\n\n### Expected behavior\n\nEnable HTTPS using a PKCS#11 keystore.\n\n### Actual behavior\n\nHTTPS listener won't start if PEM files or key store is not provided.\n\n### How to Reproduce?\n\n1. Configure your environment as follows https://github.com/keycloak/keycloak/issues/17098#issuecomment-1430508939, so that you can use SoftHSM as a PKCS#11 complaint key store.\r\n2. Change your Java security properties file (java_home/conf/security/java.security) to configure the `SunPKCS11` provider as follows:\r\n```\r\n# configuration for security providers 1-12 omitted\r\nsecurity.provider.13=SunPKCS11 ~/security.softhsm/tokens/softhsm-pkcs11.conf\r\n```\r\n3. Start an application using the following options:\r\n```\r\nquarkus.http.ssl.certificate.key-store-password=mypin\r\nquarkus.http.ssl.certificate.key-store-file-type=PKCS11\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux fedora 6.1.10-100.fc36.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Feb  6 19:58:39 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.5\" 2022-10-18 OpenJDK Runtime Environment Temurin-17.0.5+8 (build 17.0.5+8) OpenJDK 64-Bit Server VM Temurin-17.0.5+8 (build 17.0.5+8, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.13.7\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31172/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31172/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

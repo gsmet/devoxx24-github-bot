@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20749",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20749/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20749/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20749/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20749",
+  "id": 1025664050,
+  "node_id": "I_kwDOCFbutM49ImQy",
+  "number": 20749,
+  "title": "Duplicate error log in tests/no logs in tests on exception in QuarkusTestResourceLifecycleManager",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2021-10-13T20:23:47Z",
+  "updated_at": "2022-02-28T21:22:13Z",
+  "closed_at": "2022-02-28T21:22:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nError and warnings are logged twice during tests, probably because multiple logging handlers are registered.\r\nOn the other hand info logs and below are not logged if there is an exception in `QuarkusTestResourceLifecycleManager`, this was already discussed in #10885. However it is not solved according to the principle of least surprise.\n\n### Expected behavior\n\nDuring tests everything that is logged is handled according to the logging config, even if there is an exception in a `QuarkusTestResourceLifecycleManager`. There should only be the log handlers configured in quarkus and no other default handlers that create duplicate logs on the console.\n\n### Actual behavior\n\nIf there is an exception in a `QuarkusTestResourceLifecycleManager`, nothing is logged to the console from the `InitialConfigurator.DELAYED_HANDLER`.\r\nThere is a default handler registered that logs errors and warnings to the console without any formatting, which can not be configured with quarkus.\n\n### How to Reproduce?\n\n> Examples are in kotlin\r\n\r\n```kotlin\r\nclass DemoLifecycleManager : QuarkusTestResourceLifecycleManager {\r\n\r\n    private val logger = LoggerFactory.getLogger(this::class.java)\r\n\r\n    override fun start(): Map<String, String> {\r\n        logger.info(\"log info\")\r\n        logger.warn(\"log warn\")\r\n        logger.error(\"log error\")\r\n\r\n        //throw RuntimeException(\"error\")\r\n        return emptyMap()\r\n    }\r\n\r\n    override fun stop() {\r\n\r\n    }\r\n}\r\n```\r\n1. Create a new demo quarkus project\r\n2. enable standard stream logging for tests in maven or gradle\r\n```kotlin\r\ntasks.withType<Test> {\r\n    testLogging {\r\n        events(\"STARTED\", \"PASSED\", \"FAILED\", \"SKIPPED\")\r\n        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL\r\n        showStandardStreams = true\r\n        showStackTraces = true\r\n    }\r\n    systemProperty(\"java.util.logging.manager\", \"org.jboss.logmanager.LogManager\")\r\n}\r\n```\r\n3. add the DemoLifecycleManager and add it to a `@QuarkusTest`\r\n```kotlin\r\n@QuarkusTestResource.List(\r\n    QuarkusTestResource(DemoLifecycleManager::class),\r\n)\r\n```\r\n4. run the test\r\n5. observe that the following is printed before the test is started\r\n```\r\nlog warn\r\nlog error\r\n```\r\nand\r\n```\r\n    2021-10-13 22:01:14,160 INFO  [org.acm.DemoLifecycleManager] (pool-3-thread-1) log info\r\n    2021-10-13 22:01:14,165 WARN  [org.acm.DemoLifecycleManager] (pool-3-thread-1) log warn\r\n    2021-10-13 22:01:14,165 ERROR [org.acm.DemoLifecycleManager] (pool-3-thread-1) log error\r\n```\r\nis printed during the test (`log warn` and `log error` are duplicate)\r\n6. now change `DemoLifecycleManager` to throw an exception\r\n7. run the test again\r\n8. observe that\r\n```\r\nlog warn\r\nlog error\r\n```\r\nand the exception stacktrace is printed, but the `log info` is missing.\r\nI did not find any configuration options that change the logging behavior of the first \r\n```\r\nlog warn\r\nlog error\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux leon-pc 5.11.0-37-generic #41-Ubuntu SMP Mon Sep 20 16:39:20 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.11\" 2021-04-20 OpenJDK Runtime Environment (build 11.0.11+9-Ubuntu-0ubuntu2) OpenJDK 64-Bit Server VM (build 11.0.11+9-Ubuntu-0ubuntu2, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.3.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n ------------------------------------------------------------ Gradle 7.2 ------------------------------------------------------------  Build time:   2021-08-17 09:59:03 UTC Revision:     a773786b58bb28710e3dc96c4d1a7063628952ad  Kotlin:       1.5.21 Groovy:       3.0.8 Ant:          Apache Ant(TM) version 1.10.9 compiled on September 27 2020 JVM:          11.0.11 (Ubuntu 11.0.11+9-Ubuntu-0ubuntu2) OS:           Linux 5.11.0-37-generic amd64\n\n### Additional information\n\nThe project is created with `code.quarkus.io` and the kotlin extension and Gradle with Kotlin DSL.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20749/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20749/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

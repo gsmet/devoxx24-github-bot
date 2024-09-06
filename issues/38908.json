@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38908",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38908/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38908/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38908/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38908",
+  "id": 2145420863,
+  "node_id": "I_kwDOCFbutM5_4IY_",
+  "number": 38908,
+  "title": "Build Card Page for Dev UI results in NPE in ArtifactInfoUtil",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2715669984,
+      "node_id": "MDU6TGFiZWwyNzE1NjY5OTg0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/dev-ui",
+      "name": "area/dev-ui",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2024-02-20T22:46:39Z",
+  "updated_at": "2024-03-20T01:34:15Z",
+  "closed_at": "2024-03-20T01:34:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI want to create a Dev UI for our extension. I copied some code form the docs and the openapi extension and ending always in a NPE.\r\n\r\n```java\r\n    @BuildStep(onlyIf = IsDevelopment.class)\r\n    public CardPageBuildItem pages(NonApplicationRootPathBuildItem nonApplicationRootPathBuildItem,\r\n                                   ManagementInterfaceBuildTimeConfig managementInterfaceBuildTimeConfig,\r\n                                   LaunchModeBuildItem launchModeBuildItem) {\r\n\r\n        String schemaPath = nonApplicationRootPathBuildItem.resolveManagementPath(\"test2\",\r\n                managementInterfaceBuildTimeConfig, launchModeBuildItem);\r\n\r\n        CardPageBuildItem cardPageBuildItem = new CardPageBuildItem();\r\n\r\n        cardPageBuildItem.addPage(Page.externalPageBuilder(\"Schema yaml\")\r\n                .url(schemaPath, schemaPath)\r\n                .isYamlContent()\r\n                .icon(\"font-awesome-solid:file-lines\"));\r\n\r\n        String jsonSchema = schemaPath + \"?format=json\";\r\n        cardPageBuildItem.addPage(Page.externalPageBuilder(\"Schema json\")\r\n                .url(jsonSchema, jsonSchema)\r\n                .isJsonContent()\r\n                .icon(\"font-awesome-solid:file-code\"));\r\n\r\n        return cardPageBuildItem;\r\n    }\r\n```\r\n\r\n### Expected behavior\r\n\r\nA starting app with the created Dev UI.\r\n\r\n### Actual behavior\r\n\r\nGetting an NPE at https://github.com/quarkusio/quarkus/blob/885cb8ab3625f106ddd7cf9105fc606e47d5c218/core/deployment/src/main/java/io/quarkus/deployment/util/ArtifactInfoUtil.java#L120\r\n\r\n```\r\n2024-02-20 23:25:26,894 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (main) Failed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        [error]: Build step io.quarkus.devui.deployment.BuildTimeContentProcessor#mapPageBuildTimeData threw an exception: java.lang.NullPointerException: Cannot invoke \"java.nio.file.Path.toString()\" because the return value of \"java.nio.file.Path.getFileName()\" is null\r\n        at io.quarkus.deployment.util.ArtifactInfoUtil.isDeploymentTargetClasses(ArtifactInfoUtil.java:120)\r\n        at io.quarkus.deployment.util.ArtifactInfoUtil.groupIdAndArtifactId(ArtifactInfoUtil.java:93)\r\n        at io.quarkus.devui.spi.AbstractDevUIBuildItem.getExtensionPathName(AbstractDevUIBuildItem.java:61)\r\n        at io.quarkus.devui.deployment.BuildTimeContentProcessor.mapPageBuildTimeData(BuildTimeContentProcessor.java:157)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n        at io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n        at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n        at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\n```\r\n\r\nThis is the state of the input value when the NPE occurs:\r\n![CleanShot 2024-02-20 at 23 40 26@2x](https://github.com/quarkusio/quarkus/assets/15174076/c66935ac-eefe-4bc8-979d-c62e88fd2f92)\r\n\r\n I think there is a missing `null` check for `location.getFileName()` where it is `null` for the root path. Also I don't know if it is MacOS related.\r\n\r\n### How to Reproduce?\r\n\r\nNote: The project is a multi-module project.\r\n1. Copy the processor code form above into a processor\r\n2. Run the extension in development mode on MacOS\r\n3. NPE should occur\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin MBP-von-Dario.fritz.box 23.3.0 Darwin Kernel Version 23.3.0: Wed Dec 20 21:30:44 PST 2023; root:xnu-10002.81.5~7/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.5\" 2022-10-18 OpenJDK Runtime Environment JBR-17.0.5+1-653.23-nomod (build 17.0.5+1-b653.23) OpenJDK 64-Bit Server VM JBR-17.0.5+1-653.23-nomod (build 17.0.5+1-b653.23, mixed mode)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.7.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nIntelliJ bundled maven 3.9.5\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38908/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38908/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

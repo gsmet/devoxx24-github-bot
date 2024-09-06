@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37140",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37140/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37140/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37140/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37140",
+  "id": 1996544678,
+  "node_id": "I_kwDOCFbutM53ANqm",
+  "number": 37140,
+  "title": "Duplicated OTel spans on the new grpc server implementation.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2023-11-16T10:29:26Z",
+  "updated_at": "2024-01-08T09:46:13Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThis issue was first reported by @edeandrea on this zulip thread: https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/gRPC.20server.20oTel.20errors/near/398274468\r\n\r\nOn the initial report there was scope.close warnings on the logs:\r\n```log\r\n07:57:59 WARN  [io.qu.op.ru.QuarkusContextStorage] (vert.x-eventloop-thread-3) Context in storage not the expected context, Scope.close was not called correctly. Details: OTel context before: {spanId=6ab0c0488d656975, traceId=11cf803891be9354f0e1e5e7b434cda6, sampled=true, parentId=b59e2af98fc4046d}. OTel context toAttach: {spanId=b59e2af98fc4046d, traceId=11cf803891be9354f0e1e5e7b434cda6, sampled=true}\r\n07:57:59 WARN  [io.qu.op.ru.QuarkusContextStorage] (vert.x-eventloop-thread-3) Context in storage not the expected context, Scope.close was not called correctly. Details: OTel context before: {}. OTel context toAttach: {spanId=6ab0c0488d656975, traceId=11cf803891be9354f0e1e5e7b434cda6, sampled=true, parentId=b59e2af98fc4046d}\r\n```\r\n\r\nSubsequent analysis revealed that the spans for the grpc server were being duplicated because 2 different OTel instrumenters were in the request pipeline:\r\n* `HttpInstrumenterVertxTracer`\r\n* `GrpcTracingServerInterceptor`\r\n\r\nEach instrumenter will create a span and sometimes they end the spans in different order, therefore triggering the Scope close warning messages.\r\n\r\nIt turns out we have 2 different of grpc servers, the legacy separate and the internal using Vert.x. This can be switched by using this property: `quarkus.grpc.server.use-separate-server=false`\r\n\r\nThe problem only happens if we use the internal Vert.x based server. \r\n\r\n\r\n### Expected behavior\r\n\r\nWhen using the new grpc server we want a unique span for the grpc sever with no warning messages.\r\n\r\n### Actual behavior\r\n\r\n2 different spans are created and ocasional messages in the logs warning about the Scope not being properly closed.\r\n\r\n### How to Reproduce?\r\n\r\nRun the GrpcHelloServiceTest on this PR: https://github.com/quarkusio/quarkus/pull/37139 with property `quarkus.grpc.server.use-separate-server=false` at `application.properties`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kernel Version 22.6.0: Thu Nov  2 07:43:57 PDT 2023; root:xnu-8796.141.3.701.17~6/RELEASE_ARM64_T6000\r\n\r\n### Output of `java -version`\r\n\r\nJava version: 17.0.7, vendor: Eclipse Adoptium\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus 3.5.0 at least\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546) Java version: 17.0.7, vendor: Eclipse Adoptium, Default locale: en_PT, platform encoding: UTF-8 OS name: \"mac os x\", version: \"13.6.2\", arch: \"aarch64\", family: \"mac\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37140/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37140/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

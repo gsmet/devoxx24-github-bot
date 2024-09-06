@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26146",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26146/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26146/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26146/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26146",
+  "id": 1271932961,
+  "node_id": "I_kwDOCFbutM5L0Cgh",
+  "number": 26146,
+  "title": "Starting from 2.9.0.Final container-image-jib requires a configured container runtime if not directly pushing the image",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-06-15T09:18:59Z",
+  "updated_at": "2022-06-15T09:48:20Z",
+  "closed_at": "2022-06-15T09:45:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMy typical use case for container-image-jib is to create tekton pipelines which are easily producing container images in Kubernetes / OpenShift. But with the new behaviour of quarkus-container-image-jib, I can't have separate build steps any longer as the pure build requires a docker/podman environment to be available, which is not the case in an OpenShift environment. \r\n\r\n(See here: [Getting GitOps Example](https://github.com/wpernath/book-example.git) in the folder /gitops/tekton).\r\n\r\n\n\n### Expected behavior\n\nHaving a possibility (for example via a property `quarkus.container-image.jib.storeindockerregistry=false`) to use container-image-jib to produce a container image without the requirements of having a properly setup Docker/Podman environment.\n\n### Actual behavior\n\nBuild breaks with an IllegalStateException:\r\n\r\n`[package : mvn-goals] [ERROR] \t[error]: Build step io.quarkus.container.image.jib.deployment.JibProcessor#buildFromJar threw an exception: java.lang.IllegalStateException: No container runtime was found to. Make sure you have Docker or Podman installed in your environment.\r\n[package : mvn-goals] [ERROR] \tat io.quarkus.runtime.util.ContainerRuntimeUtil.detectContainerRuntime(ContainerRuntimeUtil.java:38)\r\n[package : mvn-goals] [ERROR] \tat io.quarkus.container.image.jib.deployment.JibProcessor.createContainerizer(JibProcessor.java:275)\r\n[package : mvn-goals] [ERROR] \tat io.quarkus.container.image.jib.deployment.JibProcessor.containerize(JibProcessor.java:220)\r\n[package : mvn-goals] [ERROR] \tat io.quarkus.container.image.jib.deployment.JibProcessor.buildFromJar(JibProcessor.java:166)\r\n[package : mvn-goals] [ERROR] \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n[package : mvn-goals] [ERROR] \tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n[package : mvn-goals] [ERROR] \tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n[package : mvn-goals] [ERROR] \tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n[package : mvn-goals] [ERROR] \tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:925)\r\n[package : mvn-goals] [ERROR] \tat io.quarkus.builder.BuildContext.run(BuildContext.java:277)\r\n[package : mvn-goals] [ERROR] \tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n[package : mvn-goals] [ERROR] \tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n[package : mvn-goals] [ERROR] \tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n[package : mvn-goals] [ERROR] \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n[package : mvn-goals] [ERROR] \tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n[package : mvn-goals] [ERROR] -> [Help 1]`\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17.0.3\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmvn 3.8.5\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26146/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26146/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32493",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32493/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32493/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32493/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32493",
+  "id": 1658876578,
+  "node_id": "I_kwDOCFbutM5i4HKi",
+  "number": 32493,
+  "title": "`quarkus.datasource.devservices.db-name` not applied to MS-SQL",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-04-07T14:40:08Z",
+  "updated_at": "2023-06-25T08:23:49Z",
+  "closed_at": "2023-04-07T14:45:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm trying to setup a MS-SQL database in devservices, and hitting a snag where the `quarkus.datasource.devservices.db-name` not applied to `DataSource` or mapped Java objects (`@Entities`); it seems that it is using the `master` database.\r\n\r\n\r\nConfiguration:\r\n\r\n```yaml\r\nquarkus:\r\n  datasource:\r\n    devservices:\r\n      image-name: \"mcr.microsoft.com/mssql/server:2017-latest\"\r\n      db-name: \"APISO\"\r\n      init-script-path: \"db/migration/V1.0.0__apiso.sql\"\r\n```\r\n\r\n\r\nTest Code:\r\n\r\n```java\r\ntry(Connection db = ds.getConnection()){\r\n\ttry(\r\n\t\t\tCallableStatement stmt = db.prepareCall(\"SELECT DB_NAME();\");\r\n\t){\r\n\t\tstmt.execute();\r\n\t\tResultSet dbResult = stmt.getResultSet();\r\n\t\tdbResult.next();\r\n\t\tlog.info(\"Database used: {}\", dbResult.getString(1));\r\n\t}\r\n\r\n\ttry(\r\n\t\t\tCallableStatement tstmt = db.prepareCall(\"SELECT * FROM APISO.INFORMATION_SCHEMA.TABLES;\");\r\n\t){\r\n\t\ttstmt.execute();\r\n\t\t\r\n\t\tResultSet tablesResult = tstmt.getResultSet();\r\n\t\tResultSetMetaData rsm = tablesResult.getMetaData();\r\n\t\t\r\n\t\tList<String> cols = new ArrayList<>();\r\n\t\tfor(int i = 1; i < rsm.getColumnCount(); i++) {\r\n\t\t\tcols.add(rsm.getColumnName(i));\r\n\t\t}\r\n\t\tlog.info(\"Columns: {}\", cols);\r\n\t\t\r\n\t\t\r\n\t\twhile(tablesResult.next()) {\r\n\t\t\tMap<String, Object> results = new HashMap<>();\r\n\t\t\t\r\n\t\t\tfor(String curCol : cols) {\r\n\t\t\t\tresults.put(\r\n\t\t\t\t\t\tcurCol, \r\n\t\t\t\t\t\ttablesResult.getObject(curCol)\r\n\t\t\t\t\t\t);\r\n\t\t\t}\r\n\t\t\t\r\n\t\t\tlog.info(\"Table: {}\", results);\r\n\t\t}\r\n\t}\r\n}\r\n```\r\n\r\nExcerpt of `db/migration/V1.0.0__apiso.sql`:\r\n\r\n```sql\r\nCREATE DATABASE [APISO];\r\n\r\nUSE [APISO];\r\n\r\nCREATE SCHEMA [tst\\SQL-APPDEV]\r\n;\r\nSET ANSI_NULLS ON\r\n;\r\nSET QUOTED_IDENTIFIER ON\r\n;\r\n\r\nCREATE TABLE [dbo].[ExpectedTable](\r\n -- ...\r\n);\r\n```\r\n\n\n### Expected behavior\n\n```\r\n2023-04-07 07:23:26,056 INFO  [org.tst.RunSetupTest] (main) Database used: APISO\r\n2023-04-07 07:23:26,234 INFO  [org.tst.RunSetupTest] (main) Columns: [TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME]\r\n2023-04-07 07:23:26,235 INFO  [org.tst.RunSetupTest] (main) Table: {TABLE_CATALOG=APISO, TABLE_NAME=ExpectedTable, TABLE_SCHEMA=dbo}\r\n...\r\n```\n\n### Actual behavior\n\n```\r\n2023-04-07 07:23:26,056 INFO  [org.tst.RunSetupTest] (main) Database used: master\r\n2023-04-07 07:23:26,234 INFO  [org.tst.RunSetupTest] (main) Columns: [TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME]\r\n// Note still get expected tables as the sql query specified the database, so I know it is being created and setup\r\n2023-04-07 07:23:26,235 INFO  [org.tst.RunSetupTest] (main) Table: {TABLE_CATALOG=APISO, TABLE_NAME=ExpectedTable, TABLE_SCHEMA=dbo}\r\n...\r\n```\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nWindows 11, with Docker on Ubuntu on WSL2\n\n### Output of `java -version`\n\nopenjdk 11.0.18 2023-01-17 LTS OpenJDK Runtime Environment Microsoft-7208460 (build 11.0.18+10-LTS) OpenJDK 64-Bit Server VM Microsoft-7208460 (build 11.0.18+10-LTS, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.6\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32493/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32493/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

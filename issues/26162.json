@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26162",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26162/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26162/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26162/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26162",
+  "id": 1272317277,
+  "node_id": "I_kwDOCFbutM5L1gVd",
+  "number": 26162,
+  "title": "io.quarkus.runner.AutoFeature hides exceptions thrown while registering resources and classes for JNI and reflective access ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1416831855,
+      "node_id": "MDU6TGFiZWwxNDE2ODMxODU1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/graalvm-java11",
+      "name": "env/graalvm-java11",
+      "color": "063b72",
+      "default": false,
+      "description": "Relating to using GraalVM native image generation on Java 11"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3554570642,
+      "node_id": "LA_kwDOCFbutM7T3nGS",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/graalvm-java17",
+      "name": "env/graalvm-java17",
+      "color": "228FE2",
+      "default": false,
+      "description": "Relating to using GraalVM native generation Java 11"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-06-15T14:24:07Z",
+  "updated_at": "2023-03-06T09:43:41Z",
+  "closed_at": "2023-03-06T09:43:40Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n`io.quarkus.runner.AutoFeature` hides exceptions thrown while registering resources and classes for JNI and reflective access.\r\nThis [makes finding bugs on time harder](https://github.com/oracle/graal/pull/4468#issuecomment-1156294171).\r\n\r\n### Registering resources\r\nhttps://github.com/quarkusio/quarkus/blob/bd4ff77e1b34a6e3639d8f4675a26209c5486651/core/deployment/src/main/java/io/quarkus/deployment/steps/NativeImageAutoFeatureStep.java#L379-L386\r\n\r\n### Registering for reflection\r\nhttps://github.com/quarkusio/quarkus/blob/bd4ff77e1b34a6e3639d8f4675a26209c5486651/core/deployment/src/main/java/io/quarkus/deployment/steps/NativeImageAutoFeatureStep.java#L520\r\n\r\n### Registering for JNI access\r\nhttps://github.com/quarkusio/quarkus/blob/bd4ff77e1b34a6e3639d8f4675a26209c5486651/core/deployment/src/main/java/io/quarkus/deployment/steps/NativeImageAutoFeatureStep.java#L574\r\n\r\n### Expected behavior\r\n\r\nExceptions should be visible and ideally not thrown.\r\n\r\n### Actual behavior\r\n\r\nExceptions are actually thrown but never shown.\r\n\r\n### How to Reproduce?\r\n\r\nUncommenting the commented lines listed in the description will enable seeing the exceptions when building integration-tests with `-Dnative`.\r\n\r\nDoing so results in prints like the following:\r\n\r\n### IT main\r\n```\r\n java.lang.ClassNotFoundException: com.sun.xml.internal.bind.v2.ContextFactory\r\n\tat java.base/java.net.URLClassLoader.findClass(URLClassLoader.java:445)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:587)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n\tat java.base/java.lang.Class.forName0(Native Method)\r\n\tat java.base/java.lang.Class.forName(Class.java:467)\r\n\tat io.quarkus.runner.AutoFeature.registerClass18(Unknown Source)\r\n\tat io.quarkus.runner.AutoFeature.beforeAnalysis(Unknown Source)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.lambda$runPointsToAnalysis$9(NativeImageGenerator.java:720)\r\n\tat com.oracle.svm.hosted.FeatureHandler.forEachFeature(FeatureHandler.java:78)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.runPointsToAnalysis(NativeImageGenerator.java:720)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:562)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:519)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:407)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:585)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:128)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner$JDK9Plus.main(NativeImageGeneratorRunner.java:615)\r\njava.lang.ClassNotFoundException: io.quarkus.smallrye.openapi.deployment.OpenApiConfigMapping\r\n\tat java.base/java.net.URLClassLoader.findClass(URLClassLoader.java:445)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:587)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n\tat java.base/java.lang.Class.forName0(Native Method)\r\n\tat java.base/java.lang.Class.forName(Class.java:467)\r\n\tat io.quarkus.runner.AutoFeature.registerClass453(Unknown Source)\r\n\tat io.quarkus.runner.AutoFeature.beforeAnalysis(Unknown Source)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.lambda$runPointsToAnalysis$9(NativeImageGenerator.java:720)\r\n\tat com.oracle.svm.hosted.FeatureHandler.forEachFeature(FeatureHandler.java:78)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.runPointsToAnalysis(NativeImageGenerator.java:720)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:562)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:519)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:407)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:585)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:128)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner$JDK9Plus.main(NativeImageGeneratorRunner.java:615)\r\n```\r\n\r\n### IT hibernate-orm-tenancy\r\n```\r\n java.lang.ClassNotFoundException: int\r\n\tat java.base/java.net.URLClassLoader.findClass(URLClassLoader.java:445)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:587)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n\tat java.base/java.lang.Class.forName0(Native Method)\r\n\tat java.base/java.lang.Class.forName(Class.java:467)\r\n\tat io.quarkus.runner.AutoFeature.registerClass39(Unknown Source)\r\n\tat io.quarkus.runner.AutoFeature.beforeAnalysis(Unknown Source)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.lambda$runPointsToAnalysis$9(NativeImageGenerator.java:720)\r\n\tat com.oracle.svm.hosted.FeatureHandler.forEachFeature(FeatureHandler.java:78)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.runPointsToAnalysis(NativeImageGenerator.java:720)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:562)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:519)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:407)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:585)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:128)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner$JDK9Plus.main(NativeImageGeneratorRunner.java:615)\r\n```\r\n\r\n### hibernate-orm-panache\r\n```\r\n java.lang.ClassNotFoundException: com.sun.xml.internal.bind.v2.ContextFactory\r\n\tat java.base/java.net.URLClassLoader.findClass(URLClassLoader.java:445)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:587)\r\n\tat java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:520)\r\n\tat java.base/java.lang.Class.forName0(Native Method)\r\n\tat java.base/java.lang.Class.forName(Class.java:467)\r\n\tat io.quarkus.runner.AutoFeature.registerClass23(Unknown Source)\r\n\tat io.quarkus.runner.AutoFeature.beforeAnalysis(Unknown Source)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.lambda$runPointsToAnalysis$9(NativeImageGenerator.java:720)\r\n\tat com.oracle.svm.hosted.FeatureHandler.forEachFeature(FeatureHandler.java:78)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.runPointsToAnalysis(NativeImageGenerator.java:720)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.doRun(NativeImageGenerator.java:562)\r\n\tat com.oracle.svm.hosted.NativeImageGenerator.run(NativeImageGenerator.java:519)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.buildImage(NativeImageGeneratorRunner.java:407)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.build(NativeImageGeneratorRunner.java:585)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner.main(NativeImageGeneratorRunner.java:128)\r\n\tat com.oracle.svm.hosted.NativeImageGeneratorRunner$JDK9Plus.main(NativeImageGeneratorRunner.java:615)\r\n```\r\n\r\netc.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n11 and 17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n22.1\r\n\r\n### Quarkus version or git rev\r\n\r\ne644ded521df7299514d233540db97476ba702c7\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26162/reactions",
+    "total_count": 2,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26162/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27323",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27323/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27323/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27323/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27323",
+  "id": 1340936287,
+  "node_id": "I_kwDOCFbutM5P7RBf",
+  "number": 27323,
+  "title": "Gradle plugin does not detect all extensions in the dependency tree",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-08-16T22:15:21Z",
+  "updated_at": "2024-08-22T19:33:56Z",
+  "closed_at": "2024-08-22T07:51:35Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThis one took me a bit to pin down in [Zulip chat](https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/Direct.20dependencies.20are.20the.20only.20extensions.20that.20are.20active.3F). I appreciate the patience. I may still have some details wrong but I feel like I understand enough to write an issue.\r\n\r\nIt appears that, simply put, the Quarkus Gradle plugin scans the entire tree for extensions, but it stops iterating through a branch of transitive dependencies once it finds that a dependency is an extension. This means that if an extension (\"upper\" in the repro) has a dependency on another extension (\"lower\" in the repro) that second \"lower\" extension won't be activated.\r\n\r\nThe code that triggers this bug seems to be a simple if-else [here](https://github.com/quarkusio/quarkus/blob/584db00f9cf8828cb1f344dbf3e575fb0897a37f/devtools/gradle/gradle-model/src/main/java/io/quarkus/gradle/dependency/ApplicationDeploymentClasspathBuilder.java#L280):\r\n```java\r\n    private Set<ExtensionDependency> collectQuarkusExtensions(ResolvedDependency dependency, Set<String> visitedArtifacts,\r\n            Collection<ExtensionDependency> knownExtensions) {\r\n        String artifactKey = String.format(\"%s:%s\", dependency.getModuleGroup(), dependency.getModuleName());\r\n        if (!visitedArtifacts.add(artifactKey)) {\r\n            return Collections.emptySet();\r\n        }\r\n\r\n        Set<ExtensionDependency> extensions = new LinkedHashSet<>();\r\n        ExtensionDependency extension = getExtensionOrNull(dependency.getModuleGroup(), dependency.getModuleName(),\r\n                dependency.getModuleVersion(), knownExtensions);\r\n        if (extension != null) {\r\n            extensions.add(extension);\r\n        } else {\r\n            for (ResolvedDependency child : dependency.getChildren()) {\r\n                extensions.addAll(collectQuarkusExtensions(child, visitedArtifacts, knownExtensions));\r\n            }\r\n        }\r\n        return extensions;\r\n    }\r\n```\r\n\r\nThe \"for\" loop at the end of this block appears to be something that might be worth running regardless of whether the dependency is an extension or not, as right now it is skipped if the dependency is an extension.\r\n\r\n### Expected behavior\r\n\r\nPer the Zulip chat, \"all extensions wherever they are in the dependency tree are expected to be picked up.\" I was not sure what was expected before the chat, so hopefully my interpretation here is correct.\r\n\r\n### Actual behavior\r\n\r\nAll extensions, as long as they are not _solely_ transient dependencies of another extension, will be picked up.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: https://github.com/jskillin-idt/quarkusio-quarkus-issues-27323\r\n\r\nThis reproducer is a little busy because it's built on a repro I wrote for Camel, but the goal is to simply have some beans fly around and do something so that I can prove whether or not an extension is activated properly.\r\n\r\nWhat is failing here is that, while the \"app\" project depends on the \"upper\" extension, and the \"upper\" extension depends on the \"lower\" extension, the \"lower\" extension is never activated. The \"app\" instead must explicitly depend on both.\r\n\r\n1. Clone the reproducer.\r\n2. Run `./gradlew build`. There should be a unit test failure as the extension that provides the bean is not activated.\r\n3. The workaround for the issue is to add the missing runtime dependency explicitly. See `app/build.gradle` in the repro for an example.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux jacob-ubuntu-dev 5.15.0-46-generic #49-Ubuntu SMP Thu Aug 4 18:03:25 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.4\" 2022-07-19 OpenJDK Runtime Environment (build 17.0.4+8-Ubuntu-122.04) OpenJDK 64-Bit Server VM (build 17.0.4+8-Ubuntu-122.04, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.11.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.2\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27323/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27323/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

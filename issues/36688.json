@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36688",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36688/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36688/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36688/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36688",
+  "id": 1961345373,
+  "node_id": "I_kwDOCFbutM5058Fd",
+  "number": 36688,
+  "title": "Unable to use Panache Sort.Direction enum as method parameter for GraphQL query",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-10-25T12:47:24Z",
+  "updated_at": "2023-10-27T05:07:43Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nUsing the `Sort.Direction` enum from the `quarkus-hibernate-orm-panache` extension as a method parameter for a GraphQL query defined with the `quarkus-smallrye-graphql` extension results in a startup failure when Quarkus tries to generate the schema of the exposed GraphQL API at application startup:\r\n\r\n```\r\n2023-10-25 14:30:49,999 WARN  [io.sma.gra.sch.cre.ReferenceCreator] (build-27) Class [io.quarkus.panache.common.Sort$Direction] is not indexed in Jandex. Can not scan Object Type, might not be mapped correctly. Kind = [CLASS]\r\n2023-10-25 14:30:52,088 ERROR [io.qua.run.boo.StartupActionImpl] (Quarkus Main Thread) Error running Quarkus: java.lang.reflect.InvocationTargetException\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:113)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.ExceptionInInitializerError\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n        at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)\r\n        at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:480)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:70)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        ... 6 more\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n        ... 15 more\r\nCaused by: graphql.AssertException: type Direction not found in schema\r\n        at graphql.Assert.assertNotNull(Assert.java:17)\r\n        at graphql.schema.GraphQLTypeResolvingVisitor.handleTypeReference(GraphQLTypeResolvingVisitor.java:49)\r\n        at graphql.schema.GraphQLTypeResolvingVisitor.visitGraphQLTypeReference(GraphQLTypeResolvingVisitor.java:44)\r\n        at graphql.schema.GraphQLTypeReference.accept(GraphQLTypeReference.java:62)\r\n        at graphql.schema.SchemaTraverser$TraverserDelegateVisitor.enter(SchemaTraverser.java:109)\r\n        at graphql.util.Traverser.traverse(Traverser.java:144)\r\n        at graphql.schema.SchemaTraverser.doTraverse(SchemaTraverser.java:96)\r\n        at graphql.schema.SchemaTraverser.depthFirst(SchemaTraverser.java:86)\r\n        at graphql.schema.SchemaTraverser.depthFirst(SchemaTraverser.java:79)\r\n        at graphql.schema.impl.SchemaUtil.replaceTypeReferences(SchemaUtil.java:105)\r\n        at graphql.schema.GraphQLSchema$Builder.buildImpl(GraphQLSchema.java:938)\r\n        at graphql.schema.GraphQLSchema$Builder.build(GraphQLSchema.java:904)\r\n        at io.smallrye.graphql.bootstrap.Bootstrap.generateGraphQLSchema(Bootstrap.java:205)\r\n        at io.smallrye.graphql.bootstrap.Bootstrap.bootstrap(Bootstrap.java:120)\r\n        at io.smallrye.graphql.cdi.producer.GraphQLProducer.initialize(GraphQLProducer.java:52)\r\n        at io.smallrye.graphql.cdi.producer.GraphQLProducer.initialize(GraphQLProducer.java:42)\r\n        at io.smallrye.graphql.cdi.producer.GraphQLProducer.initialize(GraphQLProducer.java:32)\r\n        at io.smallrye.graphql.cdi.producer.GraphQLProducer.initialize(GraphQLProducer.java:27)\r\n        at io.smallrye.graphql.cdi.producer.GraphQLProducer_ClientProxy.initialize(Unknown Source)\r\n        at io.quarkus.smallrye.graphql.runtime.SmallRyeGraphQLRecorder.createExecutionService(SmallRyeGraphQLRecorder.java:30)\r\n        at io.quarkus.deployment.steps.SmallRyeGraphQLProcessor$buildExecutionService1691419614.deploy_7(Unknown Source)\r\n        at io.quarkus.deployment.steps.SmallRyeGraphQLProcessor$buildExecutionService1691419614.deploy(Unknown Source)\r\n        ... 16 more\r\n\r\n```\r\n\r\n### Expected behavior\r\n\r\nIt is possible to use the `Sort.Direction` enum from the `quarkus-hibernate-orm-panache` as a method parameter for a GraphQL query.\r\n\r\n### Actual behavior\r\n\r\nThe `quarkus-smallrye-graphql` extension is unable to generate the schema of the exposed GraphQL API at application startup. Before the startup failure the warning `Class [io.quarkus.panache.common.Sort$Direction] is not indexed in Jandex. Can not scan Object Type, might not be mapped correctly. Kind = [CLASS]` is logged.\r\n\r\n### How to Reproduce?\r\n\r\nIn a Quarkus application using both the `quarkus-hibernate-orm-panache` and the `quarkus-smallrye-graphql` extension, define a GraphQL API using the `Sort.Direction` enum in a query definition:\r\n\r\n```java\r\n@GraphQLApi\r\npublic class DemoResource {\r\n\r\n    @Query(\"sortDirection\")\r\n    public String testPanacheSortDirectionEnum(Sort.Direction sortDirection) {\r\n        return sortDirection.name();\r\n    }\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.7\" 2023-04-18\r\nOpenJDK Runtime Environment GraalVM CE 17.0.7+7.1 (build 17.0.7+7-jvmci-23.0-b12)\r\nOpenJDK 64-Bit Server VM GraalVM CE 17.0.7+7.1 (build 17.0.7+7-jvmci-23.0-b12, mixed mode, sharing)\r\n\r\n\r\n### Quarkus version or git rev\r\n\r\n3.4.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36688/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36688/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

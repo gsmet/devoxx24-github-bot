@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40489",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40489/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40489/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40489/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40489",
+  "id": 2282596450,
+  "node_id": "I_kwDOCFbutM6IDahi",
+  "number": 40489,
+  "title": "Wrong transaction state for broken database connection",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 1633508165,
+      "node_id": "MDU6TGFiZWwxNjMzNTA4MTY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/narayana",
+      "name": "area/narayana",
+      "color": "0366d6",
+      "default": false,
+      "description": "Transactions / Narayana"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-05-07T08:16:41Z",
+  "updated_at": "2024-05-14T08:16:35Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIf the database connection is interrupted while we are persisting an entity in a transaction, it may be that the entity has been persisted in the database, but we are not aware of this via our transaction observers, or that the wrong observer is being called.\r\n\r\n**Example code**\r\n\r\nWe have a simple method which creates/persists the entity and fires an event:\r\n\r\n```\r\n@Inject\r\nEvent<TestEvent> event;\r\n\r\n@Transactional\r\npublic void createEntity(final int i) {\r\n    event.fire(new TestEvent(\"entity\" + i));\r\n\r\n    final var entity = new TestEntity();\r\n    entity.setId(\"entity\" + i);\r\n\r\n    entityManager.persist(entity);\r\n}\r\n```\r\n\r\nWithin a bean, we have multiple observers:\r\n\r\n```\r\npublic void afterSuccess(@Observes(during = TransactionPhase.AFTER_SUCCESS) final TestEvent event) {\r\n    // do something\r\n}\r\n\r\n\r\npublic void afterFailure(@Observes(during = TransactionPhase.AFTER_FAILURE) final TestEvent event) {\r\n    // do something\r\n}\r\n\r\n\r\npublic void afterCompletion(@Observes(during = TransactionPhase.AFTER_COMPLETION) final TestEvent event) {\r\n    // do something\r\n}\r\n```\r\n\r\nNow we are faced with the problem in our (real) applications that if we have a problem with the database connection during the persistence of the entity (e.g. because the database was restarted, a network error occurred, etc.), the `AFTER_FAILURE` observer is called, but the entity was successfully persisted.\r\n\r\nThis is an inconsistent state and we cannot know whether the entity has really been persisted or not - without performing another check on the database. This might not be a big problem for simple applications, but for generic implementations, or if you don't know what may or may not have been (partially) persisted in the transaction, then this is a very big problem for us.\r\n\r\nHint: We have the same problem when using an implementation of `jakarta.transaction.Synchronization`. Also here the status in the `afterCompletion` method is the wrong one (`Status.STATUS_ROLLEDBACK` instead of `Status.STATUS_COMMITTED`).\r\n\r\nPlease let me know if I need to create an issue at another location / project.\r\n\r\n### Expected behavior\r\n\r\nThe status of the transaction must reflect whether entities have been persisted or not. It must not be the case that entities have been persisted but we are not aware of this. The same applies in the opposite case, of course.\r\n\r\nOr to put it another way: We must be sure that the status of the observers is consistent with regard to the database operations.\r\n\r\n### Actual behavior\r\n\r\nEntities may have been successfully persisted to the database, but we get the information that the transaction failed.\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: https://github.com/timonzi/transaction-phase-reproducer\r\n\r\nExecute the `PersistenceTest`.\r\n\r\nWhat it does:\r\n* It starts a Postgres:15.5 instance as Quarkus test resource\r\n* It creates a thread, which kills all connections every 100 ms\r\n* It tries to create and persist 100000 entities\r\n\r\nHint: We create so many entities and kill the connections so often because it is not clear to me at which point the problem exists. It can happen of course also when the database connection is lost only once (as said, because of Database restart, network problem, etc.)\r\n\r\nWhat can we see:\r\n* There are more persisted entities on the database than expected\r\n\r\nExample log output:\r\n\r\n```\r\nCOUNT = 100000; // Number of entities which should be persisted in a loop\r\nexceptionCounter = 141; // Number of exceptions which occurred in the loop\r\nCOUNT - exceptionCounter = 99859; // Number of entities which we expect to be persisted, because of the exceptions\r\nentityCount = 99869; // Number of entities in the database\r\nobserverBean.getAfterCompletionCount() = 100000; // Number of calls of after completion observer\r\nobserverBean.getAfterSuccessCount() = 99859; // Number of calls of after success observer\r\nobserverBean.getAfterFailureCount() = 141; // // Number of calls of after failure observer\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n`Linux nb-timonz 6.5.0-28-generic #29~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Apr  4 14:39:20 UTC 2 x86_64 x86_64 x86_64 GNU/Linux`\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Temurin-17.0.6+10 (build 17.0.6+10)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.9.3 (but I think the problem occurs in all Quarkus versions)\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40489/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40489/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

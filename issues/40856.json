@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40856",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40856/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40856/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40856/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40856",
+  "id": 2319572840,
+  "node_id": "I_kwDOCFbutM6KQd9o",
+  "number": 40856,
+  "title": "UT005071: Undertow request failed HttpServerExchange",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1359391180,
+      "node_id": "MDU6TGFiZWwxMzU5MzkxMTgw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/undertow",
+      "name": "area/undertow",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-05-27T17:42:21Z",
+  "updated_at": "2024-06-11T11:56:14Z",
+  "closed_at": "2024-06-11T11:56:14Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi everyone, I have this problem when an application tries to communicate with my endpoint. BPM queries my endpoint and then I go to another application to fetch the response which it successfully returns to me in a json. The issue is that BPM can't reach my endpoint, it throws the following error within a 500 = \r\n\r\n{\"timestamp\":\"2024-05-27T13:09:48.652-03:00\",\"sequence\":3297,\"loggerClassName\":\"io.undertow.UndertowLogger_$logger\",\"loggerName\":\"io.undertow.request\",\"level\":\"ERROR\",\"message\":\"UT005071: Undertow request failed HttpServerExchange{ GET\r\nhttp://localhost:8080/v1/solicitudes/10186427/consulta/apiVentas\r\ndelegate io.undertow.vertx.VertxHttpExchange@5eaabe88}\",\"threadName\":\"executor-thread-0\",\"threadId\":221,\"mdc\":{},\"ndc\":\"\",\"hostName\":\"099n6737\",\"processName\":\"api-originacion-dev.jar\",\"processId\":30048,\"exception\":{\"refId\":1,\"exceptionType\":\"java.lang.IllegalArgumentException\",\"message\":\"UT000068: Servlet path match failed\",\"frames\":[{\"class\":\"io.undertow.servlet.handlers.ServletPathMatchesData\",\"method\":\"getServletHandlerByPath\",\"line\":83},{\"class\":\"io.undertow.servlet.handlers.ServletPathMatches\",\"method\":\"getServletHandlerByPath\",\"line\":89},{\"class\":\"io.undertow.servlet.handlers.ServletInitialHandler\",\"method\":\"handleRequest\",\"line\":124},{\"class\":\"io.quarkus.undertow.runtime.UndertowDeploymentRecorder$1\",\"method\":\"handleRequest\",\"line\":120},{\"class\":\"io.undertow.server.Connectors\",\"method\":\"executeRootHandler\",\"line\":284},{\"class\":\"io.undertow.server.DefaultExchangeHandler\",\"method\":\"handle\",\"line\":18},{\"class\":\"io.quarkus.undertow.runtime.UndertowDeploymentRecorder$5$1\",\"method\":\"run\",\"line\":417},{\"class\":\"java.util.concurrent.Executors$RunnableAdapter\",\"method\":\"call\",\"line\":572},{\"class\":\"java.util.concurrent.FutureTask\",\"method\":\"run\",\"line\":317},{\"class\":\"io.quarkus.vertx.core.runtime.VertxCoreRecorder$14\",\"method\":\"runWith\",\"line\":576},{\"class\":\"org.jboss.threads.EnhancedQueueExecutor$Task\",\"method\":\"run\",\"line\":2449},{\"class\":\"org.jboss.threads.EnhancedQueueExecutor$ThreadBody\",\"method\":\"run\",\"line\":1478},{\"class\":\"org.jboss.threads.DelegatingRunnable\",\"method\":\"run\",\"line\":29},{\"class\":\"org.jboss.threads.ThreadLocalResettingRunnable\",\"method\":\"run\",\"line\":29},{\"class\":\"io.netty.util.concurrent.FastThreadLocalRunnable\",\"method\":\"run\",\"line\":30},{\"class\":\"java.lang.Thread\",\"method\":\"run\",\"line\":1583}]}}\r\n\r\nThe route you send is fine, since I test it myself (already deployed in the corresponding environment and local) and it works.\r\n\r\nIn spring it works fine, I am migrating it to Quarkus and when doing this integration test it fails.\r\n\r\nAny suggestions? I send you the controller as defined \r\n\r\n@ApplicationScoped\r\n@Path(value = \"/v1\")\r\n@Tag(name = \"ventas-controller\", description = \"VentasController\")\r\n@Produces(MediaType.APPLICATION_JSON)\r\n@Consumes(MediaType.APPLICATION_JSON)\r\npublic class VentasController extends ControllerBase {\r\n\r\n        @Inject\r\n        VentasService service;\r\n\r\n        @Extensions({\r\n                @Extension(name = \"ServiceName\",\r\n                            value = \"Api-Originacion_getSolicitudApiVentas\"),\r\n                @Extension(\r\n                            name = \"MandatoryHeaders\",\r\n                            value = \"x-canal, x-idProceso, x-usuario, x-usuarioIP\"\r\n                )\r\n        })\r\n        @GET\r\n        @Path(value = \"/solicitudes/{nroSolicitud}/consulta/apiVentas\")\r\n        @Operation(summary = \"Recurso que se encarga de obtener los datos de una solicitud a traves de api-ventas\",\r\n                    description = \"Recurso que se encarga de obtener los datos de una solicitud a traves de api-ventas\")\r\n        @APIResponse(\r\n                responseCode = \"200\",\r\n                description = \"OK\",\r\n                content = @Content(\r\n                        mediaType = \"application/json\",\r\n                        schema = @Schema(\r\n                                implementation = ApiVentasResponseDTO.class\r\n                        )\r\n                    )\r\n                )\r\n        public Response getSolicitudFromApiVentas(\r\n                @Context HttpHeaders httpHeaders,\r\n                @PathParam(\"nroSolicitud\") BigInteger nroSolicitud\r\n        ) throws Exception {\r\n            String contentType = httpHeaders.getHeaderString(\"Content-Type\");\r\n            ApiVentasResponseDTO response = service.getSolicitudFromApiVentas(nroSolicitud, httpHeaders);\r\n            return Response.ok().entity(response).build();\r\n        }\r\n}\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nJava version: 17.0.7, vendor: GraalVM Community\r\n\r\n### Quarkus version or git rev\r\n\r\n2.15.3.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\napache-maven-3.9.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40856/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40856/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

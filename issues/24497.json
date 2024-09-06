@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24497",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24497/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24497/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24497/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24497",
+  "id": 1177917916,
+  "node_id": "I_kwDOCFbutM5GNZnc",
+  "number": 24497,
+  "title": "quarkus:update - dependencies with relocations are reported as \"remove version\"",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1800003265,
+      "node_id": "MDU6TGFiZWwxODAwMDAzMjY1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devtools",
+      "name": "area/devtools",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues/PR related to maven, gradle, platform and cli tooling/plugins"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2022-03-23T10:26:28Z",
+  "updated_at": "2022-03-23T10:26:29Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nquarkus:update - dependencies with relocations are reported as \"remove version\"\r\n\r\n```\r\n[INFO] --- quarkus-maven-plugin:2.7.5.Final:update (default-cli) @ 002-quarkus-all-extensions ---\r\n[WARNING] quarkus:update goal is experimental, its options and output might change in future versions\r\n[INFO]\r\n[INFO] Extensions from io.quarkus.platform:quarkus-bom:\r\n[INFO] Update: io.quarkiverse.config:quarkus-config-consul:1.0.1 -> remove version (managed)\r\n[INFO] Update: io.quarkiverse.vault:quarkus-vault:1.0.1 -> remove version (managed)\r\n[INFO]\r\n[INFO] Extensions from io.quarkus.platform:quarkus-amazon-services-bom:\r\n[INFO] Update: io.quarkiverse.amazonservices:quarkus-amazon-s3:1.0.2 -> remove version (managed)\r\n[INFO] Update: io.quarkiverse.amazonservices:quarkus-amazon-sqs:1.0.2 -> remove version (managed)\r\n[INFO] Update: io.quarkiverse.amazonservices:quarkus-amazon-kms:1.0.2 -> remove version (managed)\r\n[INFO] Update: io.quarkiverse.amazonservices:quarkus-amazon-ses:1.0.2 -> remove version (managed)\r\n[INFO] Update: io.quarkiverse.amazonservices:quarkus-amazon-sns:1.0.2 -> remove version (managed)\r\n[INFO] Update: io.quarkiverse.amazonservices:quarkus-amazon-dynamodb:1.0.2 -> remove version (managed)\r\n[INFO]\r\n[INFO] Extensions from registry.quarkus.io:\r\n[INFO] Update: io.quarkiverse.artemis:quarkus-artemis-jms:1.0.3 -> 1.0.4\r\n[INFO] Update: io.quarkiverse.neo4j:quarkus-neo4j:1.0.2 -> 1.0.6\r\n[INFO] Update: io.quarkiverse.amazonalexa:quarkus-amazon-alexa:1.0.1 -> 1.0.2\r\n[INFO] Update: io.quarkiverse.jgit:quarkus-jgit:1.1.0 -> 1.2.0\r\n[INFO]\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD SUCCESS\r\n[INFO] ------------------------------------------------------------------------\r\n```\r\n\r\nDependencies with relocations are reported as \"remove version\". I'm using `io.quarkus` groupId and relying on relocations in my sample project.\r\n\r\nThe real action should be to change `groupId` and `artifactId` of extensions that were moved to quarkiverse.\r\nThere is nothing to be done with version as the sample project is not defining them.\r\n\r\n\n\n### Expected behavior\n\nquarkus:update - dependencies with relocations have proposal to change `groupId` and `artifactId`\n\n### Actual behavior\n\nquarkus:update - dependencies with relocations are reported as \"remove version\"\n\n### How to Reproduce?\n\n - clone https://github.com/quarkus-qe/beefy-scenarios\r\n - apply\r\n```diff\r\ndiff --git a/pom.xml b/pom.xml\r\nindex ad31462..7cf624e 100644\r\n--- a/pom.xml\r\n+++ b/pom.xml\r\n@@ -70,9 +70,16 @@\r\n     <dependencyManagement>\r\n         <dependencies>\r\n             <dependency>\r\n-                <groupId>${quarkus.platform.group-id}</groupId>\r\n-                <artifactId>${quarkus.platform.artifact-id}</artifactId>\r\n-                <version>${quarkus.platform.version}</version>\r\n+                <groupId>io.quarkus.platform</groupId>\r\n+                <artifactId>quarkus-bom</artifactId>\r\n+                <version>2.7.5.Final</version>\r\n+                <type>pom</type>\r\n+                <scope>import</scope>\r\n+            </dependency>\r\n+            <dependency>\r\n+                <groupId>io.quarkus.platform</groupId>\r\n+                <artifactId>quarkus-amazon-services-bom</artifactId>\r\n+                <version>2.7.5.Final</version>\r\n                 <type>pom</type>\r\n                 <scope>import</scope>\r\n             </dependency>\r\n```\r\n - run `mvn io.quarkus:quarkus-maven-plugin:2.7.5.Final:update -f 002-quarkus-all-extensions/`\r\n\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nJava 17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.5.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24497/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24497/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

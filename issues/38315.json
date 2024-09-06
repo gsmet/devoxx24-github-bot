@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38315",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38315/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38315/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38315/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38315",
+  "id": 2091876511,
+  "node_id": "I_kwDOCFbutM58r4Cf",
+  "number": 38315,
+  "title": "Failed to redeploy verticle after quorum was re-attained",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2024-01-20T04:10:34Z",
+  "updated_at": "2024-01-24T20:56:57Z",
+  "closed_at": "2024-01-24T20:56:57Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nCreated a simple application, manually customized Vert.x instance to enable HA and quorum size 2, with a basic hazelcast TCP config. Deployed a simple HA worker verticle on startup. When launching the application, the deployed verticle is undeployed correctly because quorum is not yet attained. After launching another instance of the app, Vert.x redeploys the verticle, causing an `java.lang.NoSuchMethodException`.\r\n\r\n### Expected behavior\r\n\r\nVerticle is redeployed when quorum is reached.\r\n\r\n### Actual behavior\r\n\r\n```\r\nFailed to redeploy verticle java:org.acme.HAVerticle_ClientProxy after quorum was re-attained: java.lang.InstantiationException: org.acme.HAVerticle_ClientProxy\r\n        at java.base/java.lang.Class.newInstance(Class.java:719)\r\n        at io.vertx.core.impl.DeploymentManager.doDeploy(DeploymentManager.java:153)\r\n        at io.vertx.core.impl.VerticleManager.lambda$doDeployVerticle$5(VerticleManager.java:222)\r\n        at io.vertx.core.impl.future.Composition.onSuccess(Composition.java:38)\r\n        at io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:1583)\r\nCaused by: java.lang.NoSuchMethodException: org.acme.HAVerticle_ClientProxy.<init>()\r\n        at java.base/java.lang.Class.getConstructor0(Class.java:3761)\r\n        at java.base/java.lang.Class.newInstance(Class.java:706)\r\n        ... 12 more\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n[quarkus-cluster.zip](https://github.com/quarkusio/quarkus/files/13996620/quarkus-cluster.zip)\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class VertxCustomizer implements VertxOptionsCustomizer {\r\n    @Override\r\n    public void accept(VertxOptions options) {\r\n        options.setHAEnabled(true);\r\n        options.setHAGroup(\"test-group\");\r\n        options.setQuorumSize(2);\r\n    }\r\n}\r\n```\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class VerticleDeployer {\r\n    public void init(\r\n            @Observes StartupEvent e,\r\n            Vertx vertx,\r\n            HAVerticle verticle\r\n    ) {\r\n        Log.info(\"Deploying verticle: \" + verticle.getClass().getName());\r\n\r\n        DeploymentOptions options = new DeploymentOptions()\r\n                .setWorker(true)\r\n                .setInstances(1)\r\n                .setWorkerPoolName(\"ha-verticle-pool\")\r\n                .setHa(true)\r\n                .setWorkerPoolSize(1);\r\n\r\n        vertx.deployVerticleAndForget(verticle, options);\r\n    }\r\n}\r\n```\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class HAVerticle extends io.vertx.core.AbstractVerticle {\r\n    @Override\r\n    public void start() throws Exception {\r\n        Log.info(\"HAVerticle started\");\r\n    }\r\n\r\n    @Override\r\n    public void stop() throws Exception {\r\n        Log.info(\"HAVerticle stopped\");\r\n    }\r\n}\r\n```\r\n\r\n```\r\nquarkus.vertx.cluster.clustered=true\r\n```\r\n\r\n```\r\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<hazelcast xmlns=\"http://www.hazelcast.com/schema/config\"\r\n           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n           xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\r\n           http://www.hazelcast.com/schema/config/hazelcast-config-5.4.xsd\">\r\n    <cluster-name>dev-cluster</cluster-name>\r\n    <network>\r\n        <join>\r\n            <multicast enabled=\"false\"/>\r\n            <tcp-ip enabled=\"true\">\r\n                <interface>127.0.0.1</interface>\r\n            </tcp-ip>\r\n        </join>\r\n        <interfaces enabled=\"true\">\r\n            <interface>127.0.0.1</interface>\r\n        </interfaces>\r\n    </network>\r\n</hazelcast>\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin macbook.local 23.2.0 Darwin Kernel Version 23.2.0: Wed Nov 15 21:53:18 PST 2023; root:xnu-10002.61.3~2/RELEASE_ARM64_T6000 arm64\r\n\r\n### Output of `java -version`\r\n\r\njava version \"21\" 2023-09-19 Java(TM) SE Runtime Environment Oracle GraalVM 21+35.1 (build 21+35-jvmci-23.1-b15) Java HotSpot(TM) 64-Bit Server VM Oracle GraalVM 21+35.1 (build 21+35-jvmci-23.1-b15, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.6.6\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\ngradle 8.5\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38315/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38315/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

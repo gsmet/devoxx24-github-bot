@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42497",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42497/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42497/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42497/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42497",
+  "id": 2462257374,
+  "node_id": "I_kwDOCFbutM6SwxDe",
+  "number": 42497,
+  "title": "OIDC named tenants fail to recover when unavailable at startup",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-08-13T02:39:03Z",
+  "updated_at": "2024-08-14T10:38:02Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen using quarkus-oidc with named tenants and resolve-tenants-with-issuer, if an OIDC server is not available when the application starts, requests with credentials issued by that OIDC server will never succeed.\r\n\r\nThis behavior prevents an application from self-healing and requires a manual restart to return to normal operation.\r\n\r\nVariations attempted:\r\n- single named tenant\r\n- multiple named tenants\r\n- discovery-enabled=false\r\n- connection-delay=PT2M\r\n- connection-retry-count=999\r\n\n\n### Expected behavior\n\nQuarkus eventually reattempts to contact the OIDC server, and subsequent requests succeed with 200 Ok.\n\n### Actual behavior\n\nQuarkus never reattempts to contact the OIDC server, and all requests fail with 401 Unauthorized forever.\n\n### How to Reproduce?\n\n[https://github.com/segfault24/quarkus-oidc-bug/tree/main](https://github.com/segfault24/quarkus-oidc-bug/tree/main)\r\n\r\n1. Start the application, and wait for it to become ready. It will produce warnings about the OIDC server not being available.\r\n    ```shell script\r\n    ./mvnw quarkus:dev\r\n    ```\r\n    ```\r\n    2024-08-08 21:57:04,578 WARN  [io.qua.oid.run.OidcRecorder] (vert.x-eventloop-thread-1) Tenant 'keycloak-1': 'OIDC Server is not available'. OIDC server is not available yet, an attempt to connect will be made during the first request. Access to resources protected by this tenant may fail if OIDC server will not become available\r\n    ...\r\n    2024-08-08 21:57:04,647 INFO  [io.quarkus] (Quarkus Main Thread) quarkus-oidc-bug 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.13.1) started in 2.053s. Listening on: http://localhost:8080\r\n    ```\r\n\r\n2. In a second terminal, start the Keycloak container, and wait for it to become ready.\r\n    ```shell script\r\n    docker-compose up\r\n    ```\r\n    ```\r\n    ...\r\n    2024-08-08 21:57:37,093 INFO  [org.keycloak.services] (main) KC-SERVICES0032: Import finished successfully\r\n    2024-08-08 21:57:37,228 INFO  [org.keycloak.services] (main) KC-SERVICES0009: Added user 'admin' to realm 'master'\r\n    2024-08-08 21:57:37,295 INFO  [io.quarkus] (main) Keycloak 25.0.2 on JVM (powered by Quarkus 3.8.5) started in 7.546s. Listening on: http://0.0.0.0:8080. Management interface listening on http://0.0.0.0:9000.\r\n    ```\r\n\r\n3. In a third terminal, acquire an access token and make a request to the application. It will always respond with 401 Unauthorized.\r\n    ```shell script\r\n    ACCESS_TOKEN=$( \\\r\n        curl http://localhost:8081/realms/quarkus/protocol/openid-connect/token \\\r\n        -d \"client_id=test-client\" -d \"username=alice\" -d \"password=alice\" -d \"grant_type=password\" \\\r\n        | jq -r '.access_token')\r\n    curl -v http://localhost:8080/hello -H \"Authorization: bearer ${ACCESS_TOKEN}\"\r\n    ```\n\n### Output of `uname -a` or `ver`\n\nMINGW64_NT-10.0-22631 DESKTOP-REDACTED 3.4.10-87d57229.x86_64 2024-02-14 20:17 UTC x86_64 Msys\n\n### Output of `java -version`\n\nopenjdk version \"21.0.1\" 2023-10-17 LTS OpenJDK Runtime Environment Corretto-21.0.1.12.1 (build 21.0.1+12-LTS) OpenJDK 64-Bit Server VM Corretto-21.0.1.12.1 (build 21.0.1+12-LTS, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.13.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.7 (8b094c9513efc1b9ce2d952b3b9c8eaedaf8cbf0) Maven home: C:\\Users\\austin\\.m2\\wrapper\\dists\\apache-maven-3.9.7-bin\\33482774\\apache-maven-3.9.7 Java version: 21.0.1, vendor: Amazon.com Inc., runtime: C:\\Program Files\\Amazon Corretto\\jdk21.0.1_12 Default locale: en_US, platform encoding: UTF-8 OS name: \"windows 11\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42497/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42497/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

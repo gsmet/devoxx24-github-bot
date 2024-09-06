@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29222",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29222/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29222/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29222/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29222",
+  "id": 1446047942,
+  "node_id": "I_kwDOCFbutM5WMPDG",
+  "number": 29222,
+  "title": "Native Image build fails with Jackson >2.14.0",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-11-11T22:09:24Z",
+  "updated_at": "2022-11-12T06:02:31Z",
+  "closed_at": "2022-11-11T22:56:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nQuarkus fails to build native image if jackson is upgraded to `2.14.0`, affects both Quarkus `2.13.x` and `2.14.x` (as per my testing), not sure if GraalVM related or Quarkus issue, but see the logs and reproducer below\r\n\r\nSample quarkus github project, it should only contain files/modifications from code.quarkus.io + Jackson 2.14.0 + CI stuff https://github.com/vincejv/playground\r\n\r\nNo issues with JVM build, only native image\r\n\r\nLast known Jackson version to work without issues:  `2.13.4.2`\r\n\r\n### Expected behavior\r\n\r\nNo errors should occur during building native image and should generate a native binary\r\n\r\n### Actual behavior\r\n\r\nNative Image build fails with the following error and does not finish compilation\r\n```java\r\n[2/7] Performing analysis...  []                                                                        (23.8s @ 1.39GB)\r\n   3,866 (84.08%) of  4,598 classes reachable\r\n   4,628 (52.93%) of  8,743 fields reachable\r\n  15,543 (76.36%) of 20,355 methods reachable\r\n     273 classes,     0 fields, and     0 methods registered for reflection\r\n\r\nFatal error: com.oracle.graal.pointsto.util.AnalysisError$ParsingError: Error encountered while parsing com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector.findSubtypes(com.fasterxml.jackson.databind.introspect.Annotated) \r\nParsing context:\r\n   at com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector.findSubtypes(JacksonAnnotationIntrospector.java:621)\r\n   at com.fasterxml.jackson.databind.jsontype.impl.StdSubtypeResolver._collectAndResolveByTypeId(StdSubtypeResolver.java:296)\r\n   at com.fasterxml.jackson.databind.jsontype.impl.StdSubtypeResolver.collectAndResolveSubtypesByTypeId(StdSubtypeResolver.java:212)\r\n   at com.fasterxml.jackson.databind.deser.BasicDeserializerFactory.findTypeDeserializer(BasicDeserializerFactory.java:1793)\r\n   at com.fasterxml.jackson.databind.DeserializationContext.findRootValueDeserializer(DeserializationContext.java:654)\r\n   at com.fasterxml.jackson.databind.ObjectReader._prefetchRootDeserializer(ObjectReader.java:2430)\r\n   at com.fasterxml.jackson.databind.ObjectReader.<init>(ObjectReader.java:194)\r\n   at com.fasterxml.jackson.databind.ObjectReader.<init>(ObjectReader.java:173)\r\n\r\n\tat org.graalvm.nativeimage.pointsto/com.oracle.graal.pointsto.util.AnalysisError.parsingError(AnalysisError.java:153)\r\n\tat org.graalvm.nativeimage.pointsto/com.oracle.graal.pointsto.flow.MethodTypeFlow.createFlowsGraph(MethodTypeFlow.java:104)\r\n\tat org.graalvm.nativeimage.pointsto/com.oracle.graal.pointsto.flow.MethodTypeFlow.ensureFlowsGraphCreated(MethodTypeFlow.java:83)\r\n\tat org.graalvm.nativeimage.pointsto/com.oracle.graal.pointsto.flow.MethodTypeFlow.getOrCreateMethodFlowsGraph(MethodTypeFlow.java:65)\r\n\tat org.graalvm.nativeimage.pointsto/com.oracle.graal.pointsto.typestate.DefaultVirtualInvokeTypeFlow.onObservedUpdate(DefaultVirtualInvokeTypeFlow.java:109)\r\n\tat org.graalvm.nativeimage.pointsto/com.oracle.graal.pointsto.flow.TypeFlow.update(TypeFlow.java:562)\r\n\tat org.graalvm.nativeimage.pointsto/com.oracle.graal.pointsto.PointsToAnalysis$1.run(PointsToAnalysis.java:488)\r\n\tat org.graalvm.nativeimage.pointsto/com.oracle.graal.pointsto.util.CompletionExecutor.executeCommand(CompletionExecutor.java:193)\r\n\tat org.graalvm.nativeimage.pointsto/com.oracle.graal.pointsto.util.CompletionExecutor.lambda$executeService$0(CompletionExecutor.java:177)\r\n\tat java.base/java.util.concurrent.ForkJoinTask$RunnableExecuteAction.exec(ForkJoinTask.java:1395)\r\n\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373)\r\n\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182)\r\n\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655)\r\n\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nSteps to reproduce\r\n\r\n1. Generate a vanilla Quarkus project from [code.quarkus.io](https://code.quarkus.io/)\r\n2. Add the following jackson dependencies\r\n```xml\r\n<dependency>\r\n  <groupId>io.quarkus</groupId>\r\n  <artifactId>quarkus-resteasy-reactive-jackson</artifactId>\r\n</dependency>\r\n<dependency>\r\n  <groupId>com.fasterxml.jackson.core</groupId>\r\n  <artifactId>jackson-databind</artifactId>\r\n  <version>2.14.0</version>\r\n</dependency>\r\n<dependency>\r\n  <groupId>com.fasterxml.jackson.datatype</groupId>\r\n  <artifactId>jackson-datatype-jsr310</artifactId>\r\n  <version>2.14.0</version>\r\n</dependency>\r\n```\r\n3. Build with `mvn -B package -Pnative -Dquarkus.native.container-build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:22.3-java17`\r\n4. Build failure\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nGithub actions linux\r\n\r\n### Output of `java -version`\r\n\r\n17.0.5+8\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n22.3. also reproducible with 22.2\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.0, but also affects 2.13 and earlier versions\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.1\r\n\r\n### Additional information\r\n\r\nSee full Github actions run log here: https://github.com/vincejv/playground/actions/runs/3448179031/jobs/5754948784",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29222/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29222/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

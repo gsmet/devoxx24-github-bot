@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41288",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41288/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41288/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41288/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41288",
+  "id": 2359925127,
+  "node_id": "I_kwDOCFbutM6MqZmH",
+  "number": 41288,
+  "title": "Kotlin Coroutine suspend function Integration uses single thread dispatcher",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2024-06-18T13:51:54Z",
+  "updated_at": "2024-07-08T12:16:35Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen working with kotlin coroutines and suspend functions in quarkus, the code is executed sequentially by a single thread by default. One has to explicitly change the kotlin coroutine dispatcher to get the expected behavior of the `Dispatchers.Default` which uses a Thread pool.\r\n\r\n\n\n### Expected behavior\n\nBy default when using suspend function with quarkus the `Dispatchers.Default` or `Vertx.vertx().dispatcher()` should be used as the dispatchers. Or it should be possible to configure the used Dispatcher.\n\n### Actual behavior\n\nSome single threaded Dispatcher is used (maybe `runBlocking` is used) to run the suspend functions.\n\n### How to Reproduce?\n\nAdd the following code to an RestEasy Resource and call the endpoint\r\n\r\n```kotlin\r\n    @GET\r\n    @Path(\"test\")\r\n    suspend fun test() {\r\n        val start = System.currentTimeMillis()\r\n        coroutineScope {\r\n            repeat(10) {\r\n                launch {\r\n                    val timestamp = System.currentTimeMillis()\r\n                    while (System.currentTimeMillis() < timestamp + 1000) {\r\n                        // Busy wait\r\n                    }\r\n                    println(\"Hello, world!\")\r\n                }\r\n            }\r\n        }\r\n        println(\"Total time: ${System.currentTimeMillis() - start}\")\r\n    }\r\n```\r\nOutput: total time 10 seconds\r\n```kotlin\r\n    @GET\r\n    @Path(\"test\")\r\n    suspend fun test() {\r\n        val start = System.currentTimeMillis()\r\n        coroutineScope {\r\n            repeat(10) {\r\n                launch(Vertx.vertx().dispatcher()) {\r\n                    val timestamp = System.currentTimeMillis()\r\n                    while (System.currentTimeMillis() < timestamp + 1000) {\r\n                        // Busy wait\r\n                    }\r\n                    println(\"Hello, world!\")\r\n                }\r\n            }\r\n        }\r\n        println(\"Total time: ${System.currentTimeMillis() - start}\")\r\n    }\r\n```\r\nOutput: total time 1 second\r\n```kotlin\r\n    @GET\r\n    @Path(\"test\")\r\n    suspend fun test() {\r\n        val start = System.currentTimeMillis()\r\n        coroutineScope {\r\n            repeat(10) {\r\n                launch(Dispatchers.Default) { //Dispatchers.IO\r\n                    val timestamp = System.currentTimeMillis()\r\n                    while (System.currentTimeMillis() < timestamp + 1000) {\r\n                        // Busy wait\r\n                    }\r\n                    println(\"Hello, world!\")\r\n                }\r\n            }\r\n        }\r\n        println(\"Total time: ${System.currentTimeMillis() - start}\")\r\n    }\r\n```\r\nOutput: total time 1 second\n\n### Output of `uname -a` or `ver`\n\nLinux leon-pc 6.5.0-35-generic #35~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May  7 09:00:52 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.11\" 2024-04-16 OpenJDK Runtime Environment (build 17.0.11+9-Ubuntu-122.04.1) OpenJDK 64-Bit Server VM (build 17.0.11+9-Ubuntu-122.04.1, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.7.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 8.5\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41288/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41288/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

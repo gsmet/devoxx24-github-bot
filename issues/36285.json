@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36285",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36285/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36285/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36285/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36285",
+  "id": 1926063861,
+  "node_id": "I_kwDOCFbutM5yzWb1",
+  "number": 36285,
+  "title": "Create a conversational bot/GH Action to handle releases",
+  "labels": [
+    {
+      "id": 1304471709,
+      "node_id": "MDU6TGFiZWwxMzA0NDcxNzA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/infra",
+      "name": "area/infra",
+      "color": "c2e2f9",
+      "default": false,
+      "description": "internal and infrastructure related issues"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-10-04T12:04:36Z",
+  "updated_at": "2024-02-19T13:42:53Z",
+  "closed_at": "2024-02-19T13:42:52Z",
+  "active_lock_reason": null,
+  "body": "I thought about automating releases a lot lately and one of the issue I had is that it's not very easy to handle proper input and proper feedback with a manual workflow run.\r\n\r\nI was wondering if we could create something (either a bot or a GH Action - for now, I was more thinking about a GH Action that would react to issue events so that we don't rely on the bot being available) that would actually handle the release and guide you through it with proper error feedback.\r\n\r\nMy idea was to have the following workflow:\r\n- In a specific project, in a specific org (see notes below), we would create a new issue following a (rather strict) template\r\n- The template would contain everything you need to know about the input variables\r\n- We would check if the issue author is in a specific team of the org, if not, we would error out and close the issue right away\r\n- Depending on the input variables, we would check things, infer the version to release, make sure everything is set properly and add a comment asking the user to confirm the release (the comment would contain all the inferred details)\r\n- The OP (or another person from the aforementioned group) would have to confirm\r\n- Then we would start the first step of the workflow (the release-prepare one)\r\n- Once done, we would add a comment (if failure, we would add a comment too, suggesting a retry)\r\n- The release-perform workflow would then be started automatically\r\n- Once done, we would add a comment (if failure, we would add a comment too, suggesting a retry)\r\n- and so on\r\n\r\nSome steps will be a bit harder to handle. For instance, after the release-perform succeeded, we would have to wait ~1 hour and make sure the artifacts are available on Maven Central. Also, the update of the Platform will probably still require some manual intervention (especially if we want to wait for CI to be green there) but still the manual steps could be handled separately and then get back to the issue and go through the additional steps.\r\n\r\nI'm pretty sure it's going to be a bumpy road but I think it's worth a try and it could be refined along the way.\r\n\r\nAlso, we could start with some steps and add more when they are ready.\r\n\r\nNotes:\r\n- it's better to do it in a specific org so that we are not blocked by the QuarkusIO org limits, we will have to use a PAT to push changes to the repositories\r\n- one important adjustment is that we will need to get the repository content using `actions/checkout` to make sure the PAT is properly handled (and same for when the doc is synced to the website)\r\n- we need to keep the manual workflow working so the idea is just to wire the existing scripts. And if they need adjustments, they need to keep working in manual mode\r\n- there is a good chance we will need to keep the workspace around while releasing, we can upload an artifact containing the current namespace, the artifact would have the issue number in its name to make sure we can parallelize releases\r\n- retrying will probably require some additional work but it's definitely worth a try given how many problems can happen during the release\r\n- we need some sort of state machine to make sure we know the current state\r\n- the state needs to be stored in the issue as a comment\r\n\r\n/cc @maxandersen @gastaldi @aloubyansky for initial feedback",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36285/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36285/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

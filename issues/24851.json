@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24851",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24851/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24851/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24851/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24851",
+  "id": 1198556445,
+  "node_id": "I_kwDOCFbutM5HcIUd",
+  "number": 24851,
+  "title": "Items missing in client from a Multi SSE response",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 39,
+  "created_at": "2022-04-09T12:05:35Z",
+  "updated_at": "2022-08-30T14:10:57Z",
+  "closed_at": "2022-08-30T14:10:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a piece of code that gets users from user-service, which returns a multi. However, there are instances where a user object is missing from the list.\r\n\r\nCode in user-service:\r\n```\r\n return this.getByIds(ids).onItem().transformToMulti(users -> Multi.createFrom().items(users.stream()));\r\n```\r\n\r\nCode in client:\r\n```\r\nList<String> userIds ; // A list of distinct valid userIds with size <= 25\r\n\r\nreturn userClient.getByIds(userIds).collect().asList()\r\n                .map(users -> { // this list of users has 1 item missing.\r\n\r\n                    Map<String, User> userMap = users.stream().collect(Collectors.toMap(User::getId, user -> user));\r\n\r\n                   for(String userId: userIds) {\r\n                     User user = userMap.get(userId);\r\n                     Log.debug(\"userId : \" + user.getId()); // this line fails with null error\r\n\r\n                     return null;\r\n                   }\r\n                })\r\n                .onFailure().retry().atMost(3)\r\n                ;\r\n    }\r\n```\r\n\r\nI have a trace that shows that the ids were being fetched from user-service using cache only (as there is no db call in the trace), and the code fails because the user was null, and then a retry occurs which again fetches the same ids from user-service, and this time, all objects are received. \r\nI checked that the user that was missing in response exists in cache. Nonetheless, would've been fetched from db if not in cache.\r\n\r\nAre there any incidents of items being dropped from the stream? The size of the list also pretty small (<=25).\r\n\r\n<img width=\"1551\" alt=\"Screenshot 2022-04-09 at 5 19 26 PM\" src=\"https://user-images.githubusercontent.com/47735999/162572846-9b111911-bfc3-4db0-a2cf-2164b0158fb4.png\">\r\n \n\n### Expected behavior\n\nThe response list contains all items.\n\n### Actual behavior\n\nSometimes, an item is missing from the list. \n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n Darwin Kernel Version 21.1.0: Wed Oct 13 17:33:01 PDT 2021; root:xnu-8019.41.5~1/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17.0.2\" 2022-01-18 OpenJDK Runtime Environment GraalVM CE 22.0.0.2 (build 17.0.2+8-jvmci-22.0-b05) OpenJDK 64-Bit Server VM GraalVM CE 22.0.0.2 (build 17.0.2+8-jvmci-22.0-b05, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.8.0.CR1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nJava version: 17.0.2, vendor: Homebrew, runtime: /opt/homebrew/Cellar/openjdk/17.0.2/libexec/openjdk.jdk/Contents/Home Default locale: en_IN, platform encoding: UTF-8 OS name: \"mac os x\", version: \"12.0.1\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24851/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24851/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

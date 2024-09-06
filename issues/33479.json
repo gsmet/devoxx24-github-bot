@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33479",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33479/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33479/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33479/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33479",
+  "id": 1715852061,
+  "node_id": "I_kwDOCFbutM5mRdMd",
+  "number": 33479,
+  "title": "Allowing to disable non-application endpoints",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-05-18T15:41:21Z",
+  "updated_at": "2023-05-19T06:19:05Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "While porting our Strimzi HTTP Kafka bridge to Quarkus we came across the need of disabling the `/q/metrics` endpoint but it seems that currently such an option is not available (for any non-application endpoint).\r\nThis need comes from the following ...\r\n\r\nOur current bridge (in Vert.x) exposes metrics through a `/metrics` endpoint which has to be the same for backward compatibility while porting to Quarkus. Also metrics are HTTP and JVM related (provided by Vert.x out of box) plus some Kafka metrics we collects using a JMX collector and then put all together.\r\n\r\nThe first approach was making a custom meter registry which was leveraging the Quarkus HTTP and JVM metrics plus adding our JMX collector gathered metrics. They were served via the `/q/metrics` endpoint but we replaced it with `/metrics` (by using `quarkus.micrometer.export.prometheus.path=/metrics`). This change made `/metrics` to be a non-application endpoint.\r\nThe problem was that HTTP filters don't work for non-application endpoints and we have one for logging purposes.\r\n\r\nSo we decided to add the `/metrics` endpoint as a RESTeasy one, and gathering metrics together the same way (but not via a custom meter registry). This way the HTTP filter works fine for that endpoint.\r\nThe issue is that this way the users could get metrics from `/q/metrics` endpoint as well which are anyway missing the ones we get via the JMX collector.\r\n\r\nSo the need to disable the `/q/metrics` endpoint and leaving just our endpoint.\r\n\r\nFYI @geoand ",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33479/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33479/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

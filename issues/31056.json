@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31056",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31056/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31056/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31056/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31056",
+  "id": 1578892986,
+  "node_id": "I_kwDOCFbutM5eG_66",
+  "number": 31056,
+  "title": " org.springframework.data.domain.Example is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1552233747,
+      "node_id": "MDU6TGFiZWwxNTUyMjMzNzQ3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/spring",
+      "name": "area/spring",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues relating to the Spring integration"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-02-10T02:36:27Z",
+  "updated_at": "2023-02-21T07:22:18Z",
+  "closed_at": "2023-02-21T07:22:18Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n\r\npom.xml include `quarkus-spring-data-jpa` flow is:\r\n\r\n```xml\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-spring-data-jpa</artifactId>\r\n        </dependency>\r\n```\r\n\r\nMy code is:\r\n```java\r\n// SysUserRepository\r\n@Singleton\r\npublic interface SysUserRepository extends JpaRepository<SysUser, Long>\r\n\r\n // query users by example.\r\n @Override\r\n    public List<SysUser> selectUserList(SysUser user) {\r\n        Example q = Example.of(user);  <==================== throw exception\r\n        return sysUserRepository.findAll(q);\r\n    }\r\n\r\n```\r\n\r\n\r\n\r\n\r\n\r\n```log\r\n2023-02-10 10:13:41,976 ERROR [org.jbo.res.rea.com.cor.AbstractResteasyReactiveContext] (executor-thread-0) Request failed: java.lang.IllegalAccessError: failed to access class org.springframework.data.domain.TypedExample from class org.springframework.data.domain.Example (org.springframework.data.domain.TypedExample is in unnamed module of loader 'app'; org.springframework.data.domain.Example is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @541d4d9f)\r\n\tat org.springframework.data.domain.Example.of(Example.java:39)\r\n\tat com.wwkj.platform.system.service.impl.SysUserServiceImpl.selectUserList(SysUserServiceImpl.java:55)\r\n\tat com.wwkj.platform.system.controller.SysUserController.list(SysUserController.java:100)\r\n\tat com.wwkj.platform.system.controller.SysUserController$quarkusrestinvoker$list_df44f2bfcd664145662e4bf2e0668035d39cbfd5.invoke(Unknown Source)\r\n\tat org.jboss.resteasy.reactive.server.handlers.InvocationHandler.handle(InvocationHandler.java:29)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:114)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:576)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n```\r\n\n\n### Expected behavior\n\nFind user list.\n\n### Actual behavior\n\nthrow exception:\r\n``` \r\norg.springframework.data.domain.Example is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader\r\n```\n\n### How to Reproduce?\n\n# Create a quarkus maven project.\r\n# add some dependency to pom.xml\r\n```\r\n   <dependency>\r\n            <groupId>com.h2database</groupId>\r\n            <artifactId>h2</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-hibernate-orm</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-resteasy-reactive</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-resteasy-reactive-jackson</artifactId>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>io.quarkus</groupId>\r\n            <artifactId>quarkus-spring-data-jpa</artifactId>\r\n        </dependency>\r\n```\r\n\r\n# model a java file named `SysUser`, like this:\r\n```\r\n@Data\r\n@Entity\r\n@Table(name=\"sys_user\")\r\npublic class SysUser extends BaseEntity\r\n{\r\n```\r\n\r\n# Create a repository for SysUser.\r\n```\r\n@Singleton\r\npublic interface SysUserRepository extends JpaRepository<SysUser, Long>\r\n```\r\n\r\n#  Create a SysUserService that include the code like is:\r\n```\r\n@Override\r\n    public List<SysUser> selectUserList(SysUser user) {\r\n        Example q = Example.of(user);\r\n        return sysUserRepository.findAll(q);\r\n    }\r\n```\r\n# Create a `SysUserResource` that include invoke `SysUserService#selectUserList(SysUser user)` like is:\r\n```java\r\n @GET\r\n@Path(\"/list\")\r\n    public TableDataInfo list(@BeanParam SysUserVO vo) {\r\n        SysUser user = new SysUser();\r\n        BeanUtils.copyProperties(vo, user);\r\n        List<SysUser> list = userService.selectUserList(user);\r\n        return getDataTable(list);\r\n    }\r\n```\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux gaojie-H81U 5.15.0-58-generic #64-Ubuntu SMP Thu Jan 5 11:43:13 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment GraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13) OpenJDK 64-Bit Server VM GraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\nGraalVM CE 22.3.1 (build 17.0.6+10-jvmci-22.3-b13)\n\n### Quarkus version or git rev\n\n2.16.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.6\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31056/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31056/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

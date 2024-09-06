@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42750",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42750/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42750/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42750/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42750",
+  "id": 2485426528,
+  "node_id": "I_kwDOCFbutM6UJJlg",
+  "number": 42750,
+  "title": "Quarkus dev loads maven modules after each other, ingores --projects",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282136257,
+      "node_id": "MDU6TGFiZWwxMjgyMTM2MjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/maven",
+      "name": "area/maven",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 12,
+  "created_at": "2024-08-25T19:17:55Z",
+  "updated_at": "2024-08-28T13:36:36Z",
+  "closed_at": "2024-08-25T20:20:42Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have a multi-module consisting of services (with their own http) and support modules, the services depend on. The reactor `pom.xml` looks like this:\r\n\r\n```xml\r\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\r\n    <modelVersion>4.0.0</modelVersion>\r\n\r\n    <parent>\r\n        <groupId>org.acme</groupId>\r\n        <artifactId>parent</artifactId>\r\n        <relativePath>./parent</relativePath>\r\n        <version>1.0.0-SNAPSHOT</version>\r\n    </parent>\r\n\r\n    <artifactId>apps</artifactId>\r\n    <name>Application collection</name>\r\n    <description>All backend modules as micro services</description>\r\n\r\n    <packaging>pom</packaging>\r\n\r\n    <modules>\r\n        <module>library1</module>\r\n\t<module>library2</module>\r\n        <module>service1</module>\r\n    </modules>\r\n\r\n</project>\r\n```\r\n\r\n`service1` depends on `library1`  and `library2`. I can successfully run `mvn clean package`, but not `quarkus dev`\r\n\n\n### Expected behavior\n\nWhen starting `quarkus dev` have the ability to specify which module to load or start them concurrently. Or the ability for Quarkus to discover the reactor project\n\n### Actual behavior\n\n```bash\r\nquarkus dev\r\n````\r\nonly library1 gets processed, then quarkus stops\r\n\r\n```log\r\n[INFO] Scanning for projects...\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Reactor Build Order:\r\n[INFO] \r\n[INFO] library1                                                           [jar]\r\n[INFO] library2                                                           [jar]\r\n[INFO] service1                                                           [jar]\r\n[INFO] Application collection                                             [pom]\r\n[INFO] \r\n[INFO] -------------------------< org.acme:library1 >--------------------------\r\n[INFO] Building library1 1.0.0-SNAPSHOT                                   [1/4]\r\n[INFO]   from library1/pom.xml\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[INFO] \r\n[INFO] --- quarkus:3.13.3:dev (default-cli) @ library1 ---\r\n[INFO] Invoking resources:3.3.1:resources (default-resources) @ library1\r\n[INFO] Copying 1 resource from src/main/resources to target/classes\r\n[INFO] Invoking quarkus:3.13.3:generate-code (default) @ library1\r\n[INFO] Invoking compiler:3.13.0:compile (default-compile) @ library1\r\n[INFO] Nothing to compile - all classes are up to date.\r\n[INFO] Invoking resources:3.3.1:testResources (default-testResources) @ library1\r\n[INFO] skip non existing resourceDirectory /home/stw/Code/quarkus-trouble/library1/src/test/resources\r\n[INFO] Invoking quarkus:3.13.3:generate-code-tests (default) @ library1\r\n[INFO] Invoking compiler:3.13.0:testCompile (default-testCompile) @ library1\r\n[INFO] No sources to compile\r\nListening for transport dt_socket at address: 5005\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2024-08-26 03:02:41,601 INFO  [io.quarkus] (Quarkus Main Thread) library1 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.13.3) started in 0.734s. \r\n\r\n2024-08-26 03:02:41,603 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2024-08-26 03:02:41,604 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi]\r\n\r\n--\r\nTests paused\r\nPress [e] to edit command line args (currently ''), [r] to resume testing, [o] Toggle test output, [:] for the terminal, [h] for more options>\r\n```\r\n\r\nQuarkus loads the first library, then when stopping it (key q), the next module etc.\r\n\r\nTrying to start `quarkus dev` from the service1 module leads to:\r\n\r\n```log\r\n[INFO] Scanning for projects...\r\n[INFO] \r\n[INFO] -------------------------< org.acme:service1 >--------------------------\r\n[INFO] Building service1 1.0.0-SNAPSHOT\r\n[INFO]   from pom.xml\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[WARNING] The POM for org.acme:library1:jar:1.0.0-SNAPSHOT is missing, no dependency information available\r\n[WARNING] The POM for org.acme:library2:jar:1.0.0-SNAPSHOT is missing, no dependency information available\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  1.141 s\r\n[INFO] Finished at: 2024-08-26T03:06:50+08:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal on project service1: Could not resolve dependencies for project org.acme:service1:jar:1.0.0-SNAPSHOT\r\n[ERROR] dependency: org.acme:library1:jar:1.0.0-SNAPSHOT (compile)\r\n[ERROR] \tCould not find artifact org.acme:library1:jar:1.0.0-SNAPSHOT\r\n[ERROR] dependency: org.acme:library2:jar:1.0.0-SNAPSHOT (compile)\r\n[ERROR] \tCould not find artifact org.acme:library2:jar:1.0.0-SNAPSHOT\r\n[ERROR] \r\n[ERROR] -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR] \r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/DependencyResolutionException\r\n\r\n```\r\n\n\n### How to Reproduce?\n\nClone the [Reproducer repo](https://github.com/Stwissel/quarkus-multi-module-question) and run `quarkus dev`\r\n\r\n``` bash\r\ngit clone git@github.com:Stwissel/quarkus-multi-module-question.git\r\ncd quarkus-multi-module-question\r\nquarkus dev\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux stw-multipass 6.8.0-40-generic #40-Ubuntu SMP PREEMPT_DYNAMIC Fri Jul  5 10:34:03 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"21.0.4\" 2024-07-16 LTS OpenJDK Runtime Environment Zulu21.36+17-CA (build 21.0.4+7-LTS) OpenJDK 64-Bit Server VM Zulu21.36+17-CA (build 21.0.4+7-LTS, mixed mode, sharing)\n\n### Quarkus version or git rev\n\n3.13.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven home: /home/stw/.sdkman/candidates/maven/current Java version: 21.0.4, vendor: Azul Systems, Inc., runtime: /home/stw/.sdkman/candidates/java/21.0.4-zulu Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"6.8.0-40-generic\", arch: \"amd64\", family: \"unix\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42750/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42750/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

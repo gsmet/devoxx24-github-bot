@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36549",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36549/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36549/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36549/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36549",
+  "id": 1949429810,
+  "node_id": "I_kwDOCFbutM50MfAy",
+  "number": 36549,
+  "title": "Since 3.5.0 AMQ hostname cannot be overriden with environment variable in OpenShift, previously it could be",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-10-18T10:41:51Z",
+  "updated_at": "2023-10-18T11:26:00Z",
+  "closed_at": "2023-10-18T11:25:49Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have following properties in my application.properties\r\n\r\n```\r\namqp-host=fedor-rules\r\namqp-port=5672\r\n```\r\n\r\nand later I override it inside OpenShift pod like this (shortened output of oc describe pod):\r\n\r\n```\r\n...\r\nContainers:\r\n  app:\r\n    Container ID:   cri-o://2c353ee043ebefed4451a9d8cb7ad2a24e3f0e93f725f2932a2fbe8c4c4a4dd5\r\n    Image:          image-registry.openshift-image-registry...\r\n    Image ID:       image-registry.openshift-image-registry....\r\n    Port:           8080/TCP\r\n    Host Port:      0/TCP\r\n    State:          Running\r\n      Started:      Wed, 18 Oct 2023 12:30:42 +0200\r\n    Ready:          True\r\n    Restart Count:  0\r\n    Environment:\r\n      KUBERNETES_NAMESPACE:        ts-dxadyvktfs (v1:metadata.namespace)\r\n      QUARKUS_HOME:                /home/quarkus/\r\n      QUARKUS_OPTS:                \r\n      JAVA_APP_JAR:                /deployments/quarkus-run.jar\r\n      amqp-port:                   5672\r\n      amqp-host:                   amq-amqp\r\n...\r\n```\r\n\r\npreviously it was absolutely irrelevant what I set in app properties as long as I set env variable.\r\n\r\nI tried to link this change in behavior to netty bump / smallrye reactive messaging bump / kubernetes client bump etc. and failed to find it.\r\n\r\n### Expected behavior\r\n\r\nEnvironment variable is source with higher priority to application properties. It worked with 3.4.3.\r\n\r\n### Actual behavior\r\n\r\n\r\nApplication fails to start and following exception is being logged repeatedly:\r\n\r\n```\r\n12:31:30,321 INFO  [app] 10:31:29,252 SRMSG16212: Establishing connection with AMQP broker\r\n12:31:30,321 INFO  [app] 10:31:29,254 SRMSG16215: Unable to connect to the broker, retry will be attempted: java.net.UnknownHostException: fedor-rules: Name or service not known\r\n12:31:30,321 INFO  [app] \tat java.base/java.net.Inet6AddressImpl.lookupAllHostAddr(Native Method)\r\n12:31:30,321 INFO  [app] \tat java.base/java.net.InetAddress$PlatformNameService.lookupAllHostAddr(InetAddress.java:934)\r\n12:31:30,321 INFO  [app] \tat java.base/java.net.InetAddress.getAddressesFromNameService(InetAddress.java:1543)\r\n12:31:30,321 INFO  [app] \tat java.base/java.net.InetAddress$NameServiceAddresses.get(InetAddress.java:852)\r\n12:31:30,321 INFO  [app] \tat java.base/java.net.InetAddress.getAllByName0(InetAddress.java:1533)\r\n12:31:30,322 INFO  [app] \tat java.base/java.net.InetAddress.getAllByName(InetAddress.java:1385)\r\n12:31:30,322 INFO  [app] \tat java.base/java.net.InetAddress.getAllByName(InetAddress.java:1306)\r\n12:31:30,322 INFO  [app] \tat java.base/java.net.InetAddress.getByName(InetAddress.java:1256)\r\n12:31:30,322 INFO  [app] \tat io.netty.util.internal.SocketUtils$8.run(SocketUtils.java:156)\r\n12:31:30,322 INFO  [app] \tat io.netty.util.internal.SocketUtils$8.run(SocketUtils.java:153)\r\n12:31:30,322 INFO  [app] \tat java.base/java.security.AccessController.doPrivileged(AccessController.java:569)\r\n12:31:30,322 INFO  [app] \tat io.netty.util.internal.SocketUtils.addressByName(SocketUtils.java:153)\r\n12:31:30,322 INFO  [app] \tat io.netty.resolver.DefaultNameResolver.doResolve(DefaultNameResolver.java:41)\r\n12:31:30,322 INFO  [app] \tat io.netty.resolver.SimpleNameResolver.resolve(SimpleNameResolver.java:61)\r\n12:31:30,323 INFO  [app] \tat io.netty.resolver.SimpleNameResolver.resolve(SimpleNameResolver.java:53)\r\n12:31:30,323 INFO  [app] \tat io.netty.resolver.InetSocketAddressResolver.doResolve(InetSocketAddressResolver.java:55)\r\n12:31:30,323 INFO  [app] \tat io.netty.resolver.InetSocketAddressResolver.doResolve(InetSocketAddressResolver.java:31)\r\n12:31:30,323 INFO  [app] \tat io.netty.resolver.AbstractAddressResolver.resolve(AbstractAddressResolver.java:106)\r\n12:31:30,323 INFO  [app] \tat io.netty.bootstrap.Bootstrap.doResolveAndConnect0(Bootstrap.java:220)\r\n12:31:30,323 INFO  [app] \tat io.netty.bootstrap.Bootstrap.doResolveAndConnect(Bootstrap.java:171)\r\n12:31:30,323 INFO  [app] \tat io.netty.bootstrap.Bootstrap.connect(Bootstrap.java:148)\r\n12:31:30,323 INFO  [app] \tat io.vertx.core.net.impl.ChannelProvider.handleConnect(ChannelProvider.java:152)\r\n12:31:30,323 INFO  [app] \tat io.vertx.core.net.impl.ChannelProvider.connect(ChannelProvider.java:103)\r\n12:31:30,324 INFO  [app] \tat io.vertx.core.net.impl.ChannelProvider.connect(ChannelProvider.java:89)\r\n12:31:30,324 INFO  [app] \tat io.vertx.core.net.impl.NetClientImpl.connectInternal2(NetClientImpl.java:304)\r\n12:31:30,324 INFO  [app] \tat io.vertx.core.net.impl.NetClientImpl.lambda$connectInternal$2(NetClientImpl.java:270)\r\n12:31:30,324 INFO  [app] \tat io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n12:31:30,324 INFO  [app] \tat io.vertx.core.impl.future.FutureBase.emitSuccess(FutureBase.java:60)\r\n12:31:30,324 INFO  [app] \tat io.vertx.core.impl.future.FutureImpl.addListener(FutureImpl.java:196)\r\n12:31:30,324 INFO  [app] \tat io.vertx.core.impl.future.FutureImpl.onComplete(FutureImpl.java:164)\r\n12:31:30,324 INFO  [app] \tat io.vertx.core.net.impl.NetClientImpl.connectInternal(NetClientImpl.java:268)\r\n12:31:30,325 INFO  [app] \tat io.vertx.core.net.impl.NetClientImpl.connect(NetClientImpl.java:230)\r\n12:31:30,325 INFO  [app] \tat io.vertx.core.net.impl.NetClientImpl.connect(NetClientImpl.java:206)\r\n12:31:30,325 INFO  [app] \tat io.vertx.core.net.impl.NetClientImpl.connect(NetClientImpl.java:139)\r\n12:31:30,325 INFO  [app] \tat io.vertx.proton.impl.ProtonClientImpl.connectNetClient(ProtonClientImpl.java:74)\r\n12:31:30,325 INFO  [app] \tat io.vertx.proton.impl.ProtonClientImpl.connect(ProtonClientImpl.java:65)\r\n12:31:30,325 INFO  [app] \tat io.vertx.amqp.impl.AmqpConnectionImpl.connect(AmqpConnectionImpl.java:79)\r\n12:31:30,325 INFO  [app] \tat io.vertx.amqp.impl.AmqpConnectionImpl.lambda$new$0(AmqpConnectionImpl.java:70)\r\n12:31:30,325 INFO  [app] \tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:277)\r\n12:31:30,325 INFO  [app] \tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:259)\r\n12:31:30,325 INFO  [app] \tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n12:31:30,326 INFO  [app] \tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n12:31:30,326 INFO  [app] \tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n12:31:30,326 INFO  [app] \tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n12:31:30,326 INFO  [app] \tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n12:31:30,326 INFO  [app] \tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n12:31:30,326 INFO  [app] \tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n12:31:30,326 INFO  [app] \tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n12:31:30,326 INFO  [app] \tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nSteps to reproduce the behavior:\r\n\r\n1. `oc login ...`\r\n2. `git clone git@github.com:michalvavrik/quarkus-test-framework.git`\r\n3. `cd quarkus-test-framework`\r\n4. `git checkout reproduce/amq-ocp`\r\n5. `mvn clean verify -Dopenshift -f examples/amq-amqp`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nFedora 38\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Temurin-17.0.7+7\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.5.0.CR1 and 999-SNAPSHOT\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.3\r\n\r\n### Additional information\r\n\r\nUsing OpenShift 4.13.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36549/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36549/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

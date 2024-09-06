@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28350",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28350/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28350/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28350/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28350",
+  "id": 1394427300,
+  "node_id": "I_kwDOCFbutM5THUWk",
+  "number": 28350,
+  "title": "Reactive Messaging (RabbitMQ) - can't ack messages manually with consumer ack",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2022-10-03T09:32:51Z",
+  "updated_at": "2022-11-02T07:10:52Z",
+  "closed_at": "2022-11-02T07:10:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIt seems that whatever I do messages get always acknowledged automatically. How can I ack a message manually?\r\n\r\nCode:\r\n```\r\n    @Incoming(\"prices\")\r\n    @Acknowledgment(Acknowledgment.Strategy.MANUAL)\r\n    public CompletionStage<Void> process(Message<String> message) {\r\n        String priceInUsdString = message.getPayload();\r\n        Integer priceInUsd = Integer.parseInt(priceInUsdString);\r\n        LOGGER.infof(\"process priceInUsd=%d\", priceInUsd);\r\n        return message.ack();\r\n    }\r\n```\r\n\r\n```\r\n    @Inject\r\n    @Channel(\"generated-price\")\r\n    Emitter<Integer> emitter;\r\n\r\n    public Integer generateInteger() {\r\n        Integer i = random.nextInt(100);\r\n        LOGGER.infof(\"generateInteger i=%d send\", i);\r\n        emitter.send(\r\n                Message.of(i, () -> {\r\n                            // Called when the message is acknowledged.\r\n                            LOGGER.infof(\"generateInteger i=%d ack\", i);\r\n                            return CompletableFuture.completedFuture(null);\r\n                        },\r\n                        reason -> {\r\n                            // Called when the message is acknowledged negatively.\r\n                            LOGGER.infof(\"generateInteger i=%d nack\", i);\r\n                            return CompletableFuture.completedFuture(null);\r\n                        }));\r\n        return i;\r\n    }\r\n```\r\nCalling:\r\n```\r\ncurl http://localhost:8080/prices/generate\r\n```\r\n\r\nProduces the output:\r\n```\r\n2022-10-03 11:25:31,810 INFO  [org.acm.amq.PriceGenerator] (executor-thread-0) generateInteger i=26 send\r\n2022-10-03 11:25:31,816 INFO  [org.acm.amq.PriceGenerator] (vert.x-eventloop-thread-1) generateInteger i=26 ack\r\n2022-10-03 11:25:31,817 INFO  [org.acm.amq.PriceConverter] (vert.x-eventloop-thread-2) process priceInUsd=26\r\n2022-10-03 11:25:31,818 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `prices` has been ack'd\r\n```\r\n\r\n\r\n        \r\n\r\n\r\n### Expected behavior\r\n\r\nI'd expect the following output (the ack message only after the message has been acked):\r\n\r\n```\r\n2022-10-03 11:25:31,810 INFO  [org.acm.amq.PriceGenerator] (executor-thread-0) generateInteger i=26 send\r\n\r\n2022-10-03 11:25:31,817 INFO  [org.acm.amq.PriceConverter] (vert.x-eventloop-thread-2) process priceInUsd=26\r\n2022-10-03 11:25:31,818 INFO  [io.sma.rea.mes.rabbitmq] (vert.x-eventloop-thread-2) SRMSG17033: A message sent to channel `prices` has been ack'd\r\n2022-10-03 11:25:31,816 INFO  [org.acm.amq.PriceGenerator] (vert.x-eventloop-thread-1) generateInteger i=26 ack\r\n```\r\n\r\n### Actual behavior\r\n\r\nThe 'message is acknowledged' block gets called before the message is acked.\r\n\r\n\r\n### How to Reproduce?\r\n\r\n1. Run the attached reproducer. \r\n2. Run: `curl http://localhost:8080/prices/generate`\r\n3. Check output\r\n\r\n[ack-test.zip](https://github.com/quarkusio/quarkus/files/9696293/ack-test.zip)\r\n\r\nRequirements: an rabbitmq instance\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux a 5.15.65-1-MANJARO #1 SMP PREEMPT Mon Sep 5 10:15:47 UTC 2022 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"18.0.2\" 2022-07-19 OpenJDK Runtime Environment (build 18.0.2+0) OpenJDK 64-Bit Server VM (build 18.0.2+0, mixed mode)\r\n\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus 2.13.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\nMaven home: /opt/apache-maven-3.8.6\r\nJava version: 11.0.14.1, vendor: Eclipse Adoptium, runtime: /opt/jdk-11.0.14.1+1\r\nDefault locale: en_US, platform encoding: UTF-8\r\nOS name: \"linux\", version: \"5.15.65-1-manjaro\", arch: \"amd64\", family: \"unix\"\r\n\r\n\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28350/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28350/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

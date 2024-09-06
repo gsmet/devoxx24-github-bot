@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35068",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35068/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35068/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35068/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35068",
+  "id": 1824900137,
+  "node_id": "I_kwDOCFbutM5sxcQp",
+  "number": 35068,
+  "title": "Fast jar build fails at runtime with java.lang.NoSuchMethodError",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-07-27T17:57:33Z",
+  "updated_at": "2023-07-28T14:15:03Z",
+  "closed_at": "2023-07-28T11:24:08Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe issue is happening after migrating to quarkus 3. Previous working version - 2.16.5.Final\r\n\r\nNo exception is thrown in \r\n- quarkus dev mode\r\n- Legacy build\r\n- quarkus test\r\n\r\nThe issue occurs only if I use fast jar build and try to run the application. \r\nBuild commands used which causes failure at runtime,\r\n```\r\nRUN ./mvnw -B -e -c package -Dquarkus.package.type=fast-jar -DskipTests=true\r\n\r\nCOPY --from=build --chown=talpa-app:talpa-app /build/target/quarkus-app/lib/ ./application/lib/\r\nCOPY --from=build --chown=talpa-app:talpa-app /build/target/quarkus-app/*.jar ./application/\r\nCOPY --from=build --chown=talpa-app:talpa-app /build/target/quarkus-app/app/ ./application/app/\r\nCOPY --from=build --chown=talpa-app:talpa-app /build/target/quarkus-app/quarkus/ ./application/quarkus/\r\n```\r\n\r\nWorkaround\r\n\r\n```\r\nRUN ./mvnw -B -e -C -s ci_settings.xml package -Dquarkus.package.type=legacy-jar -DskipTests=true\r\n\r\nCOPY --from=build --chown=talpa-app:talpa-app /build/target/lib/* ./application/lib/\r\nCOPY --from=build --chown=talpa-app:talpa-app /build/target/*-runner.jar ./application/quarkus-run.jar\r\n```\r\n\r\nDependencies which may be causing the problem\r\n```\r\n        <dependency>\r\n            <groupId>com.github.mjakubowski84</groupId>\r\n            <artifactId>parquet4s-core_2.13</artifactId>\r\n            <version>1.9.2</version>\r\n        </dependency>\r\n\r\n        <dependency>\r\n            <groupId>org.apache.parquet</groupId>\r\n            <artifactId>parquet-hadoop</artifactId>\r\n            <version>1.12.3</version>\r\n        </dependency>\r\n\r\n       <dependency>\r\n            <groupId>org.apache.parquet</groupId>\r\n            <artifactId>parquet-format</artifactId>\r\n            <version>2.9.0</version>\r\n        </dependency>\r\n\r\n        <dependency>\r\n            <groupId>org.apache.parquet</groupId>\r\n            <artifactId>parquet-encoding</artifactId>\r\n            <version>1.12.3</version>\r\n        </dependency>\r\n\r\n        <dependency>\r\n            <groupId>org.apache.parquet</groupId>\r\n            <artifactId>parquet-column</artifactId>\r\n            <version>1.12.3</version>\r\n        </dependency>\r\n\r\n        <dependency>\r\n            <groupId>org.apache.parquet</groupId>\r\n            <artifactId>parquet-common</artifactId>\r\n            <version>1.12.3</version>\r\n        </dependency>\r\n```\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\nThe application starts up normal and waits for request. \r\nOnce request comes and application starts to execute and runs without issues until parquet writer method is called.\r\n\r\nError Logs:\r\n\r\n```\r\nexec java -Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -XX:+ExitOnOutOfMemoryError -cp . -jar /deployments/application/quarkus-run.jar\r\n__  ____  __  _____   ___  __ ____  ______ \r\n --/ __ \\/ / / / _ | / _ \\/ //_/ / / / __/ \r\n -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\\ \\   \r\n--\\___\\_\\____/_/ |_/_/|_/_/|_|\\____/___/   \r\n2023-07-27 17:31:22,879 WARN  [io.qua.ope.run.exp.otl.LateBoundBatchSpanProcessor] (main) No BatchSpanProcessor delegate specified, no action taken.\r\n2023-07-27 17:31:35,273 INFO  [tal.cor.ser.CService] (executor-thread-1) Starting conversion tool execution\r\n ERROR [io.qua.sch.com.run.StatusEmitterInvoker] (executor-thread-1) Error occurred while executing task for trigger IntervalTrigger [id=1_talpa.cortexconv.App#run, interval=1000]: java.util.concurrent.CompletionException: java.lang.NoSuchMethodError: 'void org.apache.parquet.format.Util.writePageHeader(org.apache.parquet.format.PageHeader, java.io.OutputStream, org.apache.parquet.format.BlockCipher$Encryptor, byte[])'\r\n        at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(Unknown Source)\r\n        at java.base/java.util.concurrent.CompletableFuture.completeThrowable(Unknown Source)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(Unknown Source)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenCompleteStage(Unknown Source)\r\n        at java.base/java.util.concurrent.CompletableFuture.whenComplete(Unknown Source)\r\n        at java.base/java.util.concurrent.CompletableFuture$MinimalStage.whenComplete(Unknown Source)\r\n        at io.quarkus.scheduler.common.runtime.DefaultInvoker.invoke(DefaultInvoker.java:24)\r\n        at io.quarkus.scheduler.common.runtime.StatusEmitterInvoker.invoke(StatusEmitterInvoker.java:35)\r\n        at io.quarkus.scheduler.common.runtime.SkipConcurrentExecutionInvoker.invoke(SkipConcurrentExecutionInvoker.java:37)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler$ScheduledTask.doInvoke(SimpleScheduler.java:416)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler$ScheduledTask$1.handle(SimpleScheduler.java:397)\r\n        at io.quarkus.scheduler.runtime.SimpleScheduler$ScheduledTask$1.handle(SimpleScheduler.java:393)\r\n        at io.vertx.core.impl.ContextBase.lambda$null$0(ContextBase.java:137)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n        at io.vertx.core.impl.ContextBase.lambda$executeBlocking$1(ContextBase.java:135)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:581)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Unknown Source)\r\nCaused by: java.lang.NoSuchMethodError: 'void org.apache.parquet.format.Util.writePageHeader(org.apache.parquet.format.PageHeader, java.io.OutputStream, org.apache.parquet.format.BlockCipher$Encryptor, byte[])'\r\n        at org.apache.parquet.format.converter.ParquetMetadataConverter.writeDataPageV1Header(ParquetMetadataConverter.java:1880)\r\n        at org.apache.parquet.hadoop.ColumnChunkPageWriteStore$ColumnChunkPageWriter.writePage(ColumnChunkPageWriteStore.java:186)\r\n        at org.apache.parquet.column.impl.ColumnWriterV1.writePage(ColumnWriterV1.java:59)\r\n        at org.apache.parquet.column.impl.ColumnWriterBase.writePage(ColumnWriterBase.java:387)\r\n        at org.apache.parquet.column.impl.ColumnWriteStoreBase.flush(ColumnWriteStoreBase.java:186)\r\n        at org.apache.parquet.column.impl.ColumnWriteStoreV1.flush(ColumnWriteStoreV1.java:29)\r\n        at org.apache.parquet.hadoop.InternalParquetRecordWriter.flushRowGroupToStore(InternalParquetRecordWriter.java:185)\r\n        at org.apache.parquet.hadoop.InternalParquetRecordWriter.close(InternalParquetRecordWriter.java:124)\r\n        at org.apache.parquet.hadoop.ParquetWriter.close(ParquetWriter.java:319)\r\n        at com.github.mjakubowski84.parquet4s.DefaultParquetWriter.close(ParquetWriter.scala:165)\r\n        at com.github.mjakubowski84.parquet4s.ParquetWriter$.writeAndClose(ParquetWriter.scala:116)\r\n        at talpa.io.ParquetWriter.$anonfun$writeFile$3(ParquetWriter.scala:371)\r\n        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)\r\n```\r\n\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\ndebian:bullseye-slim \r\n\r\n### Output of `java -version`\r\n\r\njava 17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmaven 3.8.6 \r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35068/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35068/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

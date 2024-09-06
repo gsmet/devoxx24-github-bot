@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24128",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24128/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24128/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24128/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24128",
+  "id": 1160449943,
+  "node_id": "I_kwDOCFbutM5FKw-X",
+  "number": 24128,
+  "title": "AdditionalJpaOperations doest not work properly with multiple PersistenceUnits",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1552233747,
+      "node_id": "MDU6TGFiZWwxNTUyMjMzNzQ3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/spring",
+      "name": "area/spring",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues relating to the Spring integration"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-03-05T21:28:48Z",
+  "updated_at": "2022-03-06T14:31:18Z",
+  "closed_at": "2022-03-06T14:31:18Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nThe problem I'm having is kind of similar to #24075, but I'm opening a separate issue because the scenario is a bit different and involves multiple persistent units.\r\n\r\nI managed to make SpringRepositories work with multiple PU's by creating a bean to initialize [AbstractJpaOperations::entityToPersistenceUnit](https://github.com/quarkusio/quarkus/blob/2fa974bd2e4d63e0209155f8cb9ced0544e1f4df/extensions/panache/hibernate-orm-panache-common/runtime/src/main/java/io/quarkus/hibernate/orm/panache/common/runtime/AbstractJpaOperations.java#L30), in order to create the necessary mappings:\r\n\r\n```java\r\n@Singleton\r\npublic class MultiPUBootstrapper {\r\n\r\n\tpublic void onEvent(@Observes StartupEvent ev) {\r\n\t\tvar descs = PersistenceUnitsHolder.getPersistenceUnitDescriptors();\r\n\r\n\t\tvar map = new HashMap<String, String>();\r\n\r\n\t\tdescs.forEach(desc -> {\r\n\t\t\tvar name = desc.getName();\r\n\t\t\tvar types = desc.getManagedClassNames();\r\n\r\n\t\t\tfor (var type : types) {\r\n\t\t\t\tmap.put(type, name);\r\n\t\t\t}\r\n\t\t});\r\n\r\n\t\tAbstractJpaOperations.setEntityToPersistenceUnit(map);\r\n\t}\r\n}\r\n```\r\n\r\nWith this setup, I can configure multiple named persistence units, and spring JPA repositories work (almost) flawlessly. E.g., with this config\r\n\r\n```\r\nquarkus.datasource.\"one\".db-kind = h2\r\nquarkus.datasource.\"one\".username = sa\r\nquarkus.datasource.\"one\".password = \r\nquarkus.datasource.\"one\".jdbc.url = jdbc:h2:mem:one;DB_CLOSE_DELAY=-1\r\n\r\nquarkus.datasource.\"two\".db-kind = h2\r\nquarkus.datasource.\"two\".username = sa\r\nquarkus.datasource.\"two\".password = \r\nquarkus.datasource.\"two\".jdbc.url = jdbc:h2:mem:two;DB_CLOSE_DELAY=-1\r\n\r\nquarkus.hibernate-orm.\"one\".dialect=org.hibernate.dialect.H2Dialect\r\nquarkus.hibernate-orm.\"one\".datasource=one \r\nquarkus.hibernate-orm.\"one\".packages=pkg.one\r\nquarkus.hibernate-orm.\"one\".database.generation=drop-and-create\r\n\r\nquarkus.hibernate-orm.\"two\".dialect=org.hibernate.dialect.H2Dialect\r\nquarkus.hibernate-orm.\"two\".datasource=two\r\nquarkus.hibernate-orm.\"two\".packages=pkg.two\r\nquarkus.hibernate-orm.\"two\".database.generation=drop-and-create\r\n```\r\n\r\nrepositories are correctly injected and resolved to their appropriate PU's:\r\n\r\n```java\r\n@QuarkusTest\r\npublic class TestTwoPUs {\r\n\r\n\t@Inject\r\n\tRepositoryOne ones;\r\n\r\n\t@Inject\r\n\tRepositoryTwo twos;\r\n\t\r\n\t@Test\r\n\tpublic void will_save_one_and_two() {\r\n\t\tassertEquals(0, ones.count());\r\n\t\tassertEquals(0, twos.count());\r\n\r\n\t\tones.save(new EntityOne());\r\n\t\t\r\n\t\tassertEquals(1, ones.count());\r\n\t\tassertEquals(0, twos.count());\r\n\t\t\r\n\t\ttwos.save(new EntityTwo());\r\n\t\t\r\n\t\tassertEquals(1, ones.count());\r\n\t\tassertEquals(1, twos.count());\r\n\t}\t\r\n}\r\n```\r\n\r\nOperations declared [AdditionalJpaOperations](https://github.com/quarkusio/quarkus/blob/2fa974bd2e4d63e0209155f8cb9ced0544e1f4df/extensions/panache/hibernate-orm-panache/runtime/src/main/java/io/quarkus/hibernate/orm/panache/runtime/AdditionalJpaOperations.java), e.g., [deletAllWithCascade](https://github.com/quarkusio/quarkus/blob/2fa974bd2e4d63e0209155f8cb9ced0544e1f4df/extensions/panache/hibernate-orm-panache/runtime/src/main/java/io/quarkus/hibernate/orm/panache/runtime/AdditionalJpaOperations.java#L57) don't use the type info to resolve the associated EntityManger and when running with multiple PU's the code throws\r\n\r\n```\r\njava.lang.IllegalStateException: The default datasource has not been properly configured. See https://quarkus.io/guides/datasource#jdbc-datasource for information on how to do that.\r\n```\r\n\r\nThe lack of multi-PU support breaks standard Repository methods like **deleteAll** and custom user methods with @Query. \r\n\r\nI believe this can easily be fixed simply by replacing \r\n\r\n```\r\nEntityManager em = jpaOperations.getEntityManager();\r\n```\r\n\r\nwith\r\n\r\n```\r\nEntityManager em = jpaOperations.getEntityManager(type);\r\n```\r\n\r\nin AdditionalJpaOperations.\n\n### Expected behavior\n\nMethods from AdditionalJpaOperations should work with multiple named PU's, like those declared in AbstractJpaOperations.\n\n### Actual behavior\n\nMethods are not multiple-PU aware and demand a default persistent unit configured, otherwise, an exception is thrown.\r\n\r\nThe exception thrown is also misleading. Even with a default PU configured, the code would propagate operations to a wrong EntityManager instance for entities not related to the default PU.\n\n### How to Reproduce?\n\nSteps to reproduce:\r\n\r\n1. Create two packages (pkg.one and pkg.two)\r\n2. Create one entity in each package, e.g.,\r\n\r\n```\r\npackage pkg.one;\r\n\r\npublic class EntityOne { \r\n\r\n        @Id\r\n\t@GeneratedValue(strategy = GenerationType.AUTO)\r\n\tprotected Integer id;\r\n\r\n\t// other fields, etc\r\n}\r\n\r\npackage pkg.two;\r\n\r\npublic class EntityTwo { \r\n\r\n        @Id\r\n\t@GeneratedValue(strategy = GenerationType.AUTO)\r\n\tprotected Integer id;\r\n}\r\n```\r\n\r\n3. Create the repository interfaces:\r\n\r\n```\r\npackage repos.one;\r\n\r\n@Repository\r\npublic interface RepoOne extends PagingAndSortingRepository<EntityOne, Integer> { \r\n\r\n}\r\n\r\npackage repos.two;\r\n\r\n@Repository\r\npublic interface RepoOne extends PagingAndSortingRepository<EntityTwo, Integer> { \r\n\r\n}\r\n```\r\n\r\n4. Create a configuration file with two PU's like in the bug description\r\n5. Create a MultiPUBootstraper like in the bug description\n\n### Output of `uname -a` or `ver`\n\nLinux gtr 5.4.0-65-generic #73-Ubuntu SMP Mon Jan 18 17:25:17 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.2\" 2022-01-18\n\n### GraalVM version (if different from Java)\n\nGraalVM CE 22.0.0.2 (build 17.0.2+8-jvmci-22.0-b05)\n\n### Quarkus version or git rev\n\n2.7.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24128/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24128/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

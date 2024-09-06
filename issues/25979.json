@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25979",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25979/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25979/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25979/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25979",
+  "id": 1262623387,
+  "node_id": "I_kwDOCFbutM5LQhqb",
+  "number": 25979,
+  "title": " ResourceReferenceProvider  Injection accidental failure",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2022-06-07T01:59:43Z",
+  "updated_at": "2022-06-10T17:30:17Z",
+  "closed_at": "2022-06-10T07:15:39Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI refer to how to introduce CDI (https://quarkus.io/guides/cdi-integration)\r\nSo I want to introduce Dubbo\r\n\r\nMy problem is that after the resourcereferenceprovider is introduced, the user-defined annotation will become invalid accidentally. Each time it becomes invalid, the project can only be recompiled and started. In this way, the user can resume the injection of the user-defined annotation normally. Miraculously, the index is a generated class that prints the resourcereferenceprovider, but I don't know what factors affect the probability of injection failure\r\n\r\n我的问题是 ResourceReferenceProvider 引入后，自定义注解偶然性会失效，每次失效，就只能重新编译启动项目，这样子才能正常恢复自定义注解的注入，神奇的是，index 是有打印 ResourceReferenceProvider 的生成类，却不知道是什么因素影响了概率性注入失败的问题\r\n\r\n``` deployment\r\n\r\n private static final DotName DubboReferenceName = DotName.createSimple(DubboReference.class.getName());\r\n\r\n    @BuildStep\r\n    void setupResourceInjection(BuildProducer<ResourceAnnotationBuildItem> resourceAnnotations, BuildProducer<GeneratedResourceBuildItem> resources) {\r\n   // When an entity object is generated from a dubboreference annotation, the dubboreferenceprovider may not be triggered after each startup The get method starts quarkus for 10 times, and fails to intercept CDI injection for 2-3 times. This is not a dubboreferenceprovider There is a bug in the internal method of get, and the return of a separate new entity in the get method is the same. Therefore, it is not a problem of introducing Dubbo. When various breakpoints are accessed for the first time, the internal breakpoints are also accidental and will not enter\r\n        // @DubboReference 的注解生成实体对象时，每次启动后，不一定会触发 DubboReferenceProvider.get 方法，10次启动quarkus，有2-3次遇到拦截 CDI 注入失败的情况，造成这种不是 DubboReferenceProvider.get 内部方法有bug，该get方法里单独new 实体返回也是一样的情况，所以不是引入 dubbo 的问题，断点各种时，首次访问，内部断点也是偶然性不会进入\r\n// 奇怪的是，每次quarkus 启动的时候，都会打印 index DubboReferenceProvider ，这说明类是没有丢失的，但是就是有时候没有拦截生成对象\r\n        resources.produce(new GeneratedResourceBuildItem(\"META-INF/services/io.quarkus.arc.ResourceReferenceProvider\",\r\n                DubboReferenceProvider.class.getName().getBytes()));\r\n        resourceAnnotations.produce(new ResourceAnnotationBuildItem(DubboReferenceName));\r\n    }\r\n\r\n    @BuildStep\r\n    void load(BuildProducer<AdditionalBeanBuildItem> additionalBeans) {\r\n        // 不可移除的类 -- 做增强，避免丢失\r\n        additionalBeans.produce(AdditionalBeanBuildItem.builder().setUnremovable()\r\n                .addBeanClass(DubboReferenceProvider.class)\r\n                .addBeanClass(DubboServiceExporttProvider.class)\r\n                .addBeanClass(DubboService.class)\r\n                .addBeanClass(DubboReference.class)\r\n                .build()\r\n        );\r\n    }\r\n\r\n```\r\nuse @DubboReference accidental  is null not every time\r\nbut get method of DubboReferenceProvider  accidental failure\r\n\r\n\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nI want to get the object through @Dubboreference, which is not null every time\r\n\r\n### Actual behavior\r\n\r\nthis get method of DubboReferenceProvider  accidental failure\r\n\r\n### How to Reproduce?\r\n\r\nmaven\r\n<properties>\r\n    <compiler-plugin.version>3.8.1</compiler-plugin.version>\r\n    <failsafe-plugin.version>${surefire-plugin.version}</failsafe-plugin.version>\r\n    <failsafe.useModulePath>false</failsafe.useModulePath>\r\n    <maven.compiler.release>11</maven.compiler.release>\r\n    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\r\n    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>\r\n    <quarkus.version>2.9.2.Final</quarkus.version>\r\n    <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>\r\n    <dubbo.version>2.7.15</dubbo.version>\r\n</properties>\r\n\r\n\r\n  <dependencies>\r\n    <dependency>\r\n      <groupId>io.quarkus</groupId>\r\n      <artifactId>quarkus-arc</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.apache.dubbo</groupId>\r\n      <artifactId>dubbo</artifactId>\r\n      <version>${dubbo.version}</version>\r\n    </dependency>\r\n  </dependencies>\r\n\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n11\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n11\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.5-2.9.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nmvn 3.8.1\r\n\r\n### Additional information\r\n\r\n_No response_\r\n\r\n### quarkus log\r\n#### 以下日志是由 [io.qua.arc.dep.ArcProcessor] (build-77)  打印的片段\r\nAdd FWK class: com.fjkuu.vescort.plugin.dubbo.DubboReferenceProvider_Bean\r\nAdd FWK class: com.fjkuu.vescort.plugin.dubbo.DubboReferenceProvider_Subclass$$function$$1\r\nAdd FWK class: com.fjkuu.vescort.plugin.dubbo.DubboReferenceProvider_Subclass$$function$$2\r\nAdd FWK class: com.fjkuu.vescort.plugin.dubbo.DubboReferenceProvider_Subclass$$function$$3\r\nAdd FWK class: com.fjkuu.vescort.plugin.dubbo.DubboReferenceProvider_Subclass$$function$$4\r\nAdd FWK class: com.fjkuu.vescort.plugin.dubbo.DubboReferenceProvider_Subclass\r\nAdd FWK class: com.fjkuu.vescort.plugin.dubbo.DubboReferenceProvider_Observer_Synthetic_d70cd75bf32ab6598217b9a64a8473d65e248c05\t\r\n\r\nThe above is the log of quarkus. In fact, it is found that the dubboreferenceprovider object has been successfully created. However, in fact, every time you restart, there is a probability that the get method in the dubboreferenceprovider will not be triggered. Through breakpoint tracking, it is found that the method will not be triggered sometimes. At present, 2.7 X (including version 2.7.6) and all versions of 2.9.2 are the same. I don't know how to solve this problem?\r\n\r\n以上是quarkus的日志,实际上发现 DubboReferenceProvider 对象是有创建成功的，但是实际上，每次重启，都有概率没有触发 DubboReferenceProvider 里的get方法，通过断点跟踪，发现总会有时候不触发该方法，目前2.7.x(包括 2.7.6的版本也一样 )-2.9.2 的各个版本都是一样的情况，不知道这种情况怎么解决？\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25979/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25979/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

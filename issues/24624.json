@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24624",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24624/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24624/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24624/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24624",
+  "id": 1186035493,
+  "node_id": "I_kwDOCFbutM5GsXcl",
+  "number": 24624,
+  "title": "Decorator using generics throws `NoSuchMethodError`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-03-30T07:52:23Z",
+  "updated_at": "2022-10-19T10:00:00Z",
+  "closed_at": "2022-10-19T09:59:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen a CDI decorator uses generics it can result in a `NoSuchMethodError` being thrown.\r\n\r\n```java\r\npublic interface Logger<T> {\r\n    void log(T rec);\r\n}\r\n```\r\n```java\r\n@Decorator\r\n@Priority(Interceptor.Priority.APPLICATION)\r\npublic class LoggerDecorator<T> implements Logger<T> {\r\n\r\n    @Inject\r\n    @Delegate\r\n    @Any\r\n    Logger<T> delegate;\r\n\r\n    @Override\r\n    public void log(T rec) {\r\n        System.out.println(\"decorated \" + rec);\r\n        delegate.log(rec);\r\n    }\r\n\r\n}\r\n```\r\n```java\r\n@ApplicationScoped\r\npublic class AccessLogger implements Logger<String> {\r\n\r\n    @Override\r\n    public void log(String rec) {\r\n        System.err.println(rec);\r\n    }\r\n\r\n}\r\n```\r\n\r\nPlease see attached zip with a reproducer for details: [code-with-quarkus.zip](https://github.com/quarkusio/quarkus/files/8378245/code-with-quarkus.zip)\r\n \n\n### Expected behavior\n\nA decorator should be able to use generics AFAICT.\n\n### Actual behavior\n\nWith the attached reproducer I get this error when running `mvn install`:\r\n```\r\n2022-03-30 09:45:34,220 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-0) HTTP Request to /hello failed, error id: 175510f2-db38-439c-a434-a8016a4bced2-1: org.jboss.resteasy.spi.UnhandledException: java.lang.NoSuchMethodError: 'void org.acme.LoggerDecorator.log(java.lang.String)'\r\n        at org.jboss.resteasy.core.ExceptionHandler.handleApplicationException(ExceptionHandler.java:105)\r\n        at org.jboss.resteasy.core.ExceptionHandler.handleException(ExceptionHandler.java:359)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.writeException(SynchronousDispatcher.java:218)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:519)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:261)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:161)\r\n        at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:364)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:164)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:247)\r\n        at io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:73)\r\n        at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:151)\r\n        at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:91)\r\n        at io.quarkus.vertx.core.runtime.VertxCoreRecorder$13.runWith(VertxCoreRecorder.java:545)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n        at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n        at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.NoSuchMethodError: 'void org.acme.LoggerDecorator.log(java.lang.String)'\r\n        at org.acme.AccessLogger_Subclass.log(Unknown Source)\r\n        at org.acme.AccessLogger_ClientProxy.log(Unknown Source)\r\n        at org.acme.GreetingResource.hello(GreetingResource.java:20)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:170)\r\n        at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:130)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.internalInvokeOnTarget(ResourceMethodInvoker.java:660)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTargetAfterFilter(ResourceMethodInvoker.java:524)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.lambda$invokeOnTarget$2(ResourceMethodInvoker.java:474)\r\n        at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:364)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:476)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:434)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:408)\r\n        at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:69)\r\n        at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:492)\r\n        ... 15 more\r\n```\n\n### How to Reproduce?\n\nUnzip attached ZIP and run `mvn install`.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.8.0.CR1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24624/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24624/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

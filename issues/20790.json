@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20790",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20790/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20790/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20790/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20790",
+  "id": 1027258884,
+  "node_id": "I_kwDOCFbutM49OroE",
+  "number": 20790,
+  "title": "kafka multi message consumer needs backpressure",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-10-15T09:29:22Z",
+  "updated_at": "2021-10-18T16:07:55Z",
+  "closed_at": "2021-10-18T16:07:13Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nUsing a multi consumer subscribed to a kafka topic\r\n\r\nWhen running this over a historic message queue with hundreds of thousands of messages it takes messages off the queue faster than it can process them resulting in two failures:\r\n1/ the service rapidly rounds out of memory\r\n2/ the messages timeout as they've not been acked\r\n\r\n```\r\n\t@Incoming(\"in\")\r\n\t@Outgoing(\"out\") \r\n\t@Merge\r\n\t@Acknowledgment(Acknowledgment.Strategy.MANUAL)\r\n\t@NonBlocking\r\n\tpublic Multi<Message<Integer>> process(Multi<Message<Value>> incoming) throws Throwable {\r\n\t\ttry {\r\n\t\t\tMulti<List<Message<Value>>> msgs = incoming.group().intoLists().of(100, Duration.ofSeconds(1));\r\n\r\n\t\t\treturn msgs.flatMap(lm -> {\r\n\t\t\t\tList<Value> values = lm.stream().map(m-> m.getPayload()).collect(Collectors.toList());\r\n\t\t\t\tUni<Integer> updated = dao.upsert(values);\r\n\t\t\t\tupdated.subscribe().with(x -> {\r\n\t\t\t\t\tlm.stream().forEach(m ->m.ack());\r\n\t\t\t\t});\r\n```\r\nwhere upsert does database stuff\r\n\r\n\n\n### Expected behavior\n\nI would like to specify how many to buffer from the kafka topic and pause fetching from the queue until the messages have been processed.\n\n### Actual behavior\n\nMultiple failures with memory pressure and timeouts\n\n### How to Reproduce?\n\nCreate a kafka topic with hundreds of thousands of messages\r\n\r\nHave a multi consumer that sleeps or does some time consuming activity\n\n### Output of `uname -a` or `ver`\n\nLinux JHC8700TP 4.19.128-microsoft-standard #1 SMP Tue Jun 23 12:58:10 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17\" 2021-09-14\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.3.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20790/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20790/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

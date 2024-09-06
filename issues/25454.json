@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25454",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25454/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25454/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25454/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25454",
+  "id": 1229817781,
+  "node_id": "I_kwDOCFbutM5JTYe1",
+  "number": 25454,
+  "title": "Generating project with Gradle ignores exclude clauses in dependencies",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-05-09T14:27:32Z",
+  "updated_at": "2022-05-10T08:10:20Z",
+  "closed_at": "2022-05-10T08:10:20Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThis report is a copy of what was originally created as SmallRye Context Propagation issue, see https://github.com/smallrye/smallrye-context-propagation/issues/363 for more details.\r\n\r\nSee steps to reproduce for details on how to create reproducer app.\r\n\r\nThe generated application includes `smallrye-context-propagation-jta` dependency which leads to the error in reproducer.\r\nExecuting `./gradlew dependencies` includes the following:\r\n```\r\n+--- io.quarkus:quarkus-hibernate-reactive-panache -> 2.8.3.Final\r\n|    +--- io.quarkus:quarkus-hibernate-reactive:2.8.3.Final\r\n|    |    +--- io.quarkus:quarkus-hibernate-orm:2.8.3.Final\r\n|    |    |    +--- io.quarkus:quarkus-agroal:2.8.3.Final\r\n|    |    |    |    +--- io.quarkus:quarkus-narayana-jta:2.8.3.Final\r\n|    |    |    |    |    +--- io.smallrye:smallrye-context-propagation-jta:1.2.2\r\n```\r\n\r\nHowever, this shouldn't be the case as Hibernate Reactive excludes these, see [this pom file](https://github.com/quarkusio/quarkus/blob/main/extensions/hibernate-reactive/deployment/pom.xml#L28-L45).\r\nAt least `narayna-jta` and `agroal` should not be present.\r\n\r\n### Expected behavior\r\n\r\nCreated app doesn't have dependencies that should be excluded.\r\nAs a side effect, this also means that the CDI lookup warning won't manifest.\r\n\r\n### Actual behavior\r\n\r\nCreated app has dependency on Narayana JTA which brings in its module for context propagation.\r\nAs a side effect, this results in a CDI lookup warning in the log upon accessing the REST endpoint.\r\n\r\n### How to Reproduce?\r\n\r\nTaken from a [comment on original issue](https://github.com/smallrye/smallrye-context-propagation/issues/363#issuecomment-1119589050):\r\n\r\nUsing Quarkus CLI:\r\n\r\n* `quarkus create app just.demo:purpose:1.0 --kotlin --gradle-kotlin-dsl --java=17`\r\n* `quarkus ext rm quarkus-resteasy`\r\n* `quarkus ext add quarkus-reactive-pg-client quarkus-resteasy-reactive quarkus-hibernate-reactive-panache quarkus-resteasy-reactive-jackson`\r\n\r\nAfter that, change the `GreetingResource` to:\r\n```\r\nimport io.smallrye.mutiny.Uni\r\nimport io.smallrye.mutiny.coroutines.awaitSuspending\r\nimport javax.ws.rs.GET\r\nimport javax.ws.rs.Path\r\nimport javax.ws.rs.Produces\r\nimport javax.ws.rs.core.MediaType\r\n\r\n@Path(\"/hello\")\r\nclass GreetingResource {\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    suspend fun hello(): String? {\r\n        val uni = Uni.createFrom().item { \"Hellooo\" }\r\n\r\n        return uni.awaitSuspending()\r\n    }\r\n}\r\n```\r\n\r\nStart the app and go to `http://localhost:8080/hello`, there will be an error in the log.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25454/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25454/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

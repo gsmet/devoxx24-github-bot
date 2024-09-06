@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24609",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24609/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24609/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24609/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24609",
+  "id": 1185053859,
+  "node_id": "I_kwDOCFbutM5Gonyj",
+  "number": 24609,
+  "title": "Custom IdentityProvider not getting called in Quarkus amazon lambda http api when deployed to AWS",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326073020,
+      "node_id": "MDU6TGFiZWwxMzI2MDczMDIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/amazon-lambda",
+      "name": "area/amazon-lambda",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-03-29T15:34:00Z",
+  "updated_at": "2022-11-25T19:31:10Z",
+  "closed_at": "2022-11-25T19:29:18Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMy custom identity provider is not getting called when a quarkus lambda http api is deployed in AWS. My test case works fine. And in SAM local it works only when setting QUARKUS_AWS_LAMBDA_FORCE_USER_NAME environment variable. In AWS it doesn't work at all. \r\nWhen I curl the API gateway endpoint, I simply get a NullPointerException on my resource class just because the security context is null. I added loggers to my custom identity provider and found that the provider is not getting called.\r\n\r\nI am using the quarkus generated sam.*.yaml file to deploy my lambda to AWS. I've tried both jvm and native sam files, but both produce the same result. \r\n\r\nI am expecting quarkus to automatically discover any custom identity provider and invoke it in Lambda authentication mechanism. I did some investigation and I am a bit puzzled about the below condition in LambdaHttpAuthenticationMechanism.isAuthenticatable method.\r\n\r\n`event.getRequestContext() != null && event.getRequestContext().getAuthorizer() != null`\r\n\r\nIt seems like my custom identity provider is not getting called because of this condition. Is quarkus expecting a custom lambda authorizer on top of the custom LambdaIdentityProvider?\r\n\r\nHere is my complete [source code](https://github.com/faskan/mbiz-quarkus-lambda-http-apis).\r\nThe below property is enabled in application.properties\r\n`quarkus.lambda-http.enable-security=true`\r\n\r\n```\r\n@ApplicationScoped\r\npublic class MBizSecurityProvider implements LambdaIdentityProvider {\r\n\r\n    @Override\r\n    public SecurityIdentity authenticate(APIGatewayV2HTTPEvent event) {\r\n        if (event.getHeaders() == null || !event.getHeaders().containsKey(\"x-user\")) {\r\n            throw new RuntimeException(\"No auth header\");\r\n        }\r\n        if(!event.getHeaders().get(\"x-user\").equalsIgnoreCase(\"test\")) {\r\n            throw new RuntimeException(\"Invalid user\");\r\n        }\r\n        Principal principal = new QuarkusPrincipal(event.getHeaders().get(\"x-user\"));\r\n        QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder();\r\n        builder.setPrincipal(principal);\r\n        return builder.build();\r\n    }\r\n}\r\n```\r\n```\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello(@Context SecurityContext securityContext) {\r\n        return \"hello \" + securityContext.getUserPrincipal().getName();\r\n    }\r\n}\r\n```\r\n```\r\n@QuarkusTest\r\npublic class GreetingTest {\r\n    @Test\r\n    public void test() {\r\n        APIGatewayV2HTTPEvent request = request(\"/hello\");\r\n        request.setHeaders(ImmutableMap.of(\"x-user\", \"test\"));\r\n        request.getRequestContext().setAuthorizer(new APIGatewayV2HTTPEvent.RequestContext.Authorizer());\r\n\r\n        given()\r\n                .contentType(\"application/json\")\r\n                .accept(\"application/json\")\r\n                .body(request)\r\n                .when()\r\n                .post(AmazonLambdaApi.API_BASE_PATH_TEST)\r\n                .then()\r\n                .statusCode(200)\r\n                .body(\"body\", equalTo(\"hello test\"));\r\n    }\r\n\r\n    private APIGatewayV2HTTPEvent request(String path) {\r\n        APIGatewayV2HTTPEvent request = new APIGatewayV2HTTPEvent();\r\n        request.setRawPath(path);\r\n        request.setRequestContext(new APIGatewayV2HTTPEvent.RequestContext());\r\n        request.getRequestContext().setHttp(new APIGatewayV2HTTPEvent.RequestContext.Http());\r\n        request.getRequestContext().getHttp().setMethod(\"GET\");\r\n        return request;\r\n    }\r\n}\r\n```\n\n### Expected behavior\n\nCustom Identity provider should be called\n\n### Actual behavior\n\nCustom identify provider is not getting called.\n\n### How to Reproduce?\n\n1. Clone this repo https://github.com/faskan/mbiz-quarkus-lambda-http-apis\r\n2. quarkus build \r\n3. sam build -t target/sam.jvm.yaml\r\n4. sam deploy --guided\r\n5. Do a GET api call on <aws-api-gateway-url>/hello with header x-user=test\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.5.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.2\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24609/reactions",
+    "total_count": 1,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 1
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24609/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

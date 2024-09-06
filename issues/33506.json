@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33506",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33506/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33506/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33506/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33506",
+  "id": 1717817104,
+  "node_id": "I_kwDOCFbutM5mY88Q",
+  "number": 33506,
+  "title": "@AroundInvoke method in custom interceptor not called",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-05-19T20:52:15Z",
+  "updated_at": "2023-05-20T15:11:10Z",
+  "closed_at": "2023-05-20T15:11:07Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI created a custom annotation with a boolean field\r\n```\r\n@Inherited\r\n@InterceptorBinding\r\n@Retention(RUNTIME)\r\n@Target({ElementType.TYPE, ElementType.METHOD})\r\npublic @interface MyAnnotation {\r\n    boolean value() default false;\r\n}\r\n```\r\n\r\nand an interceptor class with an @AroundInvoke method\r\n```\r\n@MyAnnotation\r\n@Interceptor\r\npublic class MyInterceptor {\r\n    @AroundInvoke\r\n    Object log(InvocationContext ctx) throws Exception {\r\n        if (ctx.getMethod().isAnnotationPresent(MyAnnotation.class)) {\r\n            Log.info(\"MyAnnotation found\");\r\n        }\r\n        boolean flag = ctx.getMethod().getAnnotation(MyAnnotation.class).value();\r\n\r\n        Log.info(\"inside MyInterceptor @AroundInvoke. flag is \" + flag);\r\n        Object o = ctx.proceed();\r\n        return o;\r\n    }\r\n}\r\n```\r\n\r\nWhen I now define the annotation at a service method like \r\n```\r\n@MyAnnotation(value = false)\r\n    public void serviceMethod(){...}\r\n```\r\n\r\nthe `@AroundInvoke` method (`log(..)`) is called\r\n\r\nHowever, when define the annotation (with value=true) at a service method like \r\n```\r\n@MyAnnotation(value = true)\r\n    public void serviceMethod(){...}\r\n```\r\nthe `@AroundInvoke` method (`log(..)`) is NOT called (???)\r\n\r\nAtm I have no idea if I have mistake in the config or if this a bug.\r\n\r\n### Expected behavior\r\n\r\n `@AroundInvoke` method (`log(..)`) is called  when using `@MyAnnotation(value = true)`\r\n\r\n### Actual behavior\r\n\r\n `@AroundInvoke` method (`log(..)`) is NOT called when using `@MyAnnotation(value = true)`\r\n\r\n### How to Reproduce?\r\n\r\nhttps://github.com/syr/quarkus-resteasy-postgres/blob/aroundinvoke_not_called/src/test/java/org/acme/CustomInterceptorTest.java\r\n\r\nThe test testAroundInvoke2 with same unexpected behaviour with unchanged code from from https://github.com/quarkusio/quarkus/blob/2.16/independent-projects/arc/tests/src/test/java/io/quarkus/arc/test/\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33506/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33506/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

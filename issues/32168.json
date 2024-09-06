@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32168",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32168/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32168/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32168/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32168",
+  "id": 1642709834,
+  "node_id": "I_kwDOCFbutM5h6cNK",
+  "number": 32168,
+  "title": "+5ms delay in RESTEasy Reactive endpoint before first line of code called",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 17,
+  "created_at": "2023-03-27T19:46:42Z",
+  "updated_at": "2023-06-07T17:12:07Z",
+  "closed_at": "2023-06-07T17:12:07Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nIn our application we're seeing a 6-8ms delay before the first line of our business logic code is called in OTEL spans:\r\n![image](https://user-images.githubusercontent.com/26604994/228048340-e902c6b2-9d30-46a3-bd02-ab3b6b7fa3f6.png)\r\n\r\nOn a fresh Quarkus app, with the below code, I can see about a 1.5-2.0ms delay before `hello()` is called:\r\n![image](https://user-images.githubusercontent.com/26604994/228048603-e9f5c95c-8be9-4427-9f9f-ffe47647b4be.png)\r\n\r\nIs there any way to debug/get visibility into what is happening in the \"dead space\" before user code is invoked?\r\nThank you 🙏 \r\n\r\n```java\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n    @Inject\r\n    Tracer tracer;\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello() {\r\n        return withSpan(\"hello\", tracer, span -> {\r\n            span.setAttribute(\"hello\", \"world\");\r\n            return withSpan(\"goodbye\", tracer, span2 -> {\r\n                span2.setAttribute(\"goodbye\", \"world\");\r\n                return \"hello\";\r\n            });\r\n        });\r\n    }\r\n\r\n    private static <T> T withSpan(String name, Tracer tracer, Function<Span, T> function) {\r\n        Span span = tracer.spanBuilder(name).startSpan();\r\n        try (Scope scope = span.makeCurrent()) {\r\n            return function.apply(span);\r\n        } finally {\r\n            span.end();\r\n        }\r\n    }\r\n}\r\n```\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nFedora 38 on WSL2\n\n### Output of `java -version`\n\n17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.5.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32168/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32168/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41635",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41635/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41635/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41635/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41635",
+  "id": 2386479756,
+  "node_id": "I_kwDOCFbutM6OPsqM",
+  "number": 41635,
+  "title": "OutOfMemoryError when returning a large InputStream which is consumed slowly ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-07-02T14:52:34Z",
+  "updated_at": "2024-07-03T09:15:05Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen returning an `InputStream` with a size larger than the configured `-XX:MaxDirectMemorySize`, there is an `OutOfMemoryError` when the client does not consume the content fast enough.\r\n\r\nIn `VertxOutputStream` the following code just sends all data to netty, which then buffers it in memory:\r\n```java\r\n private boolean awaitWriteable() throws IOException {\r\n        if (Vertx.currentContext() == ((HttpServerRequestInternal) request).context()) {\r\n            return false; // we are on the (right) event loop, so we can write - Netty will do the right thing.\r\n        }\r\n        [...]\r\n```\r\n\r\n### Expected behavior\r\n\r\nIf a client is consuming data slowly, it should not be loaded into memory fully and no `OutOfMemoryError` should occur\r\n\r\n### Actual behavior\r\n\r\n```posh\r\n2024-07-03 09:27:14,692 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-1) HTTP Request to /hello failed, error id: 3639e8fd-4281-47b0-82c7-43a46485cf5a-1: java.lang.RuntimeException: java.lang.OutOfMemoryError: Cannot reserve 65536 bytes of direct buffer memory (allocated: 104796533, limit: 104857600)\r\n\tat org.jboss.resteasy.reactive.server.core.ServerSerialisers.invokeWriter(ServerSerialisers.java:255)\r\n\tat org.jboss.resteasy.reactive.server.core.ServerSerialisers.invokeWriter(ServerSerialisers.java:185)\r\n\tat org.jboss.resteasy.reactive.server.core.serialization.FixedEntityWriterArray.write(FixedEntityWriterArray.java:31)\r\n\tat org.jboss.resteasy.reactive.server.handlers.ResponseWriterHandler.handle(ResponseWriterHandler.java:34)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:147)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:599)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:11)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:11)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\nCaused by: java.lang.OutOfMemoryError: Cannot reserve 65536 bytes of direct buffer memory (allocated: 104796533, limit: 104857600)\r\n\tat java.base/java.nio.Bits.reserveMemory(Bits.java:178)\r\n\tat java.base/java.nio.DirectByteBuffer.<init>(DirectByteBuffer.java:111)\r\n\tat java.base/java.nio.ByteBuffer.allocateDirect(ByteBuffer.java:360)\r\n\tat io.netty.buffer.PoolArena$DirectArena.allocateDirect(PoolArena.java:705)\r\n\tat io.netty.buffer.PoolArena$DirectArena.newChunk(PoolArena.java:680)\r\n\tat io.netty.buffer.PoolArena.allocateNormal(PoolArena.java:212)\r\n\tat io.netty.buffer.PoolArena.tcacheAllocateSmall(PoolArena.java:177)\r\n\tat io.netty.buffer.PoolArena.allocate(PoolArena.java:134)\r\n\tat io.netty.buffer.PoolArena.allocate(PoolArena.java:126)\r\n\tat io.netty.buffer.PooledByteBufAllocator.newDirectBuffer(PooledByteBufAllocator.java:397)\r\n\tat io.netty.buffer.AbstractByteBufAllocator.directBuffer(AbstractByteBufAllocator.java:188)\r\n\tat io.netty.buffer.AbstractByteBufAllocator.directBuffer(AbstractByteBufAllocator.java:179)\r\n\tat io.quarkus.vertx.utils.AppendBuffer.append(AppendBuffer.java:136)\r\n\tat io.quarkus.vertx.utils.VertxOutputStream.write(VertxOutputStream.java:178)\r\n\tat java.base/java.io.InputStream.transferTo(InputStream.java:797)\r\n\tat org.jboss.resteasy.reactive.common.providers.serialisers.InputStreamMessageBodyHandler.writeTo(InputStreamMessageBodyHandler.java:38)\r\n\tat org.jboss.resteasy.reactive.server.providers.serialisers.ServerInputStreamMessageBodyHandler.writeResponse(ServerInputStreamMessageBodyHandler.java:46)\r\n\tat org.jboss.resteasy.reactive.server.providers.serialisers.ServerInputStreamMessageBodyHandler.writeResponse(ServerInputStreamMessageBodyHandler.java:17)\r\n\tat org.jboss.resteasy.reactive.server.core.ServerSerialisers.invokeWriter(ServerSerialisers.java:217)\r\n\t... 13 more\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nRun the `QuarkusTest` in the attached example project with `-XX:MaxDirectMemorySize=100m`\r\n[quarkus-oom.zip](https://github.com/user-attachments/files/16070221/quarkus-oom.zip)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.19045.4529]\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"21.0.1\" 2023-10-17 OpenJDK Runtime Environment (build 21.0.1+12-29) OpenJDK 64-Bit Server VM (build 21.0.1+12-29, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (bc0240f3c744dd6b6ec2920b3cd08dcc295161ae) Maven home: C:\\Users\\redacted\\Java\\apache-maven-3.9.6-bin\\apache-maven-3.9.6 Java version: 21.0.1, vendor: Oracle Corporation, runtime: C:\\Users\\redacted\\.jdks\\openjdk-21.0.1 Default locale: en_US, platform encoding: UTF-8 OS name: \"windows 10\", version: \"10.0\", arch: \"amd64\", family: \"windows\"\r\n\r\n### Additional information\r\n\r\nThe issue occurs both on Windows and on Linux",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41635/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41635/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

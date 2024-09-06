@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41515",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41515/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41515/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41515/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41515",
+  "id": 2378106482,
+  "node_id": "I_kwDOCFbutM6NvwZy",
+  "number": 41515,
+  "title": "Allow Agroal to create a new connection for healthcheck purpose",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2024-06-27T13:02:48Z",
+  "updated_at": "2024-06-27T13:12:41Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nThe healthcheck related to the data source uses the default `isHealthy` method from the `AgroalDataSource` class. This method takes one parameter which defines if Agroal may use a new connection to check the connection (see [Agroal Documentation](https://agroal.github.io/docs.html)):\r\n\r\n> isHealthy(boolean) Since 1.13 this method checks the health of the data source by performing validation on one of the connections or the pool, or by establishing a new connection. In the latter case, the number of connections on the pool can go over max-size.\r\n\r\nThis parameter is statically defined as \"false\" in the Quarkus source code.\r\n\r\nWhen the connection pool is exhausted (no more connections available), the current implementation of the healthcheck may fail. When running in an orchestrator (like Kubernetes), the application might restart without a real reason (the connection between the service and the database is okay, even if the pool is full).\r\n\r\nI think it would be a good idea to allow users to define this parameter in the Quarkus configuration to allow Agroal to create a new connection when performing a health check.\r\n\r\n### Implementation ideas\r\n\r\nAdd a simple configuration property (false by default to keep current behavior) to configure the following boolean when calling AgroalDataSource.isHealthy(bool) :\r\n\r\nhttps://github.com/quarkusio/quarkus/blob/2.13/extensions/agroal/runtime/src/main/java/io/quarkus/agroal/runtime/health/DataSourceHealthCheck.java#L53",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41515/reactions",
+    "total_count": 2,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41515/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27213",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27213/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27213/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27213/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27213",
+  "id": 1333756159,
+  "node_id": "I_kwDOCFbutM5Pf4D_",
+  "number": 27213,
+  "title": "When a Gradle project uses \"testImplementation project(path: ':projectname', configuration: 'configurationname')\" a Quarkus-vs-JVM class loader conflict appears very late in test execution",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-08-09T20:32:52Z",
+  "updated_at": "2024-08-22T07:57:05Z",
+  "closed_at": "2024-08-22T07:57:04Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThis was a particularly strange, very nasty-to-debug issue so this one may require some discussion.\r\n\r\nFirst, some background: in a Maven version of a Quarkus project, there was a project structure listed [here](https://maven.apache.org/plugins/maven-jar-plugin/examples/create-test-jar.html) as \"the easy way\" to reuse some test code between projects. This influenced the project's transition to Gradle, in which the test sources of one library were wired up to be exported as a JAR under a separate configuration so that another project could depend on them and reuse them.\r\n\r\nGradle itself was perfectly happy with the very simplistic approach and wired up the classpath to test and run correctly.\r\n\r\nQuarkus, however, did not appreciate these shenanigans. Very late into the test run, there were quite a lot of class loader errors, and strangely if the dependencies were tweaked, that would seemingly \"fix\" one error and another would appear.\r\n\r\n### Expected behavior\r\n\r\nQuarkus is able to read the rather niche dependency list and still run.\r\n\r\n### Actual behavior\r\n\r\nQuarkus gives a variety of stack traces fairly late in the test run, such as:\r\n\r\n`\r\njava.lang.LinkageError: loader constraint violation for class org.acme.test.EndToEnd_IT: when selecting overriding method 'org.apache.camel.builder.RouteBuilder org.acme.test.EndToEnd_IT.createRouteBuilder(java.util.Collection, java.util.Collection)' the class loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @4fb392c4 of the selected method's type org.acme.test.EndToEnd_IT, and the class loader 'app' for its super type org.acme.test.AbstractEndToEnd have different Class objects for the type org.apache.camel.builder.RouteBuilder used in the signature (org.acme.test.EndToEnd_IT is in unnamed module of loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @4fb392c4, parent loader io.quarkus.bootstrap.classloading.QuarkusClassLoader @3956b302; org.acme.test.AbstractEndToEnd is in unnamed module of loader 'app')\r\n`\r\n\r\nOr, in the reproducer:\r\n\r\n```\r\njava.lang.VerifyError: Bad type on operand stack\r\nException Details:\r\n  Location:\r\n    org/acme/ExampleTest.afterAll()V @7: invokestatic\r\n  Reason:\r\n    Type 'org/acme/util/SaySomethingTesty' (current frame, stack[0]) is not assignable to 'org/acme/util/SaySomething'\r\n  Current Frame:\r\n    bci: @7\r\n    flags: { }\r\n    locals: { }\r\n    stack: { 'org/acme/util/SaySomethingTesty' }\r\n  Bytecode:\r\n    0000000: bb00 0b59 b700 0cb8 000d b1            \r\n\r\n\tat java.base/java.lang.Class.forName0(Native Method)\r\n\tat java.base/java.lang.Class.forName(Class.java:398)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.runExtensionMethod(QuarkusTestExtension.java:987)\r\n\tat io.quarkus.test.junit.QuarkusTestExtension.runExtensionMethod(QuarkusTestExtension.java:977)\r\n[snip]\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: https://github.com/jskillin-idt/quarkusio-quarkus-issues-27213\r\n\r\n1. Clone the reproducer\r\n2. Run `./gradlew :app:test` (the \"extra-lib\" tests will fail for inconsequential reasons)\r\n\r\nFor comparison while debugging, I've provided a version of the project which succeeds, under the branch \"test-fixtures\".\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux jacob-ubuntu-dev 5.15.0-43-generic #46-Ubuntu SMP Tue Jul 12 10:30:17 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.16\" 2022-07-19 OpenJDK Runtime Environment (build 11.0.16+8-post-Ubuntu-0ubuntu122.04) OpenJDK 64-Bit Server VM (build 11.0.16+8-post-Ubuntu-0ubuntu122.04, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.11.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.1\r\n\r\n### Additional information\r\n\r\nGradle is a build tool that has overwhelming flexibility in what it can do, so it's not surprising to me that going off the officially-documented path discovers corner cases in plugins like Quarkus which try to wrap that complexity with their own logic and build instructions.\r\n\r\nThe particular use case that allowed me to discover this bug is invalid because an [official feature called test fixtures](https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures) codifies exactly what was desired, and Quarkus happens to work just fine if this feature is used instead.\r\n\r\nHowever, in my humble opinion, this bug is still valid as it reveals a corner case in how dependencies are handled, and that corner case might come up again in a more obscure use case.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27213/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27213/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

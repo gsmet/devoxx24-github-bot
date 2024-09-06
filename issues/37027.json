@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37027",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37027/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37027/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37027/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37027",
+  "id": 1989141288,
+  "node_id": "I_kwDOCFbutM52j-Mo",
+  "number": 37027,
+  "title": "Can't override REST API headers if configuration is not in application.properties",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-11-11T22:25:45Z",
+  "updated_at": "2023-11-13T22:19:10Z",
+  "closed_at": "2023-11-13T20:02:10Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have created a small application which connects to a REST API and authenticate with basic auth.\r\n\r\nIf I set the configuration in application.properties everything works fine:\r\n`quarkus.rest-client.\"rest-api\".headers.Authorization=Basic dXNlcjpwYXNzd29yZA==`\r\n\r\nIf I remove the auth string from application.properties and set it in environment variable, it still works:\r\napplication.properties - `quarkus.rest-client.\"rest-api\".headers.Authorization=Basic`\r\nrun command - `export QUARKUS_REST_CLIENT__REST_API__HEADERS_AUTHORIZATION=Basic dXNlcjpwYXNzd29yZA== && export QUARKUS_REST_CLIENT__REST_API__URL=http://172.16.100.23:8888/report/tig && java -jar target/quarkus-app/quarkus-run.jar`\r\nlog entry for the REST call -  `Request: GET http://172.16.100.23:8888/report/tig Headers[Authorization=Basic dXNlcjpwYXNzd29yZA== User-Agent=Resteasy Reactive Client], Empty body`\r\n\r\nWhen I remove everything from the application.properties and run the application with the above run command it does not use the configuration:\r\nlog entry for the REST call - `Request: GET http://172.16.100.23:8888/report/tig Headers[User-Agent=Resteasy Reactive Client], Empty body`\r\n\r\nThe [quarkus.rest-client.\"config-key\".headers](https://quarkus.io/guides/all-config#quarkus-rest-client-config_quarkus.rest-client.-config-key-.headers-headers) is not marked as a build time property.\r\nI expected the application should use it even when the configuration is not in the application.properties. The [quarkus.rest-client.\"config-key\".url](https://quarkus.io/guides/all-config#quarkus-rest-client-config_quarkus.rest-client.-config-key-.url) works this way.\r\n\r\n(I am new to Quarkus and if I'm miss something and this is an expected behaviour then please point in the documentation.)\r\n\r\n\n\n### Expected behavior\n\nThe application should use the configuration even if it is not in the application.properties file.\n\n### Actual behavior\n\nThe application ignores the QUARKUS_REST_CLIENT__REST_API__HEADERS_AUTHORIZATION configuration but use the QUARKUS_REST_CLIENT__REST_API__URL configuration. None of them is set in the application.properties.\n\n### How to Reproduce?\n\n1. Create the application:  \r\n`quarkus create app org.example:rest-client-config --extension='resteasy-reactive,quarkus-rest-client-reactive'`\r\n2. Add demo REST client:\r\n```java\r\n@RegisterRestClient(configKey = \"rest-api\")\r\npublic interface DemoRestClient {\r\n\r\n    @GET\r\n    Response get();\r\n}\r\n```\r\n3. Set the configuration via environment variable or system variable (I have an application with Basic auth) and start the application:  \r\n` export QUARKUS_REST_CLIENT__REST_API__HEADERS_AUTHORIZATION=Basic dXNlcjpwYXNzd29yZA== && export QUARKUS_REST_CLIENT__REST_API__URL=http://172.16.100.23:8888/report/tig && java -jar target/quarkus-app/quarkus-run.jar`\r\n\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\nDarwin Adams-MacBook-Pro-2.local 23.1.0 Darwin Kernel Version 23.1.0: Mon Oct  9 21:27:24 PDT 2023; root:xnu-10002.41.9~6/RELEASE_ARM64_T6000 arm64\n\n### Output of `java -version`\n\nopenjdk version \"21.0.1\" 2023-10-17 LTS OpenJDK Runtime Environment Temurin-21.0.1+12 (build 21.0.1+12-LTS) OpenJDK 64-Bit Server VM Temurin-21.0.1+12 (build 21.0.1+12-LTS, mixed mode)\n\n### Quarkus version or git rev\n\n3.4.3. 3.5.0, 3.5.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.5 (57804ffe001d7215b5e7bcb531cf83df38f93546) Maven home: /Users/aszatyin/.m2/wrapper/dists/apache-maven-3.9.5-bin/32db9c34/apache-maven-3.9.5 Java version: 21.0.1, vendor: Eclipse Adoptium, runtime: /Users/aszatyin/.sdkman/candidates/java/21.0.1-tem Default locale: en_HU, platform encoding: UTF-8 OS name: \"mac os x\", version: \"14.1.1\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37027/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37027/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25094",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25094/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25094/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25094/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25094",
+  "id": 1212161869,
+  "node_id": "I_kwDOCFbutM5IQB9N",
+  "number": 25094,
+  "title": "Introduce a BuildItem in DevKafkaService to add addtional configs",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-04-22T10:21:51Z",
+  "updated_at": "2022-05-09T01:17:20Z",
+  "closed_at": "2022-05-09T01:17:20Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nWe want to set ```camel.component.kafka.brokers``` with the value of ```KAFKA_BOOTSTRAP_SERVERS``` if DvKafkaService is enabled. Currently we use the following [codes](https://github.com/apache/camel-quarkus/blob/main/extensions/kafka/deployment/src/main/java/org/apache/camel/quarkus/component/kafka/deployment/KafkaProcessor.java#L66-L81)\r\n\r\n```java\r\n @BuildStep(onlyIfNot = IsNormal.class, onlyIf = GlobalDevServicesConfig.Enabled.class)\r\n    public void configureKafkaComponentForDevServices(\r\n            DevServicesLauncherConfigResultBuildItem devServiceResult,\r\n            KafkaBuildTimeConfig kafkaBuildTimeConfig,\r\n            BuildProducer<RunTimeConfigurationDefaultBuildItem> runTimeConfig) {\r\n\r\n        Config config = ConfigProvider.getConfig();\r\n        Optional<String> brokers = config.getOptionalValue(CAMEL_KAFKA_BROKERS, String.class);\r\n\r\n        if (brokers.isEmpty() && kafkaBuildTimeConfig.devservices.enabled.orElse(true)) {\r\n            String kafkaBootstrapServers = devServiceResult.getConfig().get(KAFKA_BOOTSTRAP_SERVERS);\r\n            if (kafkaBootstrapServers != null) {\r\n                runTimeConfig.produce(new RunTimeConfigurationDefaultBuildItem(CAMEL_KAFKA_BROKERS, kafkaBootstrapServers));\r\n            }\r\n        }\r\n    }\r\n```\r\nIt works in JVM mode but not Native mode. In native test, we expect to launch the application  but there is no ``` -Dcamel.component.kafka.brokers=OUTSIDE://localhost:50172``` in the args. \r\n\r\nIt seems that ```RunTimeConfigurationDefaultBuildItem``` will not appear in the native launch args. Is it right? or is there any other possible solution? \r\n\r\nThere is a workaround to add this property in the application.properties like\r\n```properties\r\n%prod.camel.component.kafka.brokers=${kafka.bootstrap.servers}\r\n```\r\n\r\nSo I'd like to introduce a BuildItem to add addtional configs when DevServiceKafka returns ```DevServicesResultBuildItem``` which can add an addtional config. I'm not sure this is a common case or it is overkill.\n\n### Implementation ideas\n\nI'd like to introduce\r\n```java\r\npackage io.quarkus.kafka.client.deployment;\r\n\r\nimport io.quarkus.builder.item.MultiBuildItem;\r\n\r\npublic final class DevServiceKafkaAdditionalBuildItem extends MultiBuildItem {\r\n    private final String config;\r\n\r\n    public DevServiceKafkaAdditionalBuildItem(String config) {\r\n        this.config = config;\r\n    }\r\n\r\n    public String getConfig() {\r\n        return config;\r\n    }\r\n}\r\n```\r\n\r\nand in ```DevServicesKafkaProcessor.java``` to add this addtional config when returning ```DevServicesResultBuildItem```\r\n```java\r\nprivate Map<String, String> getConfigs(String address, List<DevServiceKafkaAdditionalBuildItem> additions) {\r\n        HashMap<String, String> configs = new HashMap<>();\r\n        configs.put(KAFKA_BOOTSTRAP_SERVERS, address);\r\n        additions.forEach(c -> {\r\n            configs.put(c.getConfig(), address);\r\n        });\r\n\r\n        return configs;\r\n    }\r\n```\r\n\r\nSo I can produce a ```DevServiceKafkaAdditionalBuildItem``` in quarkus-camel-kafka\r\n```java\r\n@BuildStep(onlyIfNot = IsNormal.class, onlyIf = GlobalDevServicesConfig.Enabled.class)\r\n    public void configureKafkaComponentForDevServices(\r\n            KafkaBuildTimeConfig kafkaBuildTimeConfig,\r\n            BuildProducer<DevServiceKafkaAdditionalBuildItem> additions) {\r\n\r\n        Config config = ConfigProvider.getConfig();\r\n        Optional<String> brokers = config.getOptionalValue(CAMEL_KAFKA_BROKERS, String.class);\r\n\r\n        if (brokers.isEmpty() && kafkaBuildTimeConfig.devservices.enabled.orElse(true)) {\r\n            additions.produce(new DevServiceKafkaAdditionalBuildItem(CAMEL_KAFKA_BROKERS));\r\n        }\r\n```\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25094/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25094/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

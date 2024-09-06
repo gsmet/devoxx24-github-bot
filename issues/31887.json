@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31887",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31887/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31887/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31887/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31887",
+  "id": 1626962936,
+  "node_id": "I_kwDOCFbutM5g-Xv4",
+  "number": 31887,
+  "title": "TopologyTestDriver does not pick up serde defaults",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1449536431,
+      "node_id": "MDU6TGFiZWwxNDQ5NTM2NDMx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka-streams",
+      "name": "area/kafka-streams",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-03-16T08:34:28Z",
+  "updated_at": "2023-08-28T07:29:07Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nIn my application.properties I have:\r\n```\r\nquarkus.kafka-streams.schema-registry-url=${kafka.schema.registry.url}\r\nquarkus.kafka-streams.default.key.serde=io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde\r\nquarkus.kafka-streams.default.value.serde=io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde\r\n```\r\n\r\nin my application-test.properties I have:\r\n```\r\nquarkus.apicurio-registry.devservices.port=18081\r\n\r\nkafka.schema.registry.url=http://localhost:18081/apis/ccompat/v6\r\nschema.registry.url=${kafka.schema.registry.url}\r\n```\r\n\r\n`new TopologyTestDriver(topology)` - does not pick these up instead I need to manually create the properties and pass them in:\r\n\r\n```\r\n   @ConfigProperty(name=\"quarkus.kafka-streams.default.key.serde\")\r\n   String keySerde;\r\n\r\n   @ConfigProperty(name=\"quarkus.kafka-streams.default.value.serde\")\r\n   String valueSerde;\r\n\r\n   @ConfigProperty(name=\"schema.registry.url\")\r\n   String schemaRegistry;   \r\n\r\n   @Test\r\n   public void myTest() {\r\n\r\n\t   // using DSL\r\n\t   StreamsBuilder builder = new StreamsBuilder();\r\n\t  .... build thing to test\r\n\t   Topology topology = builder.build();\r\n\r\n\t   // create test driver\r\n\t   Properties p = new Properties();\r\n\t   p.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, keySerde);\r\n\t   p.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, valueSerde);\r\n\t   p.setProperty(\"schema.registry.url\", schemaRegistry);\r\n\r\n\t   try (TopologyTestDriver testDriver = new TopologyTestDriver(topology, p)) {\r\n```\r\n\r\n```\n\n### Implementation ideas\n\nIt would be great if it could pick up the same properties I use to configure the app and I didn't have manually add in the right mappings.\r\n\r\ni.e.\r\n```\r\nquarkus.kafka-streams.schema-registry-url\r\nquarkus.kafka-streams.default.key.serde\r\nquarkus.kafka-streams.default.value.serde",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31887/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31887/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

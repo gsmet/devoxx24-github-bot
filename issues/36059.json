@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36059",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36059/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36059/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36059/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36059",
+  "id": 1906625572,
+  "node_id": "I_kwDOCFbutM5xpMwk",
+  "number": 36059,
+  "title": "Resteasy reactive Multipart related",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-09-21T10:19:29Z",
+  "updated_at": "2023-09-21T12:38:19Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nwe are in **Resteasy Classic** and we have moved to **Resteasy reactive**. we use Quarkus version 3.3.2\r\nhere is our Endpoint\r\n\r\n```\r\n   @POST\r\n    @Path(\"/ourPath\")\r\n    @Consumes({ \"application/json\" })\r\n    @Produces({ \"multipart/related\", \"application/problem+json\" })\r\n    public Response updateDatat( @PathParam(\"ref\") String ref, @NotNull @Valid  UpdateData updateData,@Context SecurityContext securityContext)\r\n    throws NotFoundException {\r\n        return service.updateSmContext(ref,updateData,securityContext);\r\n    }\r\n```\r\nin Resteasy classic this works and we have the following result\r\n\r\n```\r\nHTTP/1.1 200 OK\r\nContent-Type: multipart/related;start=jsonData;type=\"application/json\"; boundary=14f20406-9269-4351-a8f7-ea7a2b9e6527\r\nContent-Length: 321\r\n\r\n--14f20406-9269-4351-a8f7-ea7a2b9e6527\r\nContent-ID: jsonData\r\nContent-Type: application/json\r\n\r\n{\"n2SmInfo\":{\"contentId\":\"n2Id\"},\"n2SmInfoType\":\"PATH_SWITCH_REQ_ACK\"}\r\n--14f20406-9269-4351-a8f7-ea7a2b9e6527\r\nContent-ID: n2Id\r\nContent-Type: application/vnd.3gpp.ngap\r\n\r\n@...\r\n.....\r\n--14f20406-9269-4351-a8f7-ea7a2b9e6527--\r\n\r\n```\r\n\r\n`Installed features: [cache, cdi, hibernate-validator, jaeger, redis-client, rest-client, rest-client-jsonb, \r\n resteasy, resteasy-jsonb, scheduler, servlet, smallrye-context-propagation, smallrye-fault-tolerance, \r\n smallrye-health, smallrye-metrics, smallrye-opentracing, swagger-ui, vertx]`\r\n\r\nwe switched to resteasy-reactive and it no longer works multipart/related is not well managed now we receive\r\n\r\n```\r\n HTTP/1.1 200 OK\r\nContent-Type: multipart/related\r\ncontent-length: 321\r\n\r\n--bf3eb42e-fdbf-48a1-aacd-1503bee379f6\r\nContent-ID: jsonData\r\nContent-Type: application/json\r\n\r\n{\"n2SmInfo\":{\"contentId\":\"n2Id\"},\"n2SmInfoType\":\"PATH_SWITCH_REQ_ACK\"}\r\n--bf3eb42e-fdbf-48a1-aacd-1503bee379f6\r\nContent-ID: n2Id\r\nContent-Type: application/vnd.3gpp.ngap\r\n\r\n@...\r\n.....\r\n--bf3eb42e-fdbf-48a1-aacd-1503bee379f6--\r\n```\r\n`Installed features: [cache, cdi, hibernate-validator, jaeger, redis-client, rest-client-reactive, rest-client-reactive-jsonb, resteasy-reactive, resteasy-reactive-jsonb, scheduler, servlet, smallrye-context-propagation, smallrye-fault-tolerance, smallrye-health, smallrye-metrics, smallrye-opentracing, swagger-ui, vertx]`\r\n\r\nthe issue comes from the content type **Content-Type: multipart/related** which does not have a **boundary**;\r\nthe content type must contain the boundary according to the RFC and must be of this type\r\n**Content-Type: multipart/related;start=jsonData;type=\"application/json\"; boundary=bf3eb42e-fdbf-48a1-aacd-1503bee379f6**\r\n\r\n### Expected behavior\r\n\r\nManage Multipart/Related by **Resteasy-reactive** like **RestEasy classic**\r\ncontent Type must contains boundary\r\nlike **Content-Type: multipart/related;start=jsonData;type=\"application/json\"; boundary=bf3eb42e-fdbf-48a1-aacd-1503bee379f6**    \r\n\r\n\r\n### Actual behavior\r\n\r\n**Content-Type: multipart/related** not contain boundary and other parameters\r\n\r\n### How to Reproduce?\r\n\r\nwe use **MultipartRelatedOutput**  object from  **org.jboss.resteasy.plugins.providers.multipart.MultipartRelatedOutput**\r\n\r\n```\r\nMultipartRelatedOutput multiOutput = new MultipartRelatedOutput();\r\nmultiOutput.addPart(data, jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE, \"jsonData\", null);\r\nreturn Response.ok(multiOutput, MediaType.MULTIPART_RELATED.getMediaType()).build();\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux  6.2.0-32-generic #32~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Aug 18 10:40:13 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.14.1\" 2022-02-08  OpenJDK Runtime Environment Temurin-11.0.14.1+1 (build 11.0.14.1+1)  OpenJDK 64-Bit Server VM Temurin-11.0.14.1+1 (build 11.0.14.1+1, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.3.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.5 (3599d3414f046de2324203b78ddcf9b5e4388aa0)  Maven home: /opt/apache-maven-3.8.5  Java version: 11.0.14.1, vendor: Eclipse Adoptium, runtime: /opt/jdk-11.0.14.1+1  Default locale: fr_FR, platform encoding: UTF-8  OS name: \"linux\", version: \"6.2.0-32-generic\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36059/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36059/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

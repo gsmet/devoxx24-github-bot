@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38125",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38125/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38125/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38125/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38125",
+  "id": 2074359120,
+  "node_id": "I_kwDOCFbutM57pDVQ",
+  "number": 38125,
+  "title": "How to get/use RoutingContext in TenantResolver",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1282147660,
+      "node_id": "MDU6TGFiZWwxMjgyMTQ3NjYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/resteasy-classic",
+      "name": "area/resteasy-classic",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2024-01-10T13:16:55Z",
+  "updated_at": "2024-01-10T17:32:45Z",
+  "closed_at": "2024-01-10T17:32:45Z",
+  "active_lock_reason": null,
+  "body": "Hello,\r\n\r\nI'm trying to use the RoutingContext in the TenantResolver, to set the tenantId. In my CustomSecurityAugmentor, I make a call to the database with panache to define the user's permissions.\r\nI realized that if I don't make this database call, I can use the RoutingContext in the TenantResolver. However, if I do it it throws \"jakarta.enterprise.inject.IllegalProductException: Normal scoped producer method may not return null\".\r\nThe opposite is also true. If I do not use the RoutingContext in my TenantResolver, the database call in CustomSecurityAugmentor occurs successfully.\r\n\r\nI need to use the RoutingContext in the TenantResolver to obtain the tenantId that is in the Request, and I also need to search for permissions in the database.\r\n\r\nHow do I make this work?\r\n\r\n\r\nMy Code:\r\n\r\n\r\n**Tenant Resolver**\r\n\r\n```java\r\n@PersistenceUnitExtension\r\n@RequestScoped\r\npublic class CustomTenantResolver implements TenantResolver {\r\n\r\n\tpublic static final String DEFAULT_TENANT_ID = \"00000000-0000-0000-0000-000000000000\";\r\n\r\n\t@Inject\r\n\tRoutingContext context;\r\n\r\n\t@Override\r\n\tpublic String getDefaultTenantId() {\r\n\t\treturn DEFAULT_TENANT_ID;\r\n\t}\r\n\r\n\t@Override\r\n\tpublic String resolveTenantId() {\r\n\t\tString tenant = context.get(\"tenant-id\");\r\n        String tenantId = tenant != null ? tenant : getDefaultTenantId();\r\n\t\tSystem.out.println(\"Tenant: \"+tenantId);\r\n\t\treturn tenantId;\r\n\t}\r\n}\r\n```\r\n\r\n\r\n**CustomSecurityAugmentor**\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class CustomSecurityAugmentor implements SecurityIdentityAugmentor {\r\n\r\n\t@Inject\r\n\tInstance<CustomSecurityIdentitySupplier> identitySupplierInstance;\r\n\r\n\t@Override\r\n\tpublic Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {\r\n\t\t// Hibernate ORM is blocking\r\n\t\tCustomSecurityIdentitySupplier identitySupplier = identitySupplierInstance.get();\r\n\t\tidentitySupplier.setIdentity(identity);\r\n\t\treturn context.runBlocking(identitySupplier);\r\n\t}\r\n}\r\n```\r\n\r\n\r\n```java\r\n@Dependent\r\npublic class CustomSecurityIdentitySupplier implements Supplier<SecurityIdentity> {\r\n\r\n\t@ConfigProperty(name = \"quarkus.http.root-path\")\r\n\tString rootPath;\r\n\tprivate SecurityIdentity identity;\r\n\t@Inject\r\n\tprivate PermissaoRepository permissaoRepository;\r\n\r\n\tpublic void setIdentity(SecurityIdentity identity) {\r\n\t\tthis.identity = identity;\r\n\t}\r\n\r\n\t@ActivateRequestContext\r\n\t@Override\r\n\tpublic SecurityIdentity get() {\r\n\r\n\t\tif (identity.isAnonymous())\r\n\t\t\treturn identity;\r\n\t\tString idUsuario = identity.getPrincipal().getName();\r\n\t\tSystem.out.println(String.format(\"UserId: %s\", Converter.toString(idUsuario)));\r\n\t\tList<Permissao> permissoes = permissaoRepository.obtemPermissoesUsuarios(Converter.toUUID(idUsuario));\r\n\t\t// create a new builder and copy principal, attributes, credentials and roles\r\n\t\t// from the original identity\r\n\t\tQuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);\r\n\t\t// add custom role source here\r\n\t\tfor(Permissao p : permissoes)\r\n\t\t\tbuilder.addRole(p.getId());\r\n\t\treturn builder.build();\r\n\r\n\t}\r\n}\r\n````\r\n\r\n```posh\r\n2024-01-10 10:18:20,006 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (vert.x-eventloop-thread-1) HTTP Request to /empresas/me/ failed, error id: af3a1186-c3e7-4c7f-83fb-ff9037341a59-6: jakarta.enterprise.inject.IllegalProductException: Normal scoped producer method may not return null: io.quarkus.vertx.http.runtime.CurrentVertxRequest.getCurrent()\r\n\tat io.quarkus.vertx.http.runtime.CurrentVertxRequest_ProducerMethod_getCurrent_bcI9FtU7pcNOHntvVCkP17muvXY_Bean.doCreate(Unknown Source)\r\n\tat io.quarkus.vertx.http.runtime.CurrentVertxRequest_ProducerMethod_getCurrent_bcI9FtU7pcNOHntvVCkP17muvXY_Bean.create(Unknown Source)\r\n\tat io.quarkus.vertx.http.runtime.CurrentVertxRequest_ProducerMethod_getCurrent_bcI9FtU7pcNOHntvVCkP17muvXY_Bean.create(Unknown Source)\r\n\tat io.quarkus.arc.impl.RequestContext$1.get(RequestContext.java:79)\r\n\tat io.quarkus.arc.impl.RequestContext$1.get(RequestContext.java:75)\r\n\tat io.quarkus.arc.generator.Default_jakarta_enterprise_context_RequestScoped_ContextInstances.c15(Unknown Source)\r\n\tat io.quarkus.arc.generator.Default_jakarta_enterprise_context_RequestScoped_ContextInstances.computeIfAbsent(Unknown Source)\r\n\tat io.quarkus.arc.impl.RequestContext.getIfActive(RequestContext.java:75)\r\n\tat io.quarkus.arc.impl.ClientProxies.getSingleContextDelegate(ClientProxies.java:28)\r\n\tat io.vertx.ext.web.CurrentVertxRequest_ProducerMethod_getCurrent_bcI9FtU7pcNOHntvVCkP17muvXY_ClientProxy.arc$delegate(Unknown Source)\r\n\tat io.vertx.ext.web.CurrentVertxRequest_ProducerMethod_getCurrent_bcI9FtU7pcNOHntvVCkP17muvXY_ClientProxy.get(Unknown Source)\r\n\tat br.com.simpleproject.epone.multitenant.util.CustomTenantResolver.resolveTenantId(CustomTenantResolver.java:26)\r\n\tat br.com.simpleproject.epone.multitenant.util.CustomTenantResolver_ClientProxy.resolveTenantId(Unknown Source)\r\n\tat io.quarkus.hibernate.orm.runtime.tenant.HibernateCurrentTenantIdentifierResolver.resolveCurrentTenantIdentifier(HibernateCurrentTenantIdentifierResolver.java:37)\r\n\tat org.hibernate.internal.SessionFactoryImpl$SessionBuilderImpl.<init>(SessionFactoryImpl.java:1222)\r\n\tat org.hibernate.internal.SessionFactoryImpl.withOptions(SessionFactoryImpl.java:604)\r\n\tat org.hibernate.internal.SessionFactoryImpl.openSession(SessionFactoryImpl.java:580)\r\n\tat org.hibernate.internal.SessionFactoryImpl.openSession(SessionFactoryImpl.java:155)\r\n\tat io.quarkus.hibernate.orm.runtime.RequestScopedSessionHolder.lambda$getOrCreateSession$0(RequestScopedSessionHolder.java:21)\r\n\tat java.base/java.util.HashMap.computeIfAbsent(HashMap.java:1220)\r\n\tat io.quarkus.hibernate.orm.runtime.RequestScopedSessionHolder.getOrCreateSession(RequestScopedSessionHolder.java:21)\r\n\tat io.quarkus.hibernate.orm.runtime.RequestScopedSessionHolder_ClientProxy.getOrCreateSession(Unknown Source)\r\n\tat io.quarkus.hibernate.orm.runtime.session.TransactionScopedSession.acquireSession(TransactionScopedSession.java:104)\r\n\tat io.quarkus.hibernate.orm.runtime.session.TransactionScopedSession.createQuery(TransactionScopedSession.java:366)\r\n\tat org.hibernate.engine.spi.SessionLazyDelegator.createQuery(SessionLazyDelegator.java:548)\r\n\tat org.hibernate.engine.spi.SessionLazyDelegator.createQuery(SessionLazyDelegator.java:66)\r\n\tat org.hibernate.Session_OpdLahisOZ9nWRPXMsEFQmQU03A_Synthetic_ClientProxy.createQuery(Unknown Source)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.CommonPanacheQueryImpl.createBaseQuery(CommonPanacheQueryImpl.java:366)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.CommonPanacheQueryImpl.createQuery(CommonPanacheQueryImpl.java:327)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.CommonPanacheQueryImpl.list(CommonPanacheQueryImpl.java:278)\r\n\tat io.quarkus.hibernate.orm.panache.runtime.PanacheQueryImpl.list(PanacheQueryImpl.java:149)\r\n\tat io.quarkus.hibernate.orm.panache.runtime.JpaOperations.list(JpaOperations.java:24)\r\n\tat io.quarkus.hibernate.orm.panache.runtime.JpaOperations.list(JpaOperations.java:10)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.AbstractJpaOperations.list(AbstractJpaOperations.java:245)\r\n\tat br.com.simpleproject.epone.repository.PermissaoRepository.list(PermissaoRepository.java)\r\n\tat br.com.simpleproject.epone.repository.PermissaoRepository.obtemPermissoesUsuarios(PermissaoRepository.java:14)\r\n\tat br.com.simpleproject.epone.repository.PermissaoRepository_ClientProxy.obtemPermissoesUsuarios(Unknown Source)\r\n\tat br.com.simpleproject.epone.api.security.CustomSecurityIdentitySupplier.get(CustomSecurityIdentitySupplier.java:45)\r\n\tat br.com.simpleproject.epone.api.security.CustomSecurityIdentitySupplier_Subclass.get$$superforward(Unknown Source)\r\n\tat br.com.simpleproject.epone.api.security.CustomSecurityIdentitySupplier_Subclass$$function$$7.apply(Unknown Source)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:73)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:62)\r\n\tat io.quarkus.arc.impl.ActivateRequestContextInterceptor.invoke(ActivateRequestContextInterceptor.java:129)\r\n\tat io.quarkus.arc.impl.ActivateRequestContextInterceptor.aroundInvoke(ActivateRequestContextInterceptor.java:33)\r\n\tat io.quarkus.arc.impl.ActivateRequestContextInterceptor_Bean.intercept(Unknown Source)\r\n\tat io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\n\tat io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\n\tat io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n\tat br.com.simpleproject.epone.api.security.CustomSecurityIdentitySupplier_Subclass.get(Unknown Source)\r\n\tat br.com.simpleproject.epone.api.security.CustomSecurityIdentitySupplier.get(CustomSecurityIdentitySupplier.java:24)\r\n\tat io.quarkus.vertx.http.runtime.security.VertxBlockingSecurityExecutor$1$1.call(VertxBlockingSecurityExecutor.java:43)\r\n\tat io.vertx.core.impl.ContextBase.lambda$executeBlocking$0(ContextBase.java:167)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:277)\r\n\tat io.vertx.core.impl.ContextBase.lambda$internalExecuteBlocking$2(ContextBase.java:199)\r\n\tat io.vertx.core.impl.TaskQueue.run(TaskQueue.java:76)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:857)\r\n```\r\n\r\nThanks.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38125/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38125/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

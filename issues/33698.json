@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33698",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33698/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33698/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33698/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33698",
+  "id": 1732162041,
+  "node_id": "I_kwDOCFbutM5nPrH5",
+  "number": 33698,
+  "title": "RabbitMQ Memory leak due to reconnection",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2023-05-30T12:30:12Z",
+  "updated_at": "2023-07-03T06:19:38Z",
+  "closed_at": "2023-07-03T06:19:38Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIf connection is broken and app is reconnected messages are processed as expected, despite one huge thing -  under the hood in class `io.vertx.rabbitmq.impl.RabbitMQPublisherImpl` `pendingAcks` deque is not cleared anymore, and all messages after reconnection are just stuck there.\r\n`pendingAcks.clear()` is triggered on reconnection which is correct, but all messages after reconnection are not removed properly due to an Exception in `handleConfirmation` on `confirmation.write()`.\r\n`checkThread()` throws an exception during execusion.\r\n\r\n### Expected behavior\r\n\r\nAll messages are removed from `pendingAcks` after reconnection properly. Also it seems that there is no any point of keeping them for an unlimited amount of time there, if messages are not ack in reasonable time there should be an exception for example and messages should be discarded.\r\n\r\n### Actual behavior\r\n\r\nMessages got stuck in `RabbitMQPublisherImpl` and never removed, which causes a slow memory leak.\r\n\r\n### How to Reproduce?\r\n\r\nSteps to reproduce:\r\n\r\n1. Create an app which uses `io.quarkus:quarkus-smallrye-reactive-messaging-rabbitmq`\r\n2. Write code to send messages via `@Channel` and `Emitter` (I think the behaviour will be the same with `@Outgoing` annotation, but didn't test it)\r\n3. Create a reconnect situation (I just used a debugger to stop processing for some time, on resume connection there were a reconnection with message `[io.ver.rab.imp.RabbitMQClientImpl] (vert.x-eventloop-thread-13) reconnect success`)\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kernel Version 21.1.0: Wed Oct 13 17:33:23 PDT 2021; root:xnu-8019.41.5~1/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment Homebrew (build 11.0.12+0) OpenJDK 64-Bit Server VM Homebrew (build 11.0.12+0, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.6.Final;3.0.4.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\ngradle 7.5.1\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33698/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33698/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25318",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25318/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25318/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25318/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25318",
+  "id": 1223402026,
+  "node_id": "I_kwDOCFbutM5I66Iq",
+  "number": 25318,
+  "title": "GRPC method with streaming input and streaming output has wrong parameter order for blocking code generation",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2062531368,
+      "node_id": "MDU6TGFiZWwyMDYyNTMxMzY4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/grpc",
+      "name": "area/grpc",
+      "color": "0366d6",
+      "default": false,
+      "description": "gRPC"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-05-02T21:55:59Z",
+  "updated_at": "2022-05-17T15:59:27Z",
+  "closed_at": "2022-05-16T07:04:07Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen generating the code for the following proto file\r\n\r\n```\r\nsyntax = \"proto3\";\r\n\r\noption java_multiple_files = true;\r\noption java_package = \"org.acme\";\r\noption java_outer_classname = \"HelloGrpcProto\";\r\n\r\npackage hello;\r\n\r\nservice HelloGrpc {\r\n    rpc SayHello (stream HelloRequest) returns (stream HelloReply) {}\r\n}\r\n\r\nmessage HelloRequest {\r\n    string name = 1;\r\n}\r\n\r\nmessage HelloReply {\r\n    string message = 1;\r\n}\r\n```\r\n\r\nthe generated class `HelloGrpcGrpc.HelloGrpcImplBase` contains the following method definition\r\n\r\n```\r\npublic static abstract class HelloGrpcImplBase implements io.grpc.BindableService {\r\n\r\n    /**\r\n     */\r\n    public io.grpc.stub.StreamObserver<org.acme.HelloRequest> sayHello(\r\n        io.grpc.stub.StreamObserver<org.acme.HelloReply> responseObserver) {\r\n      return io.grpc.stub.ServerCalls.asyncUnimplementedStreamingCall(getSayHelloMethod(), responseObserver);\r\n    }\r\n\r\n...\r\n```\r\n\r\nThis method receives a `StreamObserver` of the type of the reply (`HelloReply`) as an argument and returns a `StreamObserver` of the type of the request (`HelloRequest`). \r\n\r\nIt looks to me as if the argument should be the `HelloRequest` and the response of the method should be of type `HelloReply`. Otherwise, it is unclear how we should use this method. \n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n1. Download the reproducer and unzip:\r\n[2022-05-02_grpc-streaming-method-generation.zip](https://github.com/quarkusio/quarkus/files/8606247/2022-05-02_grpc-streaming-method-generation.zip)\r\n2. generate the GRPC classes by running `./mvnw package`\r\n3.  check the code of  `HelloGrpcGrpc.HelloGrpcImplBase`\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.2, 2.8.2, 2.9.0.CR1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ntested mvn and gradle\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25318/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25318/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

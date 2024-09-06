@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41674",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41674/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41674/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41674/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41674",
+  "id": 2390045186,
+  "node_id": "I_kwDOCFbutM6OdTIC",
+  "number": 41674,
+  "title": "Hibernate entities: @UpdateTimestamp is triggered w/out change when bean contains JSON type",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2024-07-04T06:22:05Z",
+  "updated_at": "2024-07-08T13:54:23Z",
+  "closed_at": "2024-07-08T13:54:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nUsing a JPA/hibernate entity with @UpdateTimestamp and a JSON property (SqlTypes.JSON / MySQL column type \"json\"), a change is triggered just by finding (i.e. getting) the entity without changing the content. Removing the JSON-property from the class, everything is back to normal: No update is triggered by just accessing the entity.\r\n\r\n### Expected behavior\r\n\r\nA change should not be triggered by only mapping JSON column, i.e. the \"last update\" should only be adjusted after explicit changes.\r\n\r\n### Actual behavior\r\n\r\n@UpdateTimestamp is triggered without any explicit change when the entity has a JSON column mapped (SqlTypes.JSON)\r\n\r\n### How to Reproduce?\r\n\r\n```\r\n@Path(\"/foo\")\r\npublic class FooResource {\r\n\r\n    public static class Bar {\r\n        ...\r\n    }\r\n\r\n    @Entity\r\n    public static class Foo {\r\n        @Id\r\n        public Long id;\r\n\r\n        @UpdateTimestamp\r\n        public OffsetDateTime lastModified;\r\n\r\n        @JdbcTypeCode(SqlTypes.JSON)\r\n        @Column(columnDefinition = \"json\", nullable = false)\r\n        public Bar bar;\r\n    }\r\n    @Inject\r\n    EntityManager em;\r\n\r\n    @GET\r\n    @Path(\"/test\")\r\n    @Transactional\r\n    public String test() {\r\n        // just \"finding\" the entity triggers a lastModified update\r\n        em.find(Foo.class, 1L);\r\n        return \"ok\";\r\n    }\r\n}\r\n\r\n```\r\n\r\nEveny request to the /foo/test endpoint updates the \"lastModified\" timestamp in the database.\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin ... 23.5.0 Darwin Kernel Version 23.5.0: Wed May  1 20:17:33 PDT 2024; root:xnu-10063.121.3~5/RELEASE_ARM64_T6031 arm64\r\n\r\n### Output of `java -version`\r\n\r\njava version \"21.0.1\" 2023-10-17 LTS\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41674/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41674/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

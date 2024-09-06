@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29283",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29283/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29283/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29283/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29283",
+  "id": 1450111315,
+  "node_id": "I_kwDOCFbutM5WbvFT",
+  "number": 29283,
+  "title": "Docker templates and docs say to use `JAVA_OPTS` but `run-java.sh` docs say `JAVA_OPTIONS`, and `JAVA_OPTS_APPEND` does not exist",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2022-11-15T17:08:08Z",
+  "updated_at": "2022-11-29T20:46:49Z",
+  "closed_at": "2022-11-28T12:48:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe ran into a production issue where the `JAVA_OPTS` variable was not being honored.\r\nSome of our users have stringent vulnerability requirements so we cannot use the default Dockerfile image.\r\n\r\nTo get around this, we created a custom Dockerfile where we use a more recent base image and emulate the same functionality:\r\n\r\n```dockerfile\r\nFROM registry.access.redhat.com/ubi9-minimal:9.0.0-1580\r\n\r\nARG RUN_JAVA_VERSION=1.3.8\r\nARG JAVA_PACKAGE=java-17-openjdk-headless\r\n\r\nENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'\r\n\r\nRUN microdnf install -y ${JAVA_PACKAGE} \\\r\n    && microdnf update -y \\\r\n    && microdnf clean all \\\r\n    && mkdir /deployments \\\r\n    && chown 185 /deployments \\\r\n    && chmod \"g+rwX\" /deployments \\\r\n    && chown 185:root /deployments \\\r\n    && curl https://repo1.maven.org/maven2/io/fabric8/run-java-sh/${RUN_JAVA_VERSION}/run-java-sh-${RUN_JAVA_VERSION}-sh.sh -o /deployments/run-java.sh \\\r\n    && chown 185 /deployments/run-java.sh \\\r\n    && chmod 540 /deployments/run-java.sh\r\n\r\n# We make four distinct layers so if there are application changes the library layers can be re-used\r\nCOPY --chown=185 build/quarkus-app/lib/ /deployments/lib/\r\nCOPY --chown=185 build/quarkus-app/*.jar /deployments/\r\nCOPY --chown=185 build/quarkus-app/app/ /deployments/app/\r\nCOPY --chown=185 build/quarkus-app/quarkus/ /deployments/quarkus/\r\n\r\nEXPOSE 8080 5005\r\nUSER 185\r\nENV JAVA_OPTS=\"-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager\"\r\nENV JAVA_APP_JAR=\"/deployments/quarkus-run.jar\"\r\n\r\nENTRYPOINT [\"/deployments/run-java.sh\"]\r\n```\r\n\r\nThe generated Docker template says this:\r\n\r\nhttps://github.com/quarkusio/quarkus/blob/affcf54e6f2d202b8a40989718d0dc264736c72e/integration-tests/maven/src/test/resources-filtered/projects/codegen-config-factory/app/src/main/docker/Dockerfile.jvm#L26-L29\r\n\r\nBut in the `run-java` repo, there doesn't seem to be a `JAVA_OPTS` or `JAVA_OPTS_APPEND`:\r\n\r\n![image](https://user-images.githubusercontent.com/26604994/201981944-79d28f21-034f-471c-ba92-451b4cd9f3f8.png)\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29283/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29283/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

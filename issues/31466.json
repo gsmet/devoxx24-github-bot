@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31466",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31466/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31466/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31466/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31466",
+  "id": 1602851703,
+  "node_id": "I_kwDOCFbutM5fiZN3",
+  "number": 31466,
+  "title": "Unable to inject synthetic bean",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 13,
+  "created_at": "2023-02-28T11:20:48Z",
+  "updated_at": "2023-03-01T10:32:03Z",
+  "closed_at": "2023-03-01T10:32:02Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi, guys\r\n\r\nI customized an extension and created a `named synthetic bean` using `@Named`. But I can't inject it. Can synthetic beans not declare the `@Named` annotation? Am I missing something or is this a bug? Exception output from the console:\r\n\r\n```log\r\n[INFO] Nothing to compile - all classes are up to date\r\nListening for transport dt_socket at address: 63584\r\nConnected to the target VM, address: '127.0.0.1:63584', transport: 'socket'\r\nTests paused\r\n2023-02-28 19:03:19,120 INFO  [io.qua.dep.dev.IsolatedDevModeMain] (main) Attempting to start live reload endpoint to recover from previous Quarkus startup failure\r\n2023-02-28 19:03:19,577 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (main) Failed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.arc.deployment.ArcProcessor#validate threw an exception: javax.enterprise.inject.spi.DeploymentException: javax.enterprise.inject.AmbiguousResolutionException: Ambiguous dependencies for type io.github.demo.DemoBean and qualifiers [@Default]\r\n\t- java member: io.github.tarvfx.ExampleResource#demoBean\r\n\t- declared on CLASS bean [types=[io.github.tarvfx.ExampleResource, java.lang.Object], qualifiers=[@Default, @Any], target=io.github.tarvfx.ExampleResource]\r\n\t- available beans:\r\n\t\t- SYNTHETIC bean [types=[io.github.demo.DemoBean], qualifiers=[@javax.enterprise.inject.Default, @Any], target=n/a]\r\n\t\t- SYNTHETIC bean [types=[io.github.demo.DemoBean], qualifiers=[@Named(\"b1\"), @Default, @Any], target=n/a]\r\n\tat io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1223)\r\n\tat io.quarkus.arc.processor.BeanDeployment.init(BeanDeployment.java:288)\r\n\tat io.quarkus.arc.processor.BeanProcessor.initialize(BeanProcessor.java:148)\r\n\tat io.quarkus.arc.deployment.ArcProcessor.validate(ArcProcessor.java:526)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```\r\n\r\nextension code:\r\n\r\n```java\r\n\r\n    private static final DotName NAMED_ANNOTATION = DotName.createSimple(Named.class);\r\n\r\n    private <T> SyntheticBeanBuildItem createSyntheticBean(Class<T> beanClass, String name, RuntimeValue<T> value) {\r\n        SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem\r\n            .configure(beanClass)\r\n            .unremovable()\r\n            .setRuntimeInit()\r\n            .runtimeValue(value)\r\n            .scope(Singleton.class);\r\n\r\n        if (name == null) {\r\n            configurator.addQualifier(Default.class);\r\n        } else {\r\n            configurator.named(name);\r\n        }\r\n        return configurator.done();\r\n    }\r\n```\r\n\r\ninject code:\r\n\r\n```java\r\n    @Inject\r\n    DemoBean demoBean;\r\n\r\n    @Inject\r\n    @Named(\"b1\")\r\n    DemoBean b1Bean;\r\n```\r\n\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows 10\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n22.3.0\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31466/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31466/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

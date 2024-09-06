@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25456",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25456/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25456/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25456/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25456",
+  "id": 1229851716,
+  "node_id": "I_kwDOCFbutM5JTgxE",
+  "number": 25456,
+  "title": "Keycloak DevServices issue with quarkus RHEL 8 CSB  \"#yum docker install\" install - works fine with docker-ce install",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2955097667,
+      "node_id": "MDU6TGFiZWwyOTU1MDk3NjY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devservices",
+      "name": "area/devservices",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-05-09T14:52:29Z",
+  "updated_at": "2022-05-09T15:08:50Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n1. Description\r\n===========\r\n\r\nOn RHEL 8 CSB,  when docket is installed using the command\r\n\r\n#yum install docker\r\n\r\nIt is not possible to run use Quarkus keycloak devservices correctly.\r\nThey are failing if docker has been installed using command \"yum docker install\".\r\n\r\nKeyclaok Quarkus worksfine  if it is installed from docker-ce\r\n\r\n\r\nNote: \r\nThe command \"yum install docker\" install at the same podman Openshift package\r\n\r\n\r\nThis issue is not showing up if docker is installed from docker as follows:\r\n\r\ndnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo\r\ndnf list docker-ce --showduplicates | sort -r\r\ndnf install docker-ce-3:20.10.9-3.el8\r\nsystemctl start docker\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n2. Example\r\n=========\r\n\r\nThis example is showcasing an example of failure with following application.properties\r\n\r\n~~~~\r\n# Configuration file\r\nprod.quarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus\r\nquarkus.oidc.client-id=backend-service\r\nquarkus.oidc.credentials.secret=secret\r\nquarkus.keycloak.devservices.realm-path=quarkus-realm.json\r\n\r\nquarkus.oidc-client.auth-server-url=${quarkus.oidc.auth-server-url}\r\nquarkus.oidc-client.client-id=${quarkus.oidc.client-id}\r\nquarkus.oidc-client.credentials.secret=${quarkus.oidc.credentials.secret}\r\nquarkus.oidc-client.grant.type=password\r\nquarkus.oidc-client.grant-options.password.username=alice\r\nquarkus.oidc-client.grant-options.password.password=alice\r\n\r\n%prod.port=8080\r\n%dev.port=8080\r\n%test.port=8081\r\n\r\norg.acme.security.openid.connect.client.ProtectedResourceOidcClientFilter/mp-rest/url=http://localhost:${port}/protected\r\norg.acme.security.openid.connect.client.ProtectedResourceTokenPropagationFilter/mp-rest/url=http://localhost:${port}/protected\r\n\r\n~~~~\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n #2.1. build quarkus\r\n     \r\n git clone https://github.com/quarkusio/quarkus.git\r\n cd quarkus\r\n     \r\nexport MAVEN_OPTS=\"-Xmx4g\"\r\n ./mvnw -Dquickly\r\n     \r\n     \r\n     \r\n#2.2 add security-openid-connect-client-quickstart\r\n\r\ngit clone https://github.com/quarkusio/quarkus-quickstarts\r\ncd quarkus-quickstarts\r\ngh pr checkout 1107\r\n\r\ncd /home/orivat/dev/quarkus_ws/quarkus-quickstarts/security-openid-connect-client-quickstart  \r\n     \r\n     \r\n3. Build is failing\r\n     \r\n\r\nmvn test\r\n     \r\n~~~~\r\n\r\nmvn test\r\n \r\n \r\n[INFO] Scanning for projects...\r\n[INFO]\r\n[INFO] ---------< org.acme:security-openid-connect-client-quickstart >---------\r\n[INFO] Building security-openid-connect-client-quickstart 1.0.0-SNAPSHOT\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[INFO]\r\n[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ security-openid-connect-client-quickstart ---\r\n[INFO] Using 'UTF-8' encoding to copy filtered resources.\r\n[INFO] Copying 1 resource\r\n[INFO] Copying 1 resource\r\n[INFO]\r\n[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ security-openid-connect-client-quickstart ---\r\n[INFO] Nothing to compile - all classes are up to date\r\n[INFO]\r\n[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ security-openid-connect-client-quickstart ---\r\n[INFO] Using 'UTF-8' encoding to copy filtered resources.\r\n[INFO] skip non existing resourceDirectory /home/orivat/dev/quarkus_ws/quarkus-quickstarts/security-openid-connect-client-quickstart/src/test/resources\r\n[INFO]\r\n[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ security-openid-connect-client-quickstart ---\r\n[INFO] Nothing to compile - all classes are up to date\r\n[INFO]\r\n[INFO] --- maven-surefire-plugin:3.0.0-M5:test (default-test) @ security-openid-connect-client-quickstart ---\r\n[INFO]\r\n[INFO] -------------------------------------------------------\r\n[INFO]  T E S T S\r\n[INFO] -------------------------------------------------------\r\n[INFO] Running org.acme.security.openid.connect.OidcClientTokenPropagationTest\r\n2022-05-06 17:53:25,821 INFO  [org.jbo.threads] (main) JBoss Threads version 3.4.2.Final\r\n2022-05-06 17:53:27,838 INFO  [io.quarkus] (main) security-openid-connect-client-quickstart 1.0.0-SNAPSHOT on JVM (powered by Quarkus 999-SNAPSHOT) started in 2.518s. Listening on: http://localhost:8081/\r\n2022-05-06 17:53:27,839 INFO  [io.quarkus] (main) Profile test activated.\r\n2022-05-06 17:53:27,839 INFO  [io.quarkus] (main) Installed features: [cdi, oidc, oidc-client, oidc-client-reactive-filter, oidc-token-propagation-reactive, rest-client-reactive, resteasy-reactive, resteasy-reactive-jackson, security, smallrye-context-propagation, vertx]\r\n[ERROR] Tests run: 2, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 34.672 s <<< FAILURE! - in org.acme.security.openid.connect.OidcClientTokenPropagationTest\r\n[ERROR] org.acme.security.openid.connect.OidcClientTokenPropagationTest.testGetNameWithOidcClient  Time elapsed: 30.547 s  <<< ERROR!\r\njava.net.SocketTimeoutException: Read timed out\r\n        at org.acme.security.openid.connect.OidcClientTokenPropagationTest.testGetNameWithOidcClient(OidcClientTokenPropagationTest.java:38)\r\n \r\n2022-05-06 17:53:59,335 INFO  [io.quarkus] (main) security-openid-connect-client-quickstart stopped in 0.028s\r\n[INFO]\r\n[INFO] Results:\r\n[INFO]\r\n[ERROR] Errors:\r\n[ERROR]   OidcClientTokenPropagationTest.testGetNameWithOidcClient:38 » SocketTimeout Re...\r\n[INFO]\r\n[ERROR] Tests run: 2, Failures: 0, Errors: 1, Skipped: 0\r\n\r\n~~~~\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n4. Work-around (for  #yum install docker on RHEL8 CSB)\r\n============\r\nOnly way to make it working is:\r\n-To start docker externally (see 4.1)\r\n-To update application.properties adding/updating\r\n\r\noidc.keycloak.devservices.enabled=false\r\n\r\n# Configuration file\r\n#%prod.quarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus\r\nquarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus\r\nclient.quarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus\r\n\r\n\r\n\r\n\r\n1. start docker externally\r\ndocker run -p 8180:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=password quay.io/keycloak/keycloak:18.0.0 start-dev\r\n\r\n\r\n2. update application properteis as follows:\r\n\r\n\r\noidc.keycloak.devservices.enabled=false\r\n\r\n# Configuration file\r\n#%prod.quarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus\r\nquarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus\r\nclient.quarkus.oidc.auth-server-url=http://localhost:8180/realms/quarkus\r\nquarkus.oidc.client-id=backend-service\r\nquarkus.oidc.credentials.secret=secret\r\nquarkus.keycloak.devservices.realm-path=quarkus-realm.json\r\n\r\nquarkus.oidc-client.auth-server-url=${quarkus.oidc.auth-server-url}\r\nquarkus.oidc-client.client-id=${quarkus.oidc.client-id}\r\nquarkus.oidc-client.credentials.secret=${quarkus.oidc.credentials.secret}\r\nquarkus.oidc-client.grant.type=password\r\nquarkus.oidc-client.grant-options.password.username=alice\r\nquarkus.oidc-client.grant-options.password.password=alice\r\n\r\n%prod.port=8080\r\n%dev.port=8080\r\n%test.port=8081\r\n\r\norg.acme.security.openid.connect.client.ProtectedResourceOidcClientFilter/mp-rest/url=http://localhost:${port}/protected\r\norg.acme.security.openid.connect.client.ProtectedResourceTokenPropagationFilter/mp-rest/url=http://localhost:${port}/protected\r\n\r\n3. run test\r\n\r\nmvn test\r\n\r\nIt should display\r\n\r\n~~~\r\nINFO] -------------------------------------------------------\r\n[INFO]  T E S T S\r\n[INFO] -------------------------------------------------------\r\n[INFO] Running org.acme.security.openid.connect.OidcClientTokenPropagationTest\r\n2022-05-09 10:40:33,756 INFO  [org.jbo.threads] (main) JBoss Threads version 3.4.2.Final\r\n2022-05-09 10:40:35,785 INFO  [io.quarkus] (main) security-openid-connect-client-quickstart 1.0.0-SNAPSHOT on JVM (powered by Quarkus 999-SNAPSHOT) started in 2.601s. Listening on: http://localhost:8081/\r\n2022-05-09 10:40:35,785 INFO  [io.quarkus] (main) Profile test activated. \r\n2022-05-09 10:40:35,786 INFO  [io.quarkus] (main) Installed features: [cdi, oidc, oidc-client, oidc-client-reactive-filter, oidc-token-propagation-reactive, rest-client-reactive, resteasy-reactive, resteasy-reactive-jackson, security, smallrye-context-propagation, smallrye-openapi, swagger-ui, vertx]\r\n[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.113 s - in org.acme.security.openid.connect.OidcClientTokenPropagationTest\r\n2022-05-09 10:40:37,611 INFO  [io.quarkus] (main) security-openid-connect-client-quickstart stopped in 0.032s\r\n[INFO] \r\n[INFO] Results:\r\n[INFO] \r\n[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n       \r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux remote.csb 4.18.0-348.20.1.el8_5.x86_64 #1 SMP Tue Mar 8 12:56:54 EST 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\njava -version openjdk version \"11.0.14.1\" 2022-02-08 LTS OpenJDK Runtime Environment 18.9 (build 11.0.14.1+1-LTS) OpenJDK 64-Bit Server VM 18.9 (build 11.0.14.1+1-LTS, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\nbuild compilation version\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n3.82\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25456/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25456/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

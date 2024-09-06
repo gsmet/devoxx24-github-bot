@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41314",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41314/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41314/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41314/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41314",
+  "id": 2362639105,
+  "node_id": "I_kwDOCFbutM6M0wMB",
+  "number": 41314,
+  "title": "Pinned thread when selecting an instance from Arc",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    },
+    {
+      "id": 2236032526,
+      "node_id": "MDU6TGFiZWwyMjM2MDMyNTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/fault-tolerance",
+      "name": "area/fault-tolerance",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 14,
+  "created_at": "2024-06-19T15:19:18Z",
+  "updated_at": "2024-07-12T14:32:57Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI detected the following thread pinning:\r\n\r\n```\r\nThread[#54,ForkJoinPool-1-worker-1,5,CarrierThreads]\r\njava.base/java.lang.VirtualThread$VThreadContinuation.onPinned(VirtualThread.java:183)\r\njava.base/jdk.internal.vm.Continuation.onPinned0(Continuation.java:393)\r\njava.base/java.lang.VirtualThread.park(VirtualThread.java:582)\r\njava.base/java.lang.System$2.parkVirtualThread(System.java:2643)\r\njava.base/jdk.internal.misc.VirtualThreads.park(VirtualThreads.java:54)\r\njava.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:219)\r\njava.base/java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:754)\r\njava.base/java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:990)\r\njava.base/java.util.concurrent.locks.ReentrantLock$Sync.lock(ReentrantLock.java:153)\r\njava.base/java.util.concurrent.locks.ReentrantLock.lock(ReentrantLock.java:322)\r\nio.quarkus.arc.impl.LazyValue.get(LazyValue.java:29)\r\nio.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:69)\r\nio.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:49)\r\nio.quarkus.arc.impl.ComputingCache.getValue(ComputingCache.java:40)\r\nio.quarkus.arc.impl.ArcContainerImpl.getResolvedBeans(ArcContainerImpl.java:970)\r\nio.quarkus.arc.impl.Instances.resolveBeans(Instances.java:41)\r\nio.quarkus.arc.impl.Instances.resolveBeans(Instances.java:36)\r\nio.quarkus.arc.impl.InstanceImpl.resolve(InstanceImpl.java:339)\r\nio.quarkus.arc.impl.InstanceImpl.<init>(InstanceImpl.java:169)\r\nio.quarkus.arc.impl.InstanceImpl.child(InstanceImpl.java:135)\r\nio.quarkus.arc.impl.InstanceImpl.select(InstanceImpl.java:204)\r\nio.quarkus.arc.impl.InstanceImpl.select(InstanceImpl.java:41)\r\nio.quarkus.arc.impl.ArcCDIProvider$ArcCDI.select(ArcCDIProvider.java:51)\r\nio.smallrye.faulttolerance.CdiFaultToleranceSpi.lazyDependencies(CdiFaultToleranceSpi.java:76)\r\nio.smallrye.faulttolerance.core.apiimpl.FaultToleranceImpl$BuilderImpl.lambda$build$0(FaultToleranceImpl.java:192)\r\nio.smallrye.faulttolerance.core.apiimpl.LazyFaultTolerance.call(LazyFaultTolerance.java:28) <== monitors:1\r\nio.smallrye.faulttolerance.FaultToleranceInterceptor.preconfiguredFlow(FaultToleranceInterceptor.java:206)\r\nio.smallrye.faulttolerance.FaultToleranceInterceptor.intercept(FaultToleranceInterceptor.java:176)\r\nio.smallrye.faulttolerance.FaultToleranceInterceptor_Bean.intercept(Unknown Source)\r\nio.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)\r\nio.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:30)\r\nio.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:27)\r\n... business code\r\njava.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\r\njava.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)\r\njava.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)\r\njava.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\r\njava.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\r\njava.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)\r\njava.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\r\njava.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)\r\n... business code\r\njava.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)\r\njava.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)\r\njava.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)\r\njava.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\r\njava.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\r\njava.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)\r\njava.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)\r\njava.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\r\njava.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\r\n... business code\r\nio.smallrye.reactive.messaging.providers.AbstractMediator.lambda$invokeBlocking$15(AbstractMediator.java:190)\r\nio.smallrye.context.impl.wrappers.SlowContextualSupplier.get(SlowContextualSupplier.java:21)\r\nio.smallrye.mutiny.operators.uni.builders.UniCreateFromDeferredSupplier.subscribe(UniCreateFromDeferredSupplier.java:25)\r\nio.smallrye.mutiny.operators.AbstractUni.subscribe(AbstractUni.java:36)\r\nio.smallrye.mutiny.operators.uni.UniRunSubscribeOn.lambda$subscribe$0(UniRunSubscribeOn.java:27)\r\nio.quarkus.virtual.threads.ContextPreservingExecutorService$ContextPreservingRunnable.run(ContextPreservingExecutorService.java:45)\r\njava.base/java.util.concurrent.ThreadPerTaskExecutor$TaskRunner.run(ThreadPerTaskExecutor.java:314)\r\njava.base/java.lang.VirtualThread.run(VirtualThread.java:309)\r\n```\r\n\r\nwe do not believe we are doing any native call in our app.\r\nsimilar issue to https://github.com/quarkusio/quarkus/issues/41313 \r\nhow can we investigate this?\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41314/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41314/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27725",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27725/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27725/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27725/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27725",
+  "id": 1361976230,
+  "node_id": "I_kwDOCFbutM5RLhum",
+  "number": 27725,
+  "title": "Jackson ObjectMapper configuration broken if JsonObject.mapTo is used in test resource",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-09-05T13:29:53Z",
+  "updated_at": "2022-11-11T07:10:06Z",
+  "closed_at": "2022-11-11T07:10:01Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen using `JsonObject.mapTo` in the `start` method of a test resource, the object mapper used in the running Quarkus app in Quarkus tests is not configured properly. This can be shown with the jackson Kotlin module, which should be automatically loaded once the dependency is available. As soon as `JsonObject.mapTo` is used in the `start` method, the Kotlin module is not loaded automatically anymore.\n\n### Expected behavior\n\nUsing `JsonObject.mapTo` in a test resource is possible without breaking the Quarkus app.\n\n### Actual behavior\n\nThe Kotlin module is not loaded anymore once the method is called.\n\n### How to Reproduce?\n\nhttps://github.com/languitar/quarkus-mapper-reproducer\r\n\r\n#. `mvn verify`\r\n\r\nOnce the line\r\n\r\n```kotlin\r\nJsonObject.mapFrom(Model(42)).toString()\r\n```\r\n\r\nis removed from `BreakingResource` the tests pass.\n\n### Output of `uname -a` or `ver`\n\nLinux pres 5.15.63-1-lts #1 SMP Thu, 25 Aug 2022 13:40:16 +0000 x86_64 GNU/Linux\n\n### Output of `java -version`\n\n11.0.16.1\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.12.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n3.8.6 \n\n### Additional information\n\nThe problem here seems to be the on-demand initialization of the mapper in QuarkusJacksonJsonCodec in a static block. Due to the fact that the test resource executes before the ArcContainer is available. The fallback in this case initializes a default object mapper and initialization with an ArcContainer is not reattempted as the static code block was already executed.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27725/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27725/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

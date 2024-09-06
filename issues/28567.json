@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28567",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28567/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28567/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28567/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28567",
+  "id": 1407708979,
+  "node_id": "I_kwDOCFbutM5T5-8z",
+  "number": 28567,
+  "title": "Kafka - Endpoint that returns `org.reactivestreams.Publisher` produces occasionally invalid SseEvent JSON",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2022-10-13T12:23:45Z",
+  "updated_at": "2023-04-10T11:35:58Z",
+  "closed_at": "2023-04-10T11:35:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWe generate Kafka events (please see [here](https://github.com/quarkus-qe/quarkus-test-suite/blob/main/messaging/kafka-strimzi-avro-reactive-messaging/src/main/java/io/quarkus/ts/messaging/strimzi/kafka/reactive/KStockPriceProducer.java#L37)) in Quarkus Scheduler every second and [our test uses](https://github.com/quarkus-qe/quarkus-test-suite/blob/main/messaging/kafka-strimzi-avro-reactive-messaging/src/test/java/io/quarkus/ts/messaging/strimzi/kafka/reactive/BaseKafkaAvroIT.java#L53) `SseEventSource` to consume events from [this endpoint](https://github.com/quarkus-qe/quarkus-test-suite/blob/main/messaging/kafka-strimzi-avro-reactive-messaging/src/main/java/io/quarkus/ts/messaging/strimzi/kafka/reactive/StockPriceEndpoint.java#L49) that produces `Publisher<List<String>>`. Usually `InboundSseEvent` looks like this:\r\n```\r\nInboundSseEvent{id=null', comment=[], data=[\"{\\\"id\\\":\\\"IBM\\\",\\\"price\\\":0.4873994757961053}\", ...,\"{\\\"id\\\":\\\"IBM\\\",\\\"price\\\":0.8913893432164612}\"]}\r\n```\r\nbut sometimes, `InboundSseEvent` is not finished and new one is produced (please see `IBMdata`):\r\n```\r\nInboundSseEvent{id=null', comment=[], data=[\"{\\\"id\\\":\\\"IBM\\\",\\\"price\\\":0.4873994757961053}\",..., \"{\\\"id\\\":\\\"IBMdata: [\"{\\\"id\\\":\\\"IBM\\\",\\\"price\\\":0.482\\\",\\\"price\\\":0.29906010974526076}\", ,...,\"{\\\"id\\\":\\\"IBM\\\",\\\"price\\\":0.8913893432164612}\"]}\r\n```\r\nTests are failing as far in past as I went (couple of months), but before 16.9.2022 failures were rare (our impl. didn't change back then).\r\n\r\n### Expected behavior\r\n\r\nEndpoint produces valid JSON.\r\n\r\n### Actual behavior\r\n\r\nSometimes, endpoint produces invalid JSON.\r\n`SEVERE Invalid token=CURLYOPEN at (line no=1, column no=16385, offset=16384). Expected tokens are: [COMMA]`\r\n\r\nI mentioned there are following differences (might help with debugging):\r\n- Only for failing runs following message is not logged\r\n```bash\r\nKafka consumer kafka-consumer-channel-stock-price, connected to Kafka brokers 'localhost:49168', belongs to the 'f0c4a380-1418-463e-bc4c-69cbeb80bd16' consumer group and is configured to poll records from [stock-price]\r\n```\r\n- on average, successful runs has 500 events, while failing runs has 670 events (always more than successful runs)\r\n\r\n### How to Reproduce?\r\n\r\nReproducer:\r\n\r\nSteps to reproduce the behavior:\r\n1. `git clone https://github.com/michalvavrik/quarkus-test-suite.git & cd quarkus-test-suite`\r\n2. `git checkout kafka-reproducer`\r\n3. `mvn clean verify -f messaging/kafka-strimzi-avro-reactive-messaging/ -Dit.test=StrimziKafkaAvroIT`\r\n4. run step 3. about 5000 times, it may fail after first run, or much later on. On my workstation, the issue failed just once, however you can check logs of our CI, where the failure is pretty regular (every couple of days): https://github.com/quarkus-qe/quarkus-test-suite/actions\r\n\r\nApart from`quay.io/strimzi/kafka0.28.0-kafka-3.1.0` (steps above), the issue can also be reproduced with:\r\n\r\n- DEV mode with Apicurio Registry `quay.io/apicurio/apicurio-registry-mem:2.2.3.Final` and Redpanda `docker.io/vectorized/redpanda:v22.1.7` (`mvn clean verify -f messaging/kafka-strimzi-avro-reactive-messaging/ -Dit.test=DevModeApicurioIT#batchMustBeGreaterThanSingleEvent`)\r\n\r\n- Confluent Kafka `confluentinc/cp-kafka` (run `mvn clean verify -f messaging/kafka-confluent-avro-reactive-messaging/ -Dit.test=ConfluentKafkaAvroIT#batchMustBeGreaterThanSingleEvent`), you can also see Github CI logs from 23.9.)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux fedora 5.19.6-200.fc36.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Aug 31 17:58:15 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.4 2022-07-19\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nOpenJDK Runtime Environment GraalVM CE 21.3.3\r\n\r\n### Quarkus version or git rev\r\n\r\n999-SNAPSHOT\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28567/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28567/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

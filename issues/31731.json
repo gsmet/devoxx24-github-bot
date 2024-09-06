@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31731",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31731/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31731/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31731/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/31731",
+  "id": 1617229946,
+  "node_id": "I_kwDOCFbutM5gZPh6",
+  "number": 31731,
+  "title": "OIDC - org.jose4j.lang.UnresolvableKeyException: JWK is not available during verification of the token issued to client",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 18,
+  "created_at": "2023-03-09T13:15:25Z",
+  "updated_at": "2023-03-10T18:55:36Z",
+  "closed_at": "2023-03-10T18:55:36Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI'm having issue migration to a new oidc provider (a private one).\r\n\r\nI'm getting this error :\r\n\r\n```\r\n2023-03-09 14:03:19,930 ERROR [io.qua.oid.run.CodeAuthenticationMechanism] (vert.x-eventloop-thread-2) ID token verification has failed: null\r\n2023-03-09 14:03:19,931 DEBUG [io.qua.ver.htt.run.sec.HttpSecurityRecorder] (vert.x-eventloop-thread-2) Authentication has failed, returning HTTP status 401\r\n```\r\n\r\nIn debug, i see the following error that might be the cause :\r\n\r\n```\r\n2023-03-09 14:03:19,850 DEBUG [io.qua.oid.run.OidcIdentityProvider] (vert.x-eventloop-thread-2) Verifying the JWT token with the local JWK keys\r\n2023-03-09 14:03:19,861 DEBUG [io.qua.oid.run.OidcProvider] (vert.x-eventloop-thread-2) Verification of the token issued to client rp-di-application-gin has failed: Unable to process JOSE object (cause: org.jose4j.lang.UnresolvableKeyException: JWK is not available, neither 'kid' nor 'x5t' token headers are set): JsonWebSignature{\"typ\":\"JWT\",\"alg\":\"HS512\"}->...\r\n```\r\n\n\n### Expected behavior\n\nI should authenticate with success.\n\n### Actual behavior\n\nI'm getting this error :\r\n\r\n```\r\n2023-03-09 14:03:19,930 ERROR [io.qua.oid.run.CodeAuthenticationMechanism] (vert.x-eventloop-thread-2) ID token verification has failed: null\r\n2023-03-09 14:03:19,931 DEBUG [io.qua.ver.htt.run.sec.HttpSecurityRecorder] (vert.x-eventloop-thread-2) Authentication has failed, returning HTTP status 401\r\n```\r\n\r\nIn debug, i see the following error that might be the cause :\r\n\r\n```\r\n2023-03-09 14:03:19,850 DEBUG [io.qua.oid.run.OidcIdentityProvider] (vert.x-eventloop-thread-2) Verifying the JWT token with the local JWK keys\r\n2023-03-09 14:03:19,861 DEBUG [io.qua.oid.run.OidcProvider] (vert.x-eventloop-thread-2) Verification of the token issued to client rp-di-application-gin has failed: Unable to process JOSE object (cause: org.jose4j.lang.UnresolvableKeyException: JWK is not available, neither 'kid' nor 'x5t' token headers are set): JsonWebSignature{\"typ\":\"JWT\",\"alg\":\"HS512\"}->...\r\n```\n\n### How to Reproduce?\n\nSince I'm connecting to a private, I guess it's not possible to reproducer.\r\n\r\nHere is anyway my configuration :\r\n\r\n```\r\n...\r\nquarkus.oidc.application-type=web-app\r\nquarkus.oidc.authentication.redirect-path=/callback\r\nquarkus.oidc.authentication.restore-path-after-redirect=true\r\nquarkus.oidc.authentication.user-info-required=true\r\nquarkus.http.auth.permission.authenticated.paths=/*\r\nquarkus.http.auth.permission.authenticated.policy=authenticated\r\nquarkus.http.auth.permission.public.paths=/api/environments/cicd\r\nquarkus.http.auth.permission.public.policy=permit\r\nquarkus.oidc.authentication.session-age-extension=P1D\r\nquarkus.oidc.token.refresh-expired=true\r\nquarkus.oidc.authentication.java-script-auto-redirect=false\r\n# required workaround for quarkus 2.16.0 \r\nquarkus.oidc.authentication.cookie-same-site=lax\r\n```\n\n### Output of `uname -a` or `ver`\n\nLinux linux-dev 5.4.0-144-generic #161-Ubuntu SMP Fri Feb 3 14:49:04 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"11.0.12\" 2021-07-20\r\nOpenJDK Runtime Environment 18.9 (build 11.0.12+7)\r\nOpenJDK 64-Bit Server VM 18.9 (build 11.0.12+7, mixed mode)\r\n\n\n### GraalVM version (if different from Java)\n\nnon\n\n### Quarkus version or git rev\n\n2.8.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.6.3 (cecedd343002696d0abb50b32b541b8a6ba2883f)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/31731/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/31731/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28428",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28428/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28428/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28428/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28428",
+  "id": 1399592035,
+  "node_id": "I_kwDOCFbutM5TbBRj",
+  "number": 28428,
+  "title": "Reactive Messaging (RabbitMQ) - Problems restarting quarkus:dev",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-10-06T13:08:42Z",
+  "updated_at": "2023-12-20T08:20:02Z",
+  "closed_at": "2023-12-20T08:19:50Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhile working with SMMR (RabbitMQ) I noticed various problems when restarting quarkus:dev with 's' (Force restart). \r\nThe restart results is various stack traces, this is just one of them. It causes problems when developing since you need to start quarkus:dev from scratch.\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nRestarting quarkus should not cause problems.\r\n\r\n### Actual behavior\r\n\r\nRestarting quarkus results in an error which goes away if `mvn quarkus:dev` is started again.\r\n\r\n\r\n\r\n\r\n### How to Reproduce?\r\n\r\nUse reproducer (just a some code using SMMR, I suspect emitter is the problem).\r\n\r\n[conc.zip](https://github.com/quarkusio/quarkus/files/9733329/conc.zip)\r\n\r\n\r\n1. Run mvn quarkus:dev\r\n2. Execute request `GET http://localhost:8080/x/generate`\r\n3. Wait for request to complete\r\n4. Type 's' in the console \r\n5. Execute same request again: `GET http://localhost:8080/x/generate`\r\n6. You get the following exception:\r\n```\r\n2022-10-06 15:05:04,514 ERROR [io.sma.rea.mes.provider] (vert.x-eventloop-thread-2) SRMSG00201: Error caught while processing a message: java.lang.IllegalArgumentException: @Blocking referred to invalid worker name.\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.QuarkusWorkerPoolRegistry.getWorker(QuarkusWorkerPoolRegistry.java:104)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.QuarkusWorkerPoolRegistry_Subclass.getWorker$$superforward1(Unknown Source)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.QuarkusWorkerPoolRegistry_Subclass$$function$$2.apply(Unknown Source)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:53)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:51)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:40)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.QuarkusWorkerPoolRegistry_Subclass.getWorker(Unknown Source)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.QuarkusWorkerPoolRegistry.executeWork(QuarkusWorkerPoolRegistry.java:60)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.QuarkusWorkerPoolRegistry_Subclass.executeWork$$superforward1(Unknown Source)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.QuarkusWorkerPoolRegistry_Subclass$$function$$1.apply(Unknown Source)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:53)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:51)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:40)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.QuarkusWorkerPoolRegistry_Subclass.executeWork(Unknown Source)\r\n        at io.quarkus.smallrye.reactivemessaging.runtime.QuarkusWorkerPoolRegistry_ClientProxy.executeWork(Unknown Source)\r\n        at io.smallrye.reactive.messaging.providers.AbstractMediator.invokeBlocking(AbstractMediator.java:113)\r\n        at io.smallrye.reactive.messaging.providers.SubscriberMediator.lambda$processMethodReturningVoid$0(SubscriberMediator.java:158)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n        at io.smallrye.mutiny.groups.MultiOnItem.lambda$transformToUni$6(MultiOnItem.java:268)\r\n        at io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapMainSubscriber.onItem(MultiFlatMapOp.java:178)\r\n        at io.smallrye.mutiny.subscription.MultiSubscriber.onNext(MultiSubscriber.java:61)\r\n        at io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapMainSubscriber.tryEmit(MultiFlatMapOp.java:230)\r\n        at io.smallrye.mutiny.operators.multi.MultiFlatMapOp$FlatMapInner.onItem(MultiFlatMapOp.java:607)\r\n        at io.smallrye.mutiny.subscription.MultiSubscriber.onNext(MultiSubscriber.java:61)\r\n        at io.smallrye.mutiny.converters.uni.UniToMultiPublisher$UniToMultiSubscription.onItem(UniToMultiPublisher.java:93)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransform$UniOnItemTransformProcessor.onItem(UniOnItemTransform.java:43)\r\n        at io.smallrye.mutiny.operators.uni.builders.UniCreateFromCompletionStage$CompletionStageUniSubscription.forwardResult(UniCreateFromCompletionStage.java:63)\r\n        at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:859)\r\n        at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:837)\r\n        at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:506)\r\n        at java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2073)\r\n        at io.smallrye.reactive.messaging.rabbitmq.ConnectionHolder.lambda$runOnContext$5(ConnectionHolder.java:71)\r\n        at io.vertx.mutiny.core.Context.lambda$runOnContext$1(Context.java:134)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n        at io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:829)\r\n```\r\n\r\nAs said this is just one of the possible exception. \r\nOther issues happen when code is modified and a request triggers recompile (live reload). That fails with an error that the emitter can not be reconnected.\r\n\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux a 5.15.65-1-MANJARO #1 SMP PREEMPT Mon Sep 5 10:15:47 UTC 2022 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.14.1\" 2022-02-08 OpenJDK Runtime Environment Temurin-11.0.14.1+1 (build 11.0.14.1+1) OpenJDK 64-Bit Server VM Temurin-11.0.14.1+1 (build 11.0.14.1+1, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.13.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\nMaven home: /opt/apache-maven-3.8.6\r\nJava version: 11.0.14.1, vendor: Eclipse Adoptium, runtime: /opt/jdk-11.0.14.1+1\r\nDefault locale: en_US, platform encoding: UTF-8\r\nOS name: \"linux\", version: \"5.15.65-1-manjaro\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28428/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28428/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

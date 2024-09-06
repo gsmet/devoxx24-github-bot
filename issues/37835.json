@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37835",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37835/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37835/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37835/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37835",
+  "id": 2048511286,
+  "node_id": "I_kwDOCFbutM56Gc02",
+  "number": 37835,
+  "title": "Http 2 Authority's URI validation in the hot path",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2023-12-19T11:56:02Z",
+  "updated_at": "2024-03-02T21:16:38Z",
+  "closed_at": "2024-03-02T21:16:37Z",
+  "active_lock_reason": null,
+  "body": "Currently HTTP 2 perform malformed authority URI checks and multiple headers lookups in the request handling's hot path\r\n\r\nThis is currently addressed by https://github.com/eclipse-vertx/vert.x/pull/5038\r\n\r\nThis turn to be one of the most relevant costy behaviours between Http 1.1 and Http 2, although in quarkus we do perform URI validation [as well (per-request!)](https://github.com/quarkusio/quarkus/blob/main/extensions/vertx-http/runtime/src/main/java/io/quarkus/vertx/http/runtime/VertxHttpRecorder.java#L148), but with a significant difference: we only check the request's uri eg on `http://localhost:8080/hello` just the `/hello` part.\r\nIn HTTP 2 instead, the check is performed with a more complex part ie the whole authority `localhost:8080` which \"trigger\" a more costy behaviour on `java.net.URI`.\r\n\r\nThe pull requests referenced is addressing this by:\r\n- making the validation so cheap that is fine to always perform it (kudos to @vietj for it)\r\n- reducing the amount of lookups in the Http 2 headers map, which are not cheap and \"hidden\" under stealhy API surface which make them to appear as normal field lookups\r\n\r\nThis issue is one of the reason behind the performance diff between Http 1 vs 2 and is very specific of Vertx, that's why other servers based on Netty couldn't hit it.\r\n\r\nJust for reference, URI validation in Http 1.1 is just a nop, in term of cost, while for a simple plaintext hello world endpoint it looks like this (the check is in violet):\r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/13125299/06eaedb0-5117-47fc-ad57-6fc2fc2e9bad)\r\n\r\nwhich is about 8-10% of the overall cpu usage, compared to ~0% for http 1.1\r\n\r\nThe same applies if the payload to send is ~4K (which is quite big):\r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/13125299/e56ec666-ae09-4ea2-b317-eaa7dcdc6efc)\r\n\r\nIn which case is approx 5%.\r\n\r\nThe pr mentioned above is fixing/improving stream setup/creation as well, still affected by the cost of accessing pseudoheaders more than necessary.\r\n\r\nAlthough the gain in term of percentage seems tiny, they should be considered for the parts Quarkus/Vertx is responsible for ie the green part. In such case the relative cost make them important enough that worth to be fixed, given that they actually translate in cpu cycles which could be used with more profit elsewhere (or just scarse, because in containers).\r\n\r\nThis issue is partially related to https://github.com/quarkusio/quarkus/issues/34473",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37835/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37835/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

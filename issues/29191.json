@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29191",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29191/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29191/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29191/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29191",
+  "id": 1444570449,
+  "node_id": "I_kwDOCFbutM5WGmVR",
+  "number": 29191,
+  "title": "Subscribing to `CompletionStage` returned by `Event.fireAsync` doesn't seem to work correctly",
+  "labels": [
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 29,
+  "created_at": "2022-11-10T21:14:17Z",
+  "updated_at": "2023-07-31T08:45:24Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen trying to use `javax.enterprise.event.Event.fireAsync`, it does not seem to subscribe to the `CompletionStage` that is returned.\r\n\r\n### Expected behavior\r\n\r\nIf I wrap `Event.fireAsync` inside a `Uni.createFrom().completionStage()`, I would expect the result of the handler of the event to be subscribed to.\r\n\r\n### Actual behavior\r\n\r\nIt does not\r\n\r\n### How to Reproduce?\r\n\r\nReproducer: \r\n[fireAsyncBug.zip](https://github.com/quarkusio/quarkus/files/9984678/fireAsyncBug.zip)\r\n\r\n\r\n1. Unzip the reproducer\r\n2. Run Quarkus dev mode\r\n3. Turn on continuous testing. You'll see that the `EventResourceTests.eventReverses` test fails\r\n\r\nIn `EventResource` there is a single jax-rs method:\r\n\r\n```java\r\n@GET\r\n@Produces(MediaType.TEXT_PLAIN)\r\npublic Uni<String> event() {\r\n\treturn Uni.createFrom().completionStage(\r\n\t\tthis.event.fireAsync(\"Hello\")\r\n\t);\r\n}\r\n```\r\n\r\nThe `EventListener` class handles the event:\r\n\r\n```java\r\n@ApplicationScoped\r\npublic class EventListener {\r\n\tpublic Uni<String> onEvent(@ObservesAsync String event) {\r\n\t\treturn Uni.createFrom().item(new StringBuilder(event).reverse().toString());\r\n\t}\r\n}\r\n```\r\n\r\nThe `Uni` returned by `EventListener.onEvent` is never subscribed to. This leads me to the question \"What actually is the `CompletionStage` returned by `Event.fireAsync`? What does it represent?\r\n\r\n### Output of `uname -a` or `ver`\r\n```\r\nDarwin edeandrea-m1pro 22.1.0 Darwin Kernel Version 22.1.0: Sun Oct  9 20:15:09 PDT 2022; root:xnu-8792.41.9~2/RELEASE_ARM64_T6000 arm64\r\n```\r\n\r\n### Output of `java -version`\r\n\r\n```\r\nopenjdk version \"17.0.5\" 2022-10-18\r\nOpenJDK Runtime Environment Temurin-17.0.5+8 (build 17.0.5+8)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.5+8 (build 17.0.5+8, mixed mode)\r\n```\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n```\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\nMaven home: /Users/edeandre/.m2/wrapper/dists/apache-maven-3.8.6-bin/67568434/apache-maven-3.8.6\r\nJava version: 17.0.5, vendor: Eclipse Adoptium, runtime: /Users/edeandre/.sdkman/candidates/java/17.0.5-tem\r\nDefault locale: en_US, platform encoding: UTF-8\r\nOS name: \"mac os x\", version: \"13.0\", arch: \"aarch64\", family: \"mac\"\r\n```\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29191/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29191/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

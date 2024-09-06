@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41579",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41579/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41579/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41579/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41579",
+  "id": 2383306743,
+  "node_id": "I_kwDOCFbutM6ODl_3",
+  "number": 41579,
+  "title": "no post-process filtering in native image tracing agent",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-07-01T09:20:50Z",
+  "updated_at": "2024-07-01T09:21:58Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have tried [Native Image Tracing Agent Integration](https://quarkus.io/guides/native-reference#native-image-agent-integration).\r\nI was expecting entries to be filtered out in `native-image-agent-final-config` if elements were already covered by quarkus declarations.\r\n\r\nfor instance imagine the following code:\r\n```\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    @Path(\"/foo\")\r\n    public String foo() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {\r\n        Method method = MyFoo.class.getDeclaredMethod(\"getFoo\");\r\n        return (String) method.invoke(new MyFoo());\r\n    }\r\n```\r\nand test\r\n```\r\n    @Test\r\n    public void foo() {\r\n        given()\r\n                .when().get(\"/hello/foo\")\r\n                .then()\r\n                .statusCode(200)\r\n                .body(is(\"bar\"));\r\n    }\r\n```\r\n\r\nwith the following `MyFoo` class:\r\n\r\n```\r\npublic class MyFoo {\r\n\r\n    String foo = \"bar\";\r\n\r\n    public String getFoo() {\r\n        return foo;\r\n    }\r\n}\r\n```\r\n\r\nwhen running ` mvn clean verify -DskipITs=false -Dquarkus.test.integration-test-profile=test-with-native-agent`, I get the expected element in `reflect-config.json`:\r\n```\r\n{\r\n  \"name\":\"org.acme.MyFoo\",\r\n  \"methods\":[{\"name\":\"getFoo\",\"parameterTypes\":[] }]\r\n},\r\n```\r\n\r\nthen I annotate `MyFoo`:\r\n```\r\n@RegisterForReflection\r\npublic class MyFoo {\r\n...\r\n```\r\n\r\nand re-run the `verify`. I am expecting that the `org.acme.MyFoo` in `reflect-config.json` would disappear. but that is not the case.\r\n\r\nmoreover, `reflect-config.json` has the exact same size in `target/native-image-agent-base-config/` and `target/native-image-agent-final-config/`:\r\n```\r\n$ ls -al target/native-image-agent-final-config/\r\ntotal 12\r\ndrwxr-xr-x 1 Sevel 1049089   0 Jul  1 11:08 .\r\ndrwxr-xr-x 1 Sevel 1049089   0 Jul  1 11:08 ..\r\n-rw-r--r-- 1 Sevel 1049089 113 Jul  1 11:08 jni-config.json\r\n-rw-r--r-- 1 Sevel 1049089   4 Jul  1 11:08 proxy-config.json\r\n-rw-r--r-- 1 Sevel 1049089 994 Jul  1 11:08 reflect-config.json\r\n-rw-r--r-- 1 Sevel 1049089 261 Jul  1 11:08 resource-config.json\r\n-rw-r--r-- 1 Sevel 1049089  71 Jul  1 11:08 serialization-config.json\r\n\r\n$ ls -al target/native-image-agent-base-config/\r\ntotal 20\r\ndrwxr-xr-x 1 Sevel 1049089    0 Jul  1 11:08 .\r\ndrwxr-xr-x 1 Sevel 1049089    0 Jul  1 11:08 ..\r\ndrwxr-xr-x 1 Sevel 1049089    0 Jul  1 11:08 agent-extracted-predefined-classes\r\n-rw-r--r-- 1 Sevel 1049089  113 Jul  1 11:08 jni-config.json\r\n-rw-r--r-- 1 Sevel 1049089   65 Jul  1 11:08 predefined-classes-config.json\r\n-rw-r--r-- 1 Sevel 1049089    4 Jul  1 11:08 proxy-config.json\r\n-rw-r--r-- 1 Sevel 1049089  994 Jul  1 11:08 reflect-config.json\r\n-rw-r--r-- 1 Sevel 1049089 2219 Jul  1 11:08 resource-config.json\r\n-rw-r--r-- 1 Sevel 1049089   71 Jul  1 11:08 serialization-config.json\r\n\r\n```\r\n\r\n\r\n### Expected behavior\r\n\r\n```\r\n{\r\n  \"name\":\"org.acme.MyFoo\",\r\n  \"methods\":[{\"name\":\"getFoo\",\"parameterTypes\":[] }]\r\n}\r\n```\r\n\r\nshould disappear if I annotate `MyFoo` with `RegisterForReflection`.\r\n\r\n### Actual behavior\r\n\r\nthe entry is still there. similarly there is not filtering on included resources.\r\n\r\n### How to Reproduce?\r\n\r\ncreate an application: `quarkus create app tracingagent`\r\nadd `/foo` entry point with some reflection on class `MyFoo`\r\nannotate `MyFoo` with `RegisterForReflection`\r\nexecute `mvn clean verify -DskipITs=false -Dquarkus.test.integration-test-profile=test-with-native-agent`\r\nopen `target/native-image-agent-final-config/reflect-config.json` => `MyFoo` is there (and should not be)\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava 21\r\n\r\n### Quarkus version or git rev\r\n\r\n3.12.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41579/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41579/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

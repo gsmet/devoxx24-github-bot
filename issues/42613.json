@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42613",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42613/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42613/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42613/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42613",
+  "id": 2472025124,
+  "node_id": "I_kwDOCFbutM6TWBwk",
+  "number": 42613,
+  "title": "Conflict between form-based auth logout and quarkus.http.auth.form.new-cookie-interval",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2024-08-18T15:27:41Z",
+  "updated_at": "2024-08-19T11:43:26Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHello. Maybe I'm missing something, but have a look (example project at https://github.com/ksdev-pl/quarkus-logout-conflict):\r\n\r\nLet's say we have a simple form-based authentication with logout method implemented according to the documentation (https://quarkus.io/guides/security-authentication-mechanisms#form-auth):\r\n```java\r\n    @GET\r\n    @Path(\"logout\")\r\n    public Response logout() {\r\n        if (identity.getIdentity().isAnonymous()) {\r\n            throw new UnauthorizedException(\"Not authenticated\");\r\n        }\r\n        final NewCookie removeCookie = new NewCookie.Builder(authCookieName)\r\n            .maxAge(0)\r\n            .expiry(Date.from(Instant.EPOCH))\r\n            .path(\"/\")\r\n            .build();\r\n        return Response.seeOther(URI.create(\"/auth/login\"))\r\n            .cookie(removeCookie)\r\n            .build();\r\n    }\r\n```\r\n\r\nLet's test it:\r\n\r\n1. We login using `POST http://localhost:8080/j_security_check` - this sets the `quarkus-credential` cookie.\r\n2. After successful login we access the protected page.\r\n3. On the protected page we click on \"logout\", which destroys the cookie and redirects us back to the `/login` page.\r\nLogout response headers look like this:\r\n```http\r\nHTTP/1.1 303 See Other\r\nLocation: http://localhost:8080/auth/login\r\nSet-Cookie: quarkus-credential=;Version=1;Path=/;Max-Age=0;Expires=Thu, 01-Jan-1970 00:00:00 GMT\r\ncontent-length: 0\r\n```\r\nEverything is fine and dandy, we're logged out.\r\n\r\nNow let's take the `quarkus.http.auth.form.new-cookie-interval` into consideration, which by default is 1 minute:\r\n\r\n1. We login using `POST http://localhost:8080/j_security_check` - this sets the `quarkus-credential` cookie.\r\n2. After successful login we access the protected page.\r\n3. We wait more than 1 minute.\r\n3. On the protected page we click on \"logout\", which _should_ destroy the cookie and redirects us back to the `/login` page.\r\nLogout response headers look like this:\r\n```http\r\nHTTP/1.1 303 See Other\r\nLocation: http://localhost:8080/auth/login\r\nSet-Cookie: quarkus-credential=;Version=1;Path=/;Max-Age=0;Expires=Thu, 01-Jan-1970 00:00:00 GMT\r\ncontent-length: 0\r\nset-cookie: quarkus-credential=DD0QkzbLhLqcmjoqf6QvrSHRsLZRm0VmXp9ILRCpfMKh4A8dGI9kwHMSo5g89hKt; Path=/; SameSite=Strict\r\n```\r\n\r\nWe see the login screen, job well done, we implemented the logout? Nope, the user is still logged in and protected resources are still accessible (and stays logged in for the duration of `quarkus.http.auth.form.timeout`).\r\n\r\nYou see the issue in the headers - \"destroy\" cookie is overwritten by the \"new-cookie-interval-cookie\", or whatever is its name (at least I guess that it's new-cookie-interval functionality).\r\n\r\nIt looks like using default Quarkus configuration (new-cookie-interval equal to 1 minute) and example from documentation (logout code) we can easily arrive at a not-obviously non-working logout.\r\n\r\n### Expected behavior\r\n\r\nAuth cookie is destroyed during logout.\r\n\r\n### Actual behavior\r\n\r\nAuth cookie is not destroyed during logout if request was made after `new-cookie-interval` time.\r\n\r\n### How to Reproduce?\r\n\r\nSteps in description above. Basic example project: https://github.com/ksdev-pl/quarkus-logout-conflict\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux fedora 6.10.4-200.fc40.x86_64 #1 SMP PREEMPT_DYNAMIC Sun Aug 11 15:32:50 UTC 2024 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 21.0.1 2023-10-17 LTS\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus 3.13.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.9.6 (Red Hat 3.9.6-6)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42613/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42613/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21570",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21570/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21570/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21570/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21570",
+  "id": 1058519930,
+  "node_id": "I_kwDOCFbutM4_F7t6",
+  "number": 21570,
+  "title": "Add the possibillity to return custom http response headers based on `application.properties`",
+  "labels": [
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-11-19T13:17:45Z",
+  "updated_at": "2021-11-20T07:15:56Z",
+  "closed_at": "2021-11-19T13:30:14Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nThe use case for me is to extend the response headers with a semver version notation of the public REST API in a header: `API-Version`.  See a screenshot of FireFox F12-network here:\r\n\r\n![image](https://user-images.githubusercontent.com/6173283/142628212-f60a1c8a-e628-4e6b-b528-321edd53c445.png)\r\n\r\nThis is driven by the following piece of configuration in `application.properties`: \r\n\r\n```\r\napplication.version=1.0.0\r\n```\r\n\r\nWhich could build-time be populated with the maven coordinates. \r\n\r\nTo make this generic, one could think of the following addition:\r\n\r\n\r\n```\r\nquarkus.http.responseheader.<id>.name=API-Version\r\nquarkus.http.responseheader.<id>.value=1.0.0\r\n```\r\n\r\nin a practical case such as this:\r\n```\r\nquarkus.http.responseheader.apiversion.name=API-Version\r\nquarkus.http.responseheader.apiversion.value=1.0.0\r\n```\r\n\r\nSee also: #21457\r\n\r\n\n\n### Implementation ideas\n\nI've used a `vertex.RouteFilter` to implement this:\r\n\r\n```java\r\npublic class ApiVersionResponseFilter {\r\n\r\n    private static final String API_VERSION_HEADER = \"API-Version\";\r\n\r\n    //CHECKSTYLE:OFF\r\n    @Inject\r\n    ConfigProvider provider;\r\n    //CHECKSTYLE:ON\r\n\r\n    @RouteFilter\r\n    public void addResponse(RoutingContext rc) {\r\n            rc.response().headers().set( API_VERSION_HEADER,  provider.version  );\r\n        rc.next();\r\n    }\r\n\r\n    @Dependent\r\n    public static class ConfigProvider {\r\n\r\n        //CHECKSTYLE:OFF\r\n        @ConfigProperty( name = \"application.version\" )\r\n        String version;\r\n        //CHECKSTYLE:ON\r\n\r\n    }\r\n}\r\n```\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21570/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21570/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

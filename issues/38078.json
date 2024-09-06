@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38078",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38078/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38078/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38078/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38078",
+  "id": 2068904109,
+  "node_id": "I_kwDOCFbutM57UPit",
+  "number": 38078,
+  "title": "Make OidcTestSecurityIdentityAugmentor WAY faster by making privateKey's generation final and static (thus unique for the test execution)",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-01-07T00:28:24Z",
+  "updated_at": "2024-02-10T11:45:02Z",
+  "closed_at": "2024-02-10T11:45:02Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nThe performance issue with tests utilizing `@TestSecurity` in conjunction with `@OIDCSecurity` was observed in the [provided reproducer project](https://github.com/YassinHajaj/quarkus-slow-test-security). The test run times are as follows (pattern is `HH:mm:ss.SSS`)\r\n\r\n- `testWithoutSecurity` : Start at 01:15:28.516, End at 01:15:29.080\r\n- `testWithSecurity` : Start at 01:15:29.080, End at 01:17:03.021\r\n- `testWithCustomSecurity` : Start at 01:17:03.022, End at 01:17:03.180\r\n\r\n**You'll notice that the `testWithSecurity` takes a little less than 2 minutes to run 1000 empty tests.**\r\n\r\nThe root cause of the slowdown is attributed to the repeated instantiation of `OidcTestSecurityIdentityAugmentor` for each test. This is due to the way the augment method in the `OidcTestSecurityIdentityAugmentor` class is written\r\n\r\n```java\r\nprivate SecurityIdentity augment(SecurityIdentity identity, Annotation[] annotations) {\r\n    Instance<TestSecurityIdentityAugmentor> producer = CDI.current().select(TestSecurityIdentityAugmentor.class);\r\n    if (producer.isResolvable()) {\r\n        return producer.get().augment(identity, annotations);\r\n    }\r\n    return identity;\r\n}\r\n```\r\n\r\nThe bottleneck is specifically the generation of the `privateKey` field inside of the `OidcTestSecurityIdentityAugmentor`'s constructor\r\n\r\n```java\r\nprivateKey = KeyUtils.generateKeyPair(2048).getPrivate();\r\n```\r\n\r\nThis key generation method is computationally intensive and hence slow.\r\n\r\n### Implementation ideas\r\n\r\nTo address this issue, I propose modifying the class to initialize the `privateKey` statically. This change ensures that the key is generated only once, reducing the overhead for each test:\r\n\r\n```java\r\nprivate static final PrivateKey privateKey;\r\n\r\nstatic {\r\n    try {\r\n        privateKey = KeyUtils.generateKeyPair(2048).getPrivate();\r\n    } catch (NoSuchAlgorithmException ex) {\r\n        throw new RuntimeException(ex);\r\n    }        \r\n}\r\n```\r\n\r\nThis modification should significantly improve the performance of the tests.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38078/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38078/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

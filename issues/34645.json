@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34645",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34645/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34645/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34645/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34645",
+  "id": 1796447988,
+  "node_id": "I_kwDOCFbutM5rE570",
+  "number": 34645,
+  "title": "Openshift extension does not create a service for a management interface",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2023-07-10T10:21:31Z",
+  "updated_at": "2023-10-15T15:51:05Z",
+  "closed_at": "2023-10-15T15:50:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI have an application, deployed on Openshift via Quarkus-openshift extension, which uses separate management interface[1].\r\n\r\nAfter an update to Quarkus 3.2.0, the interface can not be accessed anymore, since this port is not exposed as a part of a service.\r\n[1] https://quarkus.io/guides/management-interface-reference\n\n### Expected behavior\n\nThe port is exposed as a part of a service, same as for 3.1.0.\r\n\r\nGenerated file `target/kubernetes/openshift.yml` should contains service description like this:\r\n```\r\n---\r\napiVersion: v1\r\nkind: Service\r\nmetadata:\r\n  annotations:\r\n<...>\r\n  labels:\r\n    app.kubernetes.io/name: openshift-quickstart\r\n<...>\r\n  name: openshift-quickstart\r\nspec:\r\n  ports:\r\n    - name: http\r\n      port: 80\r\n      protocol: TCP\r\n      targetPort: 8080\r\n    - name: https\r\n      port: 443\r\n      protocol: TCP\r\n      targetPort: 8443\r\n    - name: management\r\n      port: 9000\r\n      protocol: TCP\r\n      targetPort: 9000\r\n  selector:\r\n    app.kubernetes.io/name: openshift-quickstart\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n  type: ClusterIP\r\n---\r\n```\r\n\r\nand `oc describe svc/openshift-quickstart` should return this:\r\n\r\n```\r\nName:              openshift-quickstart\r\nNamespace:         fd-test\r\nLabels:            app.kubernetes.io/managed-by=quarkus<...>\r\nAnnotations:  <...>\r\nSelector:          app.kubernetes.io/name=openshift-quickstart,app.kubernetes.io/version=1.0.0-SNAPSHOT\r\nType:              ClusterIP\r\nIP Family Policy:  SingleStack\r\nIP Families:       IPv4\r\nIP:                $EDITED\r\nIPs:               $EDITED\r\nPort:              http  80/TCP\r\nTargetPort:        8080/TCP\r\nEndpoints:         $EDITED1:8080\r\nPort:              https  443/TCP\r\nTargetPort:        8443/TCP\r\nEndpoints:         $EDITED:8443\r\nPort:              management  9000/TCP\r\nTargetPort:        9000/TCP\r\nEndpoints:         $EDITED:9000\r\nSession Affinity:  None\r\nEvents:            <none>\r\n```\n\n### Actual behavior\n\nThe generated file looks like this:\r\n```\r\n---\r\napiVersion: v1\r\nkind: Service\r\nmetadata:\r\n  annotations:\r\n<...>\r\n  labels:\r\n    app.kubernetes.io/name: openshift-quickstart\r\n<...>\r\n  name: openshift-quickstart\r\nspec:\r\n  ports:\r\n    - name: http\r\n      port: 80\r\n      protocol: TCP\r\n      targetPort: 8080\r\n  selector:\r\n    app.kubernetes.io/name: openshift-quickstart\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n  type: ClusterIP\r\n```\r\nand the deployed service like that:\r\n```\r\nName:              openshift-quickstart\r\nNamespace:         fd-test\r\nLabels:            app.kubernetes.io/managed-by=quarkus\r\n<...>\r\nAnnotations:    <...>\r\nSelector:          app.kubernetes.io/name=openshift-quickstart,app.kubernetes.io/version=1.0.0-SNAPSHOT\r\nType:              ClusterIP\r\nIP Family Policy:  SingleStack\r\nIP Families:       IPv4\r\nIP:                $EDITED\r\nIPs:               $EDITED\r\nPort:              http  80/TCP\r\nTargetPort:        8080/TCP\r\nEndpoints:         $EDITED:8080\r\nSession Affinity:  None\r\nEvents:            <none>\r\n\r\n```\n\n### How to Reproduce?\n\n1. `git@github.com:fedinskiy/reproducer.git -b openshift-extension-management`\r\n2. `mvn clean install -Dquarkus.kubernetes.deploy=true -Dquarkus.openshift.route.expose=true -Dquarkus.kubernetes-client.trust-certs=true -Dquarkus.platform.version=3.2.0.Final`\r\n\r\nRun `mvn clean install -Dquarkus.kubernetes.deploy=true -Dquarkus.openshift.route.expose=true -Dquarkus.kubernetes-client.trust-certs=true -Dquarkus.platform.version=3.1.0.Final` for expected result.\n\n### Output of `uname -a` or `ver`\n\n6.3.8-200.fc38.x86_64\n\n### Output of `java -version`\n\n17.0.5, vendor: GraalVM Community\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.7 (b89d5959fcde851dcb1c8946a785a163f14e1e29)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34645/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34645/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

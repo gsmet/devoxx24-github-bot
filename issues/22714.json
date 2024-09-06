@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22714",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22714/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22714/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22714/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22714",
+  "id": 1095989502,
+  "node_id": "I_kwDOCFbutM5BU3j-",
+  "number": 22714,
+  "title": "Impossible to load resource folder content into InputStream",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-01-07T05:08:13Z",
+  "updated_at": "2022-07-05T07:08:14Z",
+  "closed_at": "2022-07-05T07:08:09Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\n### Describe the bug\r\n\r\nThe following method is supposed to load the contents of a resource folder, but the InputStream is empty. I know the folder is correct because if I point the path to a file I am able to load the files. I tried both Thread.currentThread ... and the one uncommented.\r\n\r\n```java\r\n    public List<String> getFilesInFolder(String path) {\r\n        List<String> filePaths = new ArrayList<>();\r\n        //InputStream datasetStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);\r\n        InputStream datasetStream = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(path));\r\n        try {\r\n            List<String> filenames = IOUtils.readLines(datasetStream, StandardCharsets.UTF_8);\r\n            LOG.info(\"Filenames on path {}: {}\", path, filenames);\r\n            filePaths.addAll(\r\n                    filenames.stream()\r\n                            .peek(filename -> LOG.info(\"Evaluating file: {}\", filename))\r\n                            .filter(filename -> filename.endsWith(\".json\"))\r\n                            .map(filename ->\r\n                                    Objects.requireNonNull(\r\n                                            getClass().getClassLoader().getResource(path + filename)\r\n                                    ).getPath()\r\n                            )\r\n                            .collect(Collectors.toList())\r\n            );\r\n        } catch (IOException exception) {\r\n            LOG.error(\"No files found in path {}.\", path, exception);\r\n        }\r\n        return filePaths;\r\n    }\r\n```\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\n\n### Expected behavior\n\nInputStream should contain the contents of the folder (the filenames). It works on any other project except in quarkus.\n\n### Actual behavior\n\nInputStream is emtpy.\n\n### How to Reproduce?\n\n1. Create a quarkus project with quarkus.platform version 2.2.3.Final or greater. \r\n2. Create a resource folder \r\n3. Create files inside the resource folder\r\n4. Use the code in the description to load the filenames\r\n5. Validate InputStream is empty\n\n### Output of `uname -a` or `ver`\n\nDocker image registry.access.redhat.com/ubi8/openjdk-11-runtime:1.10\n\n### Output of `java -version`\n\n11\n\n### GraalVM version (if different from Java)\n\nNo native, jvm build.\n\n### Quarkus version or git rev\n\n2.2.3.Final or greater\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n./mvnw package \n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22714/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22714/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

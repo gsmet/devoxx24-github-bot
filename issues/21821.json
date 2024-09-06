@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21821",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21821/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21821/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21821/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21821",
+  "id": 1067384630,
+  "node_id": "I_kwDOCFbutM4_nv82",
+  "number": 21821,
+  "title": "@Transactional ignored in any @Nested test class",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2021-11-30T15:41:30Z",
+  "updated_at": "2021-12-01T01:17:52Z",
+  "closed_at": "2021-11-30T16:24:37Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAccording to [the docs](https://quarkus.io/guides/getting-started-testing#tests-and-transactions), `@QuarkusTest` classes support the use of `@Transactional` tests. ~This does not seem to be the case for test setup methods annotated with `@BeforeEach`, though.~ *Edit*: This does not seem to be the case for `@Nested` tests, though. (I have commented out irrelevant parts)\r\n\r\nWhen running the following test, I get an exception telling me that `user.delete()` has been called outside of a transaction:\r\n\r\n```java\r\n@QuarkusTest\r\npublic class MyTest {\r\n\r\n\t@Nested\r\n\t@FlywayTest(value = @DataSource(url = \"jdbc:h2:mem:test\"))\r\n\tpublic class NestedClass {\r\n\r\n\t\t@Test\r\n\t\t@Transactional\r\n\t\tpublic void test() {\r\n\t\t\tUser user = User.findById(\"user1\");\r\n\t\t\tuser.delete();\r\n\t\t}\r\n\r\n\t}\r\n\r\n\t/* Edit: This was my original test case. turns out the aforementioned is sufficient\r\n\t@Nested\r\n\t@FlywayTest(value = @DataSource(url = \"jdbc:h2:mem:test\"), clean = false)\r\n\t@DisplayName(\"when removing a user\")\r\n\tpublic class AfterRemovingUser {\r\n\r\n\t\t@BeforeEach\r\n\t\t@Transactional\r\n\t\tpublic void setup() {\r\n\t\t\tUser user = User.findById(\"user1\");\r\n\t\t\tuser.delete();\r\n\t\t}\r\n\r\n\t\t@Test\r\n\t\t@Transactional\r\n\t\t@DisplayName(\"the user's devices get deleted\")\r\n\t\tpublic void testCascadeToDevices() {\r\n\t\t\tboolean match = Device.<Device>findAll().stream().anyMatch(d -> \"user1\".equals(d.owner.id));\r\n\t\t\tAssertions.assertFalse(match);\r\n\t\t}\r\n\r\n\t}\r\n\t*/\r\n\r\n\r\n\t/* other tests */\r\n\r\n}\r\n```\r\n\r\n```\r\njavax.persistence.TransactionRequiredException: Transaction is not active, consider adding @Transactional to your method to automatically activate one.\r\n\r\n\tat io.quarkus.hibernate.orm.runtime.session.TransactionScopedSession.remove(TransactionScopedSession.java:160)\r\n\tat io.quarkus.hibernate.orm.runtime.session.ForwardingSession.remove(ForwardingSession.java:63)\r\n\tat org.hibernate.Session_5b93bee577ae2f8d76647de04cfab36afbf52958_Synthetic_ClientProxy.remove(Session_5b93bee577ae2f8d76647de04cfab36afbf52958_Synthetic_ClientProxy.zig:1276)\r\n\tat io.quarkus.hibernate.orm.panache.common.runtime.AbstractJpaOperations.delete(AbstractJpaOperations.java:122)\r\n\tat io.quarkus.hibernate.orm.panache.PanacheEntityBase.delete(PanacheEntityBase.java:80)\r\n\tat com.example.MyTest$AfterRemovingUser.setup(MyTest.java:50)\r\n```\r\n\r\n### Expected behavior\r\n\r\nAny method inside of a `@QuarkusTest` supports `@Transactional` in the same way.\r\n\r\n### Actual behavior\r\n\r\nWhile `@Transactional` ~is supported on the `@Test` methods themselves, it seems to be ignored during test setup.~ is supported on the root level, it is ignored in `@Nested` tests.\r\n\r\n### How to Reproduce?\r\n\r\nCreate Panache entities for the following two tables and run the aforementioned test.\r\n\r\n```sql\r\n-- flyway ddl:\r\nCREATE TABLE user\r\n(\r\n    id   VARCHAR(255) NOT NULL,\r\n    name VARCHAR(255) NOT NULL,\r\n    CONSTRAINT PK_USER PRIMARY KEY (id)\r\n);\r\n\r\n/*\r\n-- CREATE TABLE device\r\n(\r\n    id        VARCHAR(255) NOT NULL,\r\n    user_id   VARCHAR(255) NOT NULL,\r\n    name      VARCHAR(255) NOT NULL,\r\n    CONSTRAINT PK_DEVICE PRIMARY KEY (id),\r\n    CONSTRAINT FK_DEVICE_ON_USER FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE\r\n);\r\n*/\r\n\r\n-- flyway test data:\r\nINSERT INTO user (id, name)\r\nVALUES\r\n    ('user1', 'User Name 1');\r\n\r\n/*\r\nINSERT INTO device (id, user_id, name)\r\nVALUES\r\n    ('device1', 'user1', 'Device 1'),\r\n    ('device2', 'user1', 'Device 2');\r\n*/\r\n```\r\n\r\n```java\r\n@Entity\r\n@Table(name = \"user\")\r\npublic class User extends PanacheEntityBase {\r\n\r\n\t@Id\r\n\t@Column(name = \"id\", nullable = false)\r\n\tpublic String id;\r\n\r\n\t@OneToMany(mappedBy = \"owner\")\r\n\tpublic Set<Device> devices = new HashSet<>();\r\n\r\n\t@Column(name = \"name\", nullable = false)\r\n\tpublic String name;\r\n\r\n\t/* hashcode/equals/etc */\r\n\r\n}\r\n```\r\n\r\n```java\r\n/*\r\n@Entity\r\n@Table(name = \"device\")\r\npublic class Device extends PanacheEntityBase {\r\n\r\n\t@Id\r\n\t@Column(name = \"id\", nullable = false)\r\n\tpublic String id;\r\n\r\n\t@ManyToOne(fetch = FetchType.LAZY)\r\n\t@JoinColumn(name = \"user_id\", updatable = false, nullable = false)\r\n\tpublic User owner;\r\n\r\n\t@Column(name = \"name\", nullable = false)\r\n\tpublic String name;\r\n\r\n\t/ * hashcode/equals/etc */\r\n*/\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin Kernel Version 20.6.0\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Temurin-17+35 (build 17+35)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nN/A\r\n\r\n### Quarkus version or git rev\r\n\r\n2.5.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.3\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21821/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21821/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

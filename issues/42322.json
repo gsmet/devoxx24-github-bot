@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42322",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42322/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42322/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42322/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42322",
+  "id": 2449480913,
+  "node_id": "I_kwDOCFbutM6SABzR",
+  "number": 42322,
+  "title": "Explicit flush needed in 3.13.0 spring-data-jpa when running `@Query` that updates foreign key column with newly saved associated entity",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 1552233747,
+      "node_id": "MDU6TGFiZWwxNTUyMjMzNzQ3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/spring",
+      "name": "area/spring",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues relating to the Spring integration"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 15,
+  "created_at": "2024-08-05T21:06:16Z",
+  "updated_at": "2024-08-12T10:00:51Z",
+  "closed_at": "2024-08-12T07:28:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nStarting from 3.13.0.CR1 (#41284 respectively), an explicit flush is needed to make sure that a `@Query('update A set associatedB where ...')` [repository method](https://quarkus.io/guides/spring-data-jpa#user-defined-queries) does not run into a foreign key constraint violation when the other entity (here: `B`) was just created in the same transaction (shortly before the update).\r\n\r\nIn other words, the following fails in 3.13.0 (but works in 3.12):\r\n- `B b = new B(...)`\r\n- `BRepository.save(b)`\r\n- `ARepository.updateAssociatedB(b)` <- foreign key constraint violations (b doesn't exist)\r\n\r\nUsing `BRepository.saveAndFlush(b)` works around the issue.\r\n\r\n### Expected behavior\r\n\r\nNo explicit flush needed; persistence layer/Hibernate should detect on its own that a flush is needed.\r\n\r\n### Actual behavior\r\n\r\nExplicit flush required.\r\n\r\n### How to Reproduce?\r\n\r\nhttps://github.com/quarkusio/quarkus-quickstarts/compare/main...famod:quarkus-quickstarts:spring-jpa-flush\r\n\r\n1. check out the `spring-jpa-flush` branch\r\n2. fails: `./mvnw clean install -f spring-data-jpa-quickstart`\r\n3. works: `./mvnw clean install -f spring-data-jpa-quickstart -Dquarkus.platform.version=3.12.3`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.13.0\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.9.8\r\n\r\n### Additional information\r\n\r\nFirst reported here: https://github.com/quarkusio/quarkus/pull/41284#issuecomment-2242385942\r\n\r\nI haven't had the time yet to report the issue upstream via `QuarkusLikeORMUnitTestCase`.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42322/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42322/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

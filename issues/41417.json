@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41417",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41417/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41417/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41417/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41417",
+  "id": 2372365769,
+  "node_id": "I_kwDOCFbutM6NZ23J",
+  "number": 41417,
+  "title": "`VertxCoreRecorder.devModeThreads` leaking",
+  "labels": [
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2024-06-25T10:52:54Z",
+  "updated_at": "2024-07-02T16:28:38Z",
+  "closed_at": "2024-07-02T16:28:38Z",
+  "active_lock_reason": null,
+  "body": "This morning, I investigated a leak reported by @FroMage . Details are in this Zulip thread https://quarkusio.zulipchat.com/#narrow/stream/187038-dev/topic/OutOfMemory.20on.20hot.20reload.20with.20web-bundler.3F but it's a long one so I will summarize my finding there.\r\n\r\nFor each dev mode reload, we are adding two new threads to `VertxCoreRecorder.devModeThreads`: one is `executor-thread-0 (scheduler)`, the other `executor-thread-1`.\r\nAfter several dev mode reloads, you end up with several instances of both:\r\n\r\n![Screenshot from 2024-06-25 11-02-58](https://github.com/quarkusio/quarkus/assets/1279749/e670064e-c6a9-4a04-8069-319022f64d54)\r\n\r\nThat is enough to be considered a leak but by itself, it's not a big leak. I'm not sure we are properly stopping the Vert.x instance/threads when restarting dev mode.\r\n\r\nNow the leak is more problematic than it seems because for `executor-thread-0 (scheduler)`, we have the `inheritedAccessControlContext` field set and the context points to a `ProtectionDomain` that has a `CodeSource` keeping the `MemoryClassPathElement` around, element that contains the bytes of the classes (and thus can be large in some cases).\r\n\r\n![Screenshot from 2024-06-25 10-40-53](https://github.com/quarkusio/quarkus/assets/1279749/1e2c861e-a22e-473a-b4da-6b58c6050049)\r\n\r\nThis is not the case for the threads named `executor-thread-1`. Their `inheritedAccessControlContext` is null. Not only that but their `threadStatus` is `2` - which I think means they are terminated - which could explain why the `inheritedAccessControlContext` is null because it's nullified when the thread is terminated:\r\n\r\n![Screenshot from 2024-06-25 12-43-42](https://github.com/quarkusio/quarkus/assets/1279749/509fe41c-d9f5-4529-a133-58d740db4854)\r\n\r\n\r\n`threadStatus` for all the `executor-thread-0 (scheduler)` is `0`.\r\n\r\n![Screenshot from 2024-06-25 12-42-32](https://github.com/quarkusio/quarkus/assets/1279749/61bb748c-1906-4c02-976e-8ca6b9836c36)\r\n\r\nNote that there are also a bunch of worker threads around but they are not registered in the `VertxCoreRecorder.devModeThreads`. Not sure if it's a problem or not.\r\n\r\nSeveral questions here:\r\n\r\n- I'm not sure it makes sense to keep all the `devModeThreads` forever? It's not a biggie but we have a loop going through all of them for each restart. And my guess is that it could be trimmed? Maybe not right away if we are handling a dev mode reload request but at least at the next reload?\r\n- Why are all the `executor-thread-0 (scheduler)` in a different state compared to the `executor-thread-1`? State that seem to indicate that they are still ready for business?\r\n- Is it really of value to have the binary content of the classes available in `CodeSource` for these `MemoryClassPathElement`?\r\n\r\n@cescoffier @dmlloyd interested in discussing this with you when you have time.\r\n\r\n/cc @geoand too for awareness\r\n\r\n## Steps to reproduce\r\n\r\nThe project is: https://github.com/FroMage/RivieraDEV-Quarkus/\r\n\r\nSteps to reproduce:\r\n\r\n$ git clone git@github.com:FroMage/RivieraDEV-Quarkus.git\r\n$ cd RivieraDEV-Quarkus\r\n$ mvn quarkus:dev\r\n\r\nIn another terminal\r\n$ touch src/main/resources/templates/Application/speakerBanner.html\r\n... wait for hot reload\r\n... repeat touch/wait\r\n\r\nYou don't even need to open a browser or do anything.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41417/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41417/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

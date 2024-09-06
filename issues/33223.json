@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33223",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33223/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33223/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33223/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/33223",
+  "id": 1701938409,
+  "node_id": "I_kwDOCFbutM5lcYTp",
+  "number": 33223,
+  "title": "Using parameterized record as GraphQL query argument makes query always fail validation",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2234509819,
+      "node_id": "MDU6TGFiZWwyMjM0NTA5ODE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/graphql",
+      "name": "area/graphql",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-05-09T12:38:20Z",
+  "updated_at": "2024-08-24T12:40:24Z",
+  "closed_at": "2024-08-24T12:40:24Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhile trying to make a GraphQL API for a project, I've come to encounter what appears to be a regression as of Quarkus 3.0.0.Final.\r\n\r\nUsing a parameterized record as an argument within a query method makes my query fail, no matter what I try or do. However, this problem is *not* reproducable in Quarkus versions 2.x.x, as far as I could find. \r\n\r\nVersions I have tried so far:\r\n\r\n- 2.10.2.Final - Works as intended\r\n- 2.16.7.Final - Works as intended\r\n- 3.0.1.Final - Does not work as intended\r\n- 3.0.2.Final - Does not work as intended\n\n### Expected behavior\n\nBe able to query with a parameterized record within my query and get back expected results\n\n### Actual behavior\n\nQuery fails with error `ValidationError` and message `argument 'argument' with value 'StringValue{value='{\\n    \\\"variable\\\": \\\"test\\\"\\n}'}' is not a valid 'Unknown Scalar Type [org.rrrakyah.ExampleRecord]'`\n\n### How to Reproduce?\n\nSteps to reproduce:\r\n\r\n1. Create new Quarkus project with extension `quarkus-smallrye-graphql`\r\n2. Add parameterized record, with a variable of type parameter, e.g.:\r\n```\r\npackage org.rrrakyah;\r\n\r\npublic record ExampleRecord<T>(T variable) {\r\n}\r\n```\r\n3. Create query with an argument of type parameterized record, e.g.:\r\n```\r\npackage org.rrrakyah;\r\n\r\nimport org.eclipse.microprofile.graphql.Description;\r\nimport org.eclipse.microprofile.graphql.GraphQLApi;\r\nimport org.eclipse.microprofile.graphql.Query;\r\n\r\n@GraphQLApi\r\npublic class HelloGraphQLResource {\r\n\r\n    @Query\r\n    @Description(\"Say hello\")\r\n    public String sayHello(ExampleRecord<String> argument) {\r\n        return \"Hello \" + argument.variable();\r\n    }\r\n\r\n}\r\n```\r\n4. Try to query, e.g.:\r\n```\r\nquery sayHello {\r\n  sayHello(\r\n    argument: {\r\n      variable: \"test\"\r\n    }\r\n  )\r\n}\r\n```\r\n5. Find that your query failed with a `ValidationError`\r\n```\r\n{\r\n  \"errors\": [\r\n    {\r\n      \"message\": \"argument 'argument' with value 'StringValue{value='{\\n    \\\"variable\\\": \\\"test\\\"\\n}'}' is not a valid 'Unknown Scalar Type [org.rrrakyah.ExampleRecord]'\",\r\n      \"locations\": [\r\n        {\r\n          \"line\": 4,\r\n          \"column\": 5\r\n        }\r\n      ],\r\n      \"extensions\": {\r\n        \"classification\": \"ValidationError\"\r\n      }\r\n    }\r\n  ],\r\n  \"data\": {\r\n    \"sayHello\": null\r\n  }\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"17.0.4.1\" 2022-08-12 LTS\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.0.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/33223/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/33223/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39404",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39404/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39404/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39404/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/39404",
+  "id": 2183977154,
+  "node_id": "I_kwDOCFbutM6CLNjC",
+  "number": 39404,
+  "title": "Adding a Java class to Kotlin module breaks Quarkus start",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-03-13T13:05:33Z",
+  "updated_at": "2024-03-14T07:30:16Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI need to start Quarkus from main function:\r\n```kotlin\r\n@QuarkusMain\r\nclass App : QuarkusApplication{\r\n\r\n    override fun run(vararg args: String?): Int {\r\n        println(\"quarkus running\")\r\n        Quarkus.waitForExit()\r\n        return 0\r\n    }\r\n}\r\n\r\nfun main() {\r\n    val app:Class<App>? = App::class.java\r\n    Quarkus.run(app)\r\n    Quarkus.asyncExit()\r\n}\r\n```\r\nThis works fine, but if I add a java class (even empty) I get `The supplied 'main-class' value of 'App' does not correspond to either a fully qualified class name or a matching 'name' field of one of the '@QuarkusMain' annotations`\r\nIt appears to me that Kotlin annotations don't get processed in this case.\r\n\r\n### Expected behavior\r\n\r\nStart without errors\r\n\r\n### Actual behavior\r\n\r\n```posh\r\nFailed to start quarkus: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.deployment.steps.MainClassBuildStep#mainClassBuildStep threw an exception: java.lang.IllegalArgumentException: The supplied 'main-class' value of 'App' does not correspond to either a fully qualified class name or a matching 'name' field of one of the '@QuarkusMain' annotations\r\n\tat io.quarkus.deployment.steps.MainClassBuildStep.mainClassBuildStep(MainClassBuildStep.java:429)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:849)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:256)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:334)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:251)\r\n\tat io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.firstStart(IsolatedDevModeMain.java:112)\r\n\tat io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:433)\r\n\tat io.quarkus.deployment.dev.IDEDevModeMain.accept(IDEDevModeMain.java:71)\r\n\tat io.quarkus.deployment.dev.IDEDevModeMain.accept(IDEDevModeMain.java:28)\r\n\tat io.quarkus.bootstrap.app.CuratedApplication.runInCl(CuratedApplication.java:138)\r\n\tat io.quarkus.bootstrap.app.CuratedApplication.runInAugmentClassLoader(CuratedApplication.java:93)\r\n\tat io.quarkus.bootstrap.IDELauncherImpl.launch(IDELauncherImpl.java:93)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n\tat io.quarkus.launcher.QuarkusLauncher.launch(QuarkusLauncher.java:56)\r\n\tat io.quarkus.runtime.Quarkus.launchFromIDE(Quarkus.java:101)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:88)\r\n\tat io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n\tat AppKt.main(App.kt:26)\r\n\tat AppKt.main(App.kt)\r\nCaused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.deployment.steps.MainClassBuildStep#mainClassBuildStep threw an exception: java.lang.IllegalArgumentException: The supplied 'main-class' value of 'App' does not correspond to either a fully qualified class name or a matching 'name' field of one of the '@QuarkusMain' annotations\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n[quarkus-kotlin.zip](https://github.com/quarkusio/quarkus/files/14588020/quarkus-kotlin.zip)\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nMicrosoft Windows [Version 10.0.22631.3155]\r\n\r\n### Output of `java -version`\r\n\r\njava version \"17.0.2\" 2022-01-18 LTS Java(TM) SE Runtime Environment (build 17.0.2+8-LTS-86) Java HotSpot(TM) 64-Bit Server VM (build 17.0.2+8-LTS-86, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n3.8.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 8.6\r\n\r\n### Additional information\r\n\r\nIf I perform the same task using Java it works, but kotlin annotations are still don't seem to get recognized. Kotlin entities are not visible and I get\r\n`jakarta.enterprise.inject.UnsatisfiedResolutionException: Unsatisfied dependency for type MetaRepoService and qualifiers [@Default]` until I define an entity with Java.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/39404/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/39404/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

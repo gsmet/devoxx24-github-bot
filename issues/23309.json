@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23309",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23309/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23309/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23309/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23309",
+  "id": 1119422059,
+  "node_id": "I_kwDOCFbutM5CuQZr",
+  "number": 23309,
+  "title": "@Convert not working in dev mode ",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-01-31T13:20:57Z",
+  "updated_at": "2022-02-17T15:37:04Z",
+  "closed_at": "2022-02-17T15:36:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nIn Entity bean when Enum is using custom converter, it does not work in dev mode. \r\n\r\n```java\r\npackage org.acme.hibernate.orm;\r\n\r\nimport javax.persistence.AttributeConverter;\r\nimport javax.persistence.Converter;\r\n\r\n@Converter\r\npublic enum StatusEnum implements AttributeConverter<StatusEnum, Integer> {\r\n\r\n    PENDING(0),\r\n    SENT(1),\r\n\tERROR(2);\r\n\r\n\tprivate Integer id;\r\n\r\n\tStatusEnum(Integer id) {\r\n\t\tthis.id = id;\r\n\t}\r\n\r\n\tpublic Integer getId() {\r\n\t\treturn id;\r\n\t}\r\n\r\n\t@Override\r\n\tpublic Integer convertToDatabaseColumn(StatusEnum arg0) {\r\n\t\treturn arg0 != null ? arg0.getId() : null;\r\n\t}\r\n\r\n\t@Override\r\n\tpublic StatusEnum convertToEntityAttribute(Integer arg0) {\r\n\t\tif(arg0 == null) {\r\n\t\t\treturn null;\r\n\t\t}\r\n\r\n\t\tint reqVal = arg0.intValue();\r\n\t\tfor(StatusEnum enumValue : StatusEnum.values()) {\r\n\t\t\tif(enumValue.getId().intValue() == reqVal) {\r\n\t\t\t\treturn enumValue;\r\n\t\t\t}\r\n\t\t}\r\n\r\n\t\treturn null;\r\n\t}\r\n}\r\n```\r\n\r\nAnd in Entity\r\n\r\n```java\r\npackage org.acme.hibernate.orm;\r\n\r\nimport javax.persistence.Cacheable;\r\nimport javax.persistence.Column;\r\nimport javax.persistence.Convert;\r\nimport javax.persistence.Entity;\r\nimport javax.persistence.Id;\r\n\r\n@Entity\r\n@Cacheable\r\npublic class FruitDeliveryEntity {\r\n\r\n    @Id\r\n    private Integer id;\r\n\r\n    @Column(name = \"status\")\r\n    @Convert(converter = StatusEnum.class)\r\n    private StatusEnum status;\r\n\r\n    public FruitDeliveryEntity() {\r\n    }\r\n\r\n    public Integer getId() {\r\n        return id;\r\n    }\r\n\r\n    public void setId(Integer id) {\r\n        this.id = id;\r\n    }\r\n\r\n    public StatusEnum getStatus() {\r\n        return status;\r\n    }\r\n\r\n    public void setStatus(StatusEnum status) {\r\n        this.status = status;\r\n    }\r\n\r\n}\r\n```\r\n\r\nIt is started with command\r\n`mvn quarkus:dev`\r\n\r\nIn dev it will not start. This is an error. Any ideas on how to solve this.\r\n\r\n```\r\n2022-01-31 14:15:29,096 ERROR [io.qua.run.boo.StartupActionImpl] (Quarkus Main Thread) Error running Quarkus: java.lang.reflect.InvocationTargetException\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:103)\r\n        at java.base/java.lang.Thread.run(Thread.java:834)\r\nCaused by: java.lang.ExceptionInInitializerError\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)\r\n        at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n        at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:490)\r\n        at java.base/java.lang.Class.newInstance(Class.java:584)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:66)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        ... 6 more\r\nCaused by: java.lang.RuntimeException: Failed to start quarkus\r\n        at io.quarkus.runner.ApplicationImpl.<clinit>(Unknown Source)\r\n        ... 15 more\r\nCaused by: org.hibernate.MappingException: Unable to determine basic type mapping via reflection [org.acme.hibernate.orm.FruitDeliveryEntity -> status]\r\n        at org.hibernate.cfg.annotations.SimpleValueBinder.fillSimpleValue(SimpleValueBinder.java:514)\r\n        at org.hibernate.cfg.SetSimpleValueTypeSecondPass.doSecondPass(SetSimpleValueTypeSecondPass.java:25)\r\n        at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.processSecondPasses(InFlightMetadataCollectorImpl.java:1653)\r\n        at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.processSecondPasses(InFlightMetadataCollectorImpl.java:1621)\r\n        at org.hibernate.boot.model.process.spi.MetadataBuildingProcess.complete(MetadataBuildingProcess.java:295)\r\n        at io.quarkus.hibernate.orm.runtime.boot.FastBootMetadataBuilder.build(FastBootMetadataBuilder.java:354)\r\n        at io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.createMetadata(PersistenceUnitsHolder.java:101)\r\n        at io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.constructMetadataAdvance(PersistenceUnitsHolder.java:73)\r\n        at io.quarkus.hibernate.orm.runtime.PersistenceUnitsHolder.initializeJpa(PersistenceUnitsHolder.java:40)\r\n        at io.quarkus.hibernate.orm.runtime.HibernateOrmRecorder$1.created(HibernateOrmRecorder.java:69)\r\n        at io.quarkus.arc.runtime.ArcRecorder.initBeanContainer(ArcRecorder.java:70)\r\n        at io.quarkus.deployment.steps.ArcProcessor$generateResources1025303321.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.ArcProcessor$generateResources1025303321.deploy(Unknown Source)\r\n        ... 16 more\r\nCaused by: org.hibernate.InstantiationException: Could not instantiate managed bean directly : org.acme.hibernate.orm.StatusEnum\r\n        at org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer.produceBeanInstance(FallbackBeanInstanceProducer.java:45)\r\n        at org.hibernate.resource.beans.container.internal.ContainerManagedLifecycleStrategy$BeanImpl.produceFallbackInstance(ContainerManagedLifecycleStrategy.java:173)\r\n        at org.hibernate.resource.beans.container.internal.ContainerManagedLifecycleStrategy$AbstractBeanImpl.initialize(ContainerManagedLifecycleStrategy.java:100)\r\n        at io.quarkus.hibernate.orm.runtime.cdi.QuarkusArcBeanContainer.createBean(QuarkusArcBeanContainer.java:34)\r\n        at io.quarkus.hibernate.orm.runtime.cdi.QuarkusArcBeanContainer_Subclass.createBean$$superforward1(Unknown Source)\r\n        at io.quarkus.hibernate.orm.runtime.cdi.QuarkusArcBeanContainer_Subclass$$function$$6.apply(Unknown Source)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:51)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n        at io.quarkus.hibernate.orm.runtime.cdi.QuarkusArcBeanContainer_Subclass.createBean(Unknown Source)\r\n        at org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer.createBean(AbstractCdiBeanContainer.java:64)\r\n        at org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer.getBean(AbstractCdiBeanContainer.java:38)\r\n        at io.quarkus.hibernate.orm.runtime.cdi.QuarkusArcBeanContainer_Subclass.getBean$$superforward1(Unknown Source)\r\n        at io.quarkus.hibernate.orm.runtime.cdi.QuarkusArcBeanContainer_Subclass$$function$$2.apply(Unknown Source)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:51)\r\n        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)\r\n        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:41)\r\n        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41)\r\n        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:32)\r\n        at io.quarkus.hibernate.orm.runtime.cdi.QuarkusArcBeanContainer_Subclass.getBean(Unknown Source)\r\n        at io.quarkus.hibernate.orm.runtime.cdi.QuarkusManagedBeanRegistry.getBean(QuarkusManagedBeanRegistry.java:34)\r\n        at org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor.createManagedBean(ClassBasedConverterDescriptor.java:38)\r\n        at org.hibernate.boot.model.convert.internal.AbstractConverterDescriptor.createJpaAttributeConverter(AbstractConverterDescriptor.java:107)\r\n        at org.hibernate.mapping.SimpleValue.buildAttributeConverterTypeAdapter(SimpleValue.java:597)\r\n        at org.hibernate.mapping.SimpleValue.setTypeUsingReflection(SimpleValue.java:558)\r\n        at org.hibernate.cfg.annotations.SimpleValueBinder.fillSimpleValue(SimpleValueBinder.java:510)\r\n        ... 28 more\r\nCaused by: java.lang.NoSuchMethodException: org.acme.hibernate.orm.StatusEnum.<init>()\r\n        at java.base/java.lang.Class.getConstructor0(Class.java:3349)\r\n        at java.base/java.lang.Class.getDeclaredConstructor(Class.java:2553)\r\n        at org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer.produceBeanInstance(FallbackBeanInstanceProducer.java:40)\r\n        ... 59 more\r\n```\r\n\r\nTested on Quarkus 2.2.2.Final and Quarkus 2.6.3.Final\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nTo start quarkus in dev mode\r\n\r\n### Actual behavior\r\n\r\nCannot start application\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23309/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23309/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

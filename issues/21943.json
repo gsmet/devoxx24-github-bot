@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21943",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21943/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21943/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21943/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21943",
+  "id": 1071935845,
+  "node_id": "I_kwDOCFbutM4_5HFl",
+  "number": 21943,
+  "title": "QuarkusIntegrationTest and QuarkusTestResource with custom testcontainer failing with \"network not found\"",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2021-12-06T09:43:19Z",
+  "updated_at": "2021-12-06T09:47:49Z",
+  "closed_at": "2021-12-06T09:47:31Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nA new QuarkusIntegrationTest written for a Quarkus application utilizing quarkus-container-image-docker with a QuarkusTestResource starting the RabbitMQContainer with a NetworkId as shown below.\r\n\r\n```java\r\n@QuarkusIntegrationTest\r\n@Tag(\"integration\")\r\n@TestProfile(TINValidatedEventReceiverIntegrationTest.IntegrationTestProfile.class)\r\n@QuarkusTestResource(value = RabbitMQServerTestResource.class,restrictToAnnotatedClass = true)\r\npublic class TINValidatedEventReceiverIntegrationTest {\r\n\r\n    @Test\r\n    public void test_container_started_successfully() {\r\n        // Check for the \"Consumer *** consuming from ** has been registered\" entry in quarkus log\r\n        assertTrue(true);\r\n        // Check that there are no errors in the quarkus log\r\n    }\r\n\r\n    public static class IntegrationTestProfile implements QuarkusTestProfile {\r\n\r\n        @Override\r\n        public Map<String, String> getConfigOverrides() {\r\n            ServiceLoader.load(DockerClientProviderStrategy.class, this.getClass().getClassLoader());\r\n            return Stream.of(new String[][]{\r\n                {\"quarkus.http.test-ssl-port\", \"0\"}\r\n            }).collect(Collectors.toMap(data -> data[0], data -> data[1]));\r\n        }\r\n    }\r\n}\r\n```\r\n\r\n```java\r\npublic class RabbitMQServerTestResource implements QuarkusTestResourceLifecycleManager,\r\n    DevServicesContext.ContextAware {\r\n\r\n    private RabbitMQContainer rabbitMQ;\r\n\r\n    private Optional<String> containerNetworkId;\r\n\r\n    @Override\r\n    public Map<String, String> start() {\r\n        rabbitMQ = new RabbitMQContainer(DockerImageName.parse(\"rabbitmq:3.8.26-management-alpine\"))\r\n            .withQueue(\"***\");\r\n        if (containerNetworkId.isPresent()) {\r\n            rabbitMQ.setNetworkMode(containerNetworkId.get());\r\n        }\r\n        rabbitMQ.start();\r\n        return Map.of(\r\n            \"rabbitmq_vhost\", \"/\",\r\n            \"rabbitmq_portnumber\", \"5672\",\r\n            \"rabbitmq_hostname\", rabbitMQ.getContainerId().substring(0,12),\r\n            \"rabbitmq_username\", rabbitMQ.getAdminUsername(),\r\n            \"rabbitmq_password\", rabbitMQ.getAdminPassword());\r\n    }\r\n\r\n    @Override\r\n    public void stop() {\r\n        rabbitMQ.stop();\r\n    }\r\n\r\n\r\n    @Override\r\n    public void setIntegrationTestContext(DevServicesContext context) {\r\n        containerNetworkId = context.containerNetworkId();\r\n    }\r\n}\r\n```\r\n\n\n### Expected behavior\n\nIt is expected that the containers are started\n\n### Actual behavior\n\nFailing with the following error \r\n\r\nCaused by: org.testcontainers.containers.ContainerLaunchException: Could not create/start container\r\nCaused by: com.github.dockerjava.api.exception.NotFoundException:\r\nStatus 404: {\"message\":\"network quarkus-integration-test-ytWar not found\"}\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nWindows 10\n\n### Output of `java -version`\n\nopenjdk version \"11.0.2\" 2019-01-15\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.5.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1\n\n### Additional information\n\nReason for this error and possible fix \r\n-----------------------------------------\r\n\r\nUpon investigation, this is because of an issue in IntegrationUtil.handleDevServices \r\n\r\n if (isDockerAppLaunch) {\r\n            try {\r\n                **Class<?> networkClass = curatedApplication.getAugmentClassLoader().loadClass(\"org.testcontainers.containers.Network\");**\r\n                Object sharedNetwork = networkClass.getField(\"SHARED\").get((Object)null);\r\n                networkId = (String)networkClass.getMethod(\"getId\").invoke(sharedNetwork);\r\n            } catch (Exception var19) {\r\n                networkId = \"quarkus-integration-test-\" + RandomStringUtils.random(5, true, false);\r\n                manageNetwork = true;\r\n            }\r\n        }\r\n\r\nThe \"org.testcontainers.containers.Network\" is loaded by the AugmentClassLoader instead of the ApplicationClassLoader.  However while creating the network in the TestContainer it is  failing to detect the DockerClient because of the classloader issue. \r\n\r\nThere are 2 ways to change it. \r\n1. Make change in Quarkus  to not use the AugmentClassLoader  while loading the \"org.testcontainers.containers.Network\" but use the applicationclassloader itself ( not sure of the impact  )\r\n2. Make change in TestContainers to use the ClassLoader from the Class rather than using the current thread's contextloader. Already checked with TestContainers ( https://github.com/testcontainers/testcontainers-java/issues/2470 ), but very reluctant to make that  change. ( Made change locally and it worked )\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21943/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21943/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

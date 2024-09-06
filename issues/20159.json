@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20159",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20159/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20159/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20159/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20159",
+  "id": 996622789,
+  "node_id": "I_kwDOCFbutM47Z0HF",
+  "number": 20159,
+  "title": "The query is very slow when some nodes of the redis cluster are unavailable",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2021-09-15T03:34:22Z",
+  "updated_at": "2022-10-03T06:07:52Z",
+  "closed_at": "2022-10-03T06:07:44Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\napplication.yml\r\nThe first three addresses in the configuration \"quarkus.redis.hosts\" are unavailable and do not belong to the cluster node (redis cluster shrinkage)\r\n```yml\r\nquarkus:\r\n  redis:\r\n    health:\r\n      enabled: true\r\n    hosts: redis://127.0.0.1:5138,redis://127.0.0.1:5139,redis://127.0.0.1:5140,redis://127.0.0.1:5141,redis://127.0.0.1:7017,redis://127.0.0.1:7018,redis://127.0.0.1:7019,redis://127.0.0.1:7020,redis://127.0.0.1:7021\r\n    password: xxxxxxxxx\r\n    timeout: 10s\r\n    client-type: cluster\r\n    replicas: share\r\n    max-pool-size: 20\r\n    max-pool-waiting: 24\r\n    pool-cleaner-interval: 5s\r\n    pool-recycle-timeout: 15s\r\n    max-waiting-handlers: 2048\r\n    max-nested-arrays: 16\r\n    reconnect-interval: 30s\r\n```\r\n\r\ncode\r\n```java\r\n@Tag(name = \"redis sample\")\r\n@Slf4j\r\n@Path(\"/redis\")\r\npublic class RedisResource {\r\n\r\n    @Inject\r\n    RedisService redisService;\r\n\r\n    @Operation(summary = \"get redis key value\")\r\n    @GET @Path(\"/{key}\") @Produces(MediaType.APPLICATION_JSON)\r\n    @Blocking\r\n    public Response<String> get(@PathParam(\"key\") String key) {\r\n        return Response.ok(redisService.get(key));\r\n    }\r\n}\r\n```\r\n```java\r\n@Singleton\r\npublic class RedisService {\r\n    @Inject\r\n    RedisClient redisClient;\r\n\r\n    @Inject\r\n    ReactiveRedisClient reactiveRedisClient;\r\n\r\n    public String get(String key) {\r\n        Response response = redisClient.get(key);\r\n        return response == null ? null : response.toString();\r\n    }\r\n}\r\n```\r\n\r\nWhen I request http://localhost:8080/redis/key1, I need to wait 5-10 seconds before there is a return value. If I remove the first three unavailable addresses configured by \"quarkus.redis.hosts\", I will get it soon To return value\r\n\n\n### Expected behavior\n\nRegardless of whether there are unavailable nodes, as long as the node where the key is located is available, the value should be returned immediately, which is very useful in the scenario of redis cluster shrinking (no need to restart the service)\n\n### Actual behavior\n\nWhen the unavailable node is configured in front of \"quarkus.redis.hosts\", the request response is slow. If configured in the back, it will not affect\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\nMicrosoft Windows [Version 10.0.22000.168]\n\n### Output of `java -version`\n\njava version \"11.0.10\" 2021-01-19\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.2.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.1\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20159/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20159/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36213",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36213/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36213/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36213/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36213",
+  "id": 1919242724,
+  "node_id": "I_kwDOCFbutM5yZVHk",
+  "number": 36213,
+  "title": "Enable the use of other SpanExporters alongside the built-in quarkus-opentelemetry ones",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2023-09-29T13:07:38Z",
+  "updated_at": "2023-09-29T14:35:50Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nAs described in the [documentation](https://quarkus.io/guides/opentelemetry#exporters) quarkus-opentelemetry ships with optimized, Vert.x based OTLP exporters that are meant to be the default and are integrated through CDI.\r\n\r\nIn my use-case I want to use this exporter alongside one or more custom SpanExporters. However from what I can tell the presence of any SpanExporter in CDI will prevent the creation of the built-in ones.\r\n\r\nE.g. after adding:\r\n```java\r\n@ApplicationScoped\r\npublic class TestingInMemoryExporterProducer {\r\n    @Produces\r\n    @Singleton\r\n    public InMemorySpanExporter getSpanExporter() {\r\n        return InMemorySpanExporter.create();\r\n    }\r\n}\r\n```\r\nto the project I can no longer make it create the built-in OTLP exporter.\r\n\r\nThere also seems to be no way to force the instantiation of the exporter in another way. Even through code.\r\n\r\n@geoand \n\n### Implementation ideas\n\nIdeally quarkus would, either by default or with specific configuration, still create an exporter matching the endpoint/protocol configuration even if other exporters are found in CDI. E.g. if otlp configuration is given without `quarkus.otel.traces.exporter` having \"otlp\" in the list the built-in exporter for the protocol is added. Alternatively there could be a special value that forces adding of these exporters alongside the CDI ones.\r\n\r\nThe code-path disabling the creation if existing exporters seems to be located in:\r\n\r\nhttps://github.com/quarkusio/quarkus/blob/596d9ae7a76cf529d24594a82b7c540030799dac/extensions/opentelemetry/runtime/src/main/java/io/quarkus/opentelemetry/runtime/exporter/otlp/OtlpRecorder.java#L56C1-L60C18\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36213/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36213/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25969",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25969/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25969/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25969/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25969",
+  "id": 1261211176,
+  "node_id": "I_kwDOCFbutM5LLI4o",
+  "number": 25969,
+  "title": "Problem with ssl configuration in Quarkus project when deploying in Docker",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-06-06T00:47:30Z",
+  "updated_at": "2022-06-08T01:56:02Z",
+  "closed_at": "2022-06-08T01:54:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nGoodnight.\r\nI am new to Quarkus and I am currently deploying my own service for my company, which consumes a DB and returns information. The issue that I present is that I am working with self-signed ssl certificates, and I am applying my configuration of the self-signed certificate through the application.properties file (just like in spring boot):\r\n\r\n```\r\nquarkus.datasource.db-kind=oracle\r\nquarkus.datasource.jdbc.driver=oracle.jdbc.driver.OracleDriver\r\nquarkus.datasource.jdbc.url=jdbc:oracle:thin:@172.28.2.134:1522/IVR\r\nquarkus.datasource.username=xxxx\r\nquarkus.datasource.password=xxxxxxxxx\r\n\r\nquarkus.ssl.native=true\r\n\r\nquarkus.http.ssl.certificate.key-store-file=srvdevrma1.jks\r\nquarkus.http.ssl.certificate.key-store-file-type=JKS\r\nquarkus.http.ssl.certificate.key-store-password=service123\r\nquarkus.http.ssl.certificate.key-store-key-alias=srvdevrma1\r\n\r\nquarkus.swagger-ui.path=swaggerui\r\n\r\nmp.openapi.extensions.smallrye.info.title=Example API\r\n%dev.mp.openapi.extensions.smallrye.info.title=Example API (development)\r\n%test.mp.openapi.extensions.smallrye.info.title=Example API (test)\r\nmp.openapi.extensions.smallrye.info.version=1.0.1\r\nmp.openapi.extensions.smallrye.info.description=Just an example service\r\nmp.openapi.extensions.smallrye.info.termsOfService=Your terms here\r\nmp.openapi.extensions.smallrye.info.contact.email=techsupport@example.com\r\nmp.openapi.extensions.smallrye.info.contact.name=Example API Support\r\nmp.openapi.extensions.smallrye.info.contact.url=http://exampleurl.com/contact\r\nmp.openapi.extensions.smallrye.info.license.name=Apache 2.0\r\nmp.openapi.extensions.smallrye.info.license.url=https://www.apache.org/licenses/LICENSE-2.0.html\r\n```\r\n\r\nI currently have my self-signed .jks file at the level of my directory where my application certificate.properties file is located:\r\n\r\n![directorio](https://user-images.githubusercontent.com/31625237/172077396-69e635c0-1489-4c01-b26b-25950cd56693.png)\r\n\r\nI run my native build with no problems:\r\n\r\n![nativa](https://user-images.githubusercontent.com/31625237/172077450-68ed0860-74a1-47b8-8620-c0e1633892a1.png)\r\n\r\nI create my native image using Dockerfile.native:\r\n\r\n```\r\n####\r\n# This Dockerfile is used in order to build a container that runs the Quarkus application in native (no JVM) mode.\r\n#\r\n# Before building the container image run:\r\n#\r\n# ./mvnw package -Pnative\r\n#\r\n# Then, build the image with:\r\n#\r\n# docker build -f src/main/docker/Dockerfile.native -t quarkus/code-with-quarkus .\r\n#\r\n# Then run the container using:\r\n#\r\n# docker run -i --rm -p 8080:8080 quarkus/code-with-quarkus\r\n#\r\n###\r\nFROM registry.access.redhat.com/ubi8/ubi-minimal:8.5\r\nWORKDIR /work/\r\nRUN chown 1001 /work \\\r\n    && chmod \"g+rwX\" /work \\\r\n    && chown 1001:root /work\r\nCOPY --chown=1001:root target/*-runner /work/application\r\n\r\nENV TZ=\"America/Caracas\"\r\nEXPOSE 8080\r\nUSER 1001\r\n\r\nCMD [\"./application\", \"-Dquarkus.http.host=0.0.0.0\"]\r\n```\r\n`docker build -f src/main/docker/Dockerfile.native -t codigo-puk:v1 .`\r\n\r\nHowever, when I go to lift my container I get the following error:\r\n\r\n![error](https://user-images.githubusercontent.com/31625237/172077649-2110a77c-06ec-42a6-b9c0-76fdb720dc98.png)\r\n\r\n```\r\n2022-06-05 20:40:59,686 INFO  [io.qua.sma.ope.run.OpenApiRecorder] (main) Default CORS properties will be used, please use 'quarkus.http.cors' properties instead\r\n2022-06-05 20:40:59,690 ERROR [io.qua.run.Application] (main) Failed to start application (with profile prod): java.nio.file.NoSuchFileException: srvdevrma1.jks\r\n        at sun.nio.fs.UnixFileSystemProvider.newByteChannel(UnixFileSystemProvider.java:218)\r\n        at java.nio.file.Files.newByteChannel(Files.java:380)\r\n        at java.nio.file.Files.newByteChannel(Files.java:432)\r\n        at java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:422)\r\n        at java.nio.file.Files.newInputStream(Files.java:160)\r\n        at io.quarkus.vertx.http.runtime.VertxHttpRecorder.getFileContent(VertxHttpRecorder.java:890)\r\n        at io.quarkus.vertx.http.runtime.VertxHttpRecorder.createKeyStoreOptions(VertxHttpRecorder.java:870)\r\n        at io.quarkus.vertx.http.runtime.VertxHttpRecorder.createSslOptions(VertxHttpRecorder.java:791)\r\n        at io.quarkus.vertx.http.runtime.VertxHttpRecorder.doServerStart(VertxHttpRecorder.java:626)\r\n        at io.quarkus.vertx.http.runtime.VertxHttpRecorder.startServer(VertxHttpRecorder.java:302)\r\n        at io.quarkus.deployment.steps.VertxHttpProcessor$openSocket1866188241.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.VertxHttpProcessor$openSocket1866188241.deploy(Unknown Source)\r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:103)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\n        at com.tmve.customer.ServiceCustomMain.main(ServiceCustomMain.java:10)\r\n```\r\n\r\n\r\nIt seems that with the profile prod I can't see the srvdevrma1.jks file, how is it done in this case, should I copy it when creating the image?\r\n\r\n\r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nThe docker container with boot quarks\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.3\" 2022-04-19 OpenJDK Runtime Environment GraalVM CE 22.1.0 (build 17.0.3+7-jvmci-22.1-b06) OpenJDK 64-Bit Server VM GraalVM CE 22.1.0 (build 17.0.3+7-jvmci-22.1-b06, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.31.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537) Maven home: /root/.m2/wrapper/dists/apache-maven-3.8.4-bin/52ccbt68d252mdldqsfsn03jlf/apache-maven-3.8.4 Java version: 17.0.3, vendor: GraalVM Community, runtime: /opt/graalvm/graalvm-ce-java17-22.1.0 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"4.18.0-348.20.1.el8_5.x86_64\", arch: \"amd64\", family: \"unix\"\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25969/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25969/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

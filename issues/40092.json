@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40092",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40092/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40092/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40092/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/40092",
+  "id": 2245097665,
+  "node_id": "I_kwDOCFbutM6F0XjB",
+  "number": 40092,
+  "title": "Support for FalkorDB instead of (now deprecated) RedisGraph?",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2184343143,
+      "node_id": "MDU6TGFiZWwyMTg0MzQzMTQz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/redis",
+      "name": "area/redis",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2024-04-16T05:03:15Z",
+  "updated_at": "2024-04-22T20:07:33Z",
+  "closed_at": "2024-04-22T07:35:27Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nHi. I am using the `io.quarkus.redis.datasource` package and have migrated from using RedisGraph to [FalkorDB](https://www.falkordb.com/). RedisGraph is deprecated and FalkorDB is a fork of that but has extra functionality compared to RedisGraph.\r\n\r\nAll works really well using the `io.quarkus.redis.datasource` with FalkorDB running in a container (`falkordb/falkordb:v4.0.7`) on the appropriate port / network address. \r\n\r\nHowever, the new FalkorDB functionality is not available via the Quarkus Reactive Key Commands. For example RedisGraph did not support the `copy` key command whereas FalkorDB 4.0.7 does. Falkor also has vector db functionality that RedisGraph does not.\r\n\r\nSo, for example using the `rename` and `copy` key commands (simplified code):\r\n```java\r\nimport io.quarkus.redis.datasource.ReactiveRedisDataSource;\r\n\r\npublic void init(ReactiveRedisDataSource reactiveRedisDS) {\r\n    // Reactive key commands. \r\n    this.keyClient = reactiveRedisDS.key();\r\n}\r\n\r\n// This works to rename a key\r\nreturn keyClient.rename(oldKey, newKey).onItem().transform(i -> i == null ? true : false);\r\n\r\n// But this copy command (which does exist on the keyClient but is not supported by RedisGraph) \r\n// throws \"ERR not supported for this module key\"\r\nreturn keyClient.copy(oldKey, newKey).onItem().transform(i -> i == null ? true : false);\r\n```\r\n\r\nI am guessing I could use the Vertx Redis Client directly (since FalkorDB docs says it should work with existing Redis Clients) or maybe it needs some kind of custom client? Or even worse maybe I need to build my own Quarkus extension which would be a steep learning curve for me! ;-) \r\n\r\nAnyway, given RedisGraph has been deprecated I was wondering if there is any thought to having a reactive FalkorDB client?\r\n\r\nThanks,\r\nMurray\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/40092/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/40092/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38860",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38860/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38860/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38860/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38860",
+  "id": 2142558148,
+  "node_id": "I_kwDOCFbutM5_tNfE",
+  "number": 38860,
+  "title": "Default Jackson thread local pool uses Soft references: can we do better?",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 3267721944,
+      "node_id": "MDU6TGFiZWwzMjY3NzIxOTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/jackson",
+      "name": "area/jackson",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issues related to Jackson (JSON library)"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2024-02-19T14:55:23Z",
+  "updated_at": "2024-05-17T12:07:04Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nThe default Jackson thread local pool is using https://github.com/FasterXML/jackson-core/blob/2.17/src/main/java/com/fasterxml/jackson/core/util/JsonRecyclerPools.java#L125 which, under the hood, uses https://github.com/FasterXML/jackson-core/blob/2.17/src/main/java/com/fasterxml/jackson/core/util/JsonRecyclerPools.java#L132 to reuse a `BufferRecycler` stored in a soft reference's `ThreadLocal` at https://github.com/FasterXML/jackson-core/blob/28fce9b4b7c48d2f70f244536ad284f1f52345ab/src/main/java/com/fasterxml/jackson/core/util/BufferRecyclers.java#L60\r\n\r\nDespite it works great to avoid buffer leaks in dev mode or for the Quarkus blocking thread pool ThreadLocal(s), soft reference management can be very dangerous and unstable in the container world, where the (scarse) available MBs of heap can cause unexpected soft reference collections, causing new (big) jackson recyclers allocations, harming runtime performance and, again, the available memory bandwidth to the rest of application (instead of saving it).\r\n\r\nAn example of this is the json benchmark at Techempower, which, for some weird reason (test duration vs available MB in the heap), was triggering re-allocation of soft references and recycler, as by this flamegraph\r\n\r\n![image](https://github.com/quarkusio/quarkus/assets/13125299/c89cb817-ff96-4e49-857b-fb8bd11e6ab8)\r\n\r\n\r\nFYI the soft reference collection policy works based on the default `SoftRefLRUPolicyMSPerMB` values as explained very well at https://www.michaelpollmeier.com/2019/04/09/understanding-jvm-soft-references-for-great-good-and-building-a-cache: have fun and be horrified by this diabolic behaviour.\r\n\r\nIn order to reproduce it, just setup a small enough max heap capacity eg 20 MB, occupy 19 MB of it (in JMH just retaining byte[]s for that), and leaving 1 MB available: the default value of `SoftRefLRUPolicyMSPerMB` will keep the soft reference of the recycler alive for 1 second per MB of available heap (which is 1, here), then it will free it up.\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38860/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38860/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

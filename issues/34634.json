@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34634",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34634/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34634/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34634/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34634",
+  "id": 1795759847,
+  "node_id": "I_kwDOCFbutM5rCR7n",
+  "number": 34634,
+  "title": "No current Vertx context found",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 2122256208,
+      "node_id": "MDU6TGFiZWwyMTIyMjU2MjA4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-reactive",
+      "name": "area/hibernate-reactive",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 23,
+  "created_at": "2023-07-10T02:01:04Z",
+  "updated_at": "2023-07-23T14:03:43Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "I am not sure if this issue is related to #14044, when upgrading [my Quarkus example](https://github.com/hantsy/quarkus-sandbox/tree/master/resteasy-reactive) (Resteasy reactive, Panchane Repository reactive with Hibernate Reactive, Postgres) to the latest 3.2.0.Final, and running `./mvnw Quarkus:dev`, I got the following **new exception** instead:\r\n\r\n\r\n```bash \r\n2023-07-08 13:08:33,074 INFO  [org.exa.DataInitializer] (Quarkus Main Thread) The application is starting...\r\n2023-07-08 13:08:33,175 INFO  [io.qua.dep.dev.IsolatedDevModeMain] (main) Attempting to start live reload endpoint to recover from previous Quarkus startup failure\r\n2023-07-08 13:08:33,173 ERROR [io.qua.run.Application] (Quarkus Main Thread) Failed to start application (with profile [dev]): java.lang.RuntimeException: Failed to start quarkus      \r\n        at io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\n        at io.quarkus.runtime.Application.start(Application.java:101)\r\n        at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:111)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:71)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:44)\r\n        at io.quarkus.runtime.Quarkus.run(Quarkus.java:124)\r\n        at io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\n        at io.quarkus.runner.bootstrap.StartupActionImpl$1.run(StartupActionImpl.java:104)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: java.lang.IllegalStateException: No current Vertx context found\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations.vertxContext(SessionOperations.java:186)\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations.getSession(SessionOperations.java:143)\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.AbstractJpaOperations.getSession(AbstractJpaOperations.java:364)\r\n        at io.quarkus.hibernate.reactive.panache.common.runtime.AbstractJpaOperations.deleteAll(AbstractJpaOperations.java:260)\r\n        at org.example.PostRepository.deleteAll(PostRepository.java)\r\n        at org.example.PostRepository_ClientProxy.deleteAll(Unknown Source)\r\n        at org.example.DataInitializer.onStart(DataInitializer.java:30)\r\n        at org.example.DataInitializer_Observer_onStart_b1ec74dcd02168bc83cc4e1229668f13327ebce5.notify(Unknown Source)\r\n        at io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:346)\r\n        at io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:328)\r\n        at io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:82)\r\n        at io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:155)\r\n        at io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:106)\r\n        at io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(Unknown Source)\r\n        at io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy(Unknown Source)\r\n        ... 13 more\r\n\r\n```\r\n\r\nThe DataIntializer is a bean that used to insert some sample data at startup.\r\n\r\n```java\r\n@ApplicationScoped\r\n@Startup\r\npublic class DataInitializer {\r\n    private static final Logger LOGGER = Logger.getLogger(DataInitializer.class.getName());\r\n\r\n    @Inject\r\n    PostRepository posts;\r\n\r\n    // There is an issue call reactive opertions in the blocking codes.\r\n    // see: https://github.com/quarkusio/quarkus/issues/14044\r\n    public void onStart(@Observes StartupEvent ev) {\r\n        LOGGER.info(\"The application is starting...\");\r\n\r\n        Post first = Post.of(\"Hello Quarkus\", \"My first post of Quarkus\");\r\n        Post second = Post.of(\"Hello Again, Quarkus\", \"My second post of Quarkus\");\r\n\r\n        this.posts.deleteAll()\r\n                .onItem().invoke(l -> LOGGER.log(Level.INFO, \"deleted {0} posts.\", new Object[]{l}))\r\n                .flatMap(d -> this.posts.persist(List.of(first, second)))\r\n                .flatMap(v -> this.posts.findAll().list())\r\n                .subscribe()\r\n                .with(\r\n                        rows -> rows.forEach(r -> LOGGER.log(Level.INFO, \"data:{0}\", r)),\r\n                        err -> LOGGER.log(Level.SEVERE, \"error:{0}\", err.toString())\r\n                );\r\n    }\r\n\r\n    void onStop(@Observes ShutdownEvent ev) {\r\n        LOGGER.info(\"The application is stopping...\");\r\n    }\r\n}\r\n\r\n```\r\n\r\nAdd a simple test to verify PostRepository functionality, \r\n\r\n```java\r\n@QuarkusTest\r\n//@QuarkusTestResource(H2DatabaseTestResource.class)\r\npublic class PostRepositoryTest {\r\n\r\n    @Inject\r\n    PostRepository postRepository;\r\n\r\n    @Test\r\n    public void testSave() {\r\n        var assertSubscriber = postRepository.save(Post.of(\"test\", \"test\"))\r\n                .invoke(p -> assertThat(p.id).isNotNull())\r\n                .subscribe().withSubscriber(UniAssertSubscriber.create());\r\n        assertSubscriber.assertCompleted();\r\n    }\r\n}\r\n```\r\n\r\nGot the same exceptions.\r\n\r\n_Originally posted by @hantsy in https://github.com/quarkusio/quarkus/discussions/34616_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34634/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34634/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

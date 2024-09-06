@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26486",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26486/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26486/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26486/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26486",
+  "id": 1290567770,
+  "node_id": "I_kwDOCFbutM5M7IBa",
+  "number": 26486,
+  "title": "Values set with org.slf4j.MDC no longer works in 2.10.0.Final",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283428650,
+      "node_id": "MDU6TGFiZWwxMjgzNDI4NjUw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/logging",
+      "name": "area/logging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-06-30T19:48:01Z",
+  "updated_at": "2022-07-04T06:18:44Z",
+  "closed_at": "2022-07-04T06:18:44Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI recently upgrade my shared component from Quarkus 2.9.2 to 2.10.0 where I previously had a logging filter that used `org.slf4j.MDC` to set context but my tests for it started failing.\r\n\r\nOnce I switched to use `org.jboss.logging.MDC` then it started working.\n\n### Expected behavior\n\nGiven that the logging is supposed to merge the SLF4J calls I'd have expected calls to `org.slf4j.MDC` to work just fine.\n\n### Actual behavior\n\nThe context was not propagated properly until I switched to `org.jboss.logging.MDC`.\n\n### How to Reproduce?\n\nHere's the sample code:\r\n\r\n```\r\nimport java.io.IOException;\r\nimport java.util.ArrayList;\r\nimport java.util.Arrays;\r\nimport java.util.List;\r\nimport java.util.Optional;\r\nimport java.util.stream.Collectors;\r\nimport javax.annotation.PostConstruct;\r\nimport javax.ws.rs.container.ContainerRequestContext;\r\nimport javax.ws.rs.container.ContainerRequestFilter;\r\nimport javax.ws.rs.container.ContainerResponseContext;\r\nimport javax.ws.rs.container.ContainerResponseFilter;\r\nimport javax.ws.rs.ext.Provider;\r\nimport org.eclipse.microprofile.config.inject.ConfigProperty;\r\nimport org.slf4j.MDC;\r\n\r\n@Provider\r\npublic class LoggingFilter implements ContainerRequestFilter, ContainerResponseFilter {\r\n    // Made this default scope so that we can see it from the tests.\r\n    static final List<String> DEFAULT_HEADERS_TO_LOG =\r\n            Arrays.asList(\r\n                    \"TRACKING-ID\", \"SESSION-ID\");\r\n\r\n    @ConfigProperty(name = \"logging.additional.headers\")\r\n    Optional<List<String>> additionalHeaders;\r\n\r\n    private final List<String> allHeaders;\r\n\r\n    /**\r\n     * Default constructor used when this is called by the servlet container when its in {@code\r\n     * web.xml}.\r\n     */\r\n    public LoggingFilter() {\r\n        allHeaders = new ArrayList<>();\r\n        allHeaders.addAll(DEFAULT_HEADERS_TO_LOG);\r\n    }\r\n\r\n    /** PostConstruct that checks to see if additional headers were populated. */\r\n    @PostConstruct\r\n    public void init() {\r\n        additionalHeaders.ifPresent(allHeaders::addAll);\r\n    }\r\n\r\n    String convertListToString(List<String> list) {\r\n        if (list == null || list.isEmpty()) {\r\n            return \"UNKNOWN\";\r\n        }\r\n\r\n        return list.stream().collect(Collectors.joining(\",\"));\r\n    }\r\n\r\n    @Override\r\n    public void filter(ContainerRequestContext requestContext) throws IOException {\r\n        // We're assuming these headers have a singular value\r\n        allHeaders.forEach(\r\n                name -> MDC.put(name, convertListToString(requestContext.getHeaders().get(name))));\r\n    }\r\n\r\n    @Override\r\n    public void filter(\r\n            ContainerRequestContext requestContext, ContainerResponseContext responseContext)\r\n            throws IOException {\r\n        MDC.clear();\r\n    }\r\n}\r\n```\r\n\r\nand the associated unit test:\r\n\r\n```\r\nimport static org.assertj.core.api.Assertions.assertThat;\r\n\r\nimport java.io.IOException;\r\nimport java.util.ArrayList;\r\nimport java.util.Arrays;\r\nimport java.util.Collections;\r\nimport java.util.Map;\r\nimport java.util.Optional;\r\nimport javax.ws.rs.container.ContainerRequestContext;\r\nimport javax.ws.rs.container.ContainerResponseContext;\r\nimport javax.ws.rs.core.MultivaluedHashMap;\r\nimport javax.ws.rs.core.MultivaluedMap;\r\nimport org.apache.commons.lang3.reflect.FieldUtils;\r\nimport org.slf4j.MDC;\r\nimport org.junit.jupiter.api.BeforeEach;\r\nimport org.junit.jupiter.api.Test;\r\nimport org.mockito.Mockito;\r\n\r\nclass LoggingFilterTest {\r\n    private static final MultivaluedMap<String, String> MULTIVALUED_HASH_MAP =\r\n            new MultivaluedHashMap();\r\n\r\n    @BeforeEach\r\n    void setup() {\r\n        MULTIVALUED_HASH_MAP.add(\"One\", \"One\");\r\n    }\r\n\r\n    /** Test with no additional details but an HTTP request. */\r\n    @Test\r\n    void doFilterHttpNoAdditional() throws IOException, IllegalAccessException {\r\n        var requestContext = Mockito.mock(ContainerRequestContext.class);\r\n        var responseContext = Mockito.mock(ContainerResponseContext.class);\r\n\r\n        LoggingFilter.DEFAULT_HEADERS_TO_LOG.forEach(\r\n                name -> Mockito.when(requestContext.getHeaders()).thenReturn(MULTIVALUED_HASH_MAP));\r\n\r\n        var filter = new LoggingFilter();\r\n        FieldUtils.writeField(filter, \"additionalHeaders\", Optional.empty(), true);\r\n        filter.init();\r\n\r\n        filter.filter(requestContext);\r\n\r\n        assertThat(MDC.getMap())\r\n                .isEqualTo(\r\n                        Map.of(\r\n                                \"SESSION-ID\",\r\n                                \"UNKNOWN\",\r\n                                \"TRACKING-ID\",\r\n                                \"UNKNOWN\"));\r\n\r\n        filter.filter(requestContext, responseContext);\r\n\r\n        assertThat(MDC.getMap()).isEqualTo(Collections.emptyMap());\r\n\r\n        Mockito.verifyNoInteractions(responseContext);\r\n    }\r\n\r\n    /** Test filter config */\r\n    @Test\r\n    void doFilterHttpFilterConfig() throws IOException, IllegalAccessException {\r\n        var requestContext = Mockito.mock(ContainerRequestContext.class);\r\n        var responseContext = Mockito.mock(ContainerResponseContext.class);\r\n\r\n        var values = Optional.of(Arrays.asList(\"test\", \"one\", \"two\"));\r\n\r\n        var verifyHeaders = new ArrayList<String>();\r\n        verifyHeaders.addAll(LoggingFilter.DEFAULT_HEADERS_TO_LOG);\r\n        verifyHeaders.addAll(values.get());\r\n        verifyHeaders.forEach(\r\n                name -> Mockito.when(requestContext.getHeaders()).thenReturn(MULTIVALUED_HASH_MAP));\r\n\r\n        var filter = new LoggingFilter();\r\n        FieldUtils.writeField(filter, \"additionalHeaders\", values, true);\r\n        filter.init();\r\n\r\n        filter.filter(requestContext);\r\n\r\n        assertThat(MDC.getMap())\r\n                .isEqualTo(\r\n                        Map.of(\r\n                                \"SESSION-ID\",\r\n                                \"UNKNOWN\",\r\n                                \"TRACKING-ID\",\r\n                                \"UNKNOWN\",\r\n                                \"one\",\r\n                                \"UNKNOWN\",\r\n                                \"test\",\r\n                                \"UNKNOWN\",\r\n                                \"two\",\r\n                                \"UNKNOWN\"));\r\n\r\n        filter.filter(requestContext, responseContext);\r\n\r\n        assertThat(MDC.getMap()).isEqualTo(Collections.emptyMap());\r\n\r\n        Mockito.verifyNoInteractions(responseContext);\r\n    }\r\n\r\n    /** Test enumeration conversion. */\r\n    @Test\r\n    void convertListToString() {\r\n        var filter = new LoggingFilter();\r\n        var list = Arrays.asList(\"One\", \"Two\", \"Three\");\r\n\r\n        var response = filter.convertListToString(list);\r\n        assertThat(response).isEqualTo(\"One,Two,Three\");\r\n    }\r\n\r\n    /** Test enumeration conversion. */\r\n    @Test\r\n    void convertEmptyEnumerationToString() {\r\n        var filter = new LoggingFilter();\r\n\r\n        var response = filter.convertListToString(Collections.emptyList());\r\n        assertThat(response).isEqualTo(\"UNKNOWN\");\r\n    }\r\n\r\n    /** Test enumeration conversion. */\r\n    @Test\r\n    void convertNullEnumerationToString() {\r\n        var filter = new LoggingFilter();\r\n\r\n        var response = filter.convertListToString(null);\r\n        assertThat(response).isEqualTo(\"UNKNOWN\");\r\n    }\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\nopenjdk version \"11.0.15\" 2022-04-19 LTS OpenJDK Runtime Environment Corretto-11.0.15.9.1 (build 11.0.15+9-LTS) OpenJDK 64-Bit Server VM Corretto-11.0.15.9.1 (build 11.0.15+9-LTS, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n_No response_\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26486/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26486/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

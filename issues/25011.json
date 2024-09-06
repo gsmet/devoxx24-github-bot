@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25011",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25011/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25011/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25011/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25011",
+  "id": 1208698297,
+  "node_id": "I_kwDOCFbutM5IC0W5",
+  "number": 25011,
+  "title": "Enums with custom representation are not correctly documented in Open API / Swagger UI",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1688349292,
+      "node_id": "MDU6TGFiZWwxNjg4MzQ5Mjky",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/swagger-ui",
+      "name": "area/swagger-ui",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2022-04-19T18:20:22Z",
+  "updated_at": "2022-04-22T09:21:33Z",
+  "closed_at": "2022-04-22T09:21:33Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen serialising enums using something other than their name - either `@JsonValue` on a enum method like `toString`, `@JsonProperty` on the enum constants, or `@JsonSerialize(using = SomeSerializer.class)` on an enum property - the Open API documentation is incorrect and only uses the enum constant names.\r\n\r\n```\r\n@Path(\"/api/v1/my\")\r\npublic class MyController {\r\n  @GET\r\n  @Path(\"/1\")\r\n  public List<MyResponse1> getMyResponse1() {\r\n    return List.of(new MyResponse1(MyEnum1.RED), new MyResponse1(MyEnum1.BLUE), new MyResponse1(MyEnum1.GREEN));\r\n  }\r\n\r\n  @GET\r\n  @Path(\"/2\")\r\n  public List<MyResponse2> getMyResponse2() {\r\n    return List.of(new MyResponse2(MyEnum2.RED), new MyResponse2(MyEnum2.BLUE), new MyResponse2(MyEnum2.GREEN));\r\n  }\r\n\r\n  @GET\r\n  @Path(\"/3\")\r\n  public List<MyResponse3> getMyResponse3() {\r\n    return List.of(new MyResponse3(MyEnum3.RED), new MyResponse3(MyEnum3.BLUE), new MyResponse3(MyEnum3.GREEN));\r\n  }\r\n}\r\n\r\nenum MyEnum1 {\r\n  RED(\"r\"),\r\n  GREEN(\"g\"),\r\n  BLUE(\"b\");\r\n\r\n  private final String value;\r\n\r\n  MyEnum1(String value) {\r\n    this.value = value;\r\n  }\r\n\r\n  @Override\r\n  @JsonValue\r\n  public String toString() {\r\n    return value;\r\n  }\r\n}\r\n\r\nclass MyResponse1 {\r\n  private final MyEnum1 myEnum1;\r\n\r\n  public MyResponse1(MyEnum1 myEnum1) {\r\n    this.myEnum1 = myEnum1;\r\n  }\r\n\r\n  public MyEnum1 getMyEnum1() {\r\n    return myEnum1;\r\n  }\r\n}\r\n\r\nenum MyEnum2 {\r\n  @JsonProperty(\"r\") RED,\r\n  @JsonProperty(\"g\") GREEN,\r\n  @JsonProperty(\"b\") BLUE;\r\n}\r\n\r\nclass MyResponse2 {\r\n  private final MyEnum2 myEnum2;\r\n\r\n  public MyResponse2(MyEnum2 myEnum2) {\r\n    this.myEnum2 = myEnum2;\r\n  }\r\n\r\n  public MyEnum2 getMyEnum2() {\r\n    return myEnum2;\r\n  }\r\n}\r\n\r\nenum MyEnum3 {\r\n  RED(\"r\"),\r\n  GREEN(\"g\"),\r\n  BLUE(\"b\");\r\n\r\n  private final String value;\r\n\r\n  MyEnum3(String value) {\r\n    this.value = value;\r\n  }\r\n\r\n  @Override\r\n  public String toString() {\r\n    return value;\r\n  }\r\n}\r\n\r\nclass MyResponse3 {\r\n  private final MyEnum3 myEnum3;\r\n\r\n  public MyResponse3(MyEnum3 myEnum3) {\r\n    this.myEnum3 = myEnum3;\r\n  }\r\n\r\n  @JsonSerialize(using = ToStringSerializer.class)\r\n  public MyEnum3 getMyEnum3() {\r\n    return myEnum3;\r\n  }\r\n}\r\n```\r\n\r\nIn all 3 cases the correct values are returned when calling the API.\r\n\r\nAdding `@Schema(enumeration = {\"r\", \"g\", \"b\"})` to the declaration of one of the enums results in the correct result for that enum. \r\n\r\nHowever if the enum source is not under my control (e.g. in case 3 using a custom serializer), then I cannot do this - I tried adding the same annotation to the enum property in the response class instead, but this results in the values being added to the existing enum names (resulting in `[ RED, GREEN, BLUE, r, g, b ]`).\r\n\r\n### Expected behavior\r\n\r\nI expected that enum values which do **not** use a custom serializer (case 1 and 2) under my source control are correctly documented without additional\r\n\r\nAdditionally, I would expected that enum values which use a custom serializer (case 3) and are not under my source control can be correctly documented in Open API (using annotations like `@Schema` if necessary).\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nmacOS 12.3.1\r\n\r\n### Output of `java -version`\r\n\r\n17.0.2\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.8.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.2\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25011/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25011/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

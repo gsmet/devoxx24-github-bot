@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26991",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26991/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26991/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26991/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26991",
+  "id": 1320696071,
+  "node_id": "I_kwDOCFbutM5OuDkH",
+  "number": 26991,
+  "title": "Unify Elasticsearch configuration for Elasticsearch clients and Hibernate Search",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1664142960,
+      "node_id": "MDU6TGFiZWwxNjY0MTQyOTYw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-search",
+      "name": "area/hibernate-search",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate Search / Elasticsearch"
+    },
+    {
+      "id": 2222769329,
+      "node_id": "MDU6TGFiZWwyMjIyNzY5MzI5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/elasticsearch",
+      "name": "area/elasticsearch",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-07-28T10:04:41Z",
+  "updated_at": "2022-08-26T06:57:10Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nFor Hibernate ORM, we have the concept of (JDBC) \"datasource\".\r\nFor Hibernate Reactive, we have the concept of (non-JDBC) \"datasource\".\r\nThose allow users to specify JDBC urls (or other, in the case of non-JDBC) in a way that is independent from Hibernate ORM, so that you can use only JDBC, or only Hibernate, or both, but in all cases you only configure the datasource once.\r\n\r\nHowever, if you use both Hibernate Search and an Elasticsearch client, you'll have to configure the Elasticsearch URL and client options twice:\r\n\r\n* once for the Elasticsearch clients\r\n* once for Hibernate Search\r\n\r\nThat's not very practical.\r\n\r\nEDIT: And it also complicates the Elasticsearch dev-service implementation. In particular we currently only support starting dev-services for the default Elasticsearch backend in Hibernate Search, not for named backends, because that would be complicated to implement.\r\n\r\nMaybe we could unify that, shoving everything under the Elasticsearch client?\r\n\r\n### Implementation ideas\r\n\r\nA relatively low-effort solution would be to simply have Hibernate Search look for the Elasticearch client configuration, but still create its own, separate client.\r\n\r\nA more complicated solution would be to have Hibernate Search use a low-level Elasticsearch client created by Quarkus. That would require changes (new SPIs or configuration options) in Hibernate Search, though. **EDIT**: See https://hibernate.atlassian.net/browse/HSEARCH-4683\r\n\r\nThings to be careful about with this solution:\r\n\r\n* Advanced client features in Hibernate Search:\r\n  * The discovery (sniffer) might be easy to expose in the elasticsearch-rest-common extension.\r\n  * [AWS signing](https://quarkiverse.github.io/quarkiverse-docs/quarkus-hibernate-search-extras/dev/index.html) (in the Quarkiverse) might be a bit more complex. Maybe we should move the part specific to the Elasticsearch client out of Hibernate Search into a separate project?\r\n\r\nThings to be careful about regardless of the solution:\r\n\r\n* Backwards compatibility: the current configuration properties in the Hibernate Search extension will have to continue to work.\r\n* Documentation... including the migration guide. That'll be a mess, but hopefully for the better.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26991/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26991/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

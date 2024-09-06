@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35306",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35306/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35306/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35306/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35306",
+  "id": 1845041604,
+  "node_id": "I_kwDOCFbutM5t-RnE",
+  "number": 35306,
+  "title": "OpenTelemetry extension is trying to export traces to localhost:4317 by default in production mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031412,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxNDEy",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/tracing",
+      "name": "area/tracing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-08-10T12:03:03Z",
+  "updated_at": "2023-09-26T12:05:54Z",
+  "closed_at": "2023-08-21T12:41:14Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen upgrading to Quarkus 3 there are now `SEVERE` log messages now outputted saying that its failing to export OpenTelemetry traces to `localhost/127.0.0.1:4317` even when run in production mode.\r\n\r\nHere is the full log message:\r\n```\r\n2023-08-10 10:12:50,489 SEVERE [io.ope.exp.int.grp.OkHttpGrpcExporter] (OkHttp http://localhost:4317/...) Failed to export spans. The request could not be executed. Full error message: Failed to connect to localhost/[0:0:0:0:0:0:0:1]:4317\r\n```\r\n\r\nThis occurs when using the OpenTelemetry extension but not configuring it to connect it to external OpenTelemerry Collector. This is how we want to setup our service by default so a OpenTelemerry Collector can be configured later but by default we need this to be a no-op.\r\n\n\n### Expected behavior\n\nBy default, the OpenTelemetry extension we expect it to not try an export traces in production mode to localhost (or anywhere else). It should be a no-op. \n\n### Actual behavior\n\nThe OpenTelemetry extension is trying to connect and export traces to localhost in production mode.\r\n\r\n\r\nPreviously even in Quarkus 2 when run in dev mode (quarkus:dev) this SEVERE log message was logged repeatedly and this is also the case in Quarkus 3. However in running Quarkus 2 in production mode this log message is **not** logged but it does now appears in Quarkus 3.\r\n\r\nQuarkus version: 3.2.3.Final\r\n![image](https://github.com/quarkusio/quarkus/assets/1751613/c471b33a-9d4d-41cd-9f65-36a6837f2eb1)\r\n\r\nRunning the application in production mode we can see the SEVERE logs:\r\n![image](https://github.com/quarkusio/quarkus/assets/1751613/2ec96cbb-d9f5-4648-8994-ecbcd373c91b)\r\n\r\nRolling back to Quarkus version: 2.16.9.Final\r\n![image](https://github.com/quarkusio/quarkus/assets/1751613/bcff2f26-9759-42a6-abf7-b6839d113aa8)\r\n\r\n_Note:_ `jakarta.ws.rs` package names need to be reverted to `javax.ws.rs`\r\n\r\nBuilding and running the application again there are no SEVERE logs. It also has a log of: `No BatchSpanProcessor delegate specified, no action taken`:\r\n![image](https://github.com/quarkusio/quarkus/assets/1751613/923cf2ed-2b1a-47fa-bbf1-6c155e946cf6)\r\n\r\nAnd just to show that even in Quarkus 2 in dev mode the SEVERE exists. This is not a problem for us in dev mode but in production mode we don't want to see this.\r\n![image](https://github.com/quarkusio/quarkus/assets/1751613/9c2118a3-cad8-4935-8ffe-44354b461fb4)\n\n### How to Reproduce?\n\nThis issue can be reproduce this using the https://quarkus.io/get-started/ app and adding the [OpenTelemetry](https://quarkus.io/extensions/io.quarkus/quarkus-opentelemetry) extension.\r\n\r\nSteps to reproduce:\r\n1. Follow steps in https://quarkus.io/get-started/ to create a simple Quarkus application\r\n2. Add the OpenTelemetry extension: https://quarkus.io/extensions/io.quarkus/quarkus-opentelemetry\r\n3. Build: `quarkus build`\r\n4. Run: java -jar target/quarkus-app/quarkus-run.jar\r\n5. Hit the home page of the app a couple of time to generate some traces\r\n\r\nThe output will look as follows that will show the SEVERE log messages:\r\n![image](https://github.com/quarkusio/quarkus/assets/1751613/2ec96cbb-d9f5-4648-8994-ecbcd373c91b)\n\n### Output of `uname -a` or `ver`\n\nLinux europa 6.2.0-060200-generic #202302191831 SMP PREEMPT_DYNAMIC Sun Feb 19 23:37:22 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.8\" 2023-07-18 OpenJDK Runtime Environment (build 17.0.8+7-Ubuntu-122.04) OpenJDK 64-Bit Server VM (build 17.0.8+7-Ubuntu-122.04, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.3.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.3 (21122926829f1ead511c958d89bd2f672198ae9f) Maven home: /home/holleranj/.m2/wrapper/dists/apache-maven-3.9.3-bin/326f10f4/apache-maven-3.9.3 Java version: 17.0.8, vendor: Private Build, runtime: /usr/lib/jvm/java-17-openjdk-amd64 Default locale: en_US, platform encoding: UTF-8 OS name: \"linux\", version: \"6.2.0-060200-generic\", arch: \"amd64\", family: \"unix\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35306/reactions",
+    "total_count": 2,
+    "+1": 2,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35306/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

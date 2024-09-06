@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26627",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26627/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26627/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26627/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26627",
+  "id": 1299094747,
+  "node_id": "I_kwDOCFbutM5Nbpzb",
+  "number": 26627,
+  "title": "Exception \"java.sql.SQLException: Connection acquired without transaction.\" while starting",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2022-07-08T14:26:51Z",
+  "updated_at": "2023-01-10T08:12:45Z",
+  "closed_at": "2023-01-10T08:12:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nTwo (related?) warning messages are printed during startup.\r\n\r\nThe exception:\r\n```\r\n2022-07-08 16:05:07,221 WARN  [io.agr.pool] (JPA Startup Thread: <default>) Datasource '<default>': java.sql.SQLException: Connection acquired without transaction.\r\n\tat io.agroal.pool.ConnectionPool.afterAcquire(ConnectionPool.java:355)\r\n\tat io.agroal.pool.ConnectionPool.getConnection(ConnectionPool.java:249)\r\n\tat io.agroal.pool.DataSource.getConnection(DataSource.java:86)\r\n\tat io.quarkus.hibernate.orm.runtime.customized.QuarkusConnectionProvider.getConnection(QuarkusConnectionProvider.java:23)\r\n\tat org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:181)\r\n\tat org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:68)\r\n\tat org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:35)\r\n\tat org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.initiateService(StandardServiceRegistryImpl.java:101)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:263)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:237)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:214)\r\n\tat org.hibernate.engine.jdbc.internal.JdbcServicesImpl.configure(JdbcServicesImpl.java:51)\r\n\tat org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.configureService(StandardServiceRegistryImpl.java:107)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:246)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:214)\r\n\tat org.hibernate.boot.internal.SessionFactoryOptionsBuilder.<init>(SessionFactoryOptionsBuilder.java:272)\r\n\tat io.quarkus.hibernate.orm.runtime.recording.PrevalidatedQuarkusMetadata.buildSessionFactoryOptionsBuilder(PrevalidatedQuarkusMetadata.java:68)\r\n\tat io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:72)\r\n\tat io.quarkus.hibernate.orm.runtime.FastBootHibernatePersistenceProvider.createEntityManagerFactory(FastBootHibernatePersistenceProvider.java:71)\r\n\tat javax.persistence.Persistence.createEntityManagerFactory(Persistence.java:80)\r\n\tat javax.persistence.Persistence.createEntityManagerFactory(Persistence.java:55)\r\n\tat io.quarkus.hibernate.orm.runtime.JPAConfig$LazyPersistenceUnit.get(JPAConfig.java:138)\r\n\tat io.quarkus.hibernate.orm.runtime.JPAConfig$1.run(JPAConfig.java:54)\r\n\tat java.base/java.lang.Thread.run(Thread.java:834)\r\n```\r\n seems to be related to the setting:\r\n`quarkus.datasource.jdbc.transaction-requirement=warn`\r\n\r\nThe message `WARN  [io.agr.pool] (agroal-11) Datasource '<default>': Closing connection in incorrect state CHECKED_OUT` seems to be related to `quarkus.datasource.jdbc.flush-on-close=true`\n\n### Expected behavior\n\nA clean startup.\n\n### Actual behavior\n\nWARNINGS in the log.\r\n\r\n```\r\n2022-07-08 16:05:07,221 WARN  [io.agr.pool] (JPA Startup Thread: <default>) Datasource '<default>': java.sql.SQLException: Connection acquired without transaction.\r\n\tat io.agroal.pool.ConnectionPool.afterAcquire(ConnectionPool.java:355)\r\n\tat io.agroal.pool.ConnectionPool.getConnection(ConnectionPool.java:249)\r\n\tat io.agroal.pool.DataSource.getConnection(DataSource.java:86)\r\n\tat io.quarkus.hibernate.orm.runtime.customized.QuarkusConnectionProvider.getConnection(QuarkusConnectionProvider.java:23)\r\n\tat org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:181)\r\n\tat org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:68)\r\n\tat org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:35)\r\n\tat org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.initiateService(StandardServiceRegistryImpl.java:101)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:263)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:237)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:214)\r\n\tat org.hibernate.engine.jdbc.internal.JdbcServicesImpl.configure(JdbcServicesImpl.java:51)\r\n\tat org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.configureService(StandardServiceRegistryImpl.java:107)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:246)\r\n\tat org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:214)\r\n\tat org.hibernate.boot.internal.SessionFactoryOptionsBuilder.<init>(SessionFactoryOptionsBuilder.java:272)\r\n\tat io.quarkus.hibernate.orm.runtime.recording.PrevalidatedQuarkusMetadata.buildSessionFactoryOptionsBuilder(PrevalidatedQuarkusMetadata.java:68)\r\n\tat io.quarkus.hibernate.orm.runtime.boot.FastBootEntityManagerFactoryBuilder.build(FastBootEntityManagerFactoryBuilder.java:72)\r\n\tat io.quarkus.hibernate.orm.runtime.FastBootHibernatePersistenceProvider.createEntityManagerFactory(FastBootHibernatePersistenceProvider.java:71)\r\n\tat javax.persistence.Persistence.createEntityManagerFactory(Persistence.java:80)\r\n\tat javax.persistence.Persistence.createEntityManagerFactory(Persistence.java:55)\r\n\tat io.quarkus.hibernate.orm.runtime.JPAConfig$LazyPersistenceUnit.get(JPAConfig.java:138)\r\n\tat io.quarkus.hibernate.orm.runtime.JPAConfig$1.run(JPAConfig.java:54)\r\n\tat java.base/java.lang.Thread.run(Thread.java:834)\r\n\r\n2022-07-08 16:05:07,318 WARN  [io.agr.pool] (agroal-11) Datasource '<default>': Closing connection in incorrect state CHECKED_OUT\r\n```\n\n### How to Reproduce?\n\nReproducer: https://github.com/sjaakd/reproducer_db_oracle\r\n\r\nJust start up the service (quarkus:dev) with proper DB settings\n\n### Output of `uname -a` or `ver`\n\n-\n\n### Output of `java -version`\n\njava 11\n\n### GraalVM version (if different from Java)\n\n-\n\n### Quarkus version or git rev\n\n2.7.0.final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nmaven 3.8.6\n\n### Additional information\n\nWe have been struggling with connection-leaks that we could not explain. After marking all our services with `@Transactional` and finally by removing a code common `PersistenceException` interceptor (for generating the proper HTTP response on our REST services) that problem seemed to have disappeared. Apparently the connection was not made available again.\r\n\r\n```java \r\n@Provider\r\npublic class PersistentExceptionProvider extends AbstractExceptionMapper implements ExceptionMapper<PersistenceException> {\r\n\r\n    @Override\r\n    public Response toResponse(PersistenceException exception) {\r\n        return toResponseInternal(\r\n            \"ExceptionMessages\",\r\n            exception,\r\n            Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),\r\n            null );\r\n    }\r\n}\r\n```\r\n\r\nHowever, we sometimes still see a Quarkus container (on our openshift cluster) consuming a lot of CPU on our cluster without probable cause.\r\n\r\nWe do use ready / live probes. The ready probe seems to be working out of the box with the proper `application.properties`",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26627/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26627/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

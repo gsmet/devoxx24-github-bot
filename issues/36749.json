@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36749",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36749/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36749/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36749/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36749",
+  "id": 1965631880,
+  "node_id": "I_kwDOCFbutM51KSmI",
+  "number": 36749,
+  "title": "Qute: add SPI to configure locale for rendered templates, including emails",
+  "labels": [
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1714005220,
+      "node_id": "MDU6TGFiZWwxNzE0MDA1MjIw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/qute",
+      "name": "area/qute",
+      "color": "0366d6",
+      "default": false,
+      "description": "The template engine"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2023-10-27T14:17:31Z",
+  "updated_at": "2023-11-09T15:22:53Z",
+  "closed_at": "2023-11-09T15:22:31Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nATM, we can set the locale using `template.setAttribute(MessageBundles.ATTRIBUTE_LOCALE, locale)` explicitely. \r\n\r\nRESTEasy Reactive has a filter that uses the headers to set `TemplateInstance.SELECTED_VARIANT` based on the request header's `Accept` header.\r\n\r\nRenarde uses an extra filter to set `MessageBundles.ATTRIBUTE_LOCALE` based on a cookie which the user can set to override the locale (very useful for websites where you can change the language without reconfiguring your browser), and it's a bit of a mess to make sure my filter runs in the right order and places. But this only works for `TemplateInstance` and not `MailTemplateInstance` because there are no response filters for those.\r\n\r\nIt would be very useful if we had an SPI to declare a locale resolver for both `TemplateInstance` and `MailTemplateInstance`, which Qute can query, which would allow me to pass a locale automatically in both cases without having to declare a filter.\r\n\r\nBean Validation has something like that, in the form of `LocaleResolver`:\r\n\r\n```java\r\n@Singleton\r\npublic class RenardeValidationLocaleResolver implements LocaleResolver {\r\n\r\n    @Inject\r\n    I18N i18n;\r\n\r\n    @Override\r\n    public Locale resolve(LocaleResolverContext context) {\r\n        final ManagedContext requestContext = Arc.container().requestContext();\r\n        if (!requestContext.isActive() || i18n.getLocale() == null) {\r\n            return null;\r\n        }\r\n        return i18n.getLocale();\r\n    }\r\n\r\n}\r\n```\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36749/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36749/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

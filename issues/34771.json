@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34771",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34771/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34771/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34771/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34771",
+  "id": 1806211361,
+  "node_id": "I_kwDOCFbutM5rqJkh",
+  "number": 34771,
+  "title": "[Rest Client Reactive] Failed to Deserialize JSON Array to Multi",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1676631606,
+      "node_id": "MDU6TGFiZWwxNjc2NjMxNjA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/env/windows",
+      "name": "env/windows",
+      "color": "edea47",
+      "default": false,
+      "description": "Impacts Windows machines"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2023-07-15T16:34:49Z",
+  "updated_at": "2023-07-18T12:14:49Z",
+  "closed_at": "2023-07-16T09:48:03Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nGiven the following RestClient.\r\n\r\n```java\r\n@Path(\"/posts\")\r\n@RegisterRestClient()\r\n@RegisterProvider(PostResponseExceptionMapper.class)\r\npublic interface PostResourceClient {\r\n\r\n    @GET\r\n    @Produces(MediaType.APPLICATION_JSON)\r\n    Multi<Post> getAllPosts(\r\n            @QueryParam(\"q\") String q,\r\n            @QueryParam(\"offset\") @DefaultValue(\"0\") int offset,\r\n            @QueryParam(\"limit\") @DefaultValue(\"10\") int limit\r\n    );\r\n\r\n}\r\n\r\n```\r\n\r\nAnd in the tests, I used WireMock to serve a JSON array to it.\r\n\r\n```java\r\n @Test\r\n    void getAllPosts() throws Throwable {\r\n        var url = \"/posts?q=&offset=0&limit=10\";\r\n        stubFor(\r\n                get(url)\r\n                        .withHeader(\"Accept\", equalTo(\"application/json\"))\r\n                        .willReturn(\r\n                                aResponse()\r\n                                        .withStatus(200)\r\n                                        .withHeader(\"Content-Type\", \"application/json\")\r\n                                        .withBody(\r\n                                                \"\"\"\r\n                                                        [\r\n                                                            {\r\n                                                                \"id\":1,\r\n                                                                \"title\":\"test post 1\",\r\n                                                                \"content\":\"test content of post 1\",\r\n                                                                \"createdAt\":\"2023-03-26T10:15:30\"\r\n                                                            },\r\n                                                            {\r\n                                                                \"id\":2,\r\n                                                                \"title\":\"test post 2\",\r\n                                                                \"content\":\"test content of post 2\",s\r\n                                                                \"createdAt\":\"2023-03-26T10:15:30\"\r\n                                                            }\r\n                                                        ]\r\n                                                        \"\"\".trim()\r\n                                        )\r\n                        )\r\n        );\r\n\r\n        var postList = VertxContextSupport.subscribeAndAwait(() ->\r\n                client.getAllPosts(\"\", 0, 10)\r\n                        .onItem().invoke(c -> LOGGER.log(Level.INFO, \"post is: {0}\", c))\r\n                        .onFailure().invoke(error -> LOGGER.log(Level.INFO, \"error: {0}\", error.getMessage()))\r\n                        .collect().asList()\r\n        );\r\n\r\n        assertThat(postList.size()).isEqualTo(2);\r\n\r\n        verify(\r\n                getRequestedFor(urlEqualTo(url))\r\n                        .withHeader(\"Accept\", equalTo(\"application/json\"))\r\n        );\r\n\r\n    }\r\n\r\n```\r\n\r\n### Expected behavior\r\n\r\nIt should work.\r\n\r\n### Actual behavior\r\n\r\n```bash\r\n\r\n2023-07-16 00:25:22,629 INFO  [com.exa.dem.PostResourceClientTest] (vert.x-eventloop-thread-2) error: HTTP 400 Bad Request\r\n\r\norg.jboss.resteasy.reactive.ClientWebApplicationException: HTTP 400 Bad Request\r\n\r\n\tat io.quarkus.rest.client.reactive.jackson.runtime.serialisers.ClientJacksonMessageBodyReader.readFrom(ClientJacksonMessageBodyReader.java:59)\r\n\tat org.jboss.resteasy.reactive.client.impl.ClientReaderInterceptorContextImpl.proceed(ClientReaderInterceptorContextImpl.java:86)\r\n\tat org.jboss.resteasy.reactive.client.impl.ClientSerialisers.invokeClientReader(ClientSerialisers.java:160)\r\n\tat org.jboss.resteasy.reactive.client.impl.RestClientRequestContext.readEntity(RestClientRequestContext.java:197)\r\n\tat org.jboss.resteasy.reactive.client.impl.MultiInvoker$1.handle(MultiInvoker.java:231)\r\n\tat org.jboss.resteasy.reactive.client.impl.MultiInvoker$1.handle(MultiInvoker.java:190)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\tat io.vertx.core.http.impl.HttpEventHandler.handleChunk(HttpEventHandler.java:51)\r\n\tat io.vertx.core.http.impl.HttpClientResponseImpl.handleChunk(HttpClientResponseImpl.java:239)\r\n\tat io.vertx.core.http.impl.Http1xClientConnection$StreamImpl.lambda$new$0(Http1xClientConnection.java:452)\r\n\tat io.vertx.core.streams.impl.InboundBuffer.handleEvent(InboundBuffer.java:255)\r\n\tat io.vertx.core.streams.impl.InboundBuffer.drain(InboundBuffer.java:242)\r\n\tat io.vertx.core.streams.impl.InboundBuffer.lambda$fetch$0(InboundBuffer.java:295)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:246)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:566)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\nCaused by: com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `com.example.demo.Post` from Array value (token `JsonToken.START_ARRAY`)\r\n at [Source: (ByteArrayInputStream); line: 1, column: 1]\r\n\tat com.fasterxml.jackson.databind.exc.MismatchedInputException.from(MismatchedInputException.java:59)\r\n\tat com.fasterxml.jackson.databind.DeserializationContext.reportInputMismatch(DeserializationContext.java:1752)\r\n\tat com.fasterxml.jackson.databind.DeserializationContext.handleUnexpectedToken(DeserializationContext.java:1526)\r\n\tat com.fasterxml.jackson.databind.DeserializationContext.handleUnexpectedToken(DeserializationContext.java:1473)\r\n\tat com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeFromArray(BeanDeserializer.java:656)\r\n\tat com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeOther(BeanDeserializer.java:211)\r\n\tat com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:187)\r\n\tat com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:323)\r\n\tat com.fasterxml.jackson.databind.ObjectReader._bindAndClose(ObjectReader.java:2105)\r\n\tat com.fasterxml.jackson.databind.ObjectReader.readValue(ObjectReader.java:1481)\r\n\tat io.quarkus.rest.client.reactive.jackson.runtime.serialisers.ClientJacksonMessageBodyReader.readFrom(ClientJacksonMessageBodyReader.java:53)\r\n\t... 23 more\r\n\r\n\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n1. clone https://github.com/hantsy/quarkus-sandbox/tree/master/restclient-reactive\r\n2. Run `PostResourceClientTest`\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nWindows 10 Pro\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nnot used\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.8 (4c87b05d9aedce574290d1acc98575ed5eb6cd39)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34771/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34771/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

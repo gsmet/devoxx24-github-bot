@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22839",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22839/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22839/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22839/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/22839",
+  "id": 1100419204,
+  "node_id": "I_kwDOCFbutM5BlxCE",
+  "number": 22839,
+  "title": "Quarkus fails to connect to Infinispan server running on FIPS",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282122953,
+      "node_id": "MDU6TGFiZWwxMjgyMTIyOTUz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/infinispan",
+      "name": "area/infinispan",
+      "color": "0366d6",
+      "default": false,
+      "description": "Infinispan"
+    },
+    {
+      "id": 1341157944,
+      "node_id": "MDU6TGFiZWwxMzQxMTU3OTQ0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/upstream",
+      "name": "triage/upstream",
+      "color": "7db4d8",
+      "default": false,
+      "description": "Used for issues which are caused by issues in upstream projects/dependency"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-01-12T14:38:39Z",
+  "updated_at": "2022-01-19T08:32:46Z",
+  "closed_at": "2022-01-12T15:21:00Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nInfinispan server running on FIPS enabled machines logs following error at startup and continues to run.\r\nCommand:\r\n`docker run -p 11222:11222 -e USER=admin -e PASS=password infinispan/server`\r\nLogs:\r\n`PKCS11Exception: CKR_ATTRIBUTE_VALUE_INVALID`\r\n\r\nBecause of this Quarkus fails to connect to the Infinispan server and throws:\r\n```\r\nISPN005003: Exception reported java.lang.SecurityException: ISPN028027: Invalid credentials\r\n\tat org.infinispan.server.hotrod.Authentication.lambda$auth$0(Authentication.java:82)\r\n\tat org.jboss.threads.ContextClassLoaderSavingRunnable.run(ContextClassLoaderSavingRunnable.java:35)\r\n\tat org.jboss.threads.EnhancedQueueExecutor.safeRun(EnhancedQueueExecutor.java:1982)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.doRunTask(EnhancedQueueExecutor.java:1486)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1377)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\nCaused by: javax.security.sasl.SaslException: ELY05051: Callback handler does not support credential acquisition [Caused by org.wildfly.security.auth.callback.FastUnsupportedCallbackException: javax.security.auth.callback.PasswordCallback@4034e07e]\r\n\tat org.wildfly.security.mechanism.digest.PasswordDigestObtainer.getSaltedPasswordFromPasswordCallback(PasswordDigestObtainer.java:295)\r\n\tat org.wildfly.security.mechanism.digest.PasswordDigestObtainer.handleUserRealmPasswordCallbacks(PasswordDigestObtainer.java:112)\r\n\tat org.wildfly.security.sasl.digest.AbstractDigestMechanism.handleUserRealmPasswordCallbacks(AbstractDigestMechanism.java:194)\r\n\tat org.wildfly.security.sasl.digest.DigestSaslServer.validateDigestResponse(DigestSaslServer.java:264)\r\n\tat org.wildfly.security.sasl.digest.DigestSaslServer.evaluateMessage(DigestSaslServer.java:377)\r\n\tat org.wildfly.security.sasl.util.AbstractSaslParticipant.evaluateMessage(AbstractSaslParticipant.java:206)\r\n\tat org.wildfly.security.sasl.digest.DigestSaslServer.evaluateResponse(DigestSaslServer.java:350)\r\n\tat org.wildfly.security.sasl.util.AuthenticationCompleteCallbackSaslServerFactory$1.evaluateResponse(AuthenticationCompleteCallbackSaslServerFactory.java:58)\r\n\tat org.wildfly.security.sasl.util.AuthenticationTimeoutSaslServerFactory$DelegatingTimeoutSaslServer.evaluateResponse(AuthenticationTimeoutSaslServerFactory.java:110)\r\n\tat org.wildfly.security.sasl.util.SecurityIdentitySaslServerFactory$1.evaluateResponse(SecurityIdentitySaslServerFactory.java:59)\r\n\tat org.infinispan.server.core.security.SubjectSaslServer.evaluateResponse(SubjectSaslServer.java:39)\r\n\tat org.infinispan.server.hotrod.Authentication.authInternal(Authentication.java:98)\r\n\tat org.infinispan.server.hotrod.Authentication.lambda$auth$0(Authentication.java:77)\r\n\t... 5 more\r\nCaused by: org.wildfly.security.auth.callback.FastUnsupportedCallbackException: javax.security.auth.callback.PasswordCallback@4034e07e\r\n```\r\n\r\nThis is related to https://github.com/quarkusio/quarkus-quickstarts/issues/1032\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nRHEL 8.5 with FIPS enabled\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux rhel8-medium-5 4.18.0-305.el8.x86_64 #1 SMP Thu Apr 29 08:54:30 EDT 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\njava version \"11.0.13\" 2021-10-19 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.6.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/22839/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/22839/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

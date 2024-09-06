@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41392",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41392/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41392/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41392/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/41392",
+  "id": 2370484603,
+  "node_id": "I_kwDOCFbutM6NSrl7",
+  "number": 41392,
+  "title": "Improve a build flow of a native image with input from an agent collecting data from JVM IT runs",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2024-06-24T15:04:21Z",
+  "updated_at": "2024-06-24T15:04:27Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nIn the current implementation, to benefit from an agent collecting data from JVM IT runs, the build flow is not straightforward. Basically, it's\r\n```\r\n./mvnw verify -DskipITs=false -Dquarkus.test.integration-test-profile=test-with-native-agent\r\n// inspect, adjust your native configuration based on the output\r\n./mvnw verify -Dnative\r\n```\r\nAs long as there is a \"manual\" inspection of the native configuration after the first command, it doesn't look that bad.\r\n\r\nHowever, a proper integration of the agent into the build should probably imply making it all work with a single Maven command. To achieve that Quarkus JVM and native build and test goals should be properly ordered and bound to the corresponding Maven build lifecycle phases.\r\n\r\nWhat we would be looking for in this case is something like:\r\n* generate-code\r\n* compile\r\n* generate-code-test\r\n* test-compile\r\n* test: unit tests and `QuarkusTest`\r\n* package: JVM quarkus:build\r\n* integration-test: JVM integration tests\r\n* native image quarkus:build\r\n* native image integration tests\r\n\r\nIf we were to do something like this with the current default POM config, we would need to adjust the `native` profile like\r\n```\r\n        <profile>\r\n            <id>newNative</id>\r\n            <activation>\r\n                <property>\r\n                    <name>newNative</name>\r\n                </property>\r\n            </activation>\r\n            <properties>\r\n                <skipITs>false</skipITs>\r\n                <!-- quarkus.native.enabled>true</quarkus.native.enabled -->\r\n            </properties>\r\n            <build>\r\n                <plugins>\r\n                    <plugin>\r\n                        <groupId>${quarkus.platform.group-id}</groupId>\r\n                        <artifactId>quarkus-maven-plugin</artifactId>\r\n                        <executions>\r\n                            <execution>\r\n                                <id>quarkus-native-build</id>\r\n                                <goals>\r\n                                    <goal>build</goal>\r\n                                </goals>\r\n                                <phase>post-integration-test</phase>\r\n                                <configuration>\r\n                                    <systemProperties>\r\n                                        <quarkus.native.enabled>true</quarkus.native.enabled>\r\n                                    </systemProperties>\r\n                                </configuration>\r\n                            </execution>\r\n                        </executions>\r\n                    </plugin>\r\n                    <plugin>\r\n                        <artifactId>maven-failsafe-plugin</artifactId>\r\n                        <executions>\r\n                            <execution>\r\n                                <id>quarkus-native-integration-tests</id>\r\n                                <goals>\r\n                                    <goal>integration-test</goal>\r\n                                </goals>\r\n                                <phase>post-integration-test</phase>\r\n                            </execution>\r\n                        </executions>\r\n                    </plugin>\r\n                </plugins>\r\n            </build>\r\n        </profile>\r\n```\r\n\r\nThere are a few issues with this profile (and current impl):\r\n1. it appears with the current impl simply calling a profile `native` will be enough to do a native build, `quarkus.native.enabled` can be removed, we should fix that. That's why I called this one `newNative`.\r\n2. `quarkus-native-build` is bound to `post-integration-test` and only for this execution we want to enable `quarkus.native.enabled` (not as a global project property). We should probably consider a dedicated Mojo parameter for it. `systemProperties` works as a PoC but it's not a proper way to configure this.\r\n3. `quarkus-native-integration-tests` actually don't run with this config, since the failsafe-plugin has already run integration tests for the JVM and it considers it's a duplicate run.\r\n```\r\n[INFO] --- failsafe:3.2.5:integration-test (quarkus-native-integration-tests) @ test-app ---\r\n[INFO] Skipping execution of surefire because it has already been run for this configuration\r\n```\r\nWe could probably find a way to still run them.\r\n\r\nFYI @galderz \n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/41392/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/41392/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

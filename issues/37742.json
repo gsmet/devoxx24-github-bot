@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37742",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37742/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37742/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37742/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37742",
+  "id": 2041733391,
+  "node_id": "I_kwDOCFbutM55smEP",
+  "number": 37742,
+  "title": "Keycloak not exchange token in devmode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273039603,
+      "node_id": "MDU6TGFiZWwxMjczMDM5NjAz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/devmode",
+      "name": "area/devmode",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2023-12-14T13:44:57Z",
+  "updated_at": "2023-12-15T14:18:14Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen logging from dev ui to [Keycloak provider](http://localhost:8080/q/dev-ui/io.quarkus.quarkus-oidc/keycloak-provider) in browser this error appear:\r\n```\r\nFailed to exchange code for tokens. Error message: Method [io.quarkus.quarkus-oidc.exchangeCodeForTokens] failed: {\"error\":\"invalid_grant\",\"error_description\":\"Code not valid\"}\r\n```\r\nThis happening only with Keycloak 23+ and previous version working fine (Tried latest version only change the Keycloak version to 22 and it work.). In reproducer are some test and they working so I thing it's only affecting the dev ui. This error causing it's no possible to test secured endpoints as they return 403.\r\n\r\n\r\nLog from Quarkus:\r\n```\r\n2023-12-14 14:26:53,780 INFO  [io.qua.oid.run.dev.OidcDevServicesUtils] (vert.x-eventloop-thread-2) Using authorization_code grant to get a token from 'http://localhost:32785/realms/quarkus/protocol/openid-connect/token' with client id 'backend-service'\r\n2023-12-14 14:26:53,788 INFO  [io.qua.oid.run.dev.OidcDevServicesUtils] (vert.x-eventloop-thread-2) Using authorization_code grant to get a token from 'http://localhost:32785/realms/quarkus/protocol/openid-connect/token' with client id 'backend-service'\r\n2023-12-14 14:26:53,806 ERROR [io.qua.oid.run.dev.OidcDevServicesUtils] (vert.x-eventloop-thread-2) Token can not be acquired from OpenId Connect provider: java.lang.RuntimeException: {\"error\":\"invalid_grant\",\"error_description\":\"Code not valid\"}\r\n2023-12-14 14:26:53,812 ERROR [io.qua.dev.run.jso.JsonRpcCodec] (vert.x-eventloop-thread-2) Error in JsonRPC Call: java.lang.RuntimeException: {\"error\":\"invalid_grant\",\"error_description\":\"Code not valid\"}\r\n        at io.quarkus.oidc.runtime.devui.OidcDevServicesUtils.getBodyAsString(OidcDevServicesUtils.java:209)\r\n        at io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n        at io.smallrye.mutiny.operators.uni.UniOnItemTransform$UniOnItemTransformProcessor.onItem(UniOnItemTransform.java:36)\r\n        at io.smallrye.mutiny.vertx.AsyncResultUni.lambda$subscribe$1(AsyncResultUni.java:35)\r\n        at io.smallrye.mutiny.vertx.DelegatingHandler.handle(DelegatingHandler.java:25)\r\n        at io.vertx.ext.web.client.impl.HttpContext.handleDispatchResponse(HttpContext.java:397)\r\n        at io.vertx.ext.web.client.impl.HttpContext.execute(HttpContext.java:384)\r\n        at io.vertx.ext.web.client.impl.HttpContext.next(HttpContext.java:362)\r\n        at io.vertx.ext.web.client.impl.HttpContext.fire(HttpContext.java:329)\r\n        at io.vertx.ext.web.client.impl.HttpContext.dispatchResponse(HttpContext.java:291)\r\n        at io.vertx.ext.web.client.impl.HttpContext.lambda$null$7(HttpContext.java:507)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:277)\r\n        at io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:259)\r\n        at io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:43)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:173)\r\n        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:166)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:566)\r\n        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n        at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n        at java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\n\n### Expected behavior\n\nNot show error and be able to test endpoints with correct behavioral.\n\n### Actual behavior\n\nShowing error and when testing with dev ui only return 403 even if user has access. \n\n### How to Reproduce?\n\n1. `git clone https://github.com/quarkusio/quarkus-quickstarts.git`\r\n2. `cd security-keycloak-authorization-quickstart`\r\n3. `mvn clean quarkus:dev -Dquarkus.platform.version=3.6.3`\r\n4. Go to `http://localhost:8080/q/dev-ui/io.quarkus.quarkus-oidc/keycloak-provider`\r\n5. Login with any user (I used admin:admin)\r\n6. Error appear\n\n### Output of `uname -a` or `ver`\n\nLinux fedowa 6.5.9-300.fc39.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Oct 25 21:39:20 UTC 2023 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.7\" 2023-04-18 OpenJDK Runtime Environment GraalVM CE 22.3.2 (build 17.0.7+7-jvmci-22.3-b18) OpenJDK 64-Bit Server VM GraalVM CE 22.3.2 (build 17.0.7+7-jvmci-22.3-b18, mixed mode, sharing)\n\n### Quarkus version or git rev\n\nmain, 3.6.2, 3.6.3\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.3 (21122926829f1ead511c958d89bd2f672198ae9f)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37742/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37742/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

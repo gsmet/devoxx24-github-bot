@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20845",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20845/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20845/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20845/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20845",
+  "id": 1029369358,
+  "node_id": "I_kwDOCFbutM49Wu4O",
+  "number": 20845,
+  "title": "Unable to serialise avro optional Decimal",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2021-10-18T16:59:00Z",
+  "updated_at": "2021-10-21T12:37:17Z",
+  "closed_at": "2021-10-20T16:25:52Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nAvro union types of Decimal do not serialise but throw \r\n\r\n```\r\n2021-10-18 17:51:46,311 ERROR [io.sma.rea.mes.kafka] (smallrye-kafka-producer-thread-0) SRMSG18212: Message org.eclipse.microprofile.reactive.messaging.Message$8@5702ccea was not sent to Kafka topic 'com.fnz.test.sink' - nacking message: org.apache.kafka.common.errors.SerializationException: Error serializing Avro message\r\nCaused by: org.apache.avro.UnresolvedUnionException: Not in union [\"null\",{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":13,\"scale\":6}]: 0.26268382480788643\r\n\tat org.apache.avro.generic.GenericData.resolveUnion(GenericData.java:877)\r\n\tat org.apache.avro.generic.GenericDatumWriter.resolveUnion(GenericDatumWriter.java:272)\r\n\tat org.apache.avro.generic.GenericDatumWriter.writeWithoutConversion(GenericDatumWriter.java:143)\r\n\tat org.apache.avro.specific.SpecificDatumWriter.writeField(SpecificDatumWriter.java:98)\r\n\tat org.apache.avro.generic.GenericDatumWriter.writeRecord(GenericDatumWriter.java:210)\r\n\tat org.apache.avro.specific.SpecificDatumWriter.writeRecord(SpecificDatumWriter.java:83)\r\n\tat org.apache.avro.generic.GenericDatumWriter.writeWithoutConversion(GenericDatumWriter.java:131)\r\n\tat org.apache.avro.generic.GenericDatumWriter.write(GenericDatumWriter.java:83)\r\n\tat org.apache.avro.generic.GenericDatumWriter.write(GenericDatumWriter.java:73)\r\n\tat io.confluent.kafka.serializers.AbstractKafkaAvroSerializer.serializeImpl(AbstractKafkaAvroSerializer.java:135)\r\n\tat io.confluent.kafka.serializers.KafkaAvroSerializer.serialize(KafkaAvroSerializer.java:61)\r\n\tat org.apache.kafka.common.serialization.Serializer.serialize(Serializer.java:62)\r\n\tat org.apache.kafka.clients.producer.KafkaProducer.doSend(KafkaProducer.java:925)\r\n\tat org.apache.kafka.clients.producer.KafkaProducer.send(KafkaProducer.java:885)\r\n\tat io.smallrye.reactive.messaging.kafka.impl.ReactiveKafkaProducer.lambda$send$3(ReactiveKafkaProducer.java:102)\r\n```\r\n\r\nSerialisers all seem to work when I use them directly - either using Avro or using the KafkaAvroSerializer but when they are used within quarkus messages fail to serialise\r\n\r\n### Expected behavior\r\n\r\nserialised and sent messages\r\n\r\n### Actual behavior\r\n\r\nException and messages not sent\r\n\r\n\r\n### How to Reproduce?\r\n\r\nCheck out project: \r\n\r\nhttps://github.com/msillence/quarkus-avro-decimal-bug\r\n\r\ndocker-compose up -d \r\n\r\nin the project home\r\n\r\nadd mskafka and schema-registry to your hosts file pointing to your localhost\r\n\r\nRun the quarkus application and you will see serialisation errors every second\r\n\r\nRun the unit tests and they all pass\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux JHC8700TP 4.19.128-microsoft-standard #1 SMP Tue Jun 23 12:58:10 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17\" 2021-09-14\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.3.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\napache-maven-3.8.1\r\n\r\n### Additional information\r\n\r\nI have been trying to capture how the serialiser is constructed in the tests here:\r\n\r\nhttps://github.com/msillence/quarkus-avro-decimal-bug/blob/master/src/test/java/com/fnz/schema/SinkValueTest.java\r\n\r\nspecifically the first tests is meant to be similar to how the serialiser is constructed in quarkus but it all works under test so I feel this is difficult to pin on either avro or the confluent kafak serialiser",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20845/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20845/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

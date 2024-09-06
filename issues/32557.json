@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32557",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32557/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32557/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32557/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32557",
+  "id": 1663886819,
+  "node_id": "I_kwDOCFbutM5jLOXj",
+  "number": 32557,
+  "title": "micrometer.binder.http-server shows wrong metrics with tags {outcome=\"CLIENT_ERROR\",status=\"RESET\"} in HTTP/2",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236031886,
+      "node_id": "MDU6TGFiZWwyMjM2MDMxODg2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/metrics",
+      "name": "area/metrics",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 18,
+  "created_at": "2023-04-12T06:08:23Z",
+  "updated_at": "2024-06-14T08:35:11Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nThe use of Http/2 with the default metrics of quarkus.micrometer.binder.http-server creates invalid metrics with the tags {outcome=\"CLIENT_ERROR\", status=\"RESET\"}, in addition to the correct metrics. \r\n\r\n```\r\n# TYPE http_server_requests_seconds summary\r\nhttp_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/hello\",} 1.0\r\nhttp_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/hello\",} 0.004004918\r\nhttp_server_requests_seconds_count{method=\"GET\",outcome=\"CLIENT_ERROR\",status=\"RESET\",uri=\"/hello\",} 1.0\r\nhttp_server_requests_seconds_sum{method=\"GET\",outcome=\"CLIENT_ERROR\",status=\"RESET\",uri=\"/hello\",} 0.003597424\r\n# HELP http_server_requests_seconds_max  \r\n# TYPE http_server_requests_seconds_max gauge\r\nhttp_server_requests_seconds_max{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/hello\",} 0.004004918\r\nhttp_server_requests_seconds_max{method=\"GET\",outcome=\"CLIENT_ERROR\",status=\"RESET\",uri=\"/hello\",} 0.003597424\r\n```\r\n\r\nBoth metrics have been created through the same request.\r\n\r\nI think the issue comes from `io.vertx.core.http.impl.Http2ConnectionBase` in  method `onStreamClosed`:\r\n```java\r\nvoid onStreamClosed(Http2Stream s) {\r\n    VertxHttp2Stream stream = s.getProperty(streamKey);\r\n    if (stream != null) {\r\n      if (goAwayStatus != null) {\r\n        stream.onClose(new HttpClosedException(goAwayStatus));\r\n      } else {\r\n        stream.onClose(HttpUtils.CLOSED_EXCEPTION);\r\n      }\r\n    }\r\n    checkShutdown();\r\n  }\r\n```\r\n\r\n\r\nWhen the stream (not the connection) is closed the above code is executed, and in the end the `io.vertx.core.http.impl.Http2ServerStream#handleClose()` method is called, which will execute `metrics.requestReset(metric);` creating the CLIENT_ERROR and RESET tags. Later, the response finishes and `metrics.responseEnd(metric, request.response(), bytesWritten());` generates the correct metric.\r\n\r\nI think that closing a stream should not be always considered an error \r\n\r\n\r\n\r\n\r\n### Expected behavior\r\n\r\nCreate correct metrics by avoiding false positives from RESET tags.\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\nI attach a simple reproducer with quarkus and micrometer enabled.\r\n\r\nReproducer:\r\n[code-with-quarkus.zip](https://github.com/quarkusio/quarkus/files/11207665/code-with-quarkus.zip)\r\n\r\nSteps to reproduce the behavior:\r\n\r\n* Run reproducer\r\n* Send requests like:\r\n\r\n```\r\ncurl -vvv --http2-prior-knowledge --location --request GET 'http://localhost:8080/hello' \\\r\n--header 'x-request-id: f0c9d877-c4cb-4cde-88af-ce08a5a6a13b' \\\r\n--header 'Content-Type: application/json' \\\r\n--header 'Accept: application/json'\r\n```\r\nor\r\n```\r\ncurl -vvv --http2 --location --request GET 'http://localhost:8080/hello' \\\r\n--header 'x-request-id: f0c9d877-c4cb-4cde-88af-ce08a5a6a13b' \\\r\n--header 'Content-Type: application/json' \\\r\n--header 'Accept: application/json'\r\n```\r\n* Verify the metrics in http://localhost:8080/q/metrics/\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\njava 17.0.5 2022-10-18 LTS Java(TM) SE Runtime Environment (build 17.0.5+9-LTS-191) Java HotSpot(TM) 64-Bit Server VM (build 17.0.5+9-LTS-191, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.16.6.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32557/reactions",
+    "total_count": 3,
+    "+1": 3,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32557/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

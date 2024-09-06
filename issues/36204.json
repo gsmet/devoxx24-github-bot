@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36204",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36204/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36204/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36204/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36204",
+  "id": 1917806080,
+  "node_id": "I_kwDOCFbutM5yT2YA",
+  "number": 36204,
+  "title": "Malloc Arena RSS increase between 2.16.11.Final and 3.x/main",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 20,
+  "created_at": "2023-09-28T15:39:11Z",
+  "updated_at": "2024-02-10T08:52:11Z",
+  "closed_at": "2024-02-10T08:52:11Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\n## Environment:\r\n```\r\njava version \"17.0.7\" 2023-04-18 LTS\r\nJava(TM) SE Runtime Environment (build 17.0.7+8-LTS-224)\r\nJava HotSpot(TM) 64-Bit Server VM (build 17.0.7+8-LTS-224, mixed mode, sharing)\r\n```\r\nand OS:\r\n```\r\nLinux fedora 6.3.8-200.fc38.x86_64 #1 SMP PREEMPT_DYNAMIC Thu Jun 15 02:15:40 UTC 2023 x86_64 GNU/Linux\r\n```\r\nCPU:\r\n```\r\nAMD Ryzen 9 7950X 16-Core Processor@4.5 GHz using network latency tuned profile with turbo boost disabled\r\n```\r\n\r\n## Instructions\r\n\r\nRun https://github.com/quarkusio/quarkus-quickstarts/tree/2.16.11.Final/config-quickstart\r\nversus https://github.com/quarkusio/quarkus-quickstarts/tree/3.4.1/config-quickstart\r\n(or https://github.com/quarkusio/quarkus-quickstarts/tree/development with \r\nwith https://github.com/quarkusio/quarkus/commit/c2f9d461e983f187db344f93917df46dd403b5bb which is the commit before a change I've sent).\r\n\r\nStart quarkus with:\r\n```\r\n$ taskset -c 0,1,2 java -XX:+AlwaysPreTouch -Xmx40M -Xms40M -XX:+UseSerialGC -XX:TieredStopAtLevel=4 -XX:-BackgroundCompilation -Dquarkus.vertx.event-loops-pool-size=1 -jar quarkus-app/quarkus-run.jar\r\n```\r\nUsing https://github.com/bric3/java-pmap-inspector vs pmap -X with:\r\n```\r\n$ pmap -X <pid of quarkus> | java <...>/java-pmap-inspector/JavaPmapInspector.java -\r\n```\r\n\r\nFor `2.16.11.Final`, reports:\r\n```\r\nShared file mappings:\r\n                   count=2     rssMin=32         rssMax=124016    \r\n\r\nMemory mappings:\r\n           UNKNOWN count=33    reserved=64400      rss=56876     \r\n       MAPPED_FILE count=22    reserved=254564     rss=30104     \r\n         JAVA_HEAP count=1     reserved=1047616    rss=1024      \r\n      MALLOC_ARENA count=17    reserved=1114112    rss=9968    <--------------\r\n         CODE_HEAP count=3     reserved=245760     rss=7680      \r\nSHARED_MAPPED_FILE count=2     reserved=124048     rss=1808      \r\n       JAVA_THREAD count=13    reserved=13312      rss=772       \r\n   NON_JAVA_THREAD count=2     reserved=2064       rss=32        \r\n\r\nstats: vsz=2865876 kib \r\n rss=108264 kib\r\n```\r\nFor c2f9d461e983f187db344f93917df46dd403b5bb, reports:\r\n```\r\nShared file mappings:\r\n                   count=2     rssMin=32         rssMax=124016    \r\n\r\nMemory mappings:\r\n           UNKNOWN count=33    reserved=63376      rss=57728     \r\n       MAPPED_FILE count=21    reserved=254500     rss=30272     \r\n         JAVA_HEAP count=1     reserved=1047616    rss=1088      \r\n      MALLOC_ARENA count=20    reserved=1310720    rss=22656    <-------------- WOT?     \r\n         CODE_HEAP count=3     reserved=245760     rss=8000      \r\nSHARED_MAPPED_FILE count=2     reserved=124048     rss=1824      \r\n       JAVA_THREAD count=17    reserved=17408      rss=1100      \r\n   NON_JAVA_THREAD count=2     reserved=2064       rss=32        \r\n\r\nstats: vsz=3065492 kib \r\n rss=122700 kib\r\n```\r\nWhich is a `14 MB` increase. \r\n\r\nFew notes:\r\n1. why `taskset` and ` -Dquarkus.vertx.event-loops-pool-size=1`? \r\nTo exclude the excessive parallelism mentioned in https://stackoverflow.com/questions/63699573/growing-resident-size-set-in-jvm as one of the causes which can cause increased RSS due to lack of concurrency out of glibc malloc.\r\nAdditionally it should limit the number of compiler threads (C1 should be just use 1 IIRC)\r\n2. why ` -XX:+AlwaysPreTouch`?\r\nTo reduce the effects of whatever allocation rate is happening in both quarkus versions and affecting the Heap's RSS\r\n3. why `-XX:+UseSerialGC`?\r\nThis GC has the lower memory footprint overall; it's a way to reduce the noise of the resulting RSS\r\n4. why `-XX:-BackgroundCompilation`?\r\nTo improve the reproducibility of the results\r\n\r\n\r\n**IMPORTANT NOTES**:\r\n- It seems that reducing the compilation level to just C1, adding `-XX:TieredStopAtLevel=1` the RSS difference is much less.\r\n- Similarly, if we use just C2 and disable tiered compilation, the RSS difference become negligible ie `-XX:-TieredCompilation -XX:TieredStopAtLevel=4`\r\n\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36204/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36204/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25922",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25922/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25922/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25922/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25922",
+  "id": 1257986812,
+  "node_id": "I_kwDOCFbutM5K-1r8",
+  "number": 25922,
+  "title": "Smallrye Configuration missreading nested maps",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-06-02T10:20:12Z",
+  "updated_at": "2022-06-14T11:53:33Z",
+  "closed_at": "2022-06-14T11:53:33Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nWhen dealing with nested maps, Smallrye config is setting all keys as the key for the topmost map.\r\n\r\nfor an application.yml map:\r\n``` \r\nkey1:\r\n  key2:\r\n    key3: value\r\n```\r\nthe config will read it as: \r\n```\r\nkey3:\r\n  key3:\r\n    key3: value\r\n```\r\n### Expected behavior\r\n\r\nWhen reading nested maps, the keys must match what is on the aplication.yml.\r\n\r\n### Actual behavior\r\n\r\nWhen reading nested maps, the keys are all set as the key of the topmost map.\r\n\r\n### How to Reproduce?\r\n\r\n```\r\npackage com.example;\r\n\r\nimport io.smallrye.config.ConfigMapping;\r\n\r\nimport java.util.Map;\r\n\r\n@ConfigMapping(prefix = \"reproducer\")\r\npublic interface Config {\r\n\r\n    Map<String, Map<String, Map<String, String>>> triple();\r\n\r\n    Map<String, Map<String, String>> dual();\r\n\r\n}\r\n```\r\n\r\n```\r\npackage com.example;\r\n\r\nimport io.quarkus.test.junit.QuarkusTest;\r\nimport org.junit.jupiter.api.Assertions;\r\nimport org.junit.jupiter.api.Test;\r\n\r\nimport javax.inject.Inject;\r\n\r\nimport static org.junit.jupiter.api.Assertions.*;\r\n\r\n\r\n@QuarkusTest\r\nclass ConfigTest {\r\n\r\n    @Inject\r\n    Config config;\r\n\r\n    @Test\r\n    void triple() {\r\n        var key1 = config.triple().keySet().toArray()[0];\r\n        var key2 = config.triple().get(key1).keySet().toArray()[0];\r\n        var key3 = config.triple().get(key1).get(key2).keySet().toArray()[0];\r\n        var value = config.triple().get(key1).get(key2).get(key3);\r\n\r\n        Assertions.assertAll(\r\n                () -> assertEquals(\"key1\", key1, \"First map\"),\r\n                () -> assertEquals(\"key2\", key2, \"Second map\"),\r\n                () -> assertEquals(\"key3\", key3, \"Third map\"),\r\n                () -> assertEquals(\"value\", value, \"value\")\r\n        );\r\n    }\r\n\r\n    @Test\r\n    void dual() {\r\n        var key1 = config.dual().keySet().toArray()[0];\r\n        var key2 = config.dual().get(key1).keySet().toArray()[0];\r\n        var value = config.dual().get(key1).get(key2);\r\n\r\n        Assertions.assertAll(\r\n                () -> assertEquals(\"key1\", key1, \"First map\"),\r\n                () -> assertEquals(\"key2\", key2, \"Second map\"),\r\n                () -> assertEquals(\"value\", value, \"value\")\r\n        );\r\n    }\r\n}\r\n```\r\nApplication.yml\r\n```\r\nreproducer:\r\n  dual:\r\n    key1:\r\n      key2: value\r\n\r\n  triple:\r\n    key1:\r\n      key2:\r\n        key3: value\r\n\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux 5.13.0-41-generic #46~20.04.1-Ubuntu SMP Wed Apr 20 13:16:21 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.15\" 2022-04-19\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.9.2.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\r\n\r\n### Additional information\r\n\r\nThis bug did not exist on version 2.5.x",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25922/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25922/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35337",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35337/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35337/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35337/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/35337",
+  "id": 1848811469,
+  "node_id": "I_kwDOCFbutM5uMp_N",
+  "number": 35337,
+  "title": "404's on `quarkus.oidc.logout.path`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2023-08-14T00:44:30Z",
+  "updated_at": "2023-08-17T09:17:08Z",
+  "closed_at": "2023-08-16T22:04:08Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHaving some trouble making a logout endpoint for my oidc based app.\r\n\r\nI specify a simple `/logout` for  `quarkus.oidc.logout.path`, yet get a 404.\r\n\r\nThis is on this app, on that branch: https://github.com/Epic-Breakfast-Productions/OpenQuarterMaster/tree/361-fr-simplify-auth-scheme/software/open-qm-base-station\r\n\r\nI also have this proof of concept: https://github.com/GregJohnStewart/quarkus-proofs/tree/main/oidc-experiment\r\n\r\nHowever, the logout path works in the PoC, except for when the user is already logged out. If the user is already logged out, a 404 occurs.\r\n\r\nThe only bit of log seen when hitting the non-poc: \r\n\r\n```\r\n20:46:58 [DEBUG][0f5ae22ba3a3a433d6b0b10b4b24711d|  |01bf2132ee2885da|true ][or.jb.re.re.co.co.AbstractResteasyReactiveContext|vert.x-eventloop-thread-3 ]():: Restarting handler chain for exception exception: jakarta.ws.rs.NotFoundException: Unable to find matching target resource method\r\n\tat org.jboss.resteasy.reactive.server.handlers.ClassRoutingHandler.throwNotFound(ClassRoutingHandler.java:231)\r\n\tat org.jboss.resteasy.reactive.server.handlers.ClassRoutingHandler.handle(ClassRoutingHandler.java:102)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:123)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:48)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:23)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:10)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:177)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:102)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:88)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:140)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n\tat io.vertx.ext.web.handler.impl.StaticHandlerImpl.lambda$sendStatic$1(StaticHandlerImpl.java:290)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n\r\n20:46:58 [INFO ][                |  |                |     ][io.qu.ht.access-log                     |vert.x-eventloop-thread-3 ]():: 127.0.0.1 - - [13/Aug/2023:20:46:58 -0400] \"GET /logout HTTP/1.1\" 404 19553\r\n```\r\n\r\nWhen 404 occurs on PoC:\r\n\r\n```\r\n2023-08-13 20:53:45,279 DEBUG [org.jbo.res.rea.com.cor.AbstractResteasyReactiveContext] (vert.x-eventloop-thread-3) Restarting handler chain for exception exception: jakarta.ws.rs.NotFoundException: HTTP 404 Not Found\r\n\tat org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.handle(RestInitialHandler.java:71)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:121)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:145)\r\n\tat org.jboss.resteasy.reactive.server.handlers.RestInitialHandler.beginProcessing(RestInitialHandler.java:48)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:23)\r\n\tat org.jboss.resteasy.reactive.server.vertx.ResteasyReactiveVertxHandler.handle(ResteasyReactiveVertxHandler.java:10)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:177)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:102)\r\n\tat io.quarkus.vertx.http.runtime.StaticResourcesRecorder$2.handle(StaticResourcesRecorder.java:88)\r\n\tat io.vertx.ext.web.impl.RouteState.handleContext(RouteState.java:1284)\r\n\tat io.vertx.ext.web.impl.RoutingContextImplBase.iterateNext(RoutingContextImplBase.java:140)\r\n\tat io.vertx.ext.web.impl.RoutingContextImpl.next(RoutingContextImpl.java:141)\r\n\tat io.vertx.ext.web.handler.impl.StaticHandlerImpl.lambda$sendStatic$1(StaticHandlerImpl.java:290)\r\n\tat io.vertx.core.impl.future.FutureImpl$3.onSuccess(FutureImpl.java:141)\r\n\tat io.vertx.core.impl.future.FutureBase.lambda$emitSuccess$0(FutureBase.java:54)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:833)\r\n```\r\n\r\n### Expected behavior\r\n\r\n404's should not occur on the logout path in any case.\r\n\r\n### Actual behavior\r\n\r\n404's are occurring on the logout endpoint\r\n\r\n### How to Reproduce?\r\n\r\nErring project: https://github.com/Epic-Breakfast-Productions/OpenQuarterMaster/tree/361-fr-simplify-auth-scheme/software/open-qm-base-station\r\n\r\n - Quarkus dev run on /software/open-qm-base-station (take note of the branch)\r\n - Navigate to `localhost:8080`, click \"Continue\"\r\n - Register a user, be taken to the 'overview' page and be logged in\r\n - Click user dropdown at top, click \"logout\" (or navigate to `/logout`)\r\n - Result at 404 page\r\n\r\nPoC: https://github.com/GregJohnStewart/quarkus-proofs/tree/main/oidc-experiment\r\n\r\n- Quarkus dev run\r\n- navigate to `localhost:8081/some-page/admin`\r\n- Login as `alice`\r\n- be back at page, click \"logout\"\r\n- Now be at `/some-page`\r\n- click `logout` again, get 404\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.2.4\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/35337/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/35337/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

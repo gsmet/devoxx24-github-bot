@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21314",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21314/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21314/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21314/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21314",
+  "id": 1048614784,
+  "node_id": "I_kwDOCFbutM4-gJeA",
+  "number": 21314,
+  "title": "[2.4.1] Kubernetes extension does not expose the correct port?",
+  "labels": [
+    {
+      "id": 985346626,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjY=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/question",
+      "name": "kind/question",
+      "color": "d876e3",
+      "default": false,
+      "description": "Further information is requested"
+    },
+    {
+      "id": 1654772125,
+      "node_id": "MDU6TGFiZWwxNjU0NzcyMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kubernetes",
+      "name": "area/kubernetes",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1891982257,
+      "node_id": "MDU6TGFiZWwxODkxOTgyMjU3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/container-image",
+      "name": "area/container-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2021-11-09T13:34:31Z",
+  "updated_at": "2021-11-09T13:38:15Z",
+  "closed_at": "2021-11-09T13:38:03Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi!\r\n\r\nI have just started to get to know the Kubernetes extension, and I found something strange.\r\n\r\nI have created the project from: [](https://quarkus.io/guides/deploying-to-kubernetes)\r\n\r\n**mvn io.quarkus.platform:quarkus-maven-plugin:2.4.1.Final:create -DprojectGroupId=org.acme -DprojectArtifactId=kubernetes-quickstart -DclassName=\"org.acme.rest.GreetingResource\" -Dpath=\"/greeting\" -Dextensions=\"resteasy,kubernetes,jib\"**\r\n\r\nAfter that I modified the application.properties with one single line:\r\n\r\n**quarkus.http.port = 8888**\r\n\r\nThen I ran the **mvnw package** command and saw the output in the **target/kubernetes** folder:\r\n\r\n---\r\napiVersion: v1\r\nkind: Service\r\nmetadata:\r\n  annotations:\r\n    app.quarkus.io/build-timestamp: 2021-11-09 - 13:24:11 +0000\r\n  labels:\r\n    app.kubernetes.io/name: kubernetes-quickstart\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n  name: kubernetes-quickstart\r\nspec:\r\n  ports:\r\n    - name: http\r\n      port: 80\r\n      targetPort: 8888\r\n  selector:\r\n    app.kubernetes.io/name: kubernetes-quickstart\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n  type: ClusterIP\r\n---\r\napiVersion: apps/v1\r\nkind: Deployment\r\nmetadata:\r\n  annotations:\r\n    app.quarkus.io/build-timestamp: 2021-11-09 - 13:24:11 +0000\r\n  labels:\r\n    app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n    app.kubernetes.io/name: kubernetes-quickstart\r\n  name: kubernetes-quickstart\r\nspec:\r\n  replicas: 1\r\n  selector:\r\n    matchLabels:\r\n      app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n      app.kubernetes.io/name: kubernetes-quickstart\r\n  template:\r\n    metadata:\r\n      annotations:\r\n        app.quarkus.io/build-timestamp: 2021-11-09 - 13:24:11 +0000\r\n      labels:\r\n        app.kubernetes.io/version: 1.0.0-SNAPSHOT\r\n        app.kubernetes.io/name: kubernetes-quickstart\r\n    spec:\r\n      containers:\r\n        - env:\r\n            - name: KUBERNETES_NAMESPACE\r\n              valueFrom:\r\n                fieldRef:\r\n                  fieldPath: metadata.namespace\r\n          image: user/kubernetes-quickstart:1.0.0-SNAPSHOT\r\n          imagePullPolicy: Always\r\n          name: kubernetes-quickstart\r\n          ports:\r\n            - containerPort: 8888\r\n              name: http\r\n              protocol: TCP \r\n\r\nAt the Service section, it shouldn't be\r\n\r\nspec:\r\n  ports:\r\n    - name: http\r\n      port: 8888\r\n      targetPort: 8888\r\n\r\ninstead of\r\n\r\nspec:\r\n  ports:\r\n    - name: http\r\n      port: 80\r\n      targetPort: 8888\r\n\r\n?\r\n\r\nI looked at the configuration options but couldn't find a value where the default would be 80, so I have no idea what would need to be changed to include the 8888 IP.\r\n\r\nBest regards,\r\nViktor\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21314/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21314/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37989",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37989/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37989/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37989/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37989",
+  "id": 2063080340,
+  "node_id": "I_kwDOCFbutM56-BuU",
+  "number": 37989,
+  "title": "Allow adding a mapping between OIDC user role (from ID token) and application user role",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 27,
+  "created_at": "2024-01-02T23:52:40Z",
+  "updated_at": "2024-01-03T18:53:57Z",
+  "closed_at": "2024-01-03T18:32:15Z",
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nThanks to the Quarkus OIDC extension, I was able to interconnect my application with an identity provider (based on Keycloak).\r\nI was able to retrieve my user's profiles provided by the identity provider via the idToken (in a specific `user_profile` claim)\r\n\r\nHere is the subset of an example ID token received:\r\n\r\n```json\r\n{\r\n\t\"name\": \"john.doe@acme.com\",\r\n\t\"issuer\": \"https://idp.acme.com/auth/realms/ACME\",\r\n\t\"subject\": \"f:c9507fd1-12f3-487f-8f23-77eb06728749:john.doe@acme.com\",\r\n\t\"tokenId\": \"d0e14a43-8545-4b67-bb9d-7704c01901dc\",\r\n\t\"claims\": {\r\n\t\t\"sub\": \"f:c9507fd1-12f3-487f-8f23-77eb06728749:john.doe@acme.com\",\r\n\t\t\"typ\": \"ID\",\r\n\t\t\"user_profile\": [\r\n\t\t\t\"AP_DEV_UI_USER\",\r\n\t\t\t\"AP_DEV_UI_ADMIN\",\r\n\t\t\t\"AP_PROD_UI_USER\"\r\n\t\t]\r\n\t}\r\n}\r\n```\r\n\r\nAnd here a subset of my configuration:\r\n\r\n```properties\r\nquarkus.oidc.roles.source=idtoken\r\nquarkus.oidc.roles.role-claim-path=user_profile\r\n```\r\n\r\nThe list of profiles provided by the IdP are relatively \"obscure\".\r\n\r\nI need to map profile to role according different environment\r\n\r\n| Environment | Identity provider profile | Application role |\r\n| ----------- | ------------------------- | ---------------- |\r\n| Development | AP_DEV_UI_USER            | user             |\r\n| Development | AP_DEV_UI_ADMIN           | admin            |\r\n| Production  | AP_PROD_UI_USER           | user             |\r\n| Production  | AP_PROD_UI_ADMIN          | admin            |\r\n\r\nIs it possible to add functionality to “map” a profile to a role?\r\n\r\nThus, I will be able to protect my resources simply via the corresponding annotations such as for example:\r\n\r\n```java\r\n@GET\r\n@RolesAllowed(\"admin\")\r\n@Path(\"/restricted-area\")\r\npublic String restrictedArea() {\r\n    return \"Restricted access granted\";\r\n}\r\n```\r\n\r\n\r\n### Implementation ideas\r\n\r\nWe can execute the mapping in [findClaimWithRoles method of OidcUtils.java#L203-L218](https://github.com/quarkusio/quarkus/blob/3.6.4/extensions/oidc/runtime/src/main/java/io/quarkus/oidc/runtime/OidcUtils.java#L203-L218) from configuration provided in `OidcTenantConfig.Roles rolesConfig` parameter:\r\n\r\n```java\r\n    private static List<String> findClaimWithRoles(OidcTenantConfig.Roles rolesConfig, String claimPath,\r\n            JsonObject json) {\r\n        Object claimValue = findClaimValue(claimPath, json, splitClaimPath(claimPath), 0);\r\n        final List<String> roles;\r\n        if (claimValue instanceof JsonArray) {\r\n            roles = convertJsonArrayToList((JsonArray) claimValue);\r\n        } else if (claimValue != null) {\r\n            String sep = rolesConfig.getRoleClaimSeparator().isPresent() ? rolesConfig.getRoleClaimSeparator().get() : \" \";\r\n            if (claimValue.toString().isBlank()) {\r\n                roles = Collections.emptyList();\r\n            } else {\r\n                roles = Arrays.asList(claimValue.toString().split(sep));\r\n            }\r\n        } else {\r\n            roles = Collections.emptyList();\r\n        }\r\n\r\n        if (!rolesConfig.getRoleMapping().isEmpty()) {\r\n            final Map<String, String> mapping = rolesConfig.getRoleMapping();\r\n            return roles.stream()\r\n                    .map(mapping::get)\r\n                    .filter(Objects::nonNull)\r\n                    .collect(Collectors.toList());\r\n        } else {\r\n            return roles;\r\n        }\r\n    }\r\n```\r\n\r\nProperty to add in [OidcTenantConfig.Roles](https://github.com/quarkusio/quarkus/blob/3.6.4/extensions/oidc/runtime/src/main/java/io/quarkus/oidc/OidcTenantConfig.java#L666) config:\r\n\r\n```java\r\n        /**\r\n         * Mapping between OIDC user role and application user role\r\n         */\r\n        @ConfigDocMapKey(\"oidc-role-name\")\r\n        public Map<String, String> roleMapping = new HashMap<>();\r\n\r\n        public Map<String, String> getRoleMapping() {\r\n            return roleMapping;\r\n        }\r\n```\r\n\r\nHere is an example of configuration to correctly respond to my use case described above:\r\n\r\n```properties\r\nquarkus.oidc.roles.source=idtoken\r\nquarkus.oidc.roles.role-claim-path=user_profile\r\n%dev.quarkus.oidc.roles.role-mapping.AP_DEV_UI_USER=user\r\n%dev.quarkus.oidc.roles.role-mapping.AP_DEV_UI_ADMIN=admin\r\nquarkus.oidc.roles.role-mapping.AP_PROD_UI_USER=user\r\nquarkus.oidc.roles.role-mapping.AP_PROD_UI_ADMIN=admin\r\n```\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37989/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37989/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

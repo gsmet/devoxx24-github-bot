@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20718",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20718/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20718/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20718/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/20718",
+  "id": 1024618861,
+  "node_id": "I_kwDOCFbutM49EnFt",
+  "number": 20718,
+  "title": "executor thread timeout unexpected behavior",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 5085228218,
+      "node_id": "LA_kwDOCFbutM8AAAABLxpsug",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-feedback",
+      "name": "triage/needs-feedback",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for feedback."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2021-10-13T00:06:34Z",
+  "updated_at": "2023-03-10T13:23:05Z",
+  "closed_at": "2023-03-10T13:22:58Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\n- I was running quarkus in dev mode\r\n- I got a client, **sending request in sequence**\r\n- I expected quarkus to handle these requests in sequence\r\n- some request contains large data, and lead to some large bulk insert into database (~ 10s)\r\n- seems that quarkus' worker thread has some timeout setting, after blocking for a while, it will spawn a new thread to handle new requests, and my client got some reading error from the connection(while quarkus didn't kill that long-running thread, it was still running and finally finished)\r\n- so in the log, I see some interleaving logging\r\n\r\n```\r\n// the first request is good\r\n2021-10-12 16:47:40,991 WARN  [MapFileDAO.java:260] (executor-thread-0) flag0\r\n2021-10-12 16:47:40,992 WARN  [MapFileDAO.java:270] (executor-thread-0) flag1.2\r\n2021-10-12 16:47:40,995 WARN  [MapFileDAO.java:294] (executor-thread-0) flag2\r\n2021-10-12 16:47:40,996 WARN  [MapFileDAO.java:328] (executor-thread-0) flag3\r\n2021-10-12 16:47:41,003 WARN  [MapFileDAO.java:340] (executor-thread-0) flag4\r\n2021-10-12 16:47:41,006 WARN  [MapFileDAO.java:353] (executor-thread-0) flag5\r\n2021-10-12 16:47:41,008 ERROR [MapFileDAO.java:245] (executor-thread-0) before bulk insert1\r\n2021-10-12 16:47:41,014 ERROR [MapFileDAO.java:247] (executor-thread-0) after bulk insert1\r\n2021-10-12 16:47:41,015 ERROR [MapFileDAO.java:254] (executor-thread-0) before bulk insert2\r\n2021-10-12 16:47:41,019 ERROR [MapFileDAO.java:256] (executor-thread-0) after bulk insert2\r\n2021-10-12 16:47:41,020 WARN  [MapFileDAO.java:362] (executor-thread-0) flag6\r\n2021-10-12 16:47:41,021 WARN  [MapFileDAO.java:394] (executor-thread-0) flag7\r\n2021-10-12 16:47:41,026 INFO  [InvocationLogger.java:29] (executor-thread-0) MapFileServiceImpl.create(request, body, securityContext)\r\n2021-10-12 16:47:41,027 INFO  [JBossLoggingAccessLogReceiver.java:44] (executor-thread-0) 0:0:0:0:0:0:0:1 - - 12/Oct/2021:16:47:41 -0700 \"POST /api/v1/map_file HTTP/1.1\" 200 1823\r\n\r\n////////// the second request(this one is the large one with long-running bulk DB insert\r\n     2021-10-12 16:47:41,080 WARN  [MapFileDAO.java:260] (executor-thread-0) flag0\r\n2021-10-12 16:47:41,080 WARN  [MapFileDAO.java:270] (executor-thread-0) flag1.2\r\n2021-10-12 16:47:41,103 WARN  [MapFileDAO.java:294] (executor-thread-0) flag2\r\n2021-10-12 16:47:41,115 WARN  [MapFileDAO.java:328] (executor-thread-0) flag3\r\n2021-10-12 16:47:41,129 WARN  [MapFileDAO.java:340] (executor-thread-0) flag4\r\n2021-10-12 16:47:41,133 WARN  [MapFileDAO.java:353] (executor-thread-0) flag5\r\n     2021-10-12 16:47:41,339 ERROR [MapFileDAO.java:245] (executor-thread-0) before bulk insert1\r\n<====2021-10-12 16:47:45,870 ERROR [MapFileDAO.java:247] (executor-thread-0) after bulk insert1\r\n<====2021-10-12 16:47:46,045 INFO  [JBossLoggingAccessLogReceiver.java:44] (vert.x-eventloop-thread-0) 0:0:0:0:0:0:0:1 - - 12/Oct/2021:16:47:46 -0700 \"POST /api/v1/map_file HTTP/1.1\" 200 -=====-> 92% EXECUTING [1m 19s]\r\n> :fe2021-10-12 16:47:46,070 ERROR [MapFileDAO.java:254] (executor-thread-0) before bulk insert2\r\n\r\n//////////  interleaving here, executor-thread-1\r\n2021-10-12 16:47:46,079 WARN  [MapFileDAO.java:260] (executor-thread-1) flag0\r\n2021-10-12 16:47:46,079 WARN  [MapFileDAO.java:270] (executor-thread-1) flag1.2\r\n2021-10-12 16:47:46,091 WARN  [MapFileDAO.java:294] (executor-thread-1) flag2\r\n2021-10-12 16:47:46,095 WARN  [MapFileDAO.java:328] (executor-thread-1) flag3\r\n2021-10-12 16:47:46,109 WARN  [MapFileDAO.java:340] (executor-thread-1) flag4\r\n\r\n//////////  finally the long-running thread-0 finished\r\n     2021-10-12 16:47:50,564 ERROR [MapFileDAO.java:256] (executor-thread-0) after bulk insert2\r\n<====2021-10-12 16:47:50,729 WARN  [MapFileDAO.java:362] (executor-thread-0) flag6\r\n<====2021-10-12 16:47:50,788 WARN  [MapFileDAO.java:394] (executor-thread-0) flag7\r\n<====2021-10-12 16:47:50,862 WARN  [MapFileDAO.java:353] (executor-thread-1) flag5\r\n2021-10-12 16:47:50,890 INFO  [InvocationLogger.java:29] (executor-thread-0) MapFileServiceImpl.create(request, body, securityContext)\r\n> :fe2021-10-12 16:47:50,979 ERROR [MapFileDAO.java:245] (executor-thread-1) before bulk insert1\r\n<====2021-10-12 16:47:51,068 INFO  [JBossLoggingAccessLogReceiver.java:44] (vert.x-eventloop-thread-23) 0:0:0:0:0:0:0:1 - - 12/Oct/2021:16:47:51 -0700 \"POST /api/v1/map_file HTTP/1.1\" 200 -====-> 92% EXECUTING [1m 24s]\r\n2021-10-12 16:47:51,101 WARN  [MapFileDAO.java:260] (executor-thread-0) flag0\r\n2021-10-12 16:47:51,101 WARN  [MapFileDAO.java:270] (executor-thread-0) flag1.2\r\n     2021-10-12 16:47:51,184 WARN  [AgroalEventLoggingListener.java:76] (executor-thread-0) Datasource '<default>': This connection has been closed.\r\n2021-10-12 16:47:51,185 ERROR [ErrorMapper.java:25] (executor-thread-0) Failed to handle request: org.postgresql.util.PSQLException: This connection has been closed.\r\n        at org.postgresql.jdbc.PgConnection.checkClosed(PgConnection.java:877)\r\n        at org.postgresql.jdbc.PgConnection.rollback(PgConnection.java:884)\r\n        at io.agroal.pool.wrapper.ConnectionWrapper.rollback(ConnectionWrapper.java:219)\r\n```\r\n\r\n\r\nI tried to find relevant config in https://quarkus.io/guides/all-config,\r\n\r\nfound `quarkus.vertx.max-worker-execute-time`, but seems that it defaults to 60s, and I haven't changed that, why the timeout happened so fast.\r\n\r\n\r\n\r\nAnd BTW, finally, I got a `org.postgresql.util.PSQLException: This connection has been closed` exception....I know I might need to post this in another issue, but in case anyone know what's happening to my db connection pool, pls also give me some hints. Seems that the other thread is reusing some closed connection\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n_No response_\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux sd-dub-527ca2 5.4.0-80-generic #90~18.04.1-Ubuntu SMP Tue Jul 13 19:40:02 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08) OpenJDK 64-Bit Server VM GraalVM CE 21.2.0 (build 11.0.12+6-jvmci-21.2-b08, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.2.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n------------------------------------------------------------ Gradle 7.0.2 ------------------------------------------------------------  Build time:   2021-05-14 12:02:31 UTC Revision:     1ef1b260d39daacbf9357f9d8594a8a743e2152e  Kotlin:       1.4.31 Groovy:       3.0.7 Ant:          Apache Ant(TM) version 1.10.9 compiled on September 27 2020 JVM:          11.0.12 (GraalVM Community 11.0.12+6-jvmci-21.2-b08) OS:           Linux 5.4.0-80-generic amd64\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/20718/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/20718/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "not_planned"
+}

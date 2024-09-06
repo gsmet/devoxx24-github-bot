@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24257",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24257/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24257/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24257/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24257",
+  "id": 1165694971,
+  "node_id": "I_kwDOCFbutM5Fexf7",
+  "number": 24257,
+  "title": "Annotation classloading issue in custom JUnit extension when run in continuous testing",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2955098535,
+      "node_id": "MDU6TGFiZWwyOTU1MDk4NTM1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/continuous-testing",
+      "name": "area/continuous-testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 20,
+  "created_at": "2022-03-10T20:38:40Z",
+  "updated_at": "2023-01-16T16:57:16Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nA Junit extension, e.g. a `org.junit.jupiter.api.extension.BeforeEachCallback`, that is registered via `src/test/resources/META-INF/services/org.junit.jupiter.api.extension.Extension`, cannot find a custom annotation that is present on a test method.\r\n\r\n`context.getRequiredTestMethod().getAnnotationsByType(SomeAnnotation.class)` (`context` being `org.junit.jupiter.api.extension.ExtensionContext`) returns an empty array.\r\nOTOH, `context.getRequiredTestMethod().getAnnotations()` does contain the annotation. So it's there, but the type is loaded in two different classloaders:\r\n\r\nVia surefire (where everything is ok):\r\n```\r\n::: CL1: jdk.internal.loader.ClassLoaders$AppClassLoader@277050dc\r\n::: CL2: jdk.internal.loader.ClassLoaders$AppClassLoader@277050dc\r\n```\r\n(CL1 is `SomeAnnotation.class.getClassLoader()` and CL2 is `annotation.annotationType().getClassLoader()`)\r\n\r\nBut in CT:\r\n```\r\n::: CL1: QuarkusClassLoader:Augmentation Class Loader: TEST@7497f2dc\r\n::: CL2: QuarkusClassLoader:Deployment Class Loader: TEST@61ad719b\r\n```\r\n\r\nℹ️ There is no issue when the extension is registered via `@ExtendWith(...)`!\r\n\r\n\r\n### Expected behavior\r\n\r\nAnnotation is found in CT just like when run via surefire.\r\n\r\n### Actual behavior\r\n\r\nAnnotation is not found by type because two different classloaders are involved.\r\n\r\n### How to Reproduce?\r\n\r\n[q_ct-callback-ann_multi.zip](https://github.com/quarkusio/quarkus/files/8227048/q_ct-callback-ann_multi.zip)\r\n\r\n- `mvn clean install` ✔️ \r\n- `mvn quarkus:test -f dist` ❌ \r\n\r\nNote that this reproducer needs two modules because of #24229 and in reality, `core` produces a `test-jar` but I wanted to take that out of the equation.\r\n\r\n_Edit: Udpated reproducer is here: https://github.com/quarkusio/quarkus/issues/24257#issuecomment-1076922903_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n17.0.2, vendor: BellSoft\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.3.Final and 2.7.4.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.4\r\n\r\n### Additional information\r\n\r\nReminds me a lot of #10623, but that was long before CT was invented.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24257/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24257/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

@@ -1,0 +1,47 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21070",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21070/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21070/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21070/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21070",
+  "id": 1038615519,
+  "node_id": "I_kwDOCFbutM496APf",
+  "number": 21070,
+  "title": "RuntimeException is thown when I try to re-start an updated app from Quarkus client",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 8,
+  "created_at": "2021-10-28T14:53:13Z",
+  "updated_at": "2021-11-12T15:42:49Z",
+  "closed_at": "2021-11-12T15:36:38Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nQuarkus Core Upstream (999-SNAPSHOT).\r\nQuarkus Client Upstream (999-SNAPSHOT)\r\n\r\nWe have a [reproducer](https://github.com/quarkus-qe/quarkus-test-suite/pull/361) where we are checking the Quarkus client behavior. Basically, we are creating an app from scratch and then adding `quarkus-smallrye-openapi`, then start the app check that everything is fine, stop the app, remove `quarkus-smallrye-openapi` extension and start the app again, and here in the last step we are getting the following exception: \r\n\r\n```\r\n14:24:51,411 INFO  [app] 2021-10-28 14:24:49,810 ERROR [io.qua.dep.dev.IsolatedDevModeMain] (main) Failed to start quarkus: java.lang.RuntimeException: java.lang.RuntimeException: Failed to load steps from class io.quarkus.deployment.dev.io.NioThreadPoolDevModeProcessor\r\n14:24:51,411 INFO  [app]        at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:418)\r\n14:24:51,412 INFO  [app]        at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:276)\r\n14:24:51,412 INFO  [app]        at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:67)\r\n14:24:51,412 INFO  [app]        at io.quarkus.deployment.dev.IsolatedDevModeMain.firstStart(IsolatedDevModeMain.java:92)\r\n14:24:51,412 INFO  [app]        at io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:441)\r\n14:24:51,413 INFO  [app]        at io.quarkus.deployment.dev.IsolatedDevModeMain.accept(IsolatedDevModeMain.java:65)\r\n14:24:51,413 INFO  [app]        at io.quarkus.bootstrap.app.CuratedApplication.runInCl(CuratedApplication.java:149)\r\n14:24:51,413 INFO  [app]        at io.quarkus.bootstrap.app.CuratedApplication.runInAugmentClassLoader(CuratedApplication.java:105)\r\n14:24:51,413 INFO  [app]        at io.quarkus.deployment.dev.DevModeMain.start(DevModeMain.java:145)\r\n14:24:51,413 INFO  [app]        at io.quarkus.deployment.dev.DevModeMain.main(DevModeMain.java:63)\r\n14:24:51,414 INFO  [app] Caused by: java.lang.RuntimeException: Failed to load steps from class io.quarkus.deployment.dev.io.NioThreadPoolDevModeProcessor\r\n14:24:51,414 INFO  [app]        at io.quarkus.deployment.ExtensionLoader.loadStepsFrom(ExtensionLoader.java:196)\r\n14:24:51,414 INFO  [app]        at io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:108)\r\n14:24:51,414 INFO  [app]        at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:416)\r\n14:24:51,414 INFO  [app]        ... 9 more\r\n14:24:51,415 INFO  [app] Caused by: java.lang.RuntimeException: void io.quarkus.deployment.dev.io.NioThreadPoolDevModeProcessor.setupTCCL(io.quarkus.runtime.dev.io.NioThreadPoolRecorder,io.quarkus.deployment.builditem.ShutdownContextBuildItem) is marked @Record but does not inject an @Recorder object\r\n```\r\nNote that used to work as expected indeed is working fine with Quarkus 2.3.0.Final, or is working fine if you use Quarkus upstream but Quarkus Client 2.3.0.Final\r\n\r\nI think that is something related to this commit: https://github.com/quarkusio/quarkus/pull/20998/files#diff-b4cbc080dba18bd5f82d2ece4ad078b684bfe808602e4a38e16d7de137d065dcR37 and also looks that there is a race condition in somewhere because from now we have [fixed the scenario](https://github.com/quarkus-qe/quarkus-test-framework/pull/321) by adding a sleep.\r\n\r\nTo me that is important is to be sure that there is no a run condition on this method: https://github.com/quarkusio/quarkus/pull/20998/files#diff-b4cbc080dba18bd5f82d2ece4ad078b684bfe808602e4a38e16d7de137d065dcR37\r\n\r\n\r\n### Expected behavior\r\n\r\nBe able to add and remove an extension by Quarkus client (even if is executed by a script) and the app should start without any exception. \r\n\r\n### Actual behavior\r\n\r\nCurrently, you could have a look at our GitHub actions: https://github.com/quarkus-qe/quarkus-test-framework/runs/4032194711?check_suite_focus=true\r\n\r\n### How to Reproduce?\r\nhttps://github.com/quarkus-qe/quarkus-test-suite/pull/361\r\n\r\ncmd: `mvn clean verify -Dall-modules -Dinclude.quarkus-cli-tests -Dts.quarkus.cli.cmd=/tmp/quarkus-dev-cli -pl quarkus-cli`\r\nWhere `ts.quarkus.cli.cmd` is pointing to this script:\r\n\r\n```\r\n #!/bin/bash\r\n          java -jar //home/pablojosegonzalezgranados/Documents/workspace/quarkus/devtools/cli/target/quarkus-cli-999-SNAPSHOT\r\n-runner.jar \"$@\"\r\n\r\n```\r\nBasically, I have compiled Quarkus-cli Upstream and used it in my test by this way. \r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n_No response_\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21070/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21070/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

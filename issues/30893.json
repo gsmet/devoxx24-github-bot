@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30893",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30893/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30893/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30893/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/30893",
+  "id": 1571143333,
+  "node_id": "I_kwDOCFbutM5dpb6l",
+  "number": 30893,
+  "title": "Exception mapper breaks OIDC authentication flow",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 21,
+  "created_at": "2023-02-04T22:02:18Z",
+  "updated_at": "2023-02-28T18:17:47Z",
+  "closed_at": "2023-02-28T18:17:47Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI have application that is using OIDC only for authentication, for rest of the time I am using JWT token.\r\nI would like to create ExceptionMapper that redirect unauthenticated users to login page.\r\n\r\n```java\r\n@Provider\r\n@Priority(Priorities.AUTHENTICATION)\r\npublic class UnauthorizedExceptionMapper implements ExceptionMapper<UnauthorizedException> {\r\n\r\n    @Context\r\n    UriInfo uriInfo;\r\n\r\n    @Override\r\n    public Response toResponse(UnauthorizedException e) {\r\n        Log.warn(\"Unauthorized request: \" + uriInfo.getRequestUri());\r\n        return Response.seeOther(URI.create(\"/auth/github\")).build();\r\n    }\r\n}\r\n```\r\n\r\nMy flow for unuthenticated user looks like this:\r\n\r\n`/secured/page` is only for authenticated -> throws `UnauthorizedException` -> exception mapper redirects to `/auth/github`\r\n\r\nFor `/auth/github` there is configured OIDC tenant and this endpoint has to be annotated as @Authenticated to initiate OIDC flow. It should redirect me to github login page but it doesn't because its also throwing UnauthorizedException which is caught by the same exception mapper.\r\n\r\n\r\n### Expected behavior\r\n\r\nException mapper catching `UnauthorizedException` shouldn't break OIDC flow.\r\n\r\nAt least there should be a way to fix it using different priority.\r\n\r\n### Actual behavior\r\n\r\nException mapper catching `UnauthorizedException` breaks OIDC flow.\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux tardis 6.1.8-200.fc37.x86_64 #1 SMP PREEMPT_DYNAMIC Tue Jan 24 20:32:16 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"17.0.6\" 2023-01-17 OpenJDK Runtime Environment (Red_Hat-17.0.6.0.10-1.fc37) (build 17.0.6+10) OpenJDK 64-Bit Server VM (Red_Hat-17.0.6.0.10-1.fc37) (build 17.0.6+10, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.0.0.Alpha3\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/30893/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/30893/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

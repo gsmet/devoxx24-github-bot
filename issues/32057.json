@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32057",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32057/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32057/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32057/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32057",
+  "id": 1637098992,
+  "node_id": "I_kwDOCFbutM5hlCXw",
+  "number": 32057,
+  "title": "Native binary and Java app size increase between 2.15.1.Final and 3.0.0.Beta1",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273027849,
+      "node_id": "MDU6TGFiZWwxMjczMDI3ODQ5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/core",
+      "name": "area/core",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2260340367,
+      "node_id": "MDU6TGFiZWwyMjYwMzQwMzY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mandrel",
+      "name": "area/mandrel",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 20,
+  "created_at": "2023-03-23T08:52:48Z",
+  "updated_at": "2023-09-14T07:19:48Z",
+  "closed_at": "2023-09-14T07:19:48Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nNative binary size increase between 2.15.1.Final and 3.0.0.Beta1 from 40M to 42M\r\nEdit: I have checked size of jars and the apps are differing by ~0.8M - 15.7M vs 16.5M, details in comment below.\r\n\r\nI have small Quarkus app using just `quarkus-resteasy`, `quarkus-smallrye-metrics` and `quarkus-scheduler` for the functionality, `quarkus-container-image-docker` to build the image. Repo: https://github.com/rsvoboda/gh-exporter/blob/main/pom.xml\r\n\r\nI moved from 2.15.1.Final to 3.0.0.Beta1 and noticed increase size increase of the binary, from 40M to 42M.\r\nIn both cases the same Mandrel version was used - GraalVM 22.3.1.0-Final Java 17 Mandrel Distribution\r\n\r\nOutput of natime-image indicated bigger size and more classes  and packages too.\r\n\r\n2.15.1.Final:\r\n```\r\n  19.38MB (48.36%) for code area:    33,001 compilation units\r\n  20.38MB (50.84%) for image heap:  268,010 objects and 10 resources\r\n 327.62KB ( 0.80%) for other data\r\n  40.08MB in total\r\n------------------------------------------------------------------------------------------------------------------------\r\nTop 10 packages in code area:                               Top 10 object types in image heap:\r\n   1.63MB sun.security.ssl                                     4.28MB byte[] for code metadata\r\n   1.00MB java.util                                            2.44MB java.lang.String\r\n 733.87KB java.lang.invoke                                     2.44MB java.lang.Class\r\n 717.65KB com.sun.crypto.provider                              2.31MB byte[] for general heap data\r\n 450.58KB sun.security.x509                                    1.90MB byte[] for java.lang.String\r\n 449.75KB java.lang                                          886.70KB com.oracle.svm.core.hub.DynamicHubCompanion\r\n 428.32KB java.util.concurrent                               626.44KB java.util.HashMap$Node\r\n 389.85KB io.netty.buffer                                    542.95KB byte[] for reflection metadata\r\n 384.39KB java.io                                            470.00KB java.lang.String[]\r\n 342.82KB io.netty.handler.codec.http2                       368.44KB c.o.svm.core.hub.DynamicHub$ReflectionMetadata\r\n  12.69MB for 386 more packages                                4.05MB for 2495 more object types\r\n```\r\n\r\n3.0.0.Beta1:\r\n```\r\n  19.98MB (47.75%) for code area:    33,931 compilation units\r\n  21.55MB (51.49%) for image heap:  273,029 objects and 10 resources\r\n 327.32KB ( 0.76%) for other data\r\n  41.85MB in total\r\n------------------------------------------------------------------------------------------------------------------------\r\nTop 10 packages in code area:                               Top 10 object types in image heap:\r\n   1.63MB sun.security.ssl                                     4.43MB byte[] for code metadata\r\n   1.01MB java.util                                            2.51MB java.lang.Class\r\n 733.91KB java.lang.invoke                                     2.49MB java.lang.String\r\n 717.66KB com.sun.crypto.provider                              2.34MB byte[] for general heap data\r\n 450.58KB sun.security.x509                                    1.95MB byte[] for java.lang.String\r\n 449.99KB java.lang                                          910.94KB com.oracle.svm.core.hub.DynamicHubCompanion\r\n 446.05KB io.netty.buffer                                    629.81KB java.util.HashMap$Node\r\n 428.57KB java.util.concurrent                               557.43KB byte[] for reflection metadata\r\n 391.83KB java.io                                            481.20KB java.lang.String[]\r\n 349.39KB io.quarkus.runtime.generated                       377.81KB c.o.svm.core.hub.DynamicHub$ReflectionMetadata\r\n  13.21MB for 399 more packages                                4.09MB for 2551 more object types\r\n```\r\n\r\n### Expected behavior\r\n\r\nNo increase in binary size, or maybe just a few kB.\r\n\r\n### Actual behavior\r\n\r\nNative binary size increase between 2.15.1.Final and 3.0.0.Beta1 from 40M to 42M\r\n\r\n### How to Reproduce?\r\n\r\n - clone https://github.com/rsvoboda/gh-exporter\r\n - run `mvn clean package -Dnative -Dquarkus.native.container-build=true -Dquarkus.container-image.build=true`\r\n - run `du -cskh target/gh-exporter-*-runner`\r\n\r\n`git checkout main` or `git checkout 1.1.22.Final` for Quarkus 3.0.0.Beta1 based app\r\n`git checkout 1.1.21.Final` for Quarkus 2.15.1.Final based app\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nmacOS 13.2.1 (22D68) Ventura\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK Runtime Environment Temurin-17.0.5+8 (build 17.0.5+8)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nMandrel image 22.3.1\r\n\r\n### Quarkus version or git rev\r\n\r\nQuarkus 3.0.0.Beta1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\n_No response_\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32057/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32057/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26470",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26470/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26470/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26470/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26470",
+  "id": 1289883172,
+  "node_id": "I_kwDOCFbutM5M4g4k",
+  "number": 26470,
+  "title": "Reactive Messaging (RabbitMQ) - connector stops when facing parse error",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1416364896,
+      "node_id": "MDU6TGFiZWwxNDE2MzY0ODk2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/reactive-messaging",
+      "name": "area/reactive-messaging",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-06-30T09:51:11Z",
+  "updated_at": "2023-12-20T09:11:38Z",
+  "closed_at": "2023-12-20T09:11:22Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhile receiving a `io.vertx.core.json.JsonObject` into a function annotated with `@Incoming` if the json is broken the consumer will throw an error, unack message and stop working, new messages just got unacked.\n\n### Expected behavior\n\nBad message is nacked, rejected and consumer continue working as usual\n\n### Actual behavior\n\nConsumer dies and stops processing messages\n\n### How to Reproduce?\n\n1. Create minimal working quarkus app with \r\n\r\n```kotlin\r\ndependencies {\r\n    implementation(enforcedPlatform(\"$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion\"))\r\n    implementation(\"io.quarkus:quarkus-smallrye-reactive-messaging-rabbitmq\")\r\n    implementation(\"io.quarkus:quarkus-resteasy-reactive\")\r\n    implementation(\"io.quarkus:quarkus-resteasy-reactive-jackson\")\r\n    implementation(\"io.quarkus:quarkus-rest-client-reactive-jackson\")\r\n    implementation(\"io.quarkus:quarkus-micrometer-registry-prometheus\")\r\n    implementation(\"io.quarkus:quarkus-kotlin\")\r\n    implementation(\"io.quarkus:quarkus-smallrye-health\")\r\n    implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")\r\n    implementation(\"io.quarkus:quarkus-arc\")\r\n    implementation(\"io.quarkus:quarkus-smallrye-openapi\")\r\n    implementation(\"io.quarkus:quarkus-config-yaml\")\r\n    implementation(\"io.smallrye.reactive:mutiny-kotlin:$mutinyKotlinVersion\")\r\n    implementation(\"com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion\")\r\n}\r\n```\r\n2. Create bean with @Incoming\r\n```kotlin\r\n@Singleton\r\nclass SettingsEventProcessor {\r\n\r\n    @Incoming(INTEGRATION_SETTINGS_QUEUE)\r\n    fun processSettingEvents(jsonObject: JsonObject) {\r\n        // do something here\r\n    }\r\n}\r\n``` \r\n\r\n3. Send a message to the queue with broken json (string for example) with json content type\r\n\r\n![image](https://user-images.githubusercontent.com/26384615/176647529-6f163533-89b7-4967-b1e5-4ee18da484c6.png)\r\n\r\n4. Exception is thrown and consumer stops working \r\n```\r\n2022-06-30 12:49:25,793 ERROR [io.sma.rea.mes.provider] (vert.x-eventloop-thread-3) SRMSG00201: Error caught while processing a message: io.vertx.core.json.DecodeException: Failed to decode:Unrecognized token 'Unacked': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\r\n at [Source: (io.netty.buffer.ByteBufInputStream); line: 1, column: 8]\r\n\tat io.quarkus.vertx.runtime.jackson.QuarkusJacksonJsonCodec.fromParser(QuarkusJacksonJsonCodec.java:128)\r\n\tat io.quarkus.vertx.runtime.jackson.QuarkusJacksonJsonCodec.fromBuffer(QuarkusJacksonJsonCodec.java:100)\r\n\tat io.vertx.core.buffer.Buffer.toJson(Buffer.java:152)\r\n\tat io.smallrye.reactive.messaging.rabbitmq.IncomingRabbitMQMessage.convertPayload(IncomingRabbitMQMessage.java:132)\r\n\tat io.smallrye.reactive.messaging.rabbitmq.IncomingRabbitMQMessage.getPayload(IncomingRabbitMQMessage.java:113)\r\n\tat io.smallrye.reactive.messaging.providers.helpers.ConverterUtils$1.apply(ConverterUtils.java:37)\r\n\tat io.smallrye.reactive.messaging.providers.helpers.ConverterUtils$1.apply(ConverterUtils.java:28)\r\n\tat io.smallrye.context.impl.wrappers.SlowContextualFunction.apply(SlowContextualFunction.java:21)\r\n\tat io.smallrye.mutiny.operators.multi.MultiMapOp$MapProcessor.onItem(MultiMapOp.java:42)\r\n\tat io.smallrye.mutiny.subscription.MultiSubscriber.onNext(MultiSubscriber.java:61)\r\n\tat io.smallrye.mutiny.subscription.SafeSubscriber.onNext(SafeSubscriber.java:99)\r\n\tat io.smallrye.mutiny.helpers.HalfSerializer.onNext(HalfSerializer.java:31)\r\n\tat io.smallrye.mutiny.helpers.StrictMultiSubscriber.onItem(StrictMultiSubscriber.java:85)\r\n\tat io.smallrye.mutiny.operators.multi.MultiOperatorProcessor.onItem(MultiOperatorProcessor.java:100)\r\n\tat io.smallrye.reactive.messaging.providers.locals.ContextDecorator$ContextMulti$ContextProcessor.lambda$onItem$1(ContextDecorator.java:78)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:100)\r\n\tat io.vertx.core.impl.AbstractContext.dispatch(AbstractContext.java:63)\r\n\tat io.vertx.core.impl.EventLoopContext.lambda$runOnContext$0(EventLoopContext.java:38)\r\n\tat io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:503)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:829)\r\nCaused by: com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'Unacked': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\r\n at [Source: (io.netty.buffer.ByteBufInputStream); line: 1, column: 8]\r\n\tat com.fasterxml.jackson.core.JsonParser._constructError(JsonParser.java:2391)\r\n\tat com.fasterxml.jackson.core.base.ParserMinimalBase._reportError(ParserMinimalBase.java:745)\r\nCaused by: com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'Unacked': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\r\n\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser._reportInvalidToken(UTF8StreamJsonParser.java:3635)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser._handleUnexpectedValue(UTF8StreamJsonParser.java:2734)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser._nextTokenNotInObject(UTF8StreamJsonParser.java:902)\r\n\tat com.fasterxml.jackson.core.json.UTF8StreamJsonParser.nextToken(UTF8StreamJsonParser.java:794)\r\n\tat com.fasterxml.jackson.databind.ObjectMapper._initForReading(ObjectMapper.java:4761)\r\n\tat com.fasterxml.jackson.databind.ObjectMapper._readValue(ObjectMapper.java:4642)\r\n\tat com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:2831)\r\n\tat io.quarkus.vertx.runtime.jackson.QuarkusJacksonJsonCodec.fromParser(QuarkusJacksonJsonCodec.java:125)\r\n\t... 24 more\r\n```\r\n\r\n\n\n### Output of `uname -a` or `ver`\n\n21.1.0 Darwin Kernel Version 21.1.0: Wed Oct 13 17:33:23 PDT 2021\n\n### Output of `java -version`\n\nopenjdk version \"11.0.12\" 2021-07-20 OpenJDK Runtime Environment Homebrew (build 11.0.12+0) OpenJDK 64-Bit Server VM Homebrew (build 11.0.12+0, mixed mode)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle 7.4.2\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26470/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26470/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

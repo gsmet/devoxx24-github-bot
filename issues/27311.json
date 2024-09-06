@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27311",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27311/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27311/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27311/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/27311",
+  "id": 1340197390,
+  "node_id": "I_kwDOCFbutM5P4coO",
+  "number": 27311,
+  "title": "Make transactions usable with raw MongoDB client / collection interfaces",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1470336085,
+      "node_id": "MDU6TGFiZWwxNDcwMzM2MDg1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mongodb",
+      "name": "area/mongodb",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 7,
+  "created_at": "2022-08-16T11:19:31Z",
+  "updated_at": "2024-02-14T02:09:14Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nThe transaction support for MongoDB currently only works when using Panache entities directly. Sometimes, though, it is necessary to resort to the raw operations provided by `MongoCollection` etc. Such manual operations currently run outside a potentially active transaction because the session containing this transaction is not accessible for user code. The MongoDB Java driver requires to explicitly pass this session into operations for being performed inside transactions.\r\n\r\nIt would be nice if there either was a way to\r\n* access (or newly create) a session with ongoing transaction for use with operations provided by `MongoCollection`, or\r\n* to have the transaction automatically passed into the raw Java driver operations without manual actions being needed by the user code\r\n\r\nThis request is the result of https://github.com/quarkusio/quarkus/discussions/27289\r\n\r\n### Implementation ideas\r\n\r\nFrom my perspective it would probably best if transaction handling based on `@Transactional` and other mechanisms was handled automatically by MongoClient, MongoDatabase and MongoCollection, potentially through a Quarkus-specific facade. The MongoDB driver provides for most operations two method signatures, one with a client session passed in via the first parameter, and one without that parameter. If an ongoing transaction was not handled automatically this would often result in client code like the following needed to handle the different signatures:\r\n\r\n```java\r\nClientSession session = Somewhere.getMongoDbTransaction()\r\nif (session == null) {\r\n    res = collection.findOneAndUpdate(query, mutation)\r\n} else {\r\n    res = collection.findOneAndUpdate(session, query, mutation)\r\n}\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/27311/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/27311/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

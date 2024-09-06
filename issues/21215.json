@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21215",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21215/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21215/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21215/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21215",
+  "id": 1045405580,
+  "node_id": "I_kwDOCFbutM4-T5-M",
+  "number": 21215,
+  "title": "Quarkus REST Reactive ServerRequestFilter Has To Be Blocking When Using With Hibernate Panache Reactive",
+  "labels": [
+    {
+      "id": 1273026134,
+      "node_id": "MDU6TGFiZWwxMjczMDI2MTM0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/panache",
+      "name": "area/panache",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1425555736,
+      "node_id": "MDU6TGFiZWwxNDI1NTU1NzM2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/hibernate-orm",
+      "name": "area/hibernate-orm",
+      "color": "0366d6",
+      "default": false,
+      "description": "Hibernate ORM"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 5,
+  "created_at": "2021-11-05T02:54:52Z",
+  "updated_at": "2021-11-07T14:17:07Z",
+  "closed_at": "2021-11-07T14:17:07Z",
+  "active_lock_reason": null,
+  "body": "I need to write a ServerRequestFilter do some checking by sending request via RestClient. Here is the code:\r\n\r\n![FDC1123B-0FEE-4D6A-8452-4E4F62F9380E](https://user-images.githubusercontent.com/3773928/140450185-20564a99-4460-459a-b758-a51590fc5888.png)\r\n\r\nThe `RestClient` is reactive:\r\n\r\n![F39DB864-0AD5-4DF4-8CD8-FE1240CBDD14](https://user-images.githubusercontent.com/3773928/140450210-c5007db7-3dc1-433c-a16e-a9102639da84.png)\r\n\r\nSo in `CheckAuthFilter` I use `await` and marked the `check()` method blocking:\r\n\r\n![4F51F258-986B-4AF6-935E-90D56FC92EB1](https://user-images.githubusercontent.com/3773928/140450230-b83294c7-6eb1-4f09-af88-cd81e936fad1.png)\r\n\r\n![F1FDF934-4061-44AE-9F15-3A62DFC965FE](https://user-images.githubusercontent.com/3773928/140450238-37233aca-0c26-4604-aae9-dc9f9e3ddd91.png)\r\n\r\nIn the document of `ServerRequestFilter`, it describes several return types:\r\n\r\n![58BEA6F6-88E9-4CB4-9849-EACF4AE64CA3](https://user-images.githubusercontent.com/3773928/140450247-a0cee549-f72e-4613-bcca-f1b6e3d46b2b.png)\r\n\r\nI can’t use `Uni<RestResponse<Void>>` return type so I can avoid calling `.await()` method of `Uni`. Because in my web API, I have some `hibernate-panache-reactive` code like this:\r\n\r\n![BD509C5B-F0C4-4A6A-8B5F-8913B4822602](https://user-images.githubusercontent.com/3773928/140450264-149bd1c8-2d64-4b8e-9ca4-ed89f43c47d4.png)\r\n\r\nI have to mark the above method as `@Blocking`, and also my `ServerRequestFilter` as blocking. If I modify my `ServerRequestFilter` to return `Uni`, and make my above web method as `@NonBlocking` like this:\r\n\r\n![8EA5062A-5E07-4356-A7FE-5C161890C899](https://user-images.githubusercontent.com/3773928/140450275-09c4b5d4-23d0-49b3-9692-cba71bf7ead2.png)\r\n\r\n![1A3AA89C-0B2E-4A65-B9B1-23C3028A6215](https://user-images.githubusercontent.com/3773928/140450285-491d4054-6b12-46ea-9161-539215ed052f.png)\r\n\r\nThen during the runtime, it will throw hibernate related runtime error like this:\r\n\r\n![67B253FE-CFC2-4D76-8715-2CFD5E9AD9AC](https://user-images.githubusercontent.com/3773928/140450311-1e0c591a-a9ce-497c-a024-8d82657e1f4d.png)\r\n\r\nFrom above screenshot I can see the the error is:\r\n\r\n```\r\njava.lang.IllegalStateException: HR000069: Detected use of the reactive Session from a different Thread than the one which was used to open the reactive Session - this suggests an invalid integration; original thread: 'vert.x-eventloop-thread-4' current Thread: 'vert.x-eventloop-thread-8'\r\n```\r\n\r\nHere is the code I changed that could reproduce the above exception:\r\n\r\n```diff\r\n➤ git diff                                                                                                                                                                                                                                                                                                      10:27:53\r\ndiff --git a/src/main/java/cn/alchemystudio/taskserver/auth/CheckAuthFilter.java b/src/main/java/cn/alchemystudio/taskserver/auth/CheckAuthFilter.java\r\nindex 4d20b44..84d9466 100644\r\n--- a/src/main/java/cn/alchemystudio/taskserver/auth/CheckAuthFilter.java\r\n+++ b/src/main/java/cn/alchemystudio/taskserver/auth/CheckAuthFilter.java\r\n@@ -4,6 +4,7 @@ import cn.alchemystudio.taskserver.client.HtyucProxy;\r\n import cn.alchemystudio.taskserver.commons.Bag;\r\n import cn.alchemystudio.taskserver.commons.Commons;\r\n import io.smallrye.common.annotation.Blocking;\r\n+import io.smallrye.mutiny.Uni;\r\n import org.eclipse.microprofile.rest.client.inject.RestClient;\r\n import org.jboss.logging.Logger;\r\n import org.jboss.resteasy.reactive.RestResponse;\r\n@@ -30,8 +31,8 @@ public class CheckAuthFilter {\r\n     HtyucProxy uc;\r\n \r\n     @ServerRequestFilter\r\n-    @Blocking\r\n-    public Optional<RestResponse<Void>> check(ContainerRequestContext ctx) throws Exception {\r\n+//    @Blocking\r\n+    public Uni<RestResponse<Void>> check(ContainerRequestContext ctx) throws Exception {\r\n \r\n         logger.debug(\":::CHECK_AUTH_FILTER:::\");\r\n         logger.debug(\"CHECK_AUTH_FILTER -> REQUEST_CTX / \" + ctx.toString());\r\n@@ -40,7 +41,7 @@ public class CheckAuthFilter {\r\n \r\n         if (ctx.getHeaderString(\"HtySudoerToken\") == null) {\r\n             logger.debug(\"CHECK_AUTH_FILTER CHECK FAILED -> empty `HtySudoerToken` header\");\r\n-            return Optional.of(RestResponse.status(Response.Status.FORBIDDEN));\r\n+            return Uni.createFrom().item(RestResponse.status(Response.Status.FORBIDDEN));\r\n         }\r\n \r\n         var tokenStr = ctx.getHeaderString(\"HtySudoerToken\");\r\n@@ -71,7 +72,7 @@ public class CheckAuthFilter {\r\n //                    }\r\n //            );\r\n \r\n-            return (Optional<RestResponse<Void>>) uc.verifyJwtToken(tokenStr).onItem().transform(\r\n+            return uc.verifyJwtToken(tokenStr).onItem().transform(\r\n                     resp -> {\r\n                         var respStr = resp.readEntity(String.class);\r\n                         logger.debug(\"CHECK_AUTH_FILTER -> uc.verifyJwtToken RESPONSE / \" + respStr);\r\n@@ -80,19 +81,19 @@ public class CheckAuthFilter {\r\n                             logger.debug(\"CHECK_AUTH_FILTER CHECK PASSED -> GOOD JWT TOKEN: \" + token);\r\n                             verifyResult.setData(Boolean.TRUE);\r\n                             verifyOk.setData(true);\r\n-                            return Optional.empty();\r\n+                            return null;\r\n                         } else {\r\n                             logger.info(\"CHECK_AUTH_FILTER CHECK FAILED -> \" + token + \" RESP / \" + respStr);\r\n-                            return Optional.of(RestResponse.status(Response.Status.FORBIDDEN));\r\n+                            return RestResponse.status(Response.Status.FORBIDDEN);\r\n                         }\r\n                     }\r\n             ).onFailure().recoverWithItem(err -> {\r\n                 logger.debug(\"CHECK_AUTH_FILTER CHECK FAILED -> ERR: \" + err);\r\n-                return Optional.of(RestResponse.status(Response.Status.FORBIDDEN));\r\n-            }).await().atMost(c.TIMEOUT);\r\n+                return RestResponse.status(Response.Status.FORBIDDEN);\r\n+            });\r\n         }\r\n \r\n         logger.debug(\"CHECK_AUTH_FILTER -> TOKEN INVAILD / \" + tokenStr);\r\n-        return Optional.of(RestResponse.status(Response.Status.FORBIDDEN));\r\n+        return Uni.createFrom().item(RestResponse.status(Response.Status.FORBIDDEN));\r\n     }\r\n }\r\n\\ No newline at end of file\r\ndiff --git a/src/main/java/cn/alchemystudio/taskserver/service/TaskServer.java b/src/main/java/cn/alchemystudio/taskserver/service/TaskServer.java\r\nindex 1fbbd50..7838707 100644\r\n--- a/src/main/java/cn/alchemystudio/taskserver/service/TaskServer.java\r\n+++ b/src/main/java/cn/alchemystudio/taskserver/service/TaskServer.java\r\n@@ -121,7 +121,7 @@ public class TaskServer {\r\n \r\n     @GET\r\n     @Path(\"/task_status/{task_id}\")\r\n-    @Blocking\r\n+//    @Blocking\r\n     public Uni<Response> task_status(@RestPath String task_id) {\r\n         logger.debug(\"[QUERY_TASK_STATUS] -> \" + task_id);\r\n         return DbTask.findById(task_id).onItem().transform(task -> {\r\n```\r\nIn conclusion, if I use `resteasy-reactive` and `hibernate-panache-reactive` together, and in addition I’m using `ServerRequestFilter`, then I have to mark both my filter and my web service as `@Blocking`, or I will get the *reactive Session* error thrown by `hibernate-panache-reactive`.\r\n\r\nI’m not sure whether it is a bug or it is by design, or maybe it’s my usage problem. so I report it here asking for help/suggestions.\r\n\r\nHere is the Quarkus version I’m using:\r\n\r\n```xml\r\n<quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>\r\n<quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>\r\n<quarkus.platform.version>2.2.3.Final</quarkus.platform.version>\r\n```\r\n\r\nHere are the reactive components I’m using:\r\n\r\n```xml\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-resteasy-reactive</artifactId>\r\n</dependency>\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-reactive-pg-client</artifactId>\r\n</dependency>\r\n<dependency>\r\n    <groupId>io.quarkus</groupId>\r\n    <artifactId>quarkus-hibernate-reactive-panache</artifactId>\r\n</dependency>\r\n```\r\n\r\nThanks for reading :D",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21215/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21215/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

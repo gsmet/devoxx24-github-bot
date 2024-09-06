@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36463",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36463/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36463/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36463/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/36463",
+  "id": 1941248689,
+  "node_id": "I_kwDOCFbutM5ztRqx",
+  "number": 36463,
+  "title": "Using RestEasy Reactive Links producing Cannot invoke \"java.util.Map.get(Object)\" because the return value of \"java.util.Map.get(Object)\" is null in GetterAccessorsContainer",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-10-13T05:11:40Z",
+  "updated_at": "2023-10-26T12:34:47Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm trying to get a simple ReastEasy Reactive Links example running\r\n\r\nWhile the \"all\" endpoint works fine, the other one creates a NullPointerException I cannot make sense of.\r\n\r\nI'd appreciate any hints on what is wrong here.\r\n\r\n### Expected behavior\r\n\r\n_No response_\r\n\r\n### Actual behavior\r\n\r\n```\r\njava.lang.NullPointerException: Cannot invoke \"java.util.Map.get(Object)\" because the return value of \"java.util.Map.get(Object)\" is null\r\n\tat io.quarkus.resteasy.reactive.links.runtime.GetterAccessorsContainer.get(GetterAccessorsContainer.java:14)\r\n\tat io.quarkus.resteasy.reactive.links.runtime.RestLinksProviderImpl.getPathParameterValues(RestLinksProviderImpl.java:65)\r\n\tat io.quarkus.resteasy.reactive.links.runtime.RestLinksProviderImpl.getInstanceLinks(RestLinksProviderImpl.java:57)\r\n\tat io.quarkus.resteasy.reactive.links.RestLinksProviderProducer_ProducerMethod_restLinksProvider_786cc3ba1428495d7e51b3949de5641383cecdb3_ClientProxy.getInstanceLinks(Unknown Source)\r\n\tat io.quarkus.resteasy.reactive.links.RestLinksHandler.getLinks(RestLinksHandler.java:38)\r\n\tat io.quarkus.resteasy.reactive.links.RestLinksHandler.handle(RestLinksHandler.java:29)\r\n\tat io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:150)\r\n\tat org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:582)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n```\r\n@Path(\"test\")\r\npublic class TestResource {\r\n\r\n    @Data\r\n    public static class Test {\r\n        private String name;\r\n\r\n        public static Test name(String name) {\r\n            var test = new Test();\r\n            test.setName(name);\r\n            return test;\r\n        }\r\n    }\r\n\r\n    private static final Map<Integer, Test> db = Map.of(\r\n            1, Test.name(\"a\"),\r\n            2, Test.name(\"b\"),\r\n            3, Test.name(\"c\"),\r\n            4, Test.name(\"d\")\r\n    );\r\n\r\n    @GET\r\n    @InjectRestLinks\r\n    @RestLink(rel = \"list\")\r\n    public Collection<Test> all() {\r\n        return db.values();\r\n    }\r\n\r\n    @GET\r\n    @Path(\"{id}\")\r\n    @RestLink(rel = \"self\")\r\n    @InjectRestLinks(RestLinkType.INSTANCE)\r\n    public Test get(@PathParam(\"id\") int id) {\r\n        return db.get(id);\r\n    }\r\n\r\n}\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\n21\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n3.4.2\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/36463/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/36463/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

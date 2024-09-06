@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25788",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25788/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25788/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25788/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25788",
+  "id": 1248093866,
+  "node_id": "I_kwDOCFbutM5KZGaq",
+  "number": 25788,
+  "title": "Gradle `quarkusBuild` fails with `ZipFile invalid LOC header` in `SmallRyeOpenApiProcessor`",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1336727006,
+      "node_id": "MDU6TGFiZWwxMzM2NzI3MDA2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/openapi",
+      "name": "area/openapi",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-05-25T13:24:37Z",
+  "updated_at": "2022-05-27T13:21:12Z",
+  "closed_at": "2022-05-27T13:21:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nA repeated `./gradlew quarkusBuild` runs into the following exception from the `SmallRyeOpenApiProcessor`.\r\n\r\nIn this case, the openapi classes and spec files are pulled from a dependency and are not located in the Gradle project.\r\n\r\n```\r\n> io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n        [error]: Build step io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor#build threw an exception: java.io.UncheckedIOException: java.util.zip.ZipException: ZipFile invalid LOC header (bad signature)\r\n        at io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.addStaticModelIfExist(SmallRyeOpenApiProcessor.java:893)\r\n        at io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.findStaticModels(SmallRyeOpenApiProcessor.java:840)\r\n        at io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.generateStaticModel(SmallRyeOpenApiProcessor.java:774)\r\n        at io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.build(SmallRyeOpenApiProcessor.java:671)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n        at java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n        at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:925)\r\n        at io.quarkus.builder.BuildContext.run(BuildContext.java:277)\r\n        at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n        at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n        at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n        at java.base/java.lang.Thread.run(Thread.java:829)\r\n        at org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n  Caused by: java.util.zip.ZipException: ZipFile invalid LOC header (bad signature)\r\n        at java.base/java.util.zip.ZipFile$ZipFileInputStream.initDataOffset(ZipFile.java:1023)\r\n        at java.base/java.util.zip.ZipFile$ZipFileInputStream.read(ZipFile.java:1033)\r\n        at java.base/java.util.zip.ZipFile$ZipFileInflaterInputStream.fill(ZipFile.java:483)\r\n        at java.base/java.util.zip.InflaterInputStream.read(InflaterInputStream.java:159)\r\n        at java.base/java.io.FilterInputStream.read(FilterInputStream.java:133)\r\n        at java.base/java.io.InputStream.readNBytes(InputStream.java:396)\r\n        at java.base/java.io.InputStream.readAllBytes(InputStream.java:333)\r\n        at io.quarkus.deployment.util.IoUtil.readBytes(IoUtil.java:18)\r\n        at io.quarkus.smallrye.openapi.deployment.SmallRyeOpenApiProcessor.addStaticModelIfExist(SmallRyeOpenApiProcessor.java:888)\r\n        ... 14 more\r\n```\r\n\r\nThis consistently happens in [this PR](https://github.com/projectnessie/nessie/pull/4274), which can serve as a reproducer:\r\n```\r\n$ ./gradlew :ser:quar-ser:quarkusBuild\r\n$ echo \"\" > model/src/main/resources/META-INF/openapi.yaml\r\n$ ./gradlew :ser:quar-ser:quarkusBuild\r\n```\r\n\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n_No response_\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.9.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.4.2\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25788/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25788/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

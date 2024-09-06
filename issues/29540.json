@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29540",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29540/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29540/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29540/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29540",
+  "id": 1466733144,
+  "node_id": "I_kwDOCFbutM5XbJJY",
+  "number": 29540,
+  "title": "Quarkus Quartz jdbc datasource + reactive datasource error",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026509,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/persistence",
+      "name": "area/persistence",
+      "color": "FBCA04",
+      "default": false,
+      "description": "OBSOLETE, DO NOT USE"
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-11-28T16:40:34Z",
+  "updated_at": "2022-12-01T13:53:44Z",
+  "closed_at": "2022-12-01T13:53:43Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHey all! Currently I have a reactive application with the Postgres driver that I am trying to integrate Quartz with. From what I read in [Quarkus Datasources](https://quarkus.io/guides/datasource#jdbc-and-reactive-datasources-simultaneously), I am able to have both a reactive and jdbc datasource working in-tandem. The issue I am having is that I can't seem to get my application to build when I create a custom quartz datasource using jdbc and I am met with this error at build time `io.quarkus.runtime.configuration.ConfigurationException: JDBC Store configured but the 'quartz' datasource is not configured properly.`.\r\n\r\nThis is how I have it set up:\r\n```\r\nquarkus:\r\n  quartz:\r\n    datasource: quartz\r\n    clustered: true\r\n    store-type: jdbc_tx\r\n    table-prefix: quartz.qrtz_\r\n```\r\nand\r\n```\r\ndatasource:\r\n    db-kind: postgresql\r\n    username: ${POSTGRES_USERNAME:postgres}\r\n    password: ${POSTGRES_PASSWORD:password}\r\n    jdbc: false\r\n    reactive:\r\n      url: ${POSTGRES_URL:postgresql://localhost:5430/db}\r\n      max-size: ${POSTGRES_REACTIVE_POOL_SIZE:30}\r\n      reconnect-attempts: ${POSTGRES_REACTIVE_RECONNECT_ATTEMPTS:1}\r\n      reconnect-interval: ${POSTGRES_REACTIVE_RECONNECT_INTERVAL:PT1S}\r\n      idle-timeout: ${POSTGRES_REACTIVE_IDLE_TIMEOUT:PT5S}\r\n    quartz:\r\n      db-kind: postgresql\r\n      username: ${POSTGRES_USERNAME:postgres}\r\n      password: ${POSTGRES_PASSWORD:password}\r\n      reactive: false\r\n      jdbc:\r\n        url: ${POSTGRES_URL:postgresql://localhost:5430/db}\r\n        max-size: ${POSTGRES_JDBC_POOL_SIZE:10}\r\n        leak-detection-interval: ${POSTGRES_JDBC_LEAK_DETECTION_INTERVAL:5M}\r\n```\r\n\r\nAm I missing something in the configuration?\r\n\r\n### Expected behavior\r\n\r\nQuartz should start with the configured custom datasource using JDBC.\r\n\r\n### Actual behavior\r\n\r\n```\r\nCaused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors\r\n\t[error]: Build step io.quarkus.quartz.deployment.QuartzProcessor#driver threw an exception: io.quarkus.runtime.configuration.ConfigurationException: JDBC Store configured but the 'quartz' datasource is not configured properly. You can configure your datasource by following the guide available at: https://quarkus.io/guides/datasource\r\n```\r\n\r\n### How to Reproduce?\r\n\r\nI created a very simple reproducer here to reproduce this behavior (created on-the-fly as I am not home yet): https://github.com/LazaroR94/Quartz-Quickstart\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nDarwin C02FW4DDMD6R 20.6.0 Darwin Kernel Version 20.6.0: Tue Jun 21 20:50:28 PDT 2022; root:xnu-7195.141.32~1/RELEASE_X86_64 x86_64\r\n\r\n### Output of `java -version`\r\n\r\njava version \"11.0.12\" 2021-07-20 LTS\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.14.1\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.3.3\r\n\r\n### Additional information\r\n\r\nAdditional stacktrace:\r\n```\r\nCaused by: io.quarkus.runtime.configuration.ConfigurationException: JDBC Store configured but the 'quartz' datasource is not configured properly. You can configure your datasource by following the guide available at: https://quarkus.io/guides/datasource\r\n\tat io.quarkus.quartz.deployment.QuartzProcessor.driver(QuartzProcessor.java:120)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:566)\r\n\tat io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:909)\r\n\tat io.quarkus.builder.BuildContext.run(BuildContext.java:281)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)\r\n\tat java.base/java.lang.Thread.run(Thread.java:834)\r\n\tat org.jboss.threads.JBossThread.run(JBossThread.java:501)\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29540/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29540/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

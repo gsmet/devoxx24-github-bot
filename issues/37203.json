@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37203",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37203/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37203/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37203/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37203",
+  "id": 2000536539,
+  "node_id": "I_kwDOCFbutM53PcPb",
+  "number": 37203,
+  "title": "Keycloak-admin-client resteasy troubles",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 3289887215,
+      "node_id": "MDU6TGFiZWwzMjg5ODg3MjE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/keycloak",
+      "name": "area/keycloak",
+      "color": "0366d6",
+      "default": false,
+      "description": null
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2023-11-18T18:54:48Z",
+  "updated_at": "2023-12-14T16:22:46Z",
+  "closed_at": "2023-12-14T16:22:45Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nHi, \r\n\r\nI am trying to set up a keycloak configuration application with the following pom and a simple main app. But it fails with:\r\n\r\n`Exception in thread \"main\" jakarta.ws.rs.ProcessingException: RESTEASY004655: Unable to invoke request: jakarta.ws.rs.ProcessingException: RESTEASY003215: could not find writer for content-type application/x-www-form-urlencoded type: jakarta.ws.rs.core.Form$1`\r\n\r\nI simple run `mvn clean package`  & `java -jar java-configuration.jar`\r\n\r\n```\r\n    public static void main(String[] args) {\r\n        try {\r\n            KeycloakClientBuilder keycloakClientBuilder = KeycloakClientBuilder.create(\r\n                    \"http://localhost:8080\",\r\n                    \"admin\",\r\n                    \"admin\",\r\n                    \"master\");\r\n            Keycloak keycloak = keycloakClientBuilder.getClient();\r\n\r\n            KeycloakConfiguration keycloakConfig = new KeycloakConfiguration(keycloak);\r\n            keycloakConfig.configure();\r\n        } catch (Exception all) {\r\n            Logger.getLogger(KeycloakConfigurationApplication.class).error(\"Exception occurred.\", all);\r\n            throw all;\r\n        }\r\n    }\r\n```\r\n\r\n\r\n`<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\r\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\r\n    <modelVersion>4.0.0</modelVersion>\r\n\r\n    <parent>\r\n        <groupId>config.keycloak</groupId>\r\n        <artifactId>keycloak-config-tryout</artifactId>\r\n        <version>1.0.0</version>\r\n    </parent>\r\n\r\n    <artifactId>java-configuration</artifactId>\r\n\r\n    <properties>\r\n        <maven.compiler.source>${java.version}</maven.compiler.source>\r\n        <maven.compiler.target>${java.version}</maven.compiler.target>\r\n        <resteasy.version>6.2.6.Final</resteasy.version>\r\n        <keycloak.version>22.0.5</keycloak.version>\r\n        <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>\r\n        <lombok.version>1.18.26</lombok.version>\r\n\r\n\r\n    </properties>\r\n\r\n    <dependencies>\r\n        <dependency>\r\n            <groupId>org.keycloak</groupId>\r\n            <artifactId>keycloak-admin-client</artifactId>\r\n            <version>${keycloak.version}</version>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.jboss.resteasy</groupId>\r\n            <artifactId>resteasy-client</artifactId>\r\n            <version>${resteasy.version}</version>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.jboss.resteasy</groupId>\r\n            <artifactId>resteasy-jackson2-provider</artifactId>\r\n            <version>${resteasy.version}</version>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.keycloak</groupId>\r\n            <artifactId>keycloak-core</artifactId>\r\n            <version>${keycloak.version}</version>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.keycloak</groupId>\r\n            <artifactId>keycloak-services</artifactId>\r\n            <version>${keycloak.version}</version>\r\n        </dependency>\r\n\r\n        <!--Tooling-->\r\n        <dependency>\r\n            <groupId>org.projectlombok</groupId>\r\n            <artifactId>lombok</artifactId>\r\n            <version>${lombok.version}</version>\r\n        </dependency>\r\n        <dependency>\r\n            <groupId>org.projectlombok</groupId>\r\n            <artifactId>lombok</artifactId>\r\n            <version>${lombok.version}</version>\r\n        </dependency>\r\n    </dependencies>\r\n\r\n    <build>\r\n        <plugins>\r\n            <plugin>\r\n                <artifactId>maven-jar-plugin</artifactId>\r\n                <version>${maven.jar.plugin.version}</version>\r\n            </plugin>\r\n            <plugin>\r\n                <groupId>org.apache.maven.plugins</groupId>\r\n                <artifactId>maven-shade-plugin</artifactId>\r\n                <version>${maven.shade.plugin.version}</version>\r\n                <executions>\r\n                    <execution>\r\n                        <phase>package</phase>\r\n                        <goals>\r\n                            <goal>shade</goal>\r\n                        </goals>\r\n                        <configuration>\r\n                            <transformers>\r\n                                <transformer implementation=\"org.apache.maven.plugins.shade.resource.ManifestResourceTransformer\">\r\n                                    <mainClass>config.keycloak.KeycloakConfigurationApplication</mainClass>\r\n                                </transformer>\r\n                                <transformer implementation=\"org.apache.maven.plugins.shade.resource.AppendingTransformer\">\r\n                                    <resource>META-INF/services/javax.ws.rs.ext.Providers</resource>\r\n                                </transformer>\r\n                            </transformers>\r\n                            <filters>\r\n                                <filter>\r\n                                    <artifact>*:*</artifact>\r\n                                    <excludes>\r\n                                        <exclude>META-INF/*.SF</exclude>\r\n                                        <exclude>META-INF/*.DSA</exclude>\r\n                                        <exclude>META-INF/*.RSA</exclude>\r\n                                    </excludes>\r\n                                </filter>\r\n                            </filters>\r\n                            <outputFile>${project.build.directory}/${project.artifactId}.jar</outputFile>\r\n                        </configuration>\r\n                    </execution>\r\n                </executions>\r\n            </plugin>\r\n        </plugins>\r\n    </build>\r\n</project>\r\n`\r\n\r\n### Expected behavior\r\n\r\nRunning and executing Rest calls to the running keycloak instance\r\n\r\n### Actual behavior\r\n\r\n`Exception in thread \"main\" jakarta.ws.rs.ProcessingException: RESTEASY004655: Unable to invoke request: jakarta.ws.rs.ProcessingException: RESTEASY003215: could not find writer for content-type application/x-www-form-urlencoded type: jakarta.ws.rs.core.Form$1`\r\n\r\n### How to Reproduce?\r\n\r\n_No response_\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n_No response_\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk 17.0.9 2023-10-17 LTS\r\n\r\n### Quarkus version or git rev\r\n\r\n_No response_\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.6\r\n\r\n### Additional information\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37203/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37203/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

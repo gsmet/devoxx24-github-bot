@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23519",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23519/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23519/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23519/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23519",
+  "id": 1127420240,
+  "node_id": "I_kwDOCFbutM5DMxFQ",
+  "number": 23519,
+  "title": "Vert.x DnsResolver fails on Quarkus 2.7.0 because jndi is disabled",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 18,
+  "created_at": "2022-02-08T15:39:40Z",
+  "updated_at": "2024-02-29T18:58:22Z",
+  "closed_at": "2022-02-11T07:51:08Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nVert.x use jndi to lookup dns servers, since jndi is disabled by default `DefaultDnsServerAddressStreamProvider` falls back to Google DNS. If these are not reachable from the application it crash with\r\n```\r\nFeb 08, 2022 12:43:55 PM io.netty.resolver.dns.DefaultDnsServerAddressStreamProvider\r\nWARN: Default DNS servers: [/8.8.8.8:53, /8.8.4.4:53] (Google Public DNS as a fallback)\r\nFeb 08, 2022 12:44:06 PM io.quarkus.runtime.ApplicationLifecycleManager run\r\nERROR: Failed to start application (with profile prod)\r\nio.netty.resolver.dns.DnsNameResolverTimeoutException: [/8.8.4.4:53] query via UDP timed out after 5000 milliseconds (no stack trace available)\r\n```\n\n### Expected behavior\n\nThe application resolves DNS and starts normally.\n\n### Actual behavior\n\nThe application it crash with\r\n```\r\nFeb 08, 2022 12:43:55 PM io.netty.resolver.dns.DefaultDnsServerAddressStreamProvider\r\nWARN: Default DNS servers: [/8.8.8.8:53, /8.8.4.4:53] (Google Public DNS as a fallback)\r\nFeb 08, 2022 12:44:06 PM io.quarkus.runtime.ApplicationLifecycleManager run\r\nERROR: Failed to start application (with profile prod)\r\nio.netty.resolver.dns.DnsNameResolverTimeoutException: [/8.8.4.4:53] query via UDP timed out after 5000 milliseconds (no stack trace available)\r\n```\r\n\r\nConnecting to the instance with debugger show that javax.naming.NamingException: JNDI has been disabled, enable it with quarkus.naming.enable-jndi=true is thrown (and ignored) here:\r\n```\r\nat io.netty.resolver.dns.DirContextUtils.addNameServers(DirContextUtils.java:49)\r\nat io.netty.resolver.dns.DefaultDnsServerAddressStreamProvider.<clinit>(DefaultDnsServerAddressStreamProvider.java:53)\r\nat io.vertx.core.impl.resolver.DnsResolverProvider.<init>(DnsResolverProvider.java:77)\r\nat io.vertx.core.spi.resolver.ResolverProvider.factory(ResolverProvider.java:39)\r\nat io.vertx.core.impl.AddressResolver.<init>(AddressResolver.java:76)\r\nat io.vertx.core.impl.VertxImpl.<init>(VertxImpl.java:180)\r\nat io.vertx.core.impl.VertxBuilder.vertx(VertxBuilder.java:225)\r\nat io.vertx.core.Vertx.vertx(Vertx.java:86)\r\nat io.vertx.core.Vertx.vertx(Vertx.java:76)\r\nat io.vertx.mutiny.core.Vertx.vertx(Vertx.java:116)\r\nat io.quarkus.vault.runtime.client.VertxVaultClient.<init>(VertxVaultClient.java:61)\r\nat io.quarkus.vault.runtime.client.VertxVaultClient_Bean.create(Unknown Source)\r\nat io.quarkus.vault.runtime.client.VertxVaultClient_Bean.create(Unknown Source)\r\nat io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:101)\r\nat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:29)\r\nat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:26)\r\nat io.quarkus.arc.impl.LazyValue.get(LazyValue.java:26)\r\nat io.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:69)\r\nat io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:26)\r\nat io.quarkus.vault.runtime.client.VertxVaultClient_Bean.get(Unknown Source)\r\nat io.quarkus.vault.runtime.client.VertxVaultClient_Bean.get(Unknown Source)\r\nat io.quarkus.arc.impl.ArcContainerImpl.beanInstanceHandle(ArcContainerImpl.java:428)\r\nat io.quarkus.arc.impl.ArcContainerImpl.beanInstanceHandle(ArcContainerImpl.java:441)\r\nat io.quarkus.arc.impl.ArcContainerImpl.instanceHandle(ArcContainerImpl.java:412)\r\nat io.quarkus.arc.impl.ArcContainerImpl.instance(ArcContainerImpl.java:229)\r\nat io.quarkus.vault.runtime.VaultRecorder.configure(VaultRecorder.java:36)\r\nat io.quarkus.deployment.steps.VaultProcessor$init1872323611.deploy_0(Unknown Source)\r\nat io.quarkus.deployment.steps.VaultProcessor$init1872323611.deploy(Unknown Source)\r\nat io.quarkus.runner.ApplicationImpl.doStart(Unknown Source)\r\nat io.quarkus.runtime.Application.start(Application.java:101)\r\nat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:104)\r\nat io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\nat io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\nat io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\nat io.quarkus.runner.GeneratedMain.main(Unknown Source)\r\nat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\nat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\r\nat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\nat java.base/java.lang.reflect.Method.invoke(Method.java:568)\r\nat io.quarkus.bootstrap.runner.QuarkusEntryPoint.doRun(QuarkusEntryPoint.java:60)\r\nat io.quarkus.bootstrap.runner.QuarkusEntryPoint.main(QuarkusEntryPoint.java:31)\r\n```\r\n\r\nFollowing the path above I cannot see that it touches any path other than using DirContextUtils.addNameServers.\r\nio.vertx.core.impl.resolver.DnsResolverProvider. has a path where Vert.x' AddressResolverOptions is used, but VertxVaultClientinitializes with Vertx.vertx(), so the relevant options is not possible to set.\n\n### How to Reproduce?\n\nRun application with the vault extension configured, and have 8.8.8.8:53 and 8.8.4.4:53 blocked.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17.0.2\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.7.0\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\n_No response_\n\n### Additional information\n\nOriginally [discussed on Zulip](https://quarkusio.zulipchat.com/#narrow/stream/187030-users/topic/jndi.20disabled.20by.20default-.3E.20application.20does.20not.20start). \r\nA separate[ issue is created on quarkus-vault](https://github.com/quarkiverse/quarkus-vault/issues/21)",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23519/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23519/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

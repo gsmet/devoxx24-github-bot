@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21833",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21833/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21833/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21833/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21833",
+  "id": 1067954598,
+  "node_id": "I_kwDOCFbutM4_p7Gm",
+  "number": 21833,
+  "title": "Cron expression defined as a config property in application.properties is not resolved while starting the application in native mode",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346625,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjU=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/invalid",
+      "name": "triage/invalid",
+      "color": "e4e669",
+      "default": false,
+      "description": "This doesn't seem right"
+    },
+    {
+      "id": 1273030910,
+      "node_id": "MDU6TGFiZWwxMjczMDMwOTEw",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/config",
+      "name": "area/config",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2021-12-01T04:43:10Z",
+  "updated_at": "2024-02-13T07:36:18Z",
+  "closed_at": "2021-12-01T12:17:27Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI'm using the `quarkus-scheduler` extension and I have the following method: \r\n```java\r\n@ApplicationScoped\r\npublic class MyScheduledBean {\r\n    @Scheduled(cron = \"{quarkus.registry.cache.cron}\")\r\n    void jobTriggered() {\r\n        // Do stuff\r\n    }\r\n}\r\n```\r\n\r\nIn my `application.properties`, I have the following entry defined: \r\n```properties\r\nquarkus.registry.cache.cron=*/2 * * ? * *\r\n```\r\n\r\nThe application starts up fine in JVM mode (including `quarkus:dev`) but fails with the following error when running in native\r\n\r\n```\r\napp_1       | 2021-12-01 03:55:49,772 ERROR [io.qua.run.Application] (main) Failed to start application (with profile prod): java.util.NoSuchElementException: Could not expand value quarkus.registry.cache.cron in property ${quarkus.registry.cache.cron}\r\napp_1       | \tat io.quarkus.scheduler.runtime.util.SchedulerUtils$1.accept(SchedulerUtils.java:113)\r\napp_1       | \tat io.quarkus.scheduler.runtime.util.SchedulerUtils$1.accept(SchedulerUtils.java:104)\r\napp_1       | \tat io.smallrye.common.expression.ExpressionNode.emit(ExpressionNode.java:22)\r\napp_1       | \tat io.smallrye.common.expression.Expression.evaluateException(Expression.java:56)\r\napp_1       | \tat io.smallrye.common.expression.Expression.evaluate(Expression.java:70)\r\napp_1       | \tat io.quarkus.scheduler.runtime.util.SchedulerUtils.resolvePropertyExpression(SchedulerUtils.java:104)\r\napp_1       | \tat io.quarkus.scheduler.runtime.util.SchedulerUtils.lookUpPropertyValue(SchedulerUtils.java:72)\r\napp_1       | \tat io.quarkus.scheduler.runtime.SimpleScheduler.createTrigger(SimpleScheduler.java:230)\r\napp_1       | \tat io.quarkus.scheduler.runtime.SimpleScheduler.<init>(SimpleScheduler.java:89)\r\napp_1       | \tat io.quarkus.scheduler.runtime.SimpleScheduler_Bean.create(SimpleScheduler_Bean.zig:400)\r\napp_1       | \tat io.quarkus.scheduler.runtime.SimpleScheduler_Bean.create(SimpleScheduler_Bean.zig:415)\r\napp_1       | \tat io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:96)\r\napp_1       | \tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:29)\r\napp_1       | \tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:26)\r\napp_1       | \tat io.quarkus.arc.impl.LazyValue.get(LazyValue.java:26)\r\napp_1       | \tat io.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:69)\r\napp_1       | \tat io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:26)\r\napp_1       | \tat io.quarkus.scheduler.runtime.SimpleScheduler_Observer_start_09e6c17011ef77dec3e1dd9987380b3d946e3db6.notify(SimpleScheduler_Observer_start_09e6c17011ef77dec3e1dd9987380b3d946e3db6.zig:135)\r\napp_1       | \tat io.quarkus.arc.impl.EventImpl$Notifier.notifyObservers(EventImpl.java:320)\r\napp_1       | \tat io.quarkus.arc.impl.EventImpl$Notifier.notify(EventImpl.java:302)\r\napp_1       | \tat io.quarkus.arc.impl.EventImpl.fire(EventImpl.java:73)\r\napp_1       | \tat io.quarkus.arc.runtime.ArcRecorder.fireLifecycleEvent(ArcRecorder.java:128)\r\napp_1       | \tat io.quarkus.arc.runtime.ArcRecorder.handleLifecycleEvents(ArcRecorder.java:97)\r\napp_1       | \tat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy_0(LifecycleEventsBuildStep$startupEvent1144526294.zig:80)\r\napp_1       | \tat io.quarkus.deployment.steps.LifecycleEventsBuildStep$startupEvent1144526294.deploy(LifecycleEventsBuildStep$startupEvent1144526294.zig:40)\r\napp_1       | \tat io.quarkus.runner.ApplicationImpl.doStart(ApplicationImpl.zig:984)\r\napp_1       | \tat io.quarkus.runtime.Application.start(Application.java:101)\r\napp_1       | \tat io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:104)\r\napp_1       | \tat io.quarkus.runtime.Quarkus.run(Quarkus.java:67)\r\napp_1       | \tat io.quarkus.runtime.Quarkus.run(Quarkus.java:41)\r\napp_1       | \tat io.quarkus.runtime.Quarkus.run(Quarkus.java:120)\r\napp_1       | \tat io.quarkus.runner.GeneratedMain.main(GeneratedMain.zig:29)\r\n```\r\n\r\n### Expected behavior\r\n\r\nThe data in `application.properties` should be used as the cron expression and the application should start without any errors with the predefined cron expression.\r\n\r\n### Actual behavior\r\n\r\nThe application fails to start *ONLY IN NATIVE*\r\n\r\n### How to Reproduce?\r\n\r\nTo reproduce, you need the Quarkus CLI installed.\r\n\r\n1. Run `quarkus create app -x scheduler` to create the project\r\n2. Add the following class:\r\n```java\r\npackage org.acme;\r\n\r\nimport javax.enterprise.context.ApplicationScoped;\r\n\r\nimport io.quarkus.logging.Log;\r\nimport io.quarkus.scheduler.Scheduled;\r\n\r\n\r\n@ApplicationScoped\r\npublic class MyScheduledBean {\r\n    @Scheduled(cron = \"{quarkus.registry.cache.cron}\")\r\n    void jobTriggered() {\r\n        Log.info(\"SCHEDULER CALLED\");\r\n    }  \r\n}\r\n```\r\n3. Add the following entry to your `application.properties`:\r\n```properties\r\nquarkus.registry.cache.cron=*/2 * * ? * *\r\n``` \r\n4. Build the native image and run it afterwards: `mvn clean package -Dnative -DskipTests`\r\n\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nFedora 35\r\n\r\n### Output of `java -version`\r\n\r\nJDK 17\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nGraalVM 21.3.0 Java 11 CE\r\n\r\n### Quarkus version or git rev\r\n\r\n2.5.0.Final\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nMaven 3.8.4\r\n\r\n### Additional information\r\n\r\nA workaround is to define the default value inside the `@Scheduled` annotation instead of putting it in `application.properties`:\r\n```java\r\n    @Scheduled(cron = \"{quarkus.registry.cache.cron:*/2 * * ? * *}\")\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21833/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21833/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

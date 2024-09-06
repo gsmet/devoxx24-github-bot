@@ -1,0 +1,74 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42855",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42855/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42855/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42855/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42855",
+  "id": 2493882331,
+  "node_id": "I_kwDOCFbutM6UpZ_b",
+  "number": 42855,
+  "title": "Quarkus Rest Client experiences massive slowdowns under concurrent load starting from Quarkus 3.13.0",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282129298,
+      "node_id": "MDU6TGFiZWwxMjgyMTI5Mjk4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/out-of-date",
+      "name": "triage/out-of-date",
+      "color": "FFFFFF",
+      "default": false,
+      "description": "This issue/PR is no longer valid or relevant"
+    },
+    {
+      "id": 1287515315,
+      "node_id": "MDU6TGFiZWwxMjg3NTE1MzE1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kotlin",
+      "name": "area/kotlin",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2024-08-29T09:11:16Z",
+  "updated_at": "2024-08-29T11:19:17Z",
+  "closed_at": "2024-08-29T11:19:12Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe have a project were we use the Quarkus Rest Client to call other services within a service of our own. We use a simple RestClient like this:\r\n\r\n```kotlin\r\n@RegisterRestClient(configKey = \"test-client\")\r\ninterface TestRestClient {\r\n\r\n    @GET()\r\n    @Path(\"/external/hello\")\r\n    suspend fun helloExternal(): String\r\n}\r\n```\r\n\r\nWe then call this  Rest client from within a controller of our service:\r\n\r\n```kotlin\r\n@Path(\"/hello\")\r\nclass GreetingResource(@RestClient private val testRestClient: TestRestClient) {\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    suspend fun hello(): String {\r\n        var result: String\r\n        val millis = measureTimeMillis {\r\n            result = testRestClient.helloExternal()\r\n        }\r\n        Log.info(\"Upstream call took $millis ms\")\r\n        return result\r\n    }\r\n}\r\n```\r\n\r\nWhen we have a sufficient amount of concurrent calls with this rest client, we experience massive slowdowns starting with Quarkus 3.13.0, e.g. calls that take 300-400ms usually start to take 4000-5000ms under load. The behaviour is only reproducable when putting some load on the client and only in Quarkus versions 3.13.0 or later. In our specific case we migrated from version 3.11.3 to 3.13.0, but i have tested all versions up to 3.13.0. The last \"good\" version was 3.12.3.\n\n### Expected behavior\n\nThe client's response times do not deterioate under heavy load, given that the external system responds in a timely fashion.\n\n### Actual behavior\n\nThe client's response times become much slower the more concurrent calls the client is executing. \r\n\r\n\r\nOutput from 3.13.3 under heavy load (50 concurrent calls, note how times deteriorate as more requests are in-flight)\r\n```\r\n2024-08-29 10:53:10,291 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#53) Upstream call took 404 ms\r\n2024-08-29 10:53:10,292 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#54) Upstream call took 357 ms\r\n2024-08-29 10:53:10,292 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#55) Upstream call took 342 ms\r\n2024-08-29 10:53:10,293 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#52) Upstream call took 406 ms\r\n2024-08-29 10:53:10,293 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#56) Upstream call took 344 ms\r\n2024-08-29 10:53:10,541 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#57) Upstream call took 590 ms\r\n\r\n...\r\n\r\n2024-08-29 10:53:11,579 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#85) Upstream call took 1621 ms\r\n2024-08-29 10:53:11,826 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#78) Upstream call took 1868 ms\r\n2024-08-29 10:53:11,829 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#80) Upstream call took 1870 ms\r\n2024-08-29 10:53:11,832 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#87) Upstream call took 1873 ms\r\n2024-08-29 10:53:11,833 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#89) Upstream call took 1874 ms\r\n2024-08-29 10:53:11,835 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#82) Upstream call took 1876 ms\r\n\r\n...\r\n\r\n2024-08-29 10:53:12,602 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#96) Upstream call took 2638 ms\r\n2024-08-29 10:53:12,603 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#100) Upstream call took 2637 ms\r\n```\r\n\r\nOutput from 3.11.3 (50 concurrent calls, also slight deterioration but may be caused by the upstream server not responding fast enough)\r\n\r\n```\r\n2024-08-29 10:56:00,275 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#63) Upstream call took 330 ms\r\n2024-08-29 10:56:00,275 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#54) Upstream call took 343 ms\r\n2024-08-29 10:56:00,277 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#65) Upstream call took 331 ms\r\n2024-08-29 10:56:00,277 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#62) Upstream call took 334 ms\r\n\r\n...\r\n\r\n2024-08-29 10:56:00,529 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#82) Upstream call took 579 ms\r\n2024-08-29 10:56:00,529 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-1 @coroutine#83) Upstream call took 578 ms\r\n2024-08-29 10:56:00,532 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#71) Upstream call took 584 ms\r\n2024-08-29 10:56:00,533 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#79) Upstream call took 583 ms\r\n\r\n...\r\n\r\n2024-08-29 10:56:00,793 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#96) Upstream call took 838 ms\r\n2024-08-29 10:56:00,793 INFO  [org.acm.GreetingResource] (vert.x-eventloop-thread-0 @coroutine#101) Upstream call took 837 ms\r\n```\r\n\r\n\n\n### How to Reproduce?\n\nReproducer: \r\n\r\nhttps://github.com/derkork/quarkus-performance-issue-reproducer\r\n\r\n\r\nThe project consists of a minimal server, client and a test. The test fires up a WireMock Server which simulates 200ms delay of the upstream system and then runs 10 rounds of 50 concurrent requests against the Quarkus application. The test then asserts that the average response time is below 1000ms.\r\n\r\nThe version that is commited is set up to use Quarkus 3.13.3 and in this version the test should fail. If you change the Quarkus version in the  `pom.xml` to 3.11.3 the test works and the response times significantly improve.\n\n### Output of `uname -a` or `ver`\n\nDarwin <redacted>.local 23.5.0 Darwin Kernel Version 23.5.0: Wed May  1 20:09:52 PDT 2024; root:xnu-10063.121.3~5/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nopenjdk version \"22.0.2\" 2024-07-16\n\n### Quarkus version or git rev\n\n3.13.0 or later\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.9.8 (36645f6c9b5079805ea5009217e36f2cffd34256)\n\n### Additional information\n\nThis also happens in the native build of the software running in a docker container, it is not limited to OSX. We have seen this in production under heavy load. It doesn't seem to be consistently reproducible in every environment though.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42855/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42855/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

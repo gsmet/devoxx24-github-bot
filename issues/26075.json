@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26075",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26075/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26075/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26075/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/26075",
+  "id": 1268966499,
+  "node_id": "I_kwDOCFbutM5LouRj",
+  "number": 26075,
+  "title": "Support registering filters for specific methods in REST Client Reactive",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1326067509,
+      "node_id": "MDU6TGFiZWwxMzI2MDY3NTA5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest-client",
+      "name": "area/rest-client",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2022-06-13T06:27:42Z",
+  "updated_at": "2022-07-27T12:47:36Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Discussed in https://github.com/quarkusio/quarkus/discussions/26020\r\n\r\n<div type='discussions-op-text'>\r\n\r\n<sup>Originally posted by **fenix-hub** June  9, 2022</sup>\r\nHi everyone, I'm trying implementing a custom Filter but it is not working as expected.\r\nI've got a Parent resource defined as an interface like so \r\n```java\r\n@Path(\"/mainpath\")\r\n@RegisterRestClient\r\npublic interface IProvider extends Closeable {\r\n\r\n\t@POST\r\n\t@Produces(MediaType.APPLICATION_JSON)\r\n\t@Consumes(MediaType.APPLICATION_JSON)\r\n\t@Path(\"\")\r\n\tpublic URI doSomething(\r\n\t\t...\r\n\t);\r\n```\r\nAnd a sub-resource implementing my interface\r\n```java\r\npublic class Provider implements IProvider {\r\n\r\n        @MyAnnotation\r\n\t@Override\r\n\tpublic URI doSomething(\r\n\t\t...\r\n\t);\r\n```\r\n\r\nI've created `MyAnnotation` like\r\n```java\r\n@NameBinding\r\n@Documented\r\n@Target({ElementType.METHOD, ElementType.TYPE})\r\n@Retention(RetentionPolicy.RUNTIME)\r\npublic @interface MyAnnotation {\r\n    int DEFAULT_CODE = 200;\r\n    int DEFAULT_FILTER = 200;\r\n    \r\n    int code() default DEFAULT_CODE;\r\n    int filter() default DEFAULT_FILTER;\r\n}\r\n```\r\nand a ContainerResponseFilter to handle this with name binding\r\n```java\r\n@MyAnnotation \r\n@Provider\r\n@Priority(Priorities.HEADER_DECORATOR)\r\npublic class MyAnnotationFilter implements ContainerResponseFilter {\r\n\r\n    @Context\r\n    private ResourceInfo info;\r\n\r\n    @Override\r\n    public void filter(ContainerRequestContext req, ContainerResponseContext res) throws IOException {\r\n        MyAnnotation responseStatus = getAnnotation(info.getResourceMethod());\r\n        etc ...\r\n    }\r\n\r\n    private MyAnnotation getAnnotation(Method resourceMethod) {\r\n        String methodName = resourceMethod.getName();\r\n        Class<?>[] paramTypes = resourceMethod.getParameterTypes();\r\n        Class<?> declaringClass = resourceMethod.getDeclaringClass();\r\n        Method declaredMethod;\r\n        try {\r\n            declaredMethod = declaringClass.getDeclaredMethod(methodName, paramTypes);\r\n        } catch (NoSuchMethodException e) {\r\n            return null;\r\n        }\r\n        return declaredMethod.getAnnotation(MyAnnotation.class);\r\n    }\r\n}\r\n```\r\n\r\nIf `@MyAnnotation` is applyed to the method in the class implementing the interface (like the example I'm showing) it is completely ignored. But if the annotation is applied inside the interface itself, it works.\r\nSince other annotations, like `@RolesAllowed` or `@DenyAll` are working in the sub-resource, i'm expecting my annotation to work too. Is there something I'm missing? </div>",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/26075/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/26075/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

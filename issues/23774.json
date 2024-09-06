@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23774",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23774/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23774/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23774/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/23774",
+  "id": 1140673264,
+  "node_id": "I_kwDOCFbutM5D_Urw",
+  "number": 23774,
+  "title": "RequestScoped not working in CDI",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1282102389,
+      "node_id": "MDU6TGFiZWwxMjgyMTAyMzg5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/arc",
+      "name": "area/arc",
+      "color": "0366d6",
+      "default": false,
+      "description": "Issue related to ARC (dependency injection)"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 4,
+  "created_at": "2022-02-16T22:58:17Z",
+  "updated_at": "2022-02-17T07:59:01Z",
+  "closed_at": "2022-02-16T23:38:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI annotated my context class as `@RequestScoped` and inject it into a service class, but it seems that it's still application scoped.\n\n### Expected behavior\n\nthe class annotated as `@RequestScoped` should be request lifecycle\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\nusing quarkus-quickstarts example https://github.com/quarkusio/quarkus-quickstarts/tree/main/getting-started\r\n\r\nand modify `src/main/java/org/acme/getting/started/GreetingResource.java`:\r\n```java\r\npackage org.acme.getting.started;\r\n\r\nimport javax.enterprise.context.RequestScoped;\r\nimport javax.inject.Inject;\r\nimport javax.ws.rs.GET;\r\nimport javax.ws.rs.Path;\r\nimport javax.ws.rs.Produces;\r\nimport javax.ws.rs.core.MediaType;\r\n\r\nimport org.jboss.resteasy.annotations.jaxrs.PathParam;\r\n\r\n@Path(\"/hello\")\r\npublic class GreetingResource {\r\n\r\n    @Inject\r\n    GreetingService service;\r\n\r\n    @RequestScoped\r\n    public static class MyContext {\r\n        public String val;\r\n        public MyContext() {\r\n            System.out.println(\"my context created\");\r\n        }\r\n    }\r\n\r\n    @Inject\r\n    MyContext myContext;\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    @Path(\"/greeting/{name}\")\r\n    public String greeting(@PathParam String name) {\r\n        System.out.println(\"val before set context \" + myContext.val);\r\n        myContext.val = name;\r\n        System.out.println(\"val after set context \" + myContext.val);\r\n        return service.greeting(name);\r\n    }\r\n\r\n    @GET\r\n    @Produces(MediaType.TEXT_PLAIN)\r\n    public String hello() {\r\n        return \"hello\";\r\n    }\r\n}\r\n```\r\n\r\nsending two request\r\n```\r\ncurl http://localhost:8080/hello/greeting/alex1\r\ncurl http://localhost:8080/hello/greeting/alex2\r\n```\r\n\r\nlog:\r\n```\r\n2022-02-16 14:48:43,472 INFO  [io.quarkus] (Quarkus Main Thread) getting-started 1.0.0-SNAPSHOT on JVM (powered by Quarkus 2.6.2.Final) started in 0.187s. Listening on: http://localhost:8080\r\n\r\n2022-02-16 14:48:43,473 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.\r\n2022-02-16 14:48:43,473 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, resteasy, smallrye-context-propagation, vertx]\r\n2022-02-16 14:48:43,473 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-0) Live reload total time: 0.267s \r\nmy context created\r\nval before set context null\r\nval after set context alex1\r\nval before set context alex1\r\nval after set context alex2\r\n```\r\n\r\nas you can see the `myContext` is only created once, instead of created per request.\r\n\r\nAm I using it in the wrong way?\n\n### Output of `uname -a` or `ver`\n\nDarwin 106-50-161-10-in-addr.tusimple.ai 19.6.0 Darwin Kernel Version 19.6.0: Thu Jun 18 20:49:00 PDT 2020; root:xnu-6153.141.1~1/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\nopenjdk version \"11.0.11\" 2021-04-20\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.6.2\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nApache Maven 3.8.4 (9b656c72d54e5bacbed989b64718c159fe39b537)\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/23774/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/23774/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

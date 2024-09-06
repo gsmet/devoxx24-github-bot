@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24904",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24904/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24904/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24904/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24904",
+  "id": 1202417128,
+  "node_id": "I_kwDOCFbutM5Hq23o",
+  "number": 24904,
+  "title": "IllegalStateException: Can't set the context safety flag",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 985346621,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjE=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/duplicate",
+      "name": "triage/duplicate",
+      "color": "cfd3d7",
+      "default": false,
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-04-12T21:35:54Z",
+  "updated_at": "2022-04-13T05:39:35Z",
+  "closed_at": "2022-04-13T05:39:19Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nAfter a short time of running, our quarkus-service throws following exception:\r\n\r\n```console\r\n2022-04-12 20:58:31,843 ERROR [io.qua.ver.cor.run.VertxCoreRecorder] (vert.x-eventloop-thread-0) Uncaught exception received by Vert.x: java.lang.IllegalStateException: Can't set the context safety flag: the current context is not a duplicated context\r\n  |   | at io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.setContextSafe(VertxContextSafetyToggle.java:107)\r\n  |   | at io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle.setCurrentContextSafe(VertxContextSafetyToggle.java:94)\r\n  |   | at io.quarkus.vertx.http.runtime.VertxHttpRecorder$12.handle(VertxHttpRecorder.java:504)\r\n  |   | at io.quarkus.vertx.http.runtime.VertxHttpRecorder$12.handle(VertxHttpRecorder.java:501)\r\n  |   | at io.quarkus.vertx.http.runtime.VertxHttpRecorder$1.handle(VertxHttpRecorder.java:161)\r\n  |   | at io.quarkus.vertx.http.runtime.VertxHttpRecorder$1.handle(VertxHttpRecorder.java:143)\r\n  |   | at io.vertx.core.http.impl.Http1xServerRequestHandler.handle(Http1xServerRequestHandler.java:67)\r\n  |   | at io.vertx.core.http.impl.Http1xServerRequestHandler.handle(Http1xServerRequestHandler.java:30)\r\n  |   | at io.vertx.core.http.impl.Http1xServerConnection.lambda$handleNext$1(Http1xServerConnection.java:225)\r\n  |   | at io.vertx.core.impl.EventLoopContext.emit(EventLoopContext.java:50)\r\n  |   | at io.vertx.core.impl.ContextImpl.emit(ContextImpl.java:274)\r\n  |   | at io.vertx.core.impl.EventLoopContext.emit(EventLoopContext.java:22)\r\n  |   | at io.vertx.core.http.impl.Http1xServerConnection.handleNext(Http1xServerConnection.java:222)\r\n  |   | at io.vertx.core.http.impl.Http1xServerConnection.responseComplete(Http1xServerConnection.java:207)\r\n  |   | at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)\r\n  |   | at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:469)\r\n  |   | at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:500)\r\n  |   | at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:986)\r\n  |   | at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n  |   | at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n  |   | at java.lang.Thread.run(Thread.java:833)\r\n  |   | at com.oracle.svm.core.thread.JavaThreads.threadStartRoutine(JavaThreads.java:597)\r\n  |   | at com.oracle.svm.core.posix.thread.PosixJavaThreads.pthreadStartRoutine(PosixJavaThreads.java:194)\r\n```\r\n\r\nI don't know when and why this exception occurs. It started after the upgrade to Quarkus 2.8.0.Final.\r\nThe application is native-build.\r\n\r\nWe are using following dependecies from quarkus:\r\n```gradle\r\n    implementation 'io.quarkus:quarkus-jdbc-postgresql'\r\n    implementation 'io.quarkus:quarkus-container-image-jib'\r\n    implementation 'io.quarkus:quarkus-smallrye-openapi'\r\n    implementation 'io.quarkus:quarkus-smallrye-health'\r\n    implementation 'io.quarkus:quarkus-hibernate-orm-panache'\r\n    implementation 'io.quarkus:quarkus-resteasy'\r\n    implementation 'io.quarkus:quarkus-resteasy-jackson'\r\n    implementation 'io.quarkus:quarkus-rest-client'\r\n    implementation 'io.quarkus:quarkus-rest-client-jackson'\r\n    implementation 'io.quarkus:quarkus-liquibase'\r\n    implementation 'io.quarkus:quarkus-arc'\r\n    implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'\r\n    implementation 'io.quarkus:quarkus-scheduler'\r\n```\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\nAfter the exception occures, a lot of requests are running into timeout when calling the api.\n\n### How to Reproduce?\n\nI currently don't know how to reproduce it as I don't know why or where this happens.\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### GraalVM version (if different from Java)\n\n22.0\n\n### Quarkus version or git rev\n\n2.8.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24904/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24904/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

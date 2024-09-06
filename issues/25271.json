@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25271",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25271/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25271/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25271/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25271",
+  "id": 1221500532,
+  "node_id": "I_kwDOCFbutM5Izp50",
+  "number": 25271,
+  "title": "gradle-extension-plugin fails to apply to decoupled extension projects",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1273026591,
+      "node_id": "MDU6TGFiZWwxMjczMDI2NTkx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/gradle",
+      "name": "area/gradle",
+      "color": "0366d6",
+      "default": false,
+      "description": "Gradle"
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 11,
+  "created_at": "2022-04-29T20:35:05Z",
+  "updated_at": "2023-09-07T23:52:08Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nI was adding gradle-extension-plugin to a runtime and deployment extension projects, which are included by a root settings.gradle file, and got a very strange error:\r\n```\r\nFAILURE: Build failed with an exception.\r\n\r\n* What went wrong:\r\nA problem occurred configuring project ':runtime'.\r\n> Configuration with name 'compileClasspath' not found.\r\n```\r\n\r\n### Expected behavior\r\n\r\nI expected the plugin to properly apply to the project without failure.\r\n\r\n### Actual behavior\r\n\r\nI receive a failure declaring compileClasspath as missing, despite the java-library plugin being applied.\r\n\r\n### How to Reproduce?\r\n\r\nI will publish a repository with a full reproduction. **Edit**: https://github.com/jskillin-idt/quarkusio-quarkus-issues-25271\r\n\r\nSteps to reproduce:\r\n1. Create an extremely simple extension, such as in the tutorial https://quarkus.io/guides/building-my-first-extension with a root project, and two subprojects named \"deployment\" and \"runtime\". However, ensure that the settings.gradle file does not contain either the \"subprojects\" or \"allprojects\" clause. The goal is to ensure that all Gradle projects are properly decoupled.\r\n2. Run \"gradle build\" in the root project. Note that it succeeds.\r\n3. Run \"gradle build\" in the deployment project. Note that it succeeds.\r\n4. Within the \"runtime\" project, run \"gradle build\". Note that it fails in the way described by this issue.\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\nLinux jacob-ubuntu-dev 5.15.0-27-generic #28-Ubuntu SMP Thu Apr 14 04:55:28 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nopenjdk version \"11.0.15\" 2022-04-19 OpenJDK Runtime Environment (build 11.0.15+10-Ubuntu-0ubuntu0.22.04.1) OpenJDK 64-Bit Server VM (build 11.0.15+10-Ubuntu-0ubuntu0.22.04.1, mixed mode, sharing)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\n_No response_\r\n\r\n### Quarkus version or git rev\r\n\r\n2.7.5\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nGradle 7.4.1\r\n\r\n### Additional information\r\n\r\nAfter some debugging, I found that the error is caused by io.quarkus.extension.gradle.QuarkusExtensionPlugin#exportDeploymentClasspath in which the plugin attempts to reach into the deployment project's configuration from within the runtime project:\r\n```java\r\n    private void exportDeploymentClasspath(Project project) {\r\n        DeploymentClasspathBuilder deploymentClasspathBuilder = new DeploymentClasspathBuilder(project);\r\n        project.getConfigurations().getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME).getIncoming()\r\n                .beforeResolve((dependencies) -> deploymentClasspathBuilder\r\n                        .exportDeploymentClasspath(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME));\r\n        project.getConfigurations().getByName(JavaPlugin.TEST_COMPILE_CLASSPATH_CONFIGURATION_NAME).getIncoming()\r\n                .beforeResolve((testDependencies) -> deploymentClasspathBuilder\r\n                        .exportDeploymentClasspath(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME));\r\n\r\n    }\r\n```\r\n\r\nThe calls `project.getConfigurations().getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME)` and `project.getConfigurations().getByName(JavaPlugin.TEST_COMPILE_CLASSPATH_CONFIGURATION_NAME)` both fail [per the Javadoc](https://docs.gradle.org/7.4.2/javadoc/org/gradle/api/artifacts/ConfigurationContainer.html#getByName-java.lang.String-) with an UnknownConfigurationException. This appears to be because Gradle hasn't identified a need to load the deployment project into memory, since the projects are decoupled.\r\n\r\nSo far adding [evaluationDependsOn(':deployment')](https://docs.gradle.org/current/javadoc/org/gradle/api/Project.html#evaluationDependsOn-java.lang.String-) to the runtime build.gradle file seems to work, making explicit the otherwise-implicit dependency between the projects. but I'm a novice with extension builds and haven't tested to see if the extension is actually working.\r\n\r\nI normally like to recommend a fix, but it's not obvious to me. This plugin violates both [recommendations for decoupled projects](https://docs.gradle.org/current/userguide/multi_project_configuration_and_execution.html#sec:decoupled_projects), so there's likely a design change required in how the deployment classpath is handled:\r\n> In order to make good use of cross project configuration without running into issues for parallel and 'configuration on demand' options, follow these recommendations:\r\n> *    Avoid a subproject’s build script referencing other subprojects; preferring cross configuration from the root project.\r\n> *    Avoid changing the configuration of other projects at execution time.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25271/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25271/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

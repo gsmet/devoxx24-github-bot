@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32014",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32014/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32014/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32014/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/32014",
+  "id": 1634277170,
+  "node_id": "I_kwDOCFbutM5haRcy",
+  "number": 32014,
+  "title": "RESTEasy Reactive endpoint returns a \"200\" response automatically after some duration, preventing an eventual error from being returned.",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2552031458,
+      "node_id": "MDU6TGFiZWwyNTUyMDMxNDU4",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/rest",
+      "name": "area/rest",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-03-21T16:19:53Z",
+  "updated_at": "2023-03-22T15:34:18Z",
+  "closed_at": "2023-03-22T15:12:29Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWe have an endpoint which looks something like this:\r\n\r\n```\r\n1. Try to establish a JDBC connection using input parameters from request\r\n2. Do stuff with the JDBC connection\r\n```\r\n\r\nThe problem is that for Snowflake, if you use an invalid URL, there is a 60-second name lookup timeout before it errors.\r\nSo what is happening is that:\r\n1. The REST endpoint is returning \"200\" (and who knows what as a response?)\r\n2. Then some moments later, an error is thrown and shows up in the terminal, but this never reaches the client because we've already sent 200.\r\n\r\nMy questions are:\r\n\r\n1. Is there a default response middleware or something, where Quarkus will send an empty response body after some period of time?\r\n2. How can I make the endpoint wait for the `val conn = driverManager.connect(connInfo.jdbcUrl, Properties())` line before continuing?\r\n3. How can I check the contents of the \"200\" response body?\r\n\r\nReally confused here as to what is going on :thinking:\r\n\r\n---\r\n\r\nThis looks like:\r\n```java\r\n11:47:25 INFO  traceId=, parentId=, spanId=, sampled= [io.qu.ht.access-log] (vert.x-eventloop-thread-1) 127.0.0.1 - - 21/Mar/2023:11:47:25 -0400 \"GET /api/v1/snowflake/schema? HTTP/1.1\" 200 -\r\n11:47:57 SEVERE traceId=, parentId=, spanId=, sampled= [ne.sn.cl.jd.RestRequest] (executor-thread-0) Stop retrying since elapsed time due to network issues has reached timeout. Elapsed: 61,267(ms), timeout: 60,000(ms)\r\n11:47:57 ERROR traceId=, parentId=, spanId=, sampled= [io.ha.ap.ExceptionHandler] (executor-thread-0) Uncaught exception: net.snowflake.client.jdbc.SnowflakeSQLException: JDBC driver encountered communication error.\r\nMessage: Exception encountered for HTTP request: xxxxxx.us-east-2.aws.com.\r\n        at net.snowflake.client.jdbc.RestRequest.execute(RestRequest.java:301)\r\n        at net.snowflake.client.core.HttpUtil.executeRequestInternal(HttpUtil.java:737)\r\n        at net.snowflake.client.core.HttpUtil.executeRequest(HttpUtil.java:672)\r\n        at net.snowflake.client.core.HttpUtil.executeGeneralRequest(HttpUtil.java:594)\r\n        at net.snowflake.client.core.SessionUtil.newSession(SessionUtil.java:596)\r\n        at net.snowflake.client.core.SessionUtil.openSession(SessionUtil.java:286)\r\n        at net.snowflake.client.core.SFSession.open(SFSession.java:461)\r\n        at net.snowflake.client.jdbc.DefaultSFConnectionHandler.initialize(DefaultSFConnectionHandler.java:104)\r\n        at net.snowflake.client.jdbc.DefaultSFConnectionHandler.initializeConnection(DefaultSFConnectionHandler.java:79)\r\n        at net.snowflake.client.jdbc.SnowflakeConnectionV1.initConnectionWithImpl(SnowflakeConnectionV1.java:116)\r\n        at net.snowflake.client.jdbc.SnowflakeConnectionV1.<init>(SnowflakeConnectionV1.java:96)\r\n        at net.snowflake.client.jdbc.SnowflakeDriver.connect(SnowflakeDriver.java:176)\r\n        at io.x.services.dataConnectors.BaseDataConnectorService.getSchema(BaseDataConnectorService.kt:77)\r\n```\r\n\r\nWhere the logic for that endpoint looks something like:\r\n```kt\r\nfun getSchema(sourceName: DatasourceName, config: Map<String, Any>): Schema {\r\n    val connInfo = DatasourceConnectionInfo(sourceName, config[\"jdbc_url\"])\r\n\r\n    val driverManager = DriverManager.getDriver(connInfo.jdbcUrl)\r\n    val conn = driverManager.connect(connInfo.jdbcUrl, Properties())\r\n    \r\n    // It should never make it here if the conn fails, and without a valid conn the rest of the info can't be gathered\r\n    return ...\r\n}\r\n```\n\n### Expected behavior\n\n_No response_\n\n### Actual behavior\n\n_No response_\n\n### How to Reproduce?\n\n_No response_\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.16.2.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\ngradle-8.0-milestone-2\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/32014/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/32014/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

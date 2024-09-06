@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28247",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28247/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28247/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28247/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/28247",
+  "id": 1389087458,
+  "node_id": "I_kwDOCFbutM5Sy8ri",
+  "number": 28247,
+  "title": "Security: harmonise cookies and redirects for interactive and non-interactive auth mechanisms",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1282139374,
+      "node_id": "MDU6TGFiZWwxMjgyMTM5Mzc0",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/security",
+      "name": "area/security",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2022-09-28T10:05:38Z",
+  "updated_at": "2022-09-28T10:05:41Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nWe have several auth mechanisms that can coexist and fall into two categories:\r\n\r\n- Basic Auth (non-interactive: header-based, on all endpoints)\r\n- JWT Auth (non-interactive: header or cookie based, on all endpoints)\r\n- OIDC Web (interactive: cookie-based, handles redirects)\r\n- WebAuthn (interactive: cookie-based, handles redirects, special action on some endpoints)\r\n- Form Auth (interactive: cookie-based, handles redirects, special action on some endpoints)\r\n\r\nBasic and JWT fall into the same category IMO, because they both look at headers and if not present return a 401. This is meant for non-interactive REST APIs where you're authenticated or you're not.\r\n\r\nOIDC, WebAuthn and Form fall into a second category, because they are meant for interactive web sites where attempting to access a protected resource without credentials should redirect you to a login page, and after the login is done, they store the user identity in a cookie so that login doesn't need to be redone on subsequente requests.\r\n\r\nIt's often the case that web applications will want more than one mechanism in place for logins, and so Basic is already special-cased so that it doesn't issue a 401 challenge if Form is enabled, because Form will trigger a wanted redirect.\r\n\r\nIn my application I have OIDC, WebAuthn and JWT coexisting: I decided to store both OIDC and WebAuthn logins into a JWT cookie, but the JWT challenge prevents me from getting a 302 redirect because it is evaluated before the WebAuthn authentication mechanism challenge. So I get a 401 which is not what I want.\r\n\r\nAt the moment, OIDC and Form both store the original uri to redirect to after login is done inside their own separate cookie. WebAuthn lacks that, but it should support it.\r\n\r\nForm and WebAuthn both support a login redirect but they're configured separately. They also store the logged-in identity in separate cookies.\r\n\r\nIMO all this should be harmonised:\r\n\r\n- JWT auth should not trigger a 401 if another auth mechanism is interactive (like Basic+Form)\r\n- Form and WebAuthn should store the original uri to redirect to after login inside the same cookie, to be configured by a shared config key\r\n- Form, WebAuthn and JWT should perhaps store the logged in user in the same cookie, perhaps with a discriminant as to which auth mechanism stored it there?\n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/28247/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/28247/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

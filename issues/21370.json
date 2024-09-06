@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21370",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21370/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21370/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21370/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/21370",
+  "id": 1051017798,
+  "node_id": "I_kwDOCFbutM4-pUJG",
+  "number": 21370,
+  "title": "Integration tests using avro fail to compile natively with GraalVM CE 21.3 Java 17",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 2497075451,
+      "node_id": "MDU6TGFiZWwyNDk3MDc1NDUx",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/native-image",
+      "name": "area/native-image",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2021-11-11T14:08:42Z",
+  "updated_at": "2021-11-16T09:03:27Z",
+  "closed_at": "2021-11-16T08:23:47Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\r\n\r\nNative compilation of integration tests using apache avro fails with GraalVM CE 21.3 Java17 (`quay.io/quarkus/ubi-quarkus-native-image:21.3-java17`)\r\n\r\nNamely the following tests fail to build:\r\n* kafka-avro\r\n* kafka-avro-apicurio2\r\n\r\nSee https://github.com/graalvm/mandrel/runs/4170345140?check_suite_focus=true\r\n\r\nNote that this is not a Quarkus issue. The underlying issue is only reproducible on Java 17 and is being tracked upstream at https://github.com/oracle/graal/issues/4006\r\n\r\n### Expected behavior\r\n\r\nTests should build and run.\r\n\r\n### Actual behavior\r\n\r\nTests fail to build with:\r\n```\r\nError: com.oracle.svm.hosted.substitute.DeletedElementException: Unsupported method java.lang.Class.protectionDomain() is reachable: The declaring class of this element has been substituted, but this element is not present in the substitution class\r\nTo diagnose the issue, you can add the option --report-unsupported-elements-at-runtime. The unsupported element is then reported at run time when it is accessed the first time.\r\nDetailed message:\r\nTrace: \r\n\tat parsing java.lang.System$2.protectionDomain(System.java:2418)\r\nCall path from entry point to java.lang.System$2.protectionDomain(Class): \r\n\tat java.lang.System$2.protectionDomain(System.java:2418)\r\n\tat java.lang.invoke.MethodHandles$Lookup.lookupClassProtectionDomain(MethodHandles.java:2457)\r\n\tat java.lang.invoke.MethodHandles$Lookup$ClassDefiner.defineClass(MethodHandles.java:2437)\r\n\tat java.lang.invoke.MethodHandles$Lookup$ClassDefiner.defineClassAsLookup(MethodHandles.java:2420)\r\n\tat java.lang.invoke.MethodHandles$Lookup.defineHiddenClass(MethodHandles.java:2127)\r\n\tat java.lang.invoke.InnerClassLambdaMetafactory.generateInnerClass(InnerClassLambdaMetafactory.java:407)\r\n\tat java.lang.invoke.InnerClassLambdaMetafactory.spinInnerClass(InnerClassLambdaMetafactory.java:315)\r\n\tat java.lang.invoke.InnerClassLambdaMetafactory.buildCallSite(InnerClassLambdaMetafactory.java:228)\r\n\tat java.lang.invoke.LambdaMetafactory.metafactory(LambdaMetafactory.java:341)\r\n\tat org.apache.avro.reflect.ReflectionUtil.getConstructorAsFunction(ReflectionUtil.java:195)\r\n\tat org.apache.avro.io.FastReaderBuilder.lambda$getTransformingStringReader$31(FastReaderBuilder.java:439)\r\n\tat org.apache.avro.io.FastReaderBuilder$$Lambda$1402/0x00000007c211cf58.apply(Unknown Source)\r\n\tat sun.security.ec.ParametersMap$1.get(ParametersMap.java:78)\r\n\tat com.oracle.svm.core.jdk.SystemPropertiesSupport.initializeLazyValue(SystemPropertiesSupport.java:216)\r\n\tat com.oracle.svm.core.jdk.SystemPropertiesSupport.getProperty(SystemPropertiesSupport.java:169)\r\n\tat com.oracle.svm.core.jdk.Target_java_lang_System.getProperty(JavaLangSubstitutions.java:287)\r\n\tat com.oracle.svm.jni.JNIJavaCallWrappers.jniInvoke_VA_LIST_System_getProperty_deeeaa72a006d330408a3b7d002c7533e108bc28(generated:0)\r\n...\r\n```\r\n\r\n### How to Reproduce?\r\n\r\n```\r\n./mvnw -Dnative -Dnative.surefire.skip -pl integration-tests/kafka-avro package -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-native-image:21.3-java17\r\n```\r\n\r\n### Output of `uname -a` or `ver`\r\n\r\n5.14.15-200.fc34.x86_64 #1 SMP Wed Oct 27 15:53:30 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n### Output of `java -version`\r\n\r\nOpenJDK 64-Bit Server VM Temurin-11.0.13+8 (build 11.0.13+8, mixed mode)\r\n\r\n### GraalVM version (if different from Java)\r\n\r\nOpenJDK 64-Bit Server VM GraalVM CE 21.3.0 (build 17.0.1+12-jvmci-21.3-b05, mixed mode, sharing)\r\n\r\n### Quarkus version or git rev\r\n\r\n132d9ea09b795d6027d557f46627092cfb29ce29\r\n\r\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\r\n\r\nApache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d)",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/21370/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/21370/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

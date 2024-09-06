@@ -1,0 +1,83 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29455",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29455/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29455/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29455/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/29455",
+  "id": 1462477902,
+  "node_id": "I_kwDOCFbutM5XK6RO",
+  "number": 29455,
+  "title": "Quartz startup error before full application initialization",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1321590926,
+      "node_id": "MDU6TGFiZWwxMzIxNTkwOTI2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/scheduler",
+      "name": "area/scheduler",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2744442223,
+      "node_id": "MDU6TGFiZWwyNzQ0NDQyMjIz",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/needs-reproducer",
+      "name": "triage/needs-reproducer",
+      "color": "FDE078",
+      "default": false,
+      "description": "We are waiting for a reproducer."
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 10,
+  "created_at": "2022-11-23T22:19:11Z",
+  "updated_at": "2022-11-28T15:43:15Z",
+  "closed_at": "2022-11-28T15:43:15Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nHello all! I've currently been testing out Quartz for Quarkus and have come to an error whenever the application starts. It seems as though Quartz starts too prematurely and does not let the application fully start before initializing its scheduled methods. I am using Kafka in my application and the emitters unfortunately do not get immediately injected and thus prompt a quick Quartz error:\r\n`ERROR [io.qua.sch.com.run.StatusEmitterInvoker] (vert.x-worker-thread-2) Error occurred while executing task for trigger io.quarkus.quartz.runtime.QuartzSchedulerImpl$QuartzTrigger@286b1223: java.util.concurrent.CompletionException: javax.enterprise.inject.spi.DefinitionException: SRMSG00019: Unable to connect an emitter with the channel \"my-kafka-channel\"`\r\n\r\nIs there a way to configure this startup behavior? I have tried a couple of configurations from the Quarkus Quartz documentation to no avail (i.e. `quartz.start-mode`, `@Scheduled(delay = X)`, etc.).\n\n### Expected behavior\n\nQuartz should start after full application initialization in order to let other dependencies load.\n\n### Actual behavior\n\nQuartz starts before any other dependencies load and therefore causes an error to output (in my case, with Kafka).\n\n### How to Reproduce?\n\n1. Create a new Quarkus application with Quartz + Smallrye Kafka\r\n2. Leave default values for Quartz\r\n3. Create a @Scheduled method for job execution\r\n4. Create a simple consumer/producer for Kafka\r\n5. Start the application and observe the error before Kafka channels get registered\n\n### Output of `uname -a` or `ver`\n\nDarwin C02FW4DDMD6R 20.6.0 Darwin Kernel Version 20.6.0: Tue Jun 21 20:50:28 PDT 2022; root:xnu-7195.141.32~1/RELEASE_X86_64 x86_64\n\n### Output of `java -version`\n\njava version \"11.0.12\" 2021-07-20 LTS\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.14.1\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nGradle 7.3.3\n\n### Additional information\n\nAdditional stacktrace:\r\n```\r\nat java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:331)\r\n\tat java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:346)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:870)\r\n\tat java.base/java.util.concurrent.CompletableFuture.uniWhenCompleteStage(CompletableFuture.java:883)\r\n\tat java.base/java.util.concurrent.CompletableFuture.whenComplete(CompletableFuture.java:2251)\r\n\tat java.base/java.util.concurrent.CompletableFuture$MinimalStage.whenComplete(CompletableFuture.java:2820)\r\n\tat io.quarkus.scheduler.common.runtime.DefaultInvoker.invoke(DefaultInvoker.java:24)\r\n\tat io.quarkus.scheduler.common.runtime.StatusEmitterInvoker.invoke(StatusEmitterInvoker.java:35)\r\n\tat io.quarkus.scheduler.common.runtime.SkipConcurrentExecutionInvoker.invoke(SkipConcurrentExecutionInvoker.java:37)\r\n\tat io.quarkus.quartz.runtime.QuartzSchedulerImpl$InvokerJob$1.handle(QuartzSchedulerImpl.java:625)\r\n\tat io.quarkus.quartz.runtime.QuartzSchedulerImpl$InvokerJob$1.handle(QuartzSchedulerImpl.java:621)\r\n\tat io.vertx.core.impl.ContextBase.lambda$null$0(ContextBase.java:137)\r\n\tat io.vertx.core.impl.ContextInternal.dispatch(ContextInternal.java:264)\r\n\tat io.vertx.core.impl.ContextBase.lambda$executeBlocking$1(ContextBase.java:135)\r\n\tat org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1452)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:834)\r\nCaused by: javax.enterprise.inject.spi.DefinitionException: SRMSG00019: Unable to connect an emitter with the channel `my-kafka-channel`\r\n\tat io.smallrye.reactive.messaging.providers.extension.ChannelProducer.getEmitter(ChannelProducer.java:187)\r\n\tat io.smallrye.reactive.messaging.providers.extension.ChannelProducer.produceMutinyEmitter(ChannelProducer.java:150)\r\n\tat io.smallrye.reactive.messaging.providers.extension.ChannelProducer_ProducerMethod_produceMutinyEmitter_61fbcd4df05bcbbbf61e88984db5879a6c6178b1_Bean.create(Unknown Source)\r\n\tat io.smallrye.reactive.messaging.providers.extension.ChannelProducer_ProducerMethod_produceMutinyEmitter_61fbcd4df05bcbbbf61e88984db5879a6c6178b1_Bean.get(Unknown Source)\r\n\tat io.smallrye.reactive.messaging.providers.extension.ChannelProducer_ProducerMethod_produceMutinyEmitter_61fbcd4df05bcbbbf61e88984db5879a6c6178b1_Bean.get(Unknown Source)\r\n\tat io.quarkus.arc.impl.CurrentInjectionPointProvider.get(CurrentInjectionPointProvider.java:62)\r\n\tat config.AppConfig_Bean.create(Unknown Source)\r\n\tat config.AppConfig_Bean.create(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:113)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:37)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:34)\r\n\tat io.quarkus.arc.impl.LazyValue.get(LazyValue.java:26)\r\n\tat io.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:69)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:34)\r\n\tat io.quarkus.arc.impl.ClientProxies.getApplicationScopedDelegate(ClientProxies.java:21)\r\n\tat config.AppConfig_ClientProxy.arc$delegate(Unknown Source)\r\n\tat config.AppConfig_ClientProxy.arc_contextualInstance(Unknown Source)\r\n\tat config.AppConfig_ProducerMethod_caseTrackingRepository_f8a85e2d8b8b7ea2753f823c3e5b5cc0694b83e0_Bean.create(Unknown Source)\r\n\tat config.AppConfig_ProducerMethod_caseTrackingRepository_f8a85e2d8b8b7ea2753f823c3e5b5cc0694b83e0_Bean.get(Unknown Source)\r\n\tat config.AppConfig_ProducerMethod_caseTrackingRepository_f8a85e2d8b8b7ea2753f823c3e5b5cc0694b83e0_Bean.get(Unknown Source)\r\n\tat infrastructure.scheduler.BatchRetryTask_Bean.create(Unknown Source)\r\n\tat infrastructure.scheduler.BatchRetryTask_Bean.create(Unknown Source)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.createInstanceHandle(AbstractSharedContext.java:113)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:37)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext$1.get(AbstractSharedContext.java:34)\r\n\tat io.quarkus.arc.impl.LazyValue.get(LazyValue.java:26)\r\n\tat io.quarkus.arc.impl.ComputingCache.computeIfAbsent(ComputingCache.java:69)\r\n\tat io.quarkus.arc.impl.AbstractSharedContext.get(AbstractSharedContext.java:34)\r\n\tat infrastructure.scheduler.BatchRetryTask_Bean.get(Unknown Source)\r\n\tat infrastructure.scheduler.BatchRetryTask_Bean.get(Unknown Source)\r\n\tat io.quarkus.arc.impl.ArcContainerImpl.beanInstanceHandle(ArcContainerImpl.java:476)\r\n\tat io.quarkus.arc.impl.ArcContainerImpl.beanInstanceHandle(ArcContainerImpl.java:489)\r\n\tat io.quarkus.arc.impl.ArcContainerImpl.instance(ArcContainerImpl.java:287)\r\n\tat infrastructure.scheduler.BatchRetryTask_ScheduledInvoker_retryFailedEvents_29bc7bcb738f29944cea1d7529664810d1c8f1a7.invokeBean(Unknown Source)\r\n```",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/29455/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/29455/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

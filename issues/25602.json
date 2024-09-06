@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25602",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25602/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25602/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25602/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/25602",
+  "id": 1237204480,
+  "node_id": "I_kwDOCFbutM5Jvj4A",
+  "number": 25602,
+  "title": "Allow (Proguard) obfuscation of the Quarkus app in fast-jar format ",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 985346627,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2Mjc=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/triage/wontfix",
+      "name": "triage/wontfix",
+      "color": "ffffff",
+      "default": false,
+      "description": "This will not be worked on"
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2022-05-16T13:58:27Z",
+  "updated_at": "2022-05-30T17:57:22Z",
+  "closed_at": "2022-05-17T06:16:38Z",
+  "active_lock_reason": null,
+  "body": "### Description\n\nDear Quarkus Team, \r\nthere is [this issue](https://github.com/quarkusio/quarkus/issues/6034), where people have requested some support for obfuscation. Dear [Guillaume Smet](https://github.com/gsmet) has suggested, that it could be done as an external project, and has closed that issue \"for now\". However, as I was not able to find any of that initiative I would at least like to summarize here the two problems I have confronted with so far, as a person trying to learn and migrate existing microservices to Quarkus.\r\nThere are mainly 2 problems, if you decide to obfuscate the Quarkus app released in the \"fast-jar\" format (quarkus default, as of 1.5 see [here](https://github.com/quarkusio/quarkus/wiki/Migration-Guide-1.12#fast-jar-as-default)): \r\n\r\na) The first issue is, that Quarkus takes the initiative and tries to speed-up the boot time by generating the implementations  of [io.quarkus.arc.InbjectableBean](https://github.com/quarkusio/quarkus/blob/main/independent-projects/arc/runtime/src/main/java/io/quarkus/arc/InjectableBean.java) beans specification. It is all great, but it uses internally the Class.forName() method, to load those classes then.Moreover stores that part under _quarkus-app/quarkus/generated-bytecode.jar_ Hence the obfuscator has to be \"smart enough\" to be able to sind the string occurrences in the generated classes, in two different JARs(under _quarkus-app/app_ and under _quarkus-app/quarkus_). To overcome this, you have to let those CDI beans unobfusctaed,or move the actual processing logic in a separate beans and obfuscate those. \r\n\r\nb) The new format utilizes the [QUARKUS_APPLICATION_DAT](https://github.com/quarkusio/quarkus/blob/5c120b1e5c8e4c4bd587581137edd2762472b52f/independent-projects/bootstrap/runner/src/main/java/io/quarkus/bootstrap/runner/QuarkusEntryPoint.java#L21) file for internal serialization of the important app information in own binary format. \r\nThis is an issue, as the obfuscator changes the class/package names, but those then can not be found, as they stay unchanged in the QUARKUS_APPLICATION_DAT.\r\n\r\nThose two issues require the developer to move the code that has to be obfuscated to some other classes, which might be tedious considering the vast features of REST, [SmallRey  Fault Resilience](https://quarkus.io/guides/smallrye-fault-tolerance), and further  available as Quarkus Extensions. \r\n\r\n\r\n\n\n### Implementation ideas\n\nNot sure, as this would lead to changes of current architecture. One most trivial implementation would be to allow changing the  QUARKUS_APPLICATION_DAT externally, with some provided mapping.txt. For that one could use the [MappingPrinter](https://github.com/Guardsquare/proguard/blob/ccab80e755d2af4547a8af0821c2c50e32122470/base/src/main/java/proguard/obfuscate/MappingPrinter.java) and [MappingReader](https://github.com/Guardsquare/proguard/blob/6dfa0ca00e090d8343f7f8359d5f2fb6850fb69b/base/src/main/java/proguard/obfuscate/MappingReader.java) Classes from Proguard repo. However that is only an idea so far, and the internal arc, structure of the resulting JAR, and actually the legal legislations of using those classes as the dependency would be needed. As an update in mappingsPrinter or reader would need an update in the new independent project for \"changing\" the QUARKUS_APPLICATION_DAT file externally.",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/25602/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/25602/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

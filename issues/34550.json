@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34550",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34550/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34550/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34550/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/34550",
+  "id": 1789556066,
+  "node_id": "I_kwDOCFbutM5qqnVi",
+  "number": 34550,
+  "title": "[Quarkus 3] Pact-Consumer-Test failing in XStream when injecting Pact Mockserver",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1375177076,
+      "node_id": "MDU6TGFiZWwxMzc1MTc3MDc2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/testing",
+      "name": "area/testing",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 9,
+  "created_at": "2023-07-05T13:23:28Z",
+  "updated_at": "2024-07-12T19:23:55Z",
+  "closed_at": "2024-07-12T19:23:55Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nMigrating from Quarkus 2 to 3 we encountered a blocking issue with Quarkus 3 in combination with [Pact-Jvm](https://github.com/pact-foundation/pact-jvm).\r\n\r\nAll Consumer-Tests run into a Stackoverflow-Error when Pact is doing some serialization using XStream. \r\n\r\nPlease see attached demo-project, containing the same test in Quarkus 2 and 3. Running `mvn verify` will pass Quarkus 2 and fail 3.\r\n\r\nThe only difference which might be interesting during investigation is that we had to add tons of `add-opens` directives to the surefire-plugin in the Quarkus 3 case, which wasnt necessary in 2. Since they run the same JVM and the same Pact version, this behaviour is quite odd.\r\nAlso note that the surefire-plugin has to be configured not to use the System-Classloader according to the Pact-JVM documentation.\r\n\r\n[quarkus-pact-issue.tar.gz](https://github.com/quarkusio/quarkus/files/11958280/quarkus-pact-issue.tar.gz)\r\n\r\nFun fact: running a Pact-Provider test works just fine.\r\n\n\n### Expected behavior\n\nTest runs to completion\n\n### Actual behavior\n\nStackoverflow occurs\r\n```\r\n[ERROR] demo.Quarkus3FooClientPactTest.testContract  Time elapsed: 1.125 s  <<< ERROR!\r\ncom.thoughtworks.xstream.converters.ConversionException: \r\nFailed calling method\r\n---- Debugging information ----\r\nmessage             : Failed calling method\r\ncause-exception     : java.lang.StackOverflowError\r\ncause-message       : null\r\nmethod              : java.util.ArrayDeque.writeObject()\r\n-------------------------------\r\n\tat com.thoughtworks.xstream.core.util.SerializationMembers.callWriteObject(SerializationMembers.java:161)\r\n\tat com.thoughtworks.xstream.converters.reflection.SerializableConverter.doMarshal(SerializableConverter.java:257)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.marshal(AbstractReflectionConverter.java:90)\r\n\tat com.thoughtworks.xstream.core.AbstractReferenceMarshaller.convert(AbstractReferenceMarshaller.java:68)\r\n\tat com.thoughtworks.xstream.core.TreeMarshaller.convertAnother(TreeMarshaller.java:59)\r\n\tat com.thoughtworks.xstream.core.AbstractReferenceMarshaller$1.convertAnother(AbstractReferenceMarshaller.java:83)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.marshallField(AbstractReflectionConverter.java:270)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter$2.writeField(AbstractReflectionConverter.java:174)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.doMarshal(AbstractReflectionConverter.java:262)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.marshal(AbstractReflectionConverter.java:90)\r\n\tat com.thoughtworks.xstream.core.AbstractReferenceMarshaller.convert(AbstractReferenceMarshaller.java:68)\r\n\tat com.thoughtworks.xstream.core.TreeMarshaller.convertAnother(TreeMarshaller.java:59)\r\n\tat com.thoughtworks.xstream.core.AbstractReferenceMarshaller$1.convertAnother(AbstractReferenceMarshaller.java:83)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.marshallField(AbstractReflectionConverter.java:270)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter$2.writeField(AbstractReflectionConverter.java:174)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.doMarshal(AbstractReflectionConverter.java:262)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.marshal(AbstractReflectionConverter.java:90)\r\n\tat com.thoughtworks.xstream.core.AbstractReferenceMarshaller.convert(AbstractReferenceMarshaller.java:68)\r\n\tat com.thoughtworks.xstream.core.TreeMarshaller.convertAnother(TreeMarshaller.java:59)\r\n\tat com.thoughtworks.xstream.core.AbstractReferenceMarshaller$1.convertAnother(AbstractReferenceMarshaller.java:83)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.marshallField(AbstractReflectionConverter.java:270)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter$2.writeField(AbstractReflectionConverter.java:174)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.doMarshal(AbstractReflectionConverter.java:262)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.marshal(AbstractReflectionConverter.java:90)\r\n\tat com.thoughtworks.xstream.core.AbstractReferenceMarshaller.convert(AbstractReferenceMarshaller.java:68)\r\n\tat com.thoughtworks.xstream.core.TreeMarshaller.convertAnother(TreeMarshaller.java:59)\r\n\tat com.thoughtworks.xstream.core.AbstractReferenceMarshaller$1.convertAnother(AbstractReferenceMarshaller.java:83)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.marshallField(AbstractReflectionConverter.java:270)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter$2.writeField(AbstractReflectionConverter.java:174)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.doMarshal(AbstractReflectionConverter.java:262)\r\n\tat com.thoughtworks.xstream.converters.reflection.AbstractReflectionConverter.marshal(AbstractReflectionConverter.java:90)\r\n\tat com.thoughtworks.xstream.core.AbstractReferenceMarshaller.convert(AbstractReferenceMarshaller.java:68)\r\n\tat com.thoughtworks.xstream.core.TreeMarshaller.convertAnother(TreeMarshaller.java:59)\r\n...\r\n```\n\n### How to Reproduce?\n\nExtract provided sample\r\n\r\nRun `mvn verify`\n\n### Output of `uname -a` or `ver`\n\n_No response_\n\n### Output of `java -version`\n\n17.0.1\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n3.2.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nMaven 3.8.6\n\n### Additional information\n\nThere are already some issues involving Quarkus-Pact interop (see for example [here](https://github.com/quarkusio/quarkus/issues/22611)) which seems to be why there is some working going on in the relatively new [Quarkiverse-Pact-Extension](https://github.com/quarkiverse/quarkus-pact). Unfortunately using this extension still doesnt solve the issue (the consumer-extension isnt currently doing much except providing the dependencies).\r\n\r\nThe Pact-JVM implementation is kinda strange and maybe the root lies there, but since the sample works in Quarkus 2 I've decided to place the issue here.\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/34550/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/34550/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

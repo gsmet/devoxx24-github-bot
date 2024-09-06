@@ -1,0 +1,65 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24979",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24979/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24979/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24979/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/24979",
+  "id": 1206437769,
+  "node_id": "I_kwDOCFbutM5H6MeJ",
+  "number": 24979,
+  "title": "Mutiny.Session.withTransaction not working as expected",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1283619446,
+      "node_id": "MDU6TGFiZWwxMjgzNjE5NDQ2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/smallrye",
+      "name": "area/smallrye",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    },
+    {
+      "id": 2236476067,
+      "node_id": "MDU6TGFiZWwyMjM2NDc2MDY3",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/mutiny",
+      "name": "area/mutiny",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "closed",
+  "locked": false,
+  "milestone": null,
+  "comments": 3,
+  "created_at": "2022-04-17T17:26:36Z",
+  "updated_at": "2022-04-22T10:31:37Z",
+  "closed_at": "2022-04-22T10:31:36Z",
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nI try to run multiple operations in the reactive way with a transaction. \r\nMy current solution looks like \r\n`Panache.getSession().flatMap(s -> s.withTransaction(t -> uni))`\r\nMy uni looks like \r\n```\r\nvar uni = Uni.createFrom().item(location)\r\n   .chain(e -> e.<LocationEO>persist())\r\n  // after persist an Exception will be thrown. I expected a rollback.\r\n  .onItem().invoke(() -> {\r\n      throw new RuntimeException();\r\n  });\r\n```\r\nI raised an Exception after the persist. \r\nI expected a rollback of all operations in the uni, but the entity is still in the database.\r\n\n\n### Expected behavior\n\nA Exception in a transaction should lead to a rollback.\n\n### Actual behavior\n\nAfter an Exception all records will be committed in the database. \n\n### How to Reproduce?\n\n\r\nThe Entity\r\n\r\n```\r\n@Entity( name =\"Location\" )\r\n@Table( name = \"locations\" )\r\n@Setter\r\n@Getter\r\n@EqualsAndHashCode(of = \"id\")\r\npublic class LocationEO extends PanacheEntityBase {\r\n\r\n    @Id\r\n    @Column(name = \"location_id\", updatable = false)\r\n    @GeneratedValue\r\n    private Long id;\r\n\r\n    @Column(name = \"name\", updatable = false, nullable = false)\r\n    private String name;\r\n}\r\n```\r\n\r\nTest Case\r\n\r\n```\r\n@QuarkusTest\r\npublic class ReactiveTransactionTest {\r\n\r\n    LocationEO location;\r\n\r\n    @BeforeEach\r\n    void setup() {\r\n        this.location = new LocationEO();\r\n        this.location.setName(\"Berlin\");\r\n    }\r\n\r\n    @Test\r\n    void notWorking() {\r\n\r\n        // how many records exists\r\n        long before = LocationEO.count().await().indefinitely();\r\n\r\n        var uni = Uni.createFrom().item(location)\r\n                .chain(e -> e.<LocationEO>persist())\r\n                // after persist an Exception will be thrown. I expected a rollback.\r\n                .onItem().invoke(() -> {\r\n                    throw new RuntimeException();\r\n                });\r\n\r\n        Panache.getSession().flatMap(s -> s.withTransaction(t -> uni))\r\n                .subscribe().withSubscriber(UniAssertSubscriber.create())\r\n                .awaitFailure(e -> e.printStackTrace());\r\n\r\n        // how many records exists now\r\n        long after = LocationEO.count().await().indefinitely();\r\n\r\n        // I expected the transaction is rollbacked, because there was an Exception in the withTransaction block.\r\n        Assertions.assertEquals(before, after);\r\n    }\r\n\r\n    @Test\r\n    void working() {\r\n\r\n        long before = LocationEO.count().await().indefinitely();\r\n\r\n        var uni = Uni.createFrom().item(location)\r\n                .chain(e -> e.<LocationEO>persist())\r\n                .onItem().invoke(() -> {\r\n                    throw new RuntimeException();\r\n                });\r\n\r\n        // with the transactionBlock I've added a MutinySessionImpl.Transaction#flush\r\n        Panache.getSession().flatMap(s -> s.withTransaction(t -> uni.onFailure().invoke(() -> flush(t, null))))\r\n                .subscribe().withSubscriber(UniAssertSubscriber.create())\r\n                .awaitFailure();\r\n\r\n        long after = LocationEO.count().await().indefinitely();\r\n\r\n        // it looks like thr transaction is rollback successful\r\n        Assertions.assertEquals(before, after);\r\n    }\r\n\r\n    // workaround\r\n    @SneakyThrows\r\n    <T> Uni<T> flush(Mutiny.Transaction t, T result) {\r\n        var m = t.getClass().getDeclaredMethod(\"flush\");\r\n        m.setAccessible(true);\r\n        return ((Uni) m.invoke(t)).onItem().transform((i) -> result);\r\n    }\r\n}\r\n```\n\n### Output of `uname -a` or `ver`\n\nDarwin Kullmann 21.4.0 Darwin Kernel Version 21.4.0: Mon Feb 21 20:36:53 PST 2022; root:xnu-8020.101.4~2/RELEASE_ARM64_T8101 arm64\n\n### Output of `java -version`\n\nopenjdk version \"17\" 2021-09-14 LTS OpenJDK Runtime Environment Zulu17.28+13-CA (build 17+35-LTS) OpenJDK 64-Bit Server VM Zulu17.28+13-CA (build 17+35-LTS, mixed mode, sharing)\n\n### GraalVM version (if different from Java)\n\n_No response_\n\n### Quarkus version or git rev\n\n2.8.0.Final\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\nJava version: 17, vendor: Azul Systems, Inc., runtime: /Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home Default locale: de_DE, platform encoding: UTF-8 OS name: \"mac os x\", version: \"12.3\", arch: \"aarch64\", family: \"mac\"\n\n### Additional information\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/24979/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/24979/timeline",
+  "performed_via_github_app": null,
+  "state_reason": "completed"
+}

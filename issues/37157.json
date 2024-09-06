@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37157",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37157/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37157/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37157/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/37157",
+  "id": 1997670472,
+  "node_id": "I_kwDOCFbutM53EghI",
+  "number": 37157,
+  "title": "Kafka broker readiness check should not be used for applications readiness check ideally",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1658790125,
+      "node_id": "MDU6TGFiZWwxNjU4NzkwMTI1",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/kafka",
+      "name": "area/kafka",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 1,
+  "created_at": "2023-11-16T20:02:25Z",
+  "updated_at": "2023-11-19T16:54:57Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\r\n\r\nThis is just my understanding of different health checks, please correct if I am wrong here.\r\n\r\n#### Documentation\r\n\r\nhttps://quarkus.io/guides/kafka#kafka-broker-readiness-check\r\n\r\n#### Why?\r\n\r\nBy health check definitions it does not fall under application readiness.\r\n\r\n#### Startup Check\r\n\r\nKafka broker readiness check can be done here as generally a little bit time is needed for Kafka Broker to start.\r\n\r\n#### Liveness Check\r\n\r\nIndicate that the service is up and running. It shall not indicate whether all dependencies are running or current load on the service.\r\n\r\nShould set it to fail only when we expect all to be fine if we restart pod.\r\n\r\nSo, this is not a suitable location for this Kafka broker readiness check.\r\n\r\n#### Readiness Check\r\n\r\nIndicate if the application is ready for receiving requests and this is activated after the startup check is passing.\r\n\r\nThis is not Kafka Server (Broker) and it is Kafka client, so Readiness does not feel like a suitable place for it.\r\n\r\nWill return 404 if none of the replica is ready. It is used mostly for load balancing.\r\n\r\nSo, this is not a suitable location for this Kafka broker readiness check.\r\n\r\nIt looks like `Kafka reactive messaging health checks` https://quarkus.io/guides/kafka#kafka-reactive-messaging-health-checks follows the definitions correctly for Startup and Liveness check at-least and conflicts with readiness check.\r\n\r\nIf suppose I have like 100 services one dependent of other and the last one is Kafka. If Kafka is not ready, then I see that all services are in not ready state which makes it very difficult to see which service actually has the issue.\r\n\r\n### Implementation ideas\r\n\r\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/37157/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/37157/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

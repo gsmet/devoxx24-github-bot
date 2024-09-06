@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42803",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42803/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42803/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42803/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/42803",
+  "id": 2489410202,
+  "node_id": "I_kwDOCFbutM6UYWKa",
+  "number": 42803,
+  "title": "OIDC: Limit number of active dynamic tenants",
+  "labels": [
+    {
+      "id": 985346622,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjI=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/enhancement",
+      "name": "kind/enhancement",
+      "color": "a2eeef",
+      "default": false,
+      "description": "New feature or request"
+    },
+    {
+      "id": 1479557456,
+      "node_id": "MDU6TGFiZWwxNDc5NTU3NDU2",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/oidc",
+      "name": "area/oidc",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 6,
+  "created_at": "2024-08-27T13:40:19Z",
+  "updated_at": "2024-08-28T09:19:54Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Description\n\nCurrently the number of OIDC tenants is unlimited. A global, static map of \"tenant ID\" to `TenantConfigContext` is held in `i.q.oidc.runtime.OidcRecorder` (propagated to `i.q.oidc.runtime.TenantConfigBean`).\r\n\r\nSome scenarios may create new OIDC tenant configs at runtime. Either by having some functionality to change the configuration (and generate a new tenant-ID) or by adding new OIDC tenant configs. Both use cases lead to new `TenantConfigContext`s being created, but never cleaned up.\r\n\r\nProposal:\r\n* Add a configuration option to limit the number of dynamic OIDC tenants\r\n* Replace the static CHM in `OidcRecorder` with a bounded Caffeine cache\r\n* Use the Caffeine cache to limit the number of active OIDC tenant contexts and automatically close old ones\r\n* The Caffeine cache could also be used to automatically close inactive OIDC tenant contexts after some period of time to safe resources (at the cost of a somewhat higher latency when inactive contexts are used again).\r\n\r\n## New Configuration properties\r\n\r\n`int quarkus.oidc.dynamic-tenants.limit` (default to Integer.MAX_VALUE to retain the current behavior)\r\n`Optional<Duration> quarkus.oidc.dynamic-tenants.close-inactive-after` (empty = don't close inactive tenant contexts, other value = configure via Caffeine's `expireAfterAccess`) \n\n### Implementation ideas\n\n_No response_",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/42803/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/42803/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}

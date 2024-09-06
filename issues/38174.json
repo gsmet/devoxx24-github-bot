@@ -1,0 +1,56 @@
+{
+  "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38174",
+  "repository_url": "https://api.github.com/repos/quarkusio/quarkus",
+  "labels_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38174/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38174/comments",
+  "events_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38174/events",
+  "html_url": "https://github.com/quarkusio/quarkus/issues/38174",
+  "id": 2080331664,
+  "node_id": "I_kwDOCFbutM57_1eQ",
+  "number": 38174,
+  "title": "First access to static resource yields 404",
+  "labels": [
+    {
+      "id": 985346620,
+      "node_id": "MDU6TGFiZWw5ODUzNDY2MjA=",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/kind/bug",
+      "name": "kind/bug",
+      "color": "d73a4a",
+      "default": false,
+      "description": "Something isn't working"
+    },
+    {
+      "id": 1320737519,
+      "node_id": "MDU6TGFiZWwxMzIwNzM3NTE5",
+      "url": "https://api.github.com/repos/quarkusio/quarkus/labels/area/vertx",
+      "name": "area/vertx",
+      "color": "0366d6",
+      "default": false,
+      "description": ""
+    }
+  ],
+  "state": "open",
+  "locked": false,
+  "milestone": null,
+  "comments": 2,
+  "created_at": "2024-01-13T14:50:41Z",
+  "updated_at": "2024-01-15T16:27:37Z",
+  "closed_at": null,
+  "active_lock_reason": null,
+  "body": "### Describe the bug\n\nWhen a static resource is configured according to the manual, like this:\r\n\r\n````\r\npublic class StaticResources {\r\n\r\n    void installRoute(@Observes StartupEvent startupEvent, Router router) {\r\n        router.route()\r\n                .path(\"/static/*\")\r\n                .handler(StaticHandler.create(\"static/\"));\r\n    }\r\n}\r\n````\r\n\r\nThe file that is requested first yields a 404, even if it exists.\n\n### Expected behavior\n\n````\r\n$ wget localhost:8080/static/1\r\n--2024-01-13 15:46:31--  http://localhost:8080/static/1\r\nResolving localhost (localhost)... ::1, 127.0.0.1\r\nConnecting to localhost (localhost)|::1|:8080... connected.\r\nHTTP request sent, awaiting response... 200 OK\r\n\r\n$ wget localhost:8080/static/2\r\n--2024-01-13 15:46:33--  http://localhost:8080/static/2\r\nResolving localhost (localhost)... ::1, 127.0.0.1\r\nConnecting to localhost (localhost)|::1|:8080... connected.\r\nHTTP request sent, awaiting response... 200 OK\r\n````\r\n\n\n### Actual behavior\n\n````\r\n$ wget localhost:8080/static/1\r\n--2024-01-13 15:37:06--  http://localhost:8080/static/1\r\nResolving localhost (localhost)... ::1, 127.0.0.1\r\nConnecting to localhost (localhost)|::1|:8080... connected.\r\nHTTP request sent, awaiting response... 404 Not Found\r\n\r\n$ wget localhost:8080/static/2\r\n--2024-01-13 15:37:07--  http://localhost:8080/static/2\r\nResolving localhost (localhost)... ::1, 127.0.0.1\r\nConnecting to localhost (localhost)|::1|:8080... connected.\r\nHTTP request sent, awaiting response... 200 OK\r\n````\n\n### How to Reproduce?\n\n1. Configure static resources like above\r\n2. Place files in `resources/static`: file `1` and file `2`\r\n3. A minimal application can be found at: https://github.com/cruftex/quarkus-static-resources\r\n4. Package and run\r\n5. Request `/static/1` yields 404, request to `/static/2` is okay\r\n\n\n### Output of `uname -a` or `ver`\n\nLinux solid 6.5.0-14-generic #14~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Mon Nov 20 18:15:30 UTC 2 x86_64 x86_64 x86_64 GNU/Linux\n\n### Output of `java -version`\n\nopenjdk version \"17.0.9\" 2023-10-17\n\n### Quarkus version or git rev\n\n3.6.4\n\n### Build tool (ie. output of `mvnw --version` or `gradlew --version`)\n\napache-maven-3.9.6\n\n### Additional information\n\nThe problem is caused by different path interpretation when the Vert.x filesystem cache is initially empty.\r\nThe problem can be mitigated by either:\r\n\r\n1. Change line `.handler(StaticHandler.create(\"static/\"));` to `.handler(StaticHandler.create(\"static\"));`\r\n2. Or access the Vert.x filesystem during startup, like `vertx.fileSystem().exists(\"static/1\")`\r\n",
+  "reactions": {
+    "url": "https://api.github.com/repos/quarkusio/quarkus/issues/38174/reactions",
+    "total_count": 1,
+    "+1": 1,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quarkusio/quarkus/issues/38174/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null
+}
