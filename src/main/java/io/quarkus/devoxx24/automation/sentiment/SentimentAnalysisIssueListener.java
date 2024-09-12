@@ -12,6 +12,8 @@ import jakarta.inject.Inject;
 
 public class SentimentAnalysisIssueListener {
 
+    private static final String SAFE_RESPONSE = "SAFE";
+
     @Inject
     SentimentAnalysisAiService sentimentAnalysisAiService;
 
@@ -21,7 +23,7 @@ public class SentimentAnalysisIssueListener {
     void warn(@Issue.Opened GHEventPayload.Issue issuePayload) throws IOException {
         String warning = sentimentAnalysisAiService.getWarning(Strings.sanitize(issuePayload.getIssue().getBody()));
 
-        if (warning == null || warning.isBlank()) {
+        if (isFine(warning)) {
             return;
         }
 
@@ -38,10 +40,14 @@ public class SentimentAnalysisIssueListener {
 
         String warning = sentimentAnalysisAiService.getWarning(Strings.sanitize(issueCommentPayload.getComment().getBody()));
 
-        if (warning == null || warning.isBlank()) {
+        if (isFine(warning)) {
             return;
         }
 
         issueCommentPayload.getIssue().comment(warning);
+    }
+
+    private boolean isFine(String warning) {
+        return warning == null || warning.isBlank() || SAFE_RESPONSE.equals(warning);
     }
 }
