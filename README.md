@@ -27,7 +27,7 @@ You need a PostgreSQL database with a `quarkus` database and a `quarkus` user as
 You can start the app in dev mode with:
 
 ```
-mvn clean -Ddevoxx.triage.init=true -Ddevoxx.init.source=issues/ quarkus:dev
+mvn clean -Ddevoxx.triage.init=true -Ddevoxx.triage.source=issues/ quarkus:dev
 ```
 
 This will ingest the issues and store the embeddings in the PostgreSQL database.
