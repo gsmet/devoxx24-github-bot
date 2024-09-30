@@ -17,9 +17,9 @@ public class LanguageDetectorIssueListener {
      * Using AI to determine the issue is in English.
      */
     void detectLanguage(@Issue.Opened GHEventPayload.Issue issuePayload) throws IOException {
-        if ("true".equals(languageDetectorAiService.isEnglish(
+        if (languageDetectorAiService.isEnglish(
                 Strings.sanitize(issuePayload.getIssue().getTitle()),
-                Strings.sanitize(issuePayload.getIssue().getBody())))) {
+                Strings.sanitize(issuePayload.getIssue().getBody()))) {
             return;
         }
 

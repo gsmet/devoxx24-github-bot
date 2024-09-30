@@ -19,5 +19,5 @@ public interface LanguageDetectorAiService {
 
         You output the result in plain text. Do not format it.
     """)
-    String isEnglish(String title, String body);
+    boolean isEnglish(String title, String body);
 }
