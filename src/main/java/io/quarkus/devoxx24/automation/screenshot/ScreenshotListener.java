@@ -39,7 +39,11 @@ public class ScreenshotListener {
     void convertScreenshotsToCode(@Issue.Opened GHEventPayload.Issue issuePayload) throws IOException {
         List<UrlOccurrence> ghScreenshotUrls = new ArrayList<>();
         String body = issuePayload.getIssue().getBody();
-        Matcher matcher = urlPattern.matcher(Strings.sanitize(body));
+        String sanitizedBody = Strings.sanitize(body);
+        if (sanitizedBody == null || sanitizedBody.isEmpty()) {
+            return;
+        }
+        Matcher matcher = urlPattern.matcher(sanitizedBody);
         while (matcher.find()) {
             int matchStart = matcher.start(1);
             int matchEnd = matcher.end() - 1;
