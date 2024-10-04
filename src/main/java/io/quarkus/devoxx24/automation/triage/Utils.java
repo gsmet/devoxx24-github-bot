@@ -18,7 +18,7 @@ public final class Utils {
     }
 
     /**
-     * @return a carefully crafted ObjectReader tp be able to use the Hub4j GitHub API outside of the GitHub API infrastructure.
+     * @return a carefully crafted ObjectReader to be able to use the Hub4j GitHub API outside of the GitHub API infrastructure.
      */
     static ObjectReader getGitHubObjectReader() {
         final ObjectMapper gitHubObjectMapper = new ObjectMapper();
